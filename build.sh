@@ -1,16 +1,31 @@
-mkdir -p build
 
-nasm -felf32 src/boot.asm -o build/boot.o
-# i686-elf-gpp -c src/kernel.cpp -o build/kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
-i686-elf-g++ -c src/kernel.cpp -o build/kernel.o -ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti
-i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib build/boot.o build/kernel.o -lgcc
+# Compile boot.asm manually since CMake is being cringe about it
+nasm -felf32 src/kernel/boot.asm -o src/kernel/boot.o
+
+
+# Build project
+mkdir -p build
+cd build
+cmake ../
+make
+cd ../
+
+
+# Delete compiled boot.o
+rm src/kernel/boot.o
+
+
+
+# Generate ISO file
+mkdir -p output
+cp build/CockOS.bin output/CockOS.bin
 
 mkdir -p isodir/boot/grub
-mkdir -p output
-cp myos.bin isodir/boot/myos.bin
-cp grub.cfg isodir/boot/grub/grub.cfg
-grub-mkrescue -o output/myos.iso isodir
+cp output/CockOS.bin isodir/boot/CockOS.bin
+cp src/kernel/grub.cfg isodir/boot/grub/grub.cfg
 
-# qemu-system-i386 -cdrom output/myos.iso
-qemu-system-i386 -kernel myos.bin
+grub-mkrescue -o output/CockOS.iso isodir
+rm -rf isodir
+
+
 
