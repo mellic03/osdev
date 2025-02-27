@@ -1,36 +1,37 @@
 cmake_minimum_required(VERSION 3.15)
-project(CockOS)
+project(ckos)
 
-ENABLE_LANGUAGE(ASM)
+string(ASCII 27 Esc)
+set(Green "${Esc}[32m")
+
+if(${KERNEL_ARCH} STREQUAL "i686")
+    message("${Green} Compiling for i686")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT elf32)
+elseif(${KERNEL_ARCH} STREQUAL "x86_64")
+    message("${Green} Compiling for x86_64")
+    set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
+else()
+    message(FATAL_ERROR "-DKERNEL_ARCH must be either i686 or x86_64")
+endif()
+
+
 set(CMAKE_SYSTEM_NAME Linux)
-set(CMAKE_SYSTEM_PROCESSOR i686)
+set(CMAKE_SYSTEM_PROCESSOR ${KERNEL_ARCH})
 set(TOOLS $ENV{HOME}/opt/cross)
-set(CMAKE_C_COMPILER /bin/i686-elf-gcc)
-set(CMAKE_CXX_COMPILER /bin/i686-elf-g++)
-set(CMAKE_ASM_COMPILER /bin/i686-elf-as)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_COMPILER /bin/${KERNEL_ARCH}-elf-gcc)
+set(CMAKE_CXX_COMPILER /bin/${KERNEL_ARCH}-elf-g++)
+set(CMAKE_ASM_NASM_COMPILER nasm)
+ENABLE_LANGUAGE(ASM_NASM)
+
+
+# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-ffreestanding -O2 -Wall -Wextra -fno-exceptions -fno-rtti")
-set(CMAKE_C_FLAGS "-ffreestanding -O2 -Wall -Wextra")
+set(CMAKE_C_FLAGS "-std=gnu99 -ffreestanding -O2 -Wall -Wextra")
+
+
 set(KERNEL_BIN ${PROJECT_NAME}.bin)
-set(KERNEL_ISO ${PROJECT_NAME}.iso)
-
-
-
-# ## A simple lib to test C compilation and linking
-# add_library(mylib mylib.c)
-
-# Compile boot.asm manually since CMake is being cringe about it
-# add_custom_command(
-#     TARGET ${KERNEL_BIN} PRE_BUILD
-#     COMMAND nasm -felf32 ${CMAKE_SOURCE_DIR}/src/kernel/boot.asm -o ${CMAKE_SOURCE_DIR}/src/kernel/boot.o
-# )
-
-# # Generate iso file after builing kernel
-# add_custom_command(
-#     TARGET ${KERNEL_BIN} POST_BUILD
-#     COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate-iso.sh ${CMAKE_SOURCE_DIR} ${PROJECT_NAME}
-# )
+set(LOADER_BIN ${PROJECT_NAME}.bin)
 
 
 # Include directories
@@ -41,59 +42,49 @@ include_directories(${CMAKE_SOURCE_DIR}/src/lib/)
 
 
 
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
+    OUTPUT_VARIABLE CRTBEGIN_OBJ
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
+    OUTPUT_VARIABLE CRTEND_OBJ
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+
 
 # Build kernel
 # ----------------------------------------------------------------------------------------------
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/boot/)
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/kernel/)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/lib/libc/)
-
 
 add_executable(
     ${KERNEL_BIN}
-    ${CMAKE_SOURCE_DIR}/src/kernel/boot.o
-    ${CMAKE_SOURCE_DIR}/src/kernel/kernel.cpp
-    ${CMAKE_SOURCE_DIR}/src/kernel/terminal/terminal.c
+    ${CMAKE_SOURCE_DIR}/src/dummy.cpp
+    ${CMAKE_SOURCE_DIR}/src/boot/boot-${KERNEL_ARCH}.asm
+    ${CMAKE_SOURCE_DIR}/src/boot/boot.cpp
 )
 
 target_link_libraries(
     ${KERNEL_BIN}
+    # /usr/lib/gcc/i686-elf/11.2.0/crtbegin.o
+    # ${CMAKE_SOURCE_DIR}/src/kernel/ctor/crti.o
+    # libBOOT
+    libKERNEL
     libc
+    # /usr/lib/gcc/i686-elf/11.2.0/crtend.o
+    # ${CMAKE_SOURCE_DIR}/src/kernel/ctor/crtn.o
 )
 
-
+# Set linker properties
 set_target_properties(
     ${KERNEL_BIN} PROPERTIES
-    LINK_FLAGS "-T ${CMAKE_SOURCE_DIR}/src/kernel/linker.ld -ffreestanding -O2 -nostdlib -lgcc"
+    LINK_FLAGS "-T ${CMAKE_SOURCE_DIR}/src/linker-${KERNEL_ARCH}.ld -ffreestanding -O2 -nostdlib -lgcc"
 )
 
 # ----------------------------------------------------------------------------------------------
 
 
-
-
-
-# execute_process(
-#     COMMAND bash qemu-system-i386 -kernel ${CMAKE_SOURCE_DIR}/output/CockOS.bin
-# )
-
-# add_custom_command(
-#     TARGET ${KERNEL_BIN} POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-#     COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_BIN} ${CMAKE_SOURCE_DIR}/bin/
-# )
-
-## Generate ISO file
-# add_custom_target(
-#     ${KERNEL_ISO}
-#     COMMAND ${CMAKE_SOURCE_DIR}/scripts/generate-iso.sh
-#     COMMENT "Generating the kernel bootable iso file"
-#     BYPRODUCTS ${KERNEL_ISO}
-# )
-
-# add_dependencies(${PROJECT_NAME}.iso ${PROJECT_NAME}.bin)
-
-
-# add_custom_command(
-#     TARGET ${KERNEL_ISO} POST_BUILD
-#     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/bin
-#     COMMAND ${CMAKE_COMMAND} -E copy ${KERNEL_ISO} ${CMAKE_SOURCE_DIR}/bin/
-# )

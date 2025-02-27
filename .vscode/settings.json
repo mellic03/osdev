@@ -75,7 +75,12 @@
         "stddef.h": "c",
         "stdarg.h": "c",
         "valarray": "c",
-        "terminal.h": "c"
+        "terminal.h": "c",
+        "unordered_set": "cpp",
+        "set": "cpp",
+        "ranges": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",

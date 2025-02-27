@@ -1,7 +1,5 @@
 #!/bin/bash
 
-./build.sh
-
-# qemu-system-i386 -cdrom output/myos.iso
-qemu-system-i386 -kernel output/CockOS.bin
+qemu-system-x86_64 -m 8G -cdrom build/ckos-x86_64.iso
+# qemu-system-i386 -m 8G -cdrom build/ckos-i686.iso
 

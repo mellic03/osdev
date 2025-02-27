@@ -1,31 +1,34 @@
+#!/bin/bash
 
-# Compile boot.asm manually since CMake is being cringe about it
-nasm -felf32 src/kernel/boot.asm -o src/kernel/boot.o
+if [[ $# -eq 0 ]] ; then
+    echo 'Give me a parameter :D'
+    exit 0
+fi
 
 
 # Build project
-mkdir -p build
-cd build
-cmake ../
+ARG=$1
+SRC_DIR="./"
+BUILD_DIR=build/build-$ARG
+ISO_PATH=build/iso-$ARG
+OUTPUT_PATH=build/ckos-$ARG.iso
+
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
+cmake -DKERNEL_ARCH="$1" ../../
 make
-cd ../
-
-
-# Delete compiled boot.o
-rm src/kernel/boot.o
-
-
+cd ../../
 
 # Generate ISO file
-mkdir -p output
-cp build/CockOS.bin output/CockOS.bin
+# mkdir -p $OUTPUT_DIR
+# cp $BUILD_DIR/ckos.bin $OUTPUT_DIR/ckos.bin
 
-mkdir -p isodir/boot/grub
-cp output/CockOS.bin isodir/boot/CockOS.bin
-cp src/kernel/grub.cfg isodir/boot/grub/grub.cfg
+# mkdir -p isodir/boot/grub
+mkdir -p $ISO_PATH
+cp -R src/iso_root/. $ISO_PATH
+cp $BUILD_DIR/ckos.bin $ISO_PATH/boot/ckos.bin
 
-grub-mkrescue -o output/CockOS.iso isodir
-rm -rf isodir
-
+grub-mkrescue -o $OUTPUT_PATH $ISO_PATH
 
 

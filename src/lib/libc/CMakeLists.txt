@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.31)
 
 
 add_library(
-    libc
+    libc STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/stdio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/printf.c
     ${CMAKE_CURRENT_SOURCE_DIR}/string.c
