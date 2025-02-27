@@ -1,34 +1,19 @@
 #!/bin/bash
 
-if [[ $# -eq 0 ]] ; then
-    echo 'Give me a parameter :D'
-    exit 0
-fi
+N0="loader"
+A0="i686"
+
+N1="kernel"
+A1="x86_64"
+
+./build_.sh $N0 $A0
+./build_.sh $N1 $A1
+
+cp -R src/iso_root build/
+
+cd build
+mv $N0-$A0/$N0.bin iso_root/boot/
+mv $N1-$A1/$N1.bin iso_root/boot/
 
 
-# Build project
-ARG=$1
-SRC_DIR="./"
-BUILD_DIR=build/build-$ARG
-ISO_PATH=build/iso-$ARG
-OUTPUT_PATH=build/ckos-$ARG.iso
-
-
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
-cmake -DKERNEL_ARCH="$1" ../../
-make
-cd ../../
-
-# Generate ISO file
-# mkdir -p $OUTPUT_DIR
-# cp $BUILD_DIR/ckos.bin $OUTPUT_DIR/ckos.bin
-
-# mkdir -p isodir/boot/grub
-mkdir -p $ISO_PATH
-cp -R src/iso_root/. $ISO_PATH
-cp $BUILD_DIR/ckos.bin $ISO_PATH/boot/ckos.bin
-
-grub-mkrescue -o $OUTPUT_PATH $ISO_PATH
-
-
+grub-mkrescue -o CoomOS.iso ./iso_root/

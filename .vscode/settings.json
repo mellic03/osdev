@@ -80,11 +80,18 @@
         "set": "cpp",
         "ranges": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "text_encoding": "cpp",
+        "typeindex": "cpp",
+        "elf.h": "c",
+        "hash_map": "cpp",
+        "deque": "cpp",
+        "hash_set": "cpp",
+        "bitset": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",
-        "${workspaceFolder}/src/kernel/include/",
+        "${workspaceFolder}/src/include/",
         "${workspaceFolder}/src/lib/"
     ]
 }

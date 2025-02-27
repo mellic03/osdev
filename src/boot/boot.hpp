@@ -6,7 +6,7 @@
 
 namespace ck
 {
-    int kboot(unsigned long, unsigned long);
+    // int kboot(unsigned long, unsigned long);
     // const char *MB2TagTypeStr( unsigned long );
 }
 

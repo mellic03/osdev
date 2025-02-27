@@ -1,12 +1,12 @@
 #include <kernel/terminal.h>
-#include "memory/memory.h"
-#include "memory/memory.hpp"
-#include "memory/linear_allocator.hpp"
-#include "terminal/terminal.h"
+#include "../common/memory/memory.h"
+#include "../common/memory/memory.hpp"
+#include "../common/memory/linear_allocator.hpp"
+#include "../common/terminal/terminal.h"
 #include <libc/stdio.h>
 
 #include "../boot/boot.hpp"
-#include "module.hpp"
+#include "../common/module.hpp"
 
 
 // __attribute__((used, section(".limine_requests")))
@@ -30,60 +30,38 @@
 
 
 extern "C" {
-    void kmain();
-    // void kmain( uint32_t magic, uint32_t addr );
+    void kmain( uint32_t magic, uint32_t addr );
 }
 
 
 
 
-static void
-process_tags( multiboot_tag *tag )
+// static void
+// process_tags( multiboot_tag *tag )
+// {
+//     // ckModulesInit(tag);
+
+//     // while (tag->type != MULTIBOOT_TAG_TYPE_END)
+//     // {
+//     //     process_tag(tag);
+//     //     tag = (multiboot_tag*)((multiboot_uint8_t*)tag + ((tag->size + 7) & ~7));
+//     // }
+
+// }
+
+
+void kmain( uint32_t magic, uint32_t addr ) 
 {
-    ckModulesInit(tag);
-
-    // while (tag->type != MULTIBOOT_TAG_TYPE_END)
-    // {
-    //     process_tag(tag);
-    //     tag = (multiboot_tag*)((multiboot_uint8_t*)tag + ((tag->size + 7) & ~7));
-    // }
-
-}
-
-
-void kmain() 
-// void kmain( uint32_t magic, uint32_t addr ) 
-{
-    ckTerminal_t term = {
-        .VGA_WIDTH  = 80,
-        .VGA_HEIGHT = 25,
-        .row = 0,
-        .col = 0,
-        .color = 0,
-        .buf = (uint16_t*)(0xB8000)
-    };
-
-    ckTerminalInit(&term);
-
-    // if (ck::kboot(magic, addr) == -1)
-    // {
-    //     return;
-    // }
-
-
-    // process_tags((multiboot_tag*)(addr+8));
-
-    // // ck::linear_allocator *mainblock;
-    // ckMemoryInfo memory = {
-    //     ck::linear_allocator(),
-    //     ck::stack_allocator()
+    // ckTerminal_t term = {
+    //     .VGA_WIDTH  = 80,
+    //     .VGA_HEIGHT = 25,
+    //     .row = 0,
+    //     .col = 0,
+    //     .color = 0,
+    //     .buf = (uint16_t*)(0xB8000)
     // };
 
-    // if (ckMemoryInit(addr, &memory) == -1)
-    // {
-    //     printf("Error initializing memory\n");
-    //     return;
-    // }
+    // ckTerminalInit(&term);
 
-    printf("[kmain]\n");
+    // printf("[kmain]\n");
 }
