@@ -22,7 +22,7 @@ struct ck_BMP_infoheader
     uint32_t colors_important;  // 0 == all
     uint8_t  color_table[4];    // present only if bpp <= 8
 
-};
+} __attribute__((packed));
 
 struct ck_BMP_header
 {
@@ -40,7 +40,7 @@ struct ck_BMP_header
         ...
         pixels[bpp * imagesize]
     */
-};
+} __attribute__((packed));
 
 // void test()
 // {
