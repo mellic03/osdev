@@ -16,19 +16,20 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 }
 
 
-ckTerminal::ckTerminal( int w, int h, uint16_t *addr )
-: 	m_buf(w, h, addr)
+ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
+						int bufw, int bufh, uint16_t *buf )
+: 	m_buf(bufw, bufh, buf)
 {
-	W   = w;
-	H   = h;
-	SZ  = w*h;
+	W   = bufw;
+	H   = bufh;
+	SZ  = bufw*bufh;
 	CSR = 0;
 
 	m_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	m_lastflush = {-1, -1};
 
 	m_VGA = (uint16_t*)(0xB8000);
-	m_buf.fill(0, w*h, vga_entry(' ', m_color));
+	m_buf.fill(0, bufw*bufh, vga_entry(' ', m_color));
 }
 
 

@@ -20,8 +20,8 @@ private:
 
 
 public:
-    ckTerminal( int outw, int outh, uint16_t *addr );
-                // int bufw, int bufh );
+    ckTerminal( int dstw, int dsth, uint16_t *dst,
+                int bufw, int bufh, uint16_t *buf );
 
     void flush();
 

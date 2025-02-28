@@ -55,7 +55,11 @@ void lmain( uint32_t magic, uint32_t addr )
 {
     uint16_t vga_buffer[25*80];
 
-    ckTerminal term(80, 25, &(vga_buffer[0]));
+    ckTerminal term(
+        80, 25, (uint16_t*)(0xB8000),
+        80, 25, vga_buffer
+    );
+
     ckTerminalInit(term);
 
     std::printf("sizeof(void*) == %d\n", sizeof(void*));
