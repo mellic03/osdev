@@ -1,19 +1,30 @@
 #!/bin/bash
 
-N0="loader"
-A0="i686"
+mkdir -p ./build
+cd ./build
 
-N1="kernel"
-A1="x86_64"
 
-./build_.sh $N0 $A0
-./build_.sh $N1 $A1
+if cmake -DKS_ARCH="i686" ../src/; then
+    echo -e "\033[32m ================ Build Successful ================ \033[0m" # Green
+    make
+else
+    echo -e "\033[31m ================ Build Failed ================ \033[0m" # Red
+    exit 1
+fi
 
-cp -R src/iso_root build/
+if cmake -DKS_ARCH="x86_64" ../src/; then
+    echo -e "\033[32m ================ Build Successful ================ \033[0m" # Green
+    make
+else
+    echo -e "\033[31m ================ Build Failed ================ \033[0m" # Red
+    exit 1
+fi
 
-cd build
-mv $N0-$A0/$N0.bin iso_root/boot/
-mv $N1-$A1/$N1.bin iso_root/boot/
 
+
+
+cp -r ../src/system/iso_root ./
+cp ./bin/* ./iso_root/boot/.
 
 grub-mkrescue -o CoomOS.iso ./iso_root/
+

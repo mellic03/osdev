@@ -1,7 +1,7 @@
 #!/bin/bash
 
-qemu-system-i386 -m 8G -cdrom build/CoomOS.iso
+./build.sh
+qemu-system-i386 -m 4G -cdrom ./build/CoomOS.iso -serial file:serial.txt
+# qemu-system-x86_64 -m 4G -cdrom build/CoomOS.iso -serial file:serial.txt
 
-# qemu-system-i386 -m 8G -cdrom build/ckos-i686.iso
-# qemu-system-x86_64 -m 8G -cdrom build/ckos-x86_64.iso
 

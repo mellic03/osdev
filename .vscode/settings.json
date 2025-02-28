@@ -87,11 +87,14 @@
         "hash_map": "cpp",
         "deque": "cpp",
         "hash_set": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "istream": "cpp",
+        "print": "cpp",
+        "__config": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/src/include/",
-        "${workspaceFolder}/src/lib/"
+        "${workspaceFolder}/src/system/"
     ]
 }
