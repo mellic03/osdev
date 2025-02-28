@@ -18,7 +18,8 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 
 ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
 						int bufw, int bufh, uint16_t *buf )
-: 	m_buf(bufw, bufh, buf)
+:	m_VGA(dstw, dsth, dst),
+ 	m_buf(bufw, bufh, buf)
 {
 	W   = bufw;
 	H   = bufh;
@@ -27,25 +28,18 @@ ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
 
 	m_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	m_lastflush = {-1, -1};
-
-	dstW = dstw;
-	dstH = dsth;
-	m_VGA = dst;
 	m_buf.fill(0, bufw*bufh, vga_entry(' ', m_color));
 }
 
 
 void ckTerminal::flush()
 {
-	if (m_VGA == m_buf.data())
+	if (m_VGA.data() == m_buf.data())
 	{
 		return;
 	}
 
-    std::memcpy(m_VGA, m_buf.data(), SZ*sizeof(uint16_t));
-
-	// m_buf.read(m_VGA, 0, SZ);
-	// m_VGA[SZ] = vga_entry_color(VGA_COLOR_BLACK, VGA_COLOR_BLACK);
+    std::memcpy(m_VGA.data(), m_buf.data(), SZ*sizeof(uint16_t));
 }
 
 

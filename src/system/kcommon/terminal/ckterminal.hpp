@@ -11,10 +11,8 @@ private:
     int CSR;
     uint8_t m_color;
 
+    ckBuffer  m_VGA;
     ckBuffer  m_buf;
-
-    int dstW, dstH;
-    uint16_t *m_VGA;
 
     struct {
         int start, end;

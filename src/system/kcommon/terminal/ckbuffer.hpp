@@ -36,13 +36,6 @@ public:
         m_data[row*W + col] = value;
     }
 
-    void read( uint16_t *dst, int start, int end )
-    {
-        for (int i=start; i<end; i++)
-        {
-            dst[i] = m_data[i];
-        }
-    }
 
     uint16_t *data()
     {
