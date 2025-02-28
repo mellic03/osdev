@@ -16,7 +16,7 @@ private:
 
     struct {
         int start, end;
-    } m_lastflush;
+    } m_view, m_lastflush;
 
 
 public:

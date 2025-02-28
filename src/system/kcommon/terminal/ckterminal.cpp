@@ -3,7 +3,8 @@
 #include <stdc++/cstring.hpp>
 #include <stdc++/algorithm.hpp>
 
-#include "../serial.hpp"
+#include "../../drivers/serial.hpp"
+
 
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) 
 {
@@ -27,7 +28,10 @@ ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
 	CSR = 0;
 
 	m_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
+
+	m_view 	    = {0, 0};
 	m_lastflush = {-1, -1};
+
 	m_buf.fill(0, bufw*bufh, vga_entry(' ', m_color));
 }
 
@@ -39,7 +43,22 @@ void ckTerminal::flush()
 		return;
 	}
 
-    std::memcpy(m_VGA.data(), m_buf.data(), SZ*sizeof(uint16_t));
+	int vga_row = 0;
+	int buf_row = getrow();
+
+	std::memset(m_VGA.data(), 0, m_VGA.SZ*sizeof(uint16_t));
+
+	while (vga_row < m_VGA.H && buf_row < m_buf.H)
+	{
+		uint16_t *dst = m_VGA.data() + vga_row*m_VGA.W;
+		uint16_t *src = m_buf.data() + buf_row*m_buf.W;
+
+		std::memcpy(dst+vga_row, src+buf_row, W*sizeof(uint16_t));
+
+		vga_row += 1;
+		buf_row += 1;
+	}
+
 }
 
 
@@ -48,8 +67,15 @@ void ckTerminal::flush()
 void
 ckTerminal::setcursor( int idx )
 {
-	// if (idx)
-	CSR = std::clamp(idx, 0, SZ);
+    CSR = std::clamp(idx, 0, SZ);
+
+    // if (idx >= SZ-1)
+    // {
+    //     int row = m_buf.W - 1;
+    //     int col = 0;
+
+    //     CSR = row*m_buf.W + col;
+    // }
 }
 
 
@@ -131,39 +157,39 @@ ckTerminal::putstr( const char *str )
         str++;
     }
 
-    ck::serial::writemsg(str);
+    this->flush();
 }
 
 
 void
 ckTerminal::scrolldown()
 {
-    int row = getrow();
+    // int row = getrow();
 
-	for (int r=0; r<row; r++)
-	{
-        for (int c=0; c<W; c++)
-        {
-            m_buf[r][c] = m_buf[r+1][c];
-        }
+	// for (int r=0; r<row; r++)
+	// {
+    //     for (int c=0; c<W; c++)
+    //     {
+    //         m_buf[r][c] = m_buf[r+1][c];
+    //     }
 
-		// uint16_t *dst = m_buf.data() + W*(r+0);
-		// uint16_t *src = m_buf.data() + W*(r+1);
-		// std::memcpy(dst, src, W);
-	}
+	// 	// uint16_t *dst = m_buf.data() + W*(r+0);
+	// 	// uint16_t *src = m_buf.data() + W*(r+1);
+	// 	// std::memcpy(dst, src, W);
+	// }
 
-	for (int r=row; r<H; r++)
-	{
-        for (int c=0; c<W; c++)
-        {
-            m_buf[r][c] = 0;
-        }
+	// for (int r=row; r<H; r++)
+	// {
+    //     for (int c=0; c<W; c++)
+    //     {
+    //         m_buf[r][c] = 0;
+    //     }
 
-		// uint16_t *dst = m_buf.data() + W*row;
-		// uint16_t *src = m_buf.data() + W*(row+1);
-		// std::memcpy(dst, src, W);
-	}
+	// 	// uint16_t *dst = m_buf.data() + W*row;
+	// 	// uint16_t *src = m_buf.data() + W*(row+1);
+	// 	// std::memcpy(dst, src, W);
+	// }
 
-    // setrow(row-1);
-    // setcol(0);
+    // // setrow(row-1);
+    // // setcol(0);
 }

@@ -4,6 +4,8 @@ if(ARCH_i686)
         ${CMAKE_SOURCE_DIR}/system/loader/gdt-32.cpp
         ${CMAKE_SOURCE_DIR}/system/loader/lmain.cpp
         ${CMAKE_SOURCE_DIR}/system/loader/boot.asm
+        ${CMAKE_SOURCE_DIR}/system/interpreter/interpreter.cpp
+
     )
 
     target_link_libraries(

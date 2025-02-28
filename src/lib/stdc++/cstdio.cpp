@@ -78,33 +78,33 @@ size_t count_fmt_specifiers( const char *format )
 
 
 
-static void long_printf( const char *&fmt, va_list &args )
-{
-    static char buf[32];
-    int idx = 0;
+// static void long_printf( const char *&fmt, va_list &args )
+// {
+//     static char buf[32];
+//     int idx = 0;
 
-    fmt++;
+//     fmt++;
 
-    switch (*fmt)
-    {
-        default: break;
-        case 'd': idx = std::itoa(va_arg(args,      int), buf, 10); break;
-        case 'u': idx = std::utoa(va_arg(args, uint32_t), buf, 10); break;
-        case 'x': idx = std::itoa(va_arg(args, uint32_t), buf, 16); break;
-    }
+//     switch (*fmt)
+//     {
+//         default: break;
+//         case 'd': idx = std::itoa(va_arg(args,      int), buf, 10); break;
+//         case 'u': idx = std::utoa(va_arg(args, uint32_t), buf, 10); break;
+//         case 'x': idx = std::itoa(va_arg(args, uint32_t), buf, 16); break;
+//     }
 
-    if (idx)
-    {
-        buf[idx] = '\0';
-    }
-}
+//     if (idx)
+//     {
+//         buf[idx] = '\0';
+//     }
+// }
 
 
 static void internal_printf( const char *&fmt, va_list &args )
 {
     static char buf[32];
     int idx = 0;
-    int lng = 0;
+    // int lng = 0;
 
     fmt++;
 
@@ -119,7 +119,7 @@ static void internal_printf( const char *&fmt, va_list &args )
 
         case 'd': idx = std::itoa(va_arg(args,      int), buf, 10); break;
         case 'u': idx = std::utoa(va_arg(args, uint32_t), buf, 10); break;
-        case 'x': idx = std::itoa(va_arg(args, uint32_t), buf, 16); break;
+        case 'x': idx = std::utoa(va_arg(args, uint32_t), buf, 16); break;
     }
 
     if (idx)
@@ -128,15 +128,15 @@ static void internal_printf( const char *&fmt, va_list &args )
         std::puts(buf);
     }
 
-    else if (lng)
-    {
-        long_printf(fmt, args);
-    }
+    // else if (lng)
+    // {
+    //     long_printf(fmt, args);
+    // }
 
-    else if (idx && lng)
-    {
-        // error
-    }
+    // else if (idx && lng)
+    // {
+    //     // error
+    // }
 
 }
 
@@ -171,5 +171,54 @@ int std::printf( const char *fmt, ... )
 
 
 
+// int std::printf( const char *fmt, ... )
+// {
+//     va_list args;
+//     size_t num_spec = count_fmt_specifiers(fmt);
 
+//     va_start ( args, fmt );
 
+//     char itoabuf[32];
+//     std::memset(itoabuf, '\0', 32);
+
+//     while (*fmt)
+//     {
+//         if (*fmt == '%')
+//         {
+//             fmt += 1;
+
+//             switch (*fmt)
+//             {
+//                 default: break;
+//                 case 'c': std::putc(va_arg(args, int));           break;
+//                 case 's': std::puts(va_arg(args, const char *));  break;
+
+//                 case 'x':
+//                     std::itoa(va_arg(args, int), itoabuf, 16);
+//                     std::puts(itoabuf);
+//                     break;
+
+//                 case 'd':
+//                     std::itoa(va_arg(args, int), itoabuf, 10);
+//                     std::puts(itoabuf);
+//                     break;
+
+//                 case 'u':
+//                     std::utoa(va_arg(args, uint32_t), itoabuf, 10);
+//                     std::puts(itoabuf);
+//                     break;
+//             }
+//         }
+
+//         else
+//         {
+//             std::putc(*fmt);
+//         }
+
+//         fmt += 1;
+//     }
+
+//     va_end( args );
+
+//     return num_spec;
+// }

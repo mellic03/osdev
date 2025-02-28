@@ -25,7 +25,6 @@ public:
         }
     }
 
-
     void write( int idx, uint16_t value )
     {
         m_data[idx] = value;

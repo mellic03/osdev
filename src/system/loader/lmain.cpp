@@ -2,8 +2,6 @@
 #include <kcommon/terminal.hpp>
 #include <kcommon/module.hpp>
 #include <kcommon/multiboot2.hpp>
-#include <kcommon/serial.hpp>
-
 #include <kcommon/stack.hpp>
 
 
@@ -11,6 +9,9 @@
 #include <stdc++/cstring.hpp>
 
 #include "./gdt-32.hpp"
+#include "./drivers/serial.hpp"
+#include "./drivers/ps2.hpp"
+#include "../interpreter/interpreter.hpp"
 
 // extern char __multiboot_start;
 // extern char __multiboot_end;
@@ -37,67 +38,48 @@ const char *MB2TagTypeStr( unsigned long type );
 static int modcount = 0;
 
 
-// void testfn( int depth )
-// {
-//     auto sp = ckStackPointer();
-//     std::printf("[testfn %d] stack pointer: 0x%x\n", depth, sp);
-
-//     if (depth < 4)
-//     {
-//         testfn(depth+1);
-//     }
-
-//     return;
-// }
-
 
 void lmain( uint32_t magic, uint32_t addr ) 
 {
-    uint16_t vga_buffer[25*80];
+    // uint16_t term_buffer[25*80];
 
     ckTerminal term(
         80, 25, (uint16_t*)(0xB8000),
-        80, 25, vga_buffer
+        80, 25, (uint16_t*)(0xB8000)
+        // 80, 25, term_buffer
     );
 
     ckTerminalInit(term);
 
-    std::printf("sizeof(void*) == %d\n", sizeof(void*));
-    term.flush();
 
     if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
     {
         return;
     }
 
-    std::printf("magic == MULTIBOOT2_BOOTLOADER_MAGIC == 0x%x\n", magic);
-    term.flush();
+    std::printf("magic == MULTIBOOT2_BOOTLOADER_MAGIC\n");
 
-    if (ck::serial::init() == 1)
+    if (ck::serial::init() == 0)
     {
         std::printf("Failed to initialize serial\n");
         return;
     }
-
     std::printf("Initialized serial\n");
-    term.flush();
-    ck::serial::writemsg("It is working, my dudes.\n\0\0\0");
+    ck::serial::writemsg("Hello dudes\n\0");
+
 
     ck_gdt_table GDT;
     ck_TSS TSS;
     ckGDT32_create(&GDT, &TSS);
     ckGDT32_load(&GDT, &TSS);
     std::printf("[lmain] gdt initalized\n");
-    term.flush();
 
     auto *tag = (multiboot_tag*)(addr+8);
     while (tag->type != MULTIBOOT_TAG_TYPE_END)
     {
         process_tag(tag);
-        term.flush();
         tag = (multiboot_tag*)((multiboot_uint8_t*)tag + ((tag->size + 7) & ~7));
     }
-
 
     auto *info = ckMemoryInit(addr);
     if (info == (void*)(0xDEADBEEF))
@@ -108,7 +90,6 @@ void lmain( uint32_t magic, uint32_t addr )
     for (int i=0; i<10; i++)
     {
         std::printf("wwerwerwe\n");
-        term.flush();
     }
 
 

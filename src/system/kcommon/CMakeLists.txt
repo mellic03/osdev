@@ -7,9 +7,10 @@ add_library(
     ${CMAKE_SOURCE_DIR}/system/kcommon/memory/memory.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/memory/linear_allocator.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/memory/stack_allocator.cpp
-    ${CMAKE_SOURCE_DIR}/system/kcommon/serial.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/terminal/terminal.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/terminal/ckterminal.cpp
+    ${CMAKE_SOURCE_DIR}/system/drivers/serial.cpp
+    ${CMAKE_SOURCE_DIR}/system/drivers/ps2.cpp
 )
 
 
