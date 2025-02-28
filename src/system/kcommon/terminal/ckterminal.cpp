@@ -28,7 +28,9 @@ ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
 	m_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	m_lastflush = {-1, -1};
 
-	m_VGA = (uint16_t*)(0xB8000);
+	dstW = dstw;
+	dstH = dsth;
+	m_VGA = dst;
 	m_buf.fill(0, bufw*bufh, vga_entry(' ', m_color));
 }
 

@@ -12,6 +12,8 @@ private:
     uint8_t m_color;
 
     ckBuffer  m_buf;
+
+    int dstW, dstH;
     uint16_t *m_VGA;
 
     struct {
