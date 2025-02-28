@@ -59,7 +59,7 @@ void lmain( uint32_t magic, uint32_t addr )
 
     std::printf("magic == MULTIBOOT2_BOOTLOADER_MAGIC\n");
 
-    if (ck::serial::init() == 0)
+    if (ck::serial::init() == 1)
     {
         std::printf("Failed to initialize serial\n");
         return;

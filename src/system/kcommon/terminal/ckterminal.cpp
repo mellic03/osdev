@@ -157,6 +157,8 @@ ckTerminal::putstr( const char *str )
         str++;
     }
 
+    ck::serial::writemsg(str);
+
     this->flush();
 }
 
