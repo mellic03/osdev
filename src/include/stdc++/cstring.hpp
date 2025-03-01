@@ -9,6 +9,7 @@
 namespace std
 {
     size_t strlen( const char *str );
+    int    strcmp( const char*, const char* );
 
     void *memcpy( void *dst, const void *src, size_t N );
 

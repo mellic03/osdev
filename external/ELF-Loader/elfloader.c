@@ -28,40 +28,43 @@ void dump_section_table(elf64_section_header_t *elf_section_headers, size_t sect
     }
 }
 
-int main(int argc, const char **argv) {
-    if (argc != 2) {
-        return 1;
-    }
 
-    const char *object_file_name = argv[1];
-    FILE *object_file = fopen(object_file_name, "rb");
-    if (object_file == NULL) {
-        fprintf(stderr, "Unable to open file\n");
-        return 1;
-    }
 
-    elf64_header_t *elf_header = malloc(sizeof(elf64_header_t));
-    fread(elf_header, sizeof(elf64_header_t), 1, object_file);
+
+int try_ELF( void *addr )
+{
+    // if (argc != 2) {
+    //     return 1;
+    // }
+
+    // const char *object_file_name = argv[1];
+    // FILE *object_file = fopen(object_file_name, "rb");
+    // if (object_file == NULL) {
+    //     printf("Unable to open file\n");
+    //     return 1;
+    // }
+
+    elf64_header_t *elf_header = (elf64_header_t*)(addr);
 
     if (elf_header->magic != 0x464c457f) {
-        fprintf(stderr, "Invalid ELF header!\n");
+        printf("Invalid ELF header!\n");
         return 1;
     }
 
     if (elf_header->file_class != ELF_CLASS_64 ||
         elf_header->encoding != ELF_DATA_LITTLE)
     {
-        fprintf(stderr, "This file is not 64bit little endian\n");
+        printf("This file is not 64bit little endian\n");
         return 1;
     }
 
     if (elf_header->file_type != ELF_FILE_REL) {
-        fprintf(stderr, "This file is not a relocatable object file\n");
+        printf("This file is not a relocatable object file\n");
         return 1;
     }
 
     if (elf_header->section_header_size != sizeof(elf64_section_header_t)) {
-        fprintf(stderr, "Section header size does not match\n");
+        printf("Section header size does not match\n");
         return 1;
     }
 
@@ -82,7 +85,7 @@ int main(int argc, const char **argv) {
             // Allocate memory, currenty RW so we can write to it
             char *mem = mmap(NULL, section->size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
             if (mem == MAP_FAILED) {
-                fprintf(stderr, "Unable to mmap\n");
+                printf("Unable to mmap\n");
                 return 2;
             }
 
@@ -115,7 +118,7 @@ int main(int argc, const char **argv) {
         if (section->type == ELF_SECTION_RELA) {
             size_t entry_count = section->size / section->entry_size;
             if (section->entry_size != sizeof(elf64_rela_entry_t)) {
-                fprintf(stderr, "RELA entry size does not match\n");
+                printf("RELA entry size does not match\n");
                 return 1;
             }
 
@@ -171,12 +174,12 @@ int main(int argc, const char **argv) {
                         if (strcmp("printf", symbol_name) == 0) {
                             *location = (uint64_t)(&printf);
                         } else {
-                            fprintf(stderr, "Unknown symbol: %s\n", symbol_name);
+                            printf("Unknown symbol: %s\n", symbol_name);
                             return 1;
                         }
                     }
                 } else {
-                    fprintf(stderr, "Unknown relocation type: %d\n", entry->type);
+                    printf("Unknown relocation type: %d\n", entry->type);
                     return 1;
                 }
             }
@@ -240,7 +243,7 @@ int main(int argc, const char **argv) {
         printf(">> Running run() function\n\n");
         run_func();
     } else {
-        fprintf(stderr, "Unable to locate run()\n");
+        printf("Unable to locate run()\n");
         return 1;
     }
 

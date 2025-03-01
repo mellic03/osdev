@@ -17,19 +17,6 @@ int ckTerminalInit( ckTerminal &term )
 	return 0;
 }
 
-void std::putc( char c )
-{
- 	instance->putchar(c);
-}
-
-
-void std::puts( const char *s )
-{
- 	instance->putstr(s);
-}
-
-
-
 
 // void terminal_setcolor(uint8_t color) 
 // {

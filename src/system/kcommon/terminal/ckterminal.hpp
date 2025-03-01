@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "ckbuffer.hpp"
 
+
 class ckTerminal
 {
 private:
@@ -18,6 +19,7 @@ private:
         int start, end;
     } m_view, m_lastflush;
 
+    void _overflow();
 
 public:
     ckTerminal( int dstw, int dsth, uint16_t *dst,
@@ -40,7 +42,7 @@ public:
 
     void putchar( char );
     void putstr( const char* );
-    void scrolldown();
+    void scrolldown( int );
 
 };
 

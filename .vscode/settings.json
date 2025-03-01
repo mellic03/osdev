@@ -90,7 +90,9 @@
         "bitset": "cpp",
         "istream": "cpp",
         "print": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "elfloader.h": "c",
+        "mman.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

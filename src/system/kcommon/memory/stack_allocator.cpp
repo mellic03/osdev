@@ -2,6 +2,17 @@
 // #include "../idk_assert.hpp"
 #include "bitmanip.hpp"
 // #include "../idk_log.hpp"
+#include "../../drivers/serial.hpp"
+
+
+ck::stack_allocator::stack_allocator()
+{
+    serial::writestr("[ck::stack_allocator::stack_allocator]\n");
+    // std::printf("[ck::stack_allocator::stack_allocator]\n");
+    this->test_value = 0xDEADBEEF;
+
+}
+
 
 
 ck::stack_allocator::stack_allocator( size_t nbytes, void *baseptr )

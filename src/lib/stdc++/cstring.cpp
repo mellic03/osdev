@@ -16,6 +16,21 @@ std::strlen( const char *str )
 }
 
 
+int
+std::strcmp( const char *lhs, const char *rhs )
+{
+    while (*lhs && *lhs == *rhs)
+    {
+        lhs++;
+        rhs++;
+    }
+
+    return (*lhs > *rhs) - (*rhs > *lhs);
+}
+
+
+
+
 void*
 std::memcpy( void *dst, const void *src, size_t n )
 {

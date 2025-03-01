@@ -2,18 +2,8 @@
 #include <stdc++/cstdlib.hpp>
 #include <stdc++/cstring.hpp>
 
+#include "./cstdio-file.cpp"
 
-
-// void std::putc( char c )
-// {
-// 	// ckTerminal_putc(c);
-// }
-
-
-// void std::puts( const char *s )
-// {
-//     // ckTerminal_puts(s);
-// }
 
 
 void puti( int n )
@@ -29,50 +19,6 @@ void putu( uint32_t n )
     char buf[16];
     std::itoa(n, buf, 10);
     std::puts(buf);
-}
-
-
-// void putf( double f )
-// {
-//     if (f < 0)
-//     {
-//         std::putc('-');
-//         f = -f;
-//     }
-
-//     int whole = (int)f;
-//     int frac = (int)(((f - (double)whole) * 100000.0) + 0.5);
-
-//     if (frac >= 100000)
-//     {
-//         whole += 1;
-//         frac = 0;
-//     }
-
-//     puti(whole);
-//     std::putc('.');
-//     puti(frac);
-// }
-
-
-
-
-
-size_t count_fmt_specifiers( const char *format )
-{
-    size_t num_spec = 0;
-
-    while (*format)
-    {
-        if (*format == '%')
-        {
-            num_spec += 1;
-            format += 1;
-        }
-        format += 1;
-    }
-
-    return num_spec;
 }
 
 
@@ -100,6 +46,50 @@ size_t count_fmt_specifiers( const char *format )
 // }
 
 
+
+// int std::printf( const char *fmt, ... )
+// {
+//     va_list args;
+//     va_start(args, fmt);
+//     int res = std::fprintf(std::stdout, fmt, args);
+//     va_end(args);
+//     return res;
+// }
+
+typedef int (*__ck_putc_method_t)( char  );
+typedef int (*__ck_puts_method_t)( const char* );
+
+
+static struct {
+    __ck_putc_method_t __putc = nullptr;
+    __ck_puts_method_t __puts = nullptr;
+} __ck_syscall;
+
+
+
+void std::cstdio_init( void *__putc_ptr, void *__puts_ptr )
+{
+    __ck_syscall.__putc = (__ck_putc_method_t)(__putc_ptr);
+    __ck_syscall.__puts = (__ck_puts_method_t)(__puts_ptr);
+}
+
+
+
+int std::putc( char c )
+{
+    return __ck_syscall.__putc(c);
+}
+
+
+int std::puts( const char *s )
+{
+    return __ck_syscall.__puts(s);
+}
+
+
+
+
+
 static void internal_printf( const char *&fmt, va_list &args )
 {
     static char buf[32];
@@ -117,7 +107,7 @@ static void internal_printf( const char *&fmt, va_list &args )
         case 'c': std::putc(va_arg(args, int));           break;
         case 's': std::puts(va_arg(args, const char *));  break;
 
-        case 'd': idx = std::itoa(va_arg(args,      int), buf, 10); break;
+        case 'd': idx = std::itoa(va_arg(args,  int32_t), buf, 10); break;
         case 'u': idx = std::utoa(va_arg(args, uint32_t), buf, 10); break;
         case 'x': idx = std::utoa(va_arg(args, uint32_t), buf, 16); break;
     }
@@ -144,8 +134,6 @@ static void internal_printf( const char *&fmt, va_list &args )
 int std::printf( const char *fmt, ... )
 {
     va_list args;
-    size_t num_spec = count_fmt_specifiers(fmt);
-
     va_start ( args, fmt );
 
     while (*fmt)
@@ -165,60 +153,5 @@ int std::printf( const char *fmt, ... )
 
     va_end( args );
 
-    return num_spec;
+    return 1;
 }
-
-
-
-
-// int std::printf( const char *fmt, ... )
-// {
-//     va_list args;
-//     size_t num_spec = count_fmt_specifiers(fmt);
-
-//     va_start ( args, fmt );
-
-//     char itoabuf[32];
-//     std::memset(itoabuf, '\0', 32);
-
-//     while (*fmt)
-//     {
-//         if (*fmt == '%')
-//         {
-//             fmt += 1;
-
-//             switch (*fmt)
-//             {
-//                 default: break;
-//                 case 'c': std::putc(va_arg(args, int));           break;
-//                 case 's': std::puts(va_arg(args, const char *));  break;
-
-//                 case 'x':
-//                     std::itoa(va_arg(args, int), itoabuf, 16);
-//                     std::puts(itoabuf);
-//                     break;
-
-//                 case 'd':
-//                     std::itoa(va_arg(args, int), itoabuf, 10);
-//                     std::puts(itoabuf);
-//                     break;
-
-//                 case 'u':
-//                     std::utoa(va_arg(args, uint32_t), itoabuf, 10);
-//                     std::puts(itoabuf);
-//                     break;
-//             }
-//         }
-
-//         else
-//         {
-//             std::putc(*fmt);
-//         }
-
-//         fmt += 1;
-//     }
-
-//     va_end( args );
-
-//     return num_spec;
-// }

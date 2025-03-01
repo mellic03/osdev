@@ -12,8 +12,10 @@ namespace ck
         } *m_top;
 
     public:
+        int test_value;
+
         using linear_allocator::linear_allocator;
-        stack_allocator() {  };
+        stack_allocator();
         stack_allocator( size_t nbytes, void *baseptr );
 
         virtual void *alloc( size_t nbytes, size_t alignment ) final;

@@ -1,5 +1,6 @@
 #include "ckterminal.hpp"
 #include "terminal.hpp"
+#include <stdc++/cstdio.hpp>
 #include <stdc++/cstring.hpp>
 #include <stdc++/algorithm.hpp>
 
@@ -15,6 +16,27 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 {
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
+
+
+
+static ckTerminal *instance;
+
+
+int ree( char c )
+{
+	instance->putchar(c);
+	instance->flush();
+	return c;
+}
+
+int ree2( const char *str )
+{
+	instance->putstr(str);
+	instance->flush();
+	return 1;
+}
+
+
 
 
 ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
@@ -33,6 +55,11 @@ ckTerminal::ckTerminal( int dstw, int dsth, uint16_t *dst,
 	m_lastflush = {-1, -1};
 
 	m_buf.fill(0, bufw*bufh, vga_entry(' ', m_color));
+
+	instance = this;
+
+	std::cstdio_init((void*)(&ree), (void*)(&ree2));
+
 }
 
 
@@ -45,15 +72,26 @@ void ckTerminal::flush()
 
 	int vga_row = 0;
 	int buf_row = getrow();
+	auto color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
-	std::memset(m_VGA.data(), 0, m_VGA.SZ*sizeof(uint16_t));
+
+	for (int i=0; i<SZ; i++)
+	{
+		m_VGA.data()[i] = vga_entry(' ', color);
+	}
+
+	// std::memset(m_VGA.data(), 0, m_VGA.SZ*sizeof(uint16_t));
 
 	while (vga_row < m_VGA.H && buf_row < m_buf.H)
 	{
-		uint16_t *dst = m_VGA.data() + vga_row*m_VGA.W;
-		uint16_t *src = m_buf.data() + buf_row*m_buf.W;
+		// uint16_t *dst = m_VGA.data() + vga_row*m_VGA.W;
+		// uint16_t *src = m_buf.data() + buf_row*m_buf.W;
 
-		std::memcpy(dst+vga_row, src+buf_row, W*sizeof(uint16_t));
+		for (int c=0; c<W; c++)
+		{
+			m_VGA.data()[vga_row*m_VGA.W + c] = m_buf.data()[buf_row*m_buf.W + c];
+		}
+		// std::memcpy(dst+vga_row, src+buf_row, W*sizeof(uint16_t));
 
 		vga_row += 1;
 		buf_row += 1;
@@ -67,15 +105,14 @@ void ckTerminal::flush()
 void
 ckTerminal::setcursor( int idx )
 {
-    CSR = std::clamp(idx, 0, SZ);
+    CSR = std::clamp(idx, 0, SZ-1);
 
-    // if (idx >= SZ-1)
-    // {
-    //     int row = m_buf.W - 1;
-    //     int col = 0;
+	// if (idx/m_buf.W >= m_buf.H)
+	// {
+	// 	CSR = 0;
+	// 	_overflow();
+	// }
 
-    //     CSR = row*m_buf.W + col;
-    // }
 }
 
 
@@ -129,13 +166,26 @@ ckTerminal::newline()
 void
 ckTerminal::tab()
 {
-	this->movecursor(4);
+	this->movecursor(1);
 }
 
 
 void
 ckTerminal::putchar( char c )
 {
+	if (c == '\t')
+	{
+		ck::serial::outb(ck::serial::COM1, ' ');
+		ck::serial::outb(ck::serial::COM1, ' ');
+	}
+
+	else
+	{
+		ck::serial::outb(ck::serial::COM1, c);
+	}
+
+
+
 	switch (c)
 	{
 		default: 					break;
@@ -156,16 +206,34 @@ ckTerminal::putstr( const char *str )
 		this->putchar(*str);
         str++;
     }
+}
 
-    ck::serial::writemsg(str);
 
-    this->flush();
+
+
+void
+ckTerminal::_overflow()
+{
+	// for (int c=0; c<m_buf.W; c++)
+	// {
+	// 	m_buf[0][c] = vga_entry(' ', m_color);
+	// 	m_buf[1][c] = vga_entry(' ', m_color);
+	// 	m_buf[2][c] = vga_entry(' ', m_color);
+	// }
+
+	// ck::serial::writestr("[ckTerminal::_overflow]\n");
 }
 
 
 void
-ckTerminal::scrolldown()
+ckTerminal::scrolldown( int n )
 {
+
+	if (n)
+	{
+		
+	}
+
     // int row = getrow();
 
 	// for (int r=0; r<row; r++)

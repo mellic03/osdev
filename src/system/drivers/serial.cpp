@@ -3,6 +3,15 @@
 int
 ck::serial::init()
 {
+    static int first = true;
+
+    if (first == false)
+    {
+        return 1;
+    }
+
+    first = false;
+
     serial::outb(COM1+1, 0x00);    // Disable all interrupts
     serial::outb(COM1+3, 0x80);    // Enable DLAB (set baud rate divisor)
     serial::outb(COM1+0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
@@ -16,20 +25,24 @@ ck::serial::init()
     // Check if serial is faulty (i.e: not same byte as sent)
     if (serial::inb(COM1 + 0) != 0xAE)
     {
-        return 1;
+        return 0;
     }
  
     // If serial is not faulty set it in normal operation mode
     // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
     serial::outb(COM1 + 4, 0x0F);
 
-    return 0;
+    serial::writestr("[ck::serial::init]\n");
+
+    return 1;
 }
 
 
 int
-ck::serial::writemsg( const char *str )
+ck::serial::writestr( const char *str )
 {
+    init();
+
     while (*str)
     {
         serial::outb(COM1, *str);
