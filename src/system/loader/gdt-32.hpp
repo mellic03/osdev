@@ -87,8 +87,9 @@ union ck_gdt_table
 
 
 // void init_gdt_desc(uint32_t base, uint32_t limite, uint8_t acces, uint8_t other, gdtdesc *desc);
-void ckGDT32_create( ck_gdt_table*, ck_TSS* );
-void ckGDT32_load( ck_gdt_table*, ck_TSS* );
+// void ckGDT32_create( ck_gdt_table*, ck_TSS* );
+// void ckGDT32_load( ck_gdt_table*, ck_TSS* );
+void init_GDT();
 
 
 // extern ck_TSS default_tss;

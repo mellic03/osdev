@@ -1,6 +1,7 @@
 #include "./icxxabi.h"
 
 #ifdef __cplusplus
+#include <drivers/serial.hpp>
 extern "C" {
 #endif
 
@@ -12,6 +13,10 @@ uarch_t __atexit_func_count = 0;
 
 int __cxa_atexit(void (*f)(void *), void *objptr, void *dso)
 {
+	#ifdef __cplusplus
+		ck::serial::writeln("[__cxa_atexit]\n");
+	#endif
+
 	if (__atexit_func_count >= ATEXIT_MAX_FUNCS) {return -1;};
 	__atexit_funcs[__atexit_func_count].destructor_func = f;
 	__atexit_funcs[__atexit_func_count].obj_ptr = objptr;
@@ -22,6 +27,11 @@ int __cxa_atexit(void (*f)(void *), void *objptr, void *dso)
 
 void __cxa_finalize(void *f)
 {
+	#ifdef __cplusplus
+		ck::serial::writeln("[__cxa_finalize]\n");
+	#endif
+
+
 	uarch_t i = __atexit_func_count;
 	if (!f)
 	{

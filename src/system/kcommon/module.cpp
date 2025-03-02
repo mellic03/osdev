@@ -1,7 +1,7 @@
 #include "module.hpp"
 #include  "multiboot2.hpp"
 
-#include <stdc++/cstdio.hpp>
+#include <cstdio.hpp>
 
 // static void
 // process_tag( multiboot_tag_module *tag )

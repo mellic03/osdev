@@ -92,11 +92,33 @@
         "print": "cpp",
         "__config": "cpp",
         "elfloader.h": "c",
-        "mman.h": "c"
+        "mman.h": "c",
+        "limine.h": "c",
+        "ck_stdio.h": "c",
+        "stdlib.h": "c",
+        "ck_systemio.h": "c",
+        "file.h": "c",
+        "serial.hpp": "c",
+        "interrupt.h": "c",
+        "serial.h": "c",
+        "ck_file.h": "c",
+        "ck_memory.h": "c",
+        "idt.h": "c",
+        "pit.h": "c",
+        "pic.h": "c",
+        "cpuid.h": "c",
+        "coroutine": "cpp",
+        "future": "cpp",
+        "idt.hpp": "c",
+        "kmain.hpp": "c",
+        "unistd.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/src/include/",
-        "${workspaceFolder}/src/system/"
+        "${workspaceFolder}/src/include/libc/",
+        "${workspaceFolder}/src/include/libc++/",
+        "${workspaceFolder}/src/system/",
+        "${workspaceFolder}/src/"
     ]
 }

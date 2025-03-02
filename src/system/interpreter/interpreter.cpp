@@ -1,7 +1,7 @@
 #include "./interpreter.hpp"
-#include <stdc++/cctype.hpp>
-#include <stdc++/cstdio.hpp>
-#include <stdc++/cstring.hpp>
+#include <cctype.hpp>
+#include <cstdio.hpp>
+#include <cstring.hpp>
 
 
 enum ck_dtype_t: uint32_t

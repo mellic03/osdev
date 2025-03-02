@@ -2,8 +2,8 @@
 #include <kcommon/multiboot2.hpp>
 #include "../drivers/serial.hpp"
 
-#include <stdc++/cstdio.hpp>
-#include <stdc++/cstring.hpp>
+#include <cstdio.hpp>
+#include <cstring.hpp>
 
 
 static ckInfo __ck_info;
@@ -45,7 +45,7 @@ ckInfoLoad( uint32_t *addr )
     // __ck_info.modules.kernel_x64 = {nullptr, nullptr};
     __ck_info.font = 0; // = {nullptr, nullptr};
 
-	// ck::serial::writestr("[ckInfoLoad]\n");
+	// ck::serial::writeln("[ckInfoLoad]\n");
 
     auto *tag = (multiboot_tag*)(addr);
 
@@ -62,7 +62,7 @@ ckInfoLoad( uint32_t *addr )
 
 void __ckProcessTag( multiboot_tag *tag )
 {
-	// ck::serial::writestr("[ckProcessTag]\n");
+	// ck::serial::writeln("[ckProcessTag]\n");
     std::printf("Tag type: %s\n", MB2TagTypeStr(tag->type));
 
     switch (tag->type)

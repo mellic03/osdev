@@ -5,8 +5,8 @@
 #include <kcommon/stack.hpp>
 
 
-#include <stdc++/cstdio.hpp>
-#include <stdc++/cstring.hpp>
+#include <cstdio.hpp>
+#include <cstring.hpp>
 
 #include "./gdt-32.hpp"
 #include "./drivers/serial.hpp"
@@ -98,10 +98,10 @@ void lmain( uint32_t magic, uint32_t *addr )
 
     // uint8_t lo, hi;
 
-    // ck::serial::outb(0x70, 0x30);
-    // lo = ck::serial::inb(0x71);
-    // ck::serial::outb(0x70, 0x31);
-    // hi = ck::serial::inb(0x71);
+    // ck::IO::outb(0x70, 0x30);
+    // lo = ck::IO::inb(0x71);
+    // ck::IO::outb(0x70, 0x31);
+    // hi = ck::IO::inb(0x71);
 
     // uint32_t CMOS = (uint32_t(hi) << 8) + uint32_t(lo);
 

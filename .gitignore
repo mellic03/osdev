@@ -1,1 +1,4 @@
 build
+external/limine
+iso_root
+output

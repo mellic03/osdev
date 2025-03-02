@@ -3,10 +3,6 @@ add_library(
     KCommon-${KS_ARCH} OBJECT
     ${CMAKE_SOURCE_DIR}/system/kcommon/ctor/icxxabi.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/file/bmp.cpp
-    ${CMAKE_SOURCE_DIR}/system/kcommon/module.cpp
-    ${CMAKE_SOURCE_DIR}/system/kcommon/memory/memory.cpp
-    ${CMAKE_SOURCE_DIR}/system/kcommon/memory/linear_allocator.cpp
-    ${CMAKE_SOURCE_DIR}/system/kcommon/memory/stack_allocator.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/terminal/terminal.cpp
     ${CMAKE_SOURCE_DIR}/system/kcommon/terminal/ckterminal.cpp
     ${CMAKE_SOURCE_DIR}/system/drivers/serial.cpp
@@ -16,5 +12,5 @@ add_library(
 
 target_link_libraries(
     KCommon-${KS_ARCH}
-    stdc++-${KS_ARCH}
+    ck_libc
 )

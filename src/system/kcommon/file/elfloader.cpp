@@ -3,9 +3,9 @@
 // #include "elfloader.h"
 
 
-// #include <stdc++/cstdio.hpp>
-// #include <stdc++/cstdlib.hpp>
-// #include <stdc++/cstring.hpp>
+// #include <cstdio.hpp>
+// #include <cstdlib.hpp>
+// #include <cstring.hpp>
 
 
 // void dump_section_table(
