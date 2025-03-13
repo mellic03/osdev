@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <ck/ck_file.h>
-typedef ckFILE FILE;
+#include <idk/idk_file.h>
+typedef idk_file_t FILE;
 
 
 #ifdef __cplusplus
@@ -25,27 +25,27 @@ extern FILE *stdin;     // Standard input stream.
 extern FILE *stdout;    // Standard output stream.
 
 
-int __libc_stdio_init( void* );
+int __libc_stdio_init( FILE*, FILE*, FILE* );
 
 
-int fseek( FILE*, long offset, int origin );
+int     fflush( FILE* );
+int     fputc( char, FILE* );
+int     fputs( const char*, FILE* );
+int     fprintf( FILE*, const char *fmt, ... );
+int     fseek( FILE*, long offset, int origin );
+size_t  fwrite( const void *buf, size_t size, size_t count, FILE* );
 
-int fputc( char, FILE* );
-int fputs( const char*, FILE* );
-int fprintf( FILE*, const char *fmt, ... );
-int sprintf( char *buf, const char *fmt, ... );
+int     getc ( FILE* );
 
+int     putc( char );
+int     puts( const char* );
+int     printf( const char *fmt, ... );
 
-size_t fwrite( const void *buf, size_t size, size_t count, FILE* );
+int     sprintf( char *buf, const char *fmt, ... );
 
-
-int putc( char );
-int puts( const char* );
-int printf( const char *fmt, ... );
-
-int getc ( FILE* );
-
-
+int     vprintf( const char *fmt, va_list args );
+int     vfprintf( FILE*, const char *fmt, va_list args );
+int     vsprintf( char *buf, const char *fmt, va_list args );
 
 #ifdef __cplusplus
 }

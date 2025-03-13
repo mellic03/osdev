@@ -9,6 +9,7 @@ extern "C" {
 
 size_t   strlen( const char* );
 int      strcmp( const char*, const char* );
+char    *strcpy( char*, const char* );
 void    *memcpy( void *dst, const void *src, size_t n );
 void    *memset( void *s, uint8_t c, size_t n );
 void    *memmove( void *dst, const void *src, size_t n );

@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 
-int serial_writeln( const char* );
+int serial_printf( const char *fmt, ... );
 
 
 #ifdef __cplusplus

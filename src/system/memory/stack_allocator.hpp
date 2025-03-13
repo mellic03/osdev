@@ -1,9 +1,9 @@
 #pragma once
 #include "linear_allocator.hpp"
 
-namespace ck
+namespace idk
 {
-    class stack_allocator: public ck::linear_allocator
+    class stack_allocator: public linear_allocator
     {
     private:
         struct node_type {

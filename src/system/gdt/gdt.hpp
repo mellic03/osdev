@@ -3,14 +3,16 @@
 #include <stdint.h>
 
 
-struct GDTR
+static constexpr uint16_t GDT_OFFSET_KERNEL_CODE = 0x08;
+
+struct idk_GDTR
 {
     uint16_t limit;
     uint64_t base;
 } __attribute__((packed));
 
 
-struct ck_TSS
+struct idk_TSS
 {
 	uint16_t previous_task, __previous_task_unused;
 	uint32_t esp0;
@@ -32,6 +34,9 @@ struct ck_TSS
 } __attribute__ ((packed));
 
 
+namespace idk::sys
+{
+	idk_GDTR loadGDT();
+}
 
 
-GDTR init_GDT();

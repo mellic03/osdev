@@ -2,20 +2,20 @@
 // #include "../idk_assert.hpp"
 #include "bitmanip.hpp"
 // #include "../idk_log.hpp"
-#include "../../drivers/serial.hpp"
+// #include "../drivers/serial.hpp"
 
 
-ck::stack_allocator::stack_allocator()
+idk::stack_allocator::stack_allocator()
 {
-    serial::writeln("[ck::stack_allocator::stack_allocator]\n");
-    // std::printf("[ck::stack_allocator::stack_allocator]\n");
+    // serial::writeln("[idk::stack_allocator::stack_allocator]\n");
+    // std::printf("[idk::stack_allocator::stack_allocator]\n");
     this->test_value = 0xDEADBEEF;
 
 }
 
 
 
-ck::stack_allocator::stack_allocator( size_t nbytes, void *baseptr )
+idk::stack_allocator::stack_allocator( size_t nbytes, void *baseptr )
 :   linear_allocator(nbytes, baseptr)
 {
     // m_capacity = nbytes;
@@ -26,10 +26,10 @@ ck::stack_allocator::stack_allocator( size_t nbytes, void *baseptr )
 
 
 void*
-ck::stack_allocator::alloc( size_t nbytes, size_t alignment )
+idk::stack_allocator::alloc( size_t nbytes, size_t alignment )
 {
     uint8_t *tailptr = m_tail;
-    uint8_t *aligned = ck::ptr_align(m_tail+sizeof(node_type), alignment);
+    uint8_t *aligned = idk::ptr_align(m_tail+sizeof(node_type), alignment);
     m_tail = aligned + nbytes;
 
     // LOG_INFO(
@@ -68,7 +68,7 @@ ck::stack_allocator::alloc( size_t nbytes, size_t alignment )
 
 
 void
-ck::stack_allocator::free( void *ptr )
+idk::stack_allocator::free( void *ptr )
 {
     if (ptr != m_top->usrptr)
     {

@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include "./serial.h"
+#include "../memory/base_allocator.hpp"
+
 
 
 namespace ck::serial
@@ -15,7 +18,7 @@ namespace ck::serial
     static constexpr uint16_t COM7 = 0x5E8;
     static constexpr uint16_t COM8 = 0x4E8;
 
-    int init();
+    int init( idk::base_allocator* );
     int writeln( const char* );
 
 }

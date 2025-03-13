@@ -11,7 +11,6 @@ PHDRS
     text PT_LOAD;
     rodata PT_LOAD;
     data PT_LOAD;
-    __ck_reserved PT_LOAD;
 }
 
 SECTIONS
@@ -49,15 +48,6 @@ SECTIONS
     .data : {
         *(.data .data.*)
     } :data
-
-
-    . = ALIGN(CONSTANT(MAXPAGESIZE));
-    __ck_reserved_start = .;
-    __ck_reserved_start_phys = . - kernOffset;
-	.__ck_reserved : {
-		*(.__ck_reserved)
-		__ck_reserved_end = .;
-	} :data
 
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */

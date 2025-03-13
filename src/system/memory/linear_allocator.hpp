@@ -2,9 +2,9 @@
 #include "base_allocator.hpp"
 
 
-namespace ck
+namespace idk
 {
-    class linear_allocator: public ck::base_allocator
+    class linear_allocator: public idk::base_allocator
     {
     protected:
         size_t   m_capacity;
@@ -21,7 +21,6 @@ namespace ck
         virtual void *alloc( size_t nbytes, size_t alignment ) override;
         virtual void  free( void* ) override;
         virtual void  clear() override;
-
     };
 }
 

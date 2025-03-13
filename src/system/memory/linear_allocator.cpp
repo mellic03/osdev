@@ -1,16 +1,15 @@
 #include "linear_allocator.hpp"
-// #include "../idk_assert.hpp"
 #include "bitmanip.hpp"
 
 
-ck::linear_allocator::linear_allocator( size_t nbytes, base_allocator *A )
+idk::linear_allocator::linear_allocator( size_t nbytes, base_allocator *A )
 :   linear_allocator(nbytes, A->alloc(nbytes, 8))
 {
 
 }
 
 
-ck::linear_allocator::linear_allocator( size_t nbytes, void *baseptr )
+idk::linear_allocator::linear_allocator( size_t nbytes, void *baseptr )
 {
     // IDK_ASSERT("Capacity must be > 0", nbytes > 0);
 
@@ -24,20 +23,20 @@ ck::linear_allocator::linear_allocator( size_t nbytes, void *baseptr )
 }
 
 
-ck::linear_allocator::~linear_allocator()
+idk::linear_allocator::~linear_allocator()
 {
     // delete[] m_base;
 }
 
 
 void*
-ck::linear_allocator::alloc( size_t nbytes, size_t alignment )
+idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
 {
     // uint8_t *top = reinterpret_cast<uint8_t*>(m_top.fetch_add(nbytes));
     //          top = align_ptr(top, alignment);
     // return static_cast<void*>(top);
 
-    m_tail = ck::ptr_align(m_tail, alignment) + nbytes;
+    m_tail = idk::ptr_align(m_tail, alignment) + nbytes;
 
     // LOG_ASSERT(
     //     m_tail < m_end,
@@ -51,7 +50,7 @@ ck::linear_allocator::alloc( size_t nbytes, size_t alignment )
 
 
 void
-ck::linear_allocator::free( void *ptr )
+idk::linear_allocator::free( void *ptr )
 {
     uint64_t addr = (uint64_t)(ptr);
     addr++;
@@ -59,7 +58,7 @@ ck::linear_allocator::free( void *ptr )
 
 
 void
-ck::linear_allocator::clear()
+idk::linear_allocator::clear()
 {
     m_tail = m_base;
 }

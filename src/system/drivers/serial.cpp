@@ -1,21 +1,24 @@
 #include "./serial.hpp"
-#include "./serial.h"
 #include "../io.hpp"
-#include <cstdlib.hpp>
 
+#include <stdio.h>
+#include <string.h>
+
+static char *__serial_buf;
+static size_t __serial_buf_nbytes = 256;
 
 
 int
-ck::serial::init()
+ck::serial::init( idk::base_allocator *mem )
 {
     static int first = true;
-
     if (first == false)
     {
         return 1;
     }
-
     first = false;
+
+    __serial_buf = mem->alloca<char>(__serial_buf_nbytes);
 
     IO::outb(COM1+1, 0x00);    // Disable all interrupts
     IO::outb(COM1+3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -57,8 +60,17 @@ ck::serial::writeln( const char *str )
 
 
 
-int serial_writeln( const char *str )
+int serial_printf( const char *fmt, ... )
 {
-    return ck::serial::writeln(str);
-}
+    va_list args;
+    va_start (args, fmt);
+    int n = vsprintf(__serial_buf, fmt, args);
+    va_end(args);
 
+    for (int i=0; i<n; i++)
+    {
+        ck::IO::outb(ck::serial::COM1, __serial_buf[i]);
+    }
+    
+    return n;
+}

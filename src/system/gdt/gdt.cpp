@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
 #include "./gdt.hpp"
 
 // Each define here is for a specific flag in the descriptor.
@@ -46,21 +44,21 @@
                      SEG_PRIV(3)     | SEG_DATA_RDWR
 
 struct tss_entry {
-uint32_t reserved1;
-uint64_t rsp0; // Stack pointer for ring 0
-uint64_t rsp1; // Stack pointer for ring 1
-uint64_t rsp2; // Stack pointer for ring 2
-uint64_t reserved2;
-uint64_t ist1; // Interrupt Stack Table 1
-uint64_t ist2; // Interrupt Stack Table 2
-uint64_t ist3; // Interrupt Stack Table 3
-uint64_t ist4; // Interrupt Stack Table 4
-uint64_t ist5; // Interrupt Stack Table 5
-uint64_t ist6; // Interrupt Stack Table 6
-uint64_t ist7; // Interrupt Stack Table 7
-uint64_t reserved3;
-uint16_t reserved4;
-uint16_t io_map_base; // Offset for I/O permission bitmap
+	uint32_t reserved1;
+	uint64_t rsp0; // Stack pointer for ring 0
+	uint64_t rsp1; // Stack pointer for ring 1
+	uint64_t rsp2; // Stack pointer for ring 2
+	uint64_t reserved2;
+	uint64_t ist1; // Interrupt Stack Table 1
+	uint64_t ist2; // Interrupt Stack Table 2
+	uint64_t ist3; // Interrupt Stack Table 3
+	uint64_t ist4; // Interrupt Stack Table 4
+	uint64_t ist5; // Interrupt Stack Table 5
+	uint64_t ist6; // Interrupt Stack Table 6
+	uint64_t ist7; // Interrupt Stack Table 7
+	uint64_t reserved3;
+	uint16_t reserved4;
+	uint16_t io_map_base; // Offset for I/O permission bitmap
 };
 
 
@@ -87,7 +85,7 @@ struct gdt_tss
 
 
 
-uint64_t create_descriptor(uint32_t base, uint32_t limit, uint16_t flag)
+uint64_t create_descriptor( uint32_t base, uint32_t limit, uint16_t flag )
 {
 	// sizeof(tss_entry);
 	// sizeof(gdt_tss)
@@ -110,84 +108,63 @@ uint64_t create_descriptor(uint32_t base, uint32_t limit, uint16_t flag)
 }
  
 
-extern "C" void setGdt(  uint16_t limit, uint64_t *base );
+// extern void setGdt(  uint16_t limit, uint64_t *base );
 static uint64_t gdt_entries[16];
 
 
-GDTR init_GDT()
+idk_GDTR idk::sys::loadGDT()
 {
-    // uint64_t GDT[4] = {
-	// 	create_descriptor(0, 0, 0),
-	// 	create_descriptor(0, 0x000FFFFF, (GDT_CODE_PL0)),
-	// 	create_descriptor(0, 0x000FFFFF, (GDT_DATA_PL0)),
-	// 	// 0x
-    // };
-	
 	// uint64_t gdt_entries[5];
-	uint16_t num_gdt_entries = 3;
+	uint16_t num_gdt_entries = 5;
 
 	//null descriptor, required to be here.
 	// -------------------------------------------------------
 	gdt_entries[0] = 0;
 	// -------------------------------------------------------
 
+	// gdt_entries[1] = create_descriptor(0, 0x000FFFFF, (GDT_CODE_PL0));
+    // gdt_entries[2] = create_descriptor(0, 0x000FFFFF, (GDT_DATA_PL0));
+    // gdt_entries[3] = create_descriptor(0, 0x000FFFFF, (GDT_CODE_PL3));
+    // gdt_entries[4] = create_descriptor(0, 0x000FFFFF, (GDT_DATA_PL3));
+ 
 	// -------------------------------------------------------
 	uint64_t kernel_code = 0;
-	kernel_code |= 0b1011 << 8; //type of selector
-	kernel_code |= 1 << 12; //not a system descriptor
-	kernel_code |= 0 << 13; //DPL field = 0
-	kernel_code |= 1 << 15; //present
-	kernel_code |= 1 << 21; //long-mode segment
+	kernel_code |= 0b1011 << 8; // type of selector
+	kernel_code |= 1 << 12; // not a system descriptor
+	kernel_code |= 0 << 13; // DPL field = 0
+	kernel_code |= 1 << 15; // present
+	kernel_code |= 1 << 21; // long-mode segment
 	gdt_entries[1] = kernel_code << 32;
 	// -------------------------------------------------------
 
 	// -------------------------------------------------------
 	uint64_t kernel_data = 0;
 	kernel_data |= 0b0011 << 8; //type of selector
-	kernel_data |= 1 << 12; //not a system descriptor
-	kernel_data |= 0 << 13; //DPL field = 0
-	kernel_data |= 1 << 15; //present
-	kernel_data |= 1 << 21; //long-mode segment
+	kernel_data |= 1 << 12; // not a system descriptor
+	kernel_data |= 0 << 13; // DPL field = 0
+	kernel_data |= 1 << 15; // present
+	kernel_data |= 1 << 21; // long-mode segment
 	gdt_entries[2] = kernel_data << 32;
 	// -------------------------------------------------------
 
-
-	// // -------------------------------------------------------
-	// uint64_t user_code = kernel_code | (3 << 13);
-	// gdt_entries[3] = user_code;
-	// // -------------------------------------------------------
-
-
-	// // -------------------------------------------------------
-	// uint64_t user_data = kernel_data | (3 << 13);
-	// gdt_entries[4] = user_data;
-	// // -------------------------------------------------------
-
-
+	// -------------------------------------------------------
+	uint64_t user_code = kernel_code | (3 << 13);
+	gdt_entries[3] = user_code;
 	// -------------------------------------------------------
 
-	GDTR example_gdtr = {
-		.limit = num_gdt_entries * sizeof(uint64_t) - 1,
+	// -------------------------------------------------------
+	uint64_t user_data = kernel_data | (3 << 13);
+	gdt_entries[4] = user_data;
+	// // -------------------------------------------------------
+
+
+	idk_GDTR example_gdtr = {
+		.limit = uint16_t(num_gdt_entries * sizeof(uint64_t) - 1),
 		.base  = (uint64_t)gdt_entries
 	};
 
-	asm("cli");
-	
-	asm("lgdt %0" : : "m"(example_gdtr));
-
-    asm volatile("\
-        mov $0x10, %ax \n\
-        mov %ax, %ds \n\
-        mov %ax, %es \n\
-        mov %ax, %fs \n\
-        mov %ax, %gs \n\
-        mov %ax, %ss \n\
-        \n\
-        pop %rdi \n\
-        push $0x8 \n\
-        push %rdi \n\
-        lretq \n\
-    ");
+	__asm__ ("cli");
+	__asm__ ("lgdt %0" : : "m"(example_gdtr));
 
 	return example_gdtr;
 }

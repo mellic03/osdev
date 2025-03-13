@@ -4,9 +4,7 @@
 #include <stdint.h>
 
 
-namespace ckInterpreter
+namespace asm_interpreter
 {
     int Exec( const char *src );
 }
-
-

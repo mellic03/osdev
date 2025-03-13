@@ -28,6 +28,16 @@ int strcmp( const char *lhs, const char *rhs )
 
 
 
+char *strcpy( char *dst, const char *src )
+{
+    while (*src)
+    {
+        *(dst++) = *(src++);
+    }
+
+    return dst;
+}
+
 
 void *memcpy( void *dst, const void *src, size_t n )
 {

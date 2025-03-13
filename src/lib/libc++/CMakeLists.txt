@@ -1,6 +1,6 @@
 
 add_library(
-    ck_libc++ STATIC
+    ck_libc++ OBJECT
     ${CMAKE_CURRENT_SOURCE_DIR}/cstdio-file.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cstdio.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cstdlib.cpp

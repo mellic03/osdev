@@ -9,11 +9,11 @@ extern "C" {
 #endif
 
 
-int itoa( int value, char *sp, int radix );
-int ltoa( int64_t value, char *sp, int radix );
+char *itoa( int value, char *buf, int radix );
+char *ltoa( int64_t value, char *buf, int radix );
 
-int utoa( uint32_t value, char *sp, int radix );
-int ultoa( uint64_t value, char *sp, int radix );
+char *utoa( uint32_t value, char *buf, int radix );
+char *ultoa( uint64_t value, char *buf, int radix );
 
 
 

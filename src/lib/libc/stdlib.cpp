@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 
-int ltoa( int64_t value, char *sp, int radix )
+char *ltoa( int64_t value, char *buf, int radix )
 {
     char tmp[32];
     char *tp = tmp;
@@ -25,19 +25,19 @@ int ltoa( int64_t value, char *sp, int radix )
 
     if (sign) 
     {
-        *sp++ = '-';
+        *buf++ = '-';
         len++;
     }
 
     while (tp > tmp)
-        *sp++ = *--tp;
+        *buf++ = *--tp;
 
-    return len;
+    return buf;
 }
 
 
 
-int ultoa( uint64_t value, char *sp, int radix )
+char *ultoa( uint64_t value, char *buf, int radix )
 {
     char tmp[32];
     char *tp = tmp;
@@ -57,14 +57,14 @@ int ultoa( uint64_t value, char *sp, int radix )
     int len = tp - tmp;
 
     while (tp > tmp)
-        *sp++ = *--tp;
+        *buf++ = *--tp;
 
-    return len;
+    return buf;
 }
 
 
 
-int itoa( int value, char *sp, int radix )
+char *itoa( int value, char *buf, int radix )
 {
     char tmp[32];
     char *tp = tmp;
@@ -88,20 +88,20 @@ int itoa( int value, char *sp, int radix )
 
     if (sign) 
     {
-        *sp++ = '-';
+        *buf++ = '-';
         len++;
     }
 
     while (tp > tmp)
-        *sp++ = *--tp;
+        *buf++ = *--tp;
 
-    return len;
+    return buf;
 }
 
 
-int utoa( uint32_t value, char *sp, int radix )
+char *utoa( uint32_t value, char *buf, int radix )
 {
-    return ultoa((uint64_t)value, sp, radix);
+    return ultoa((uint64_t)value, buf, radix);
 }
 
 
