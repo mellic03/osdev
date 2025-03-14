@@ -6,7 +6,8 @@
 #include <algorithm.hpp>
 
 
-idk::Terminal::Terminal( int width, int height, char *buf )
+idk::Terminal::Terminal( int id, int width, int height, char *buf )
+:	ID(id)
 {
 	W   = width;
 	H   = height;

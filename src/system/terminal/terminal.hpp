@@ -23,7 +23,10 @@ private:
 
 
 public:
-    Terminal( int width, int height, char *buf );
+    static constexpr int MAX_BUFSIZE = 1024;
+    const int ID;
+
+    Terminal( int id, int width, int height, char *buf );
 
     void setcursor( int );
     void setcursor( int, int );

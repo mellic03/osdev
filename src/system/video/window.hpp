@@ -14,6 +14,8 @@ namespace idk
 
 struct idk::VWindow
 {
+    const int ID;
+
     ivec2 corner;
     ivec2 extents;
     uvec4 bg;
@@ -21,13 +23,12 @@ struct idk::VWindow
     int &x, &y;
     int &w, &h;
 
-    idk::Terminal     *term;
-    video::FontBuffer *font;
+    idk::Terminal   *term;
+    idk::FontBuffer *font;
 
-    idk::inplace_array<VWindow*> children;
+    VWindow *children[4] = {nullptr, nullptr, nullptr, nullptr};
 
-    VWindow();
-    VWindow( const ivec2 &cnr, const ivec2 &ext, const uvec4 &color );
+    VWindow( int id, const ivec2 &cnr, const ivec2 &ext, const uvec4 &color );
 };
 
 

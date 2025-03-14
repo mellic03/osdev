@@ -14,15 +14,12 @@
 #include <stdio.h>
 
 
-static uint8_t __sys_buffer[512];
-// static idk::inplace_vector<idk::Terminal> __sys_terminals;
 
-
-idk::System::System()
-:   value(0xDEADBEEF)
-{
-    // __sys_terminals = idk::inplace_vector<Terminal>(16, (Terminal*)(&__sys_buffer[0]));
-}
+// idk::System::System()
+// :   value(0xDEADBEEF)
+// {
+//     // __sys_terminals = idk::inplace_vector<Terminal>(16, (Terminal*)(&__sys_buffer[0]));
+// }
 
 
 idk::System&
@@ -128,26 +125,32 @@ void __except_out_of_memory()
 }
 
 
-// __attribute__((noreturn))
 void __keyboard_handler()
 {
-    auto &cpu0 = idk::getSystem().cpu0;
+    using namespace idk;
+
+    auto &cpu0 = getSystem().cpu0;
     cpu0.fxsave();
 
-    using namespace idk;
     uint8_t scancode = IO::inb(0x60);
     serial_printf("[__keyboard_handler] scancode=%u\n", scancode);
-    IO::outb(PIC::PIC1_CMD, 0x20);
-    // INTERRUPT_RET;
 
     cpu0.fxrstor();
-
 }
 
 
 void __except_rect()
 {
+    using namespace idk;
+    auto &cpu0 = getSystem().cpu0;
+    cpu0.fxsave();
+
     serial_printf("[__except_rect]\n");
+
+    cpu0.fxrstor();
+
+    // IO::outb(PIC::PIC1_CMD, 0x20);
+    // asm volatile ("iretq");
 }
 
 
@@ -167,7 +170,7 @@ idk::System::init( const idk_BootInfo &info )
         return 0;
     }
 
-    if (!idk::video::init(m_mainblock, info.fb_list[0]))
+    if (!this->video.init(m_mainblock, info.fb_list[0]))
     {
         return 0;
     }
@@ -177,6 +180,7 @@ idk::System::init( const idk_BootInfo &info )
         return 0;
     }
 
+    m_terminals.init(32, m_mainblock.alloc<Terminal*>(32));
 
     sys::loadGDT();
     serial_printf("GDT loaded\n");
@@ -204,6 +208,14 @@ idk::System::init( const idk_BootInfo &info )
 
 
 
+idk::Terminal*
+idk::System::createTerminal( int w, int h )
+{
+    static int id = 0;
+    auto &buddy = memory::getBuddy();
+    m_terminals.push_back(new Terminal(id++, w, h, buddy.alloc<char>(w*h)));
+    return m_terminals.back();
+}
 
 
 

@@ -87,8 +87,6 @@ struct gdt_tss
 
 uint64_t create_descriptor( uint32_t base, uint32_t limit, uint16_t flag )
 {
-	// sizeof(tss_entry);
-	// sizeof(gdt_tss)
     uint64_t descriptor;
  
     // Create the high 32 bit segment
@@ -115,7 +113,7 @@ static uint64_t gdt_entries[16];
 idk_GDTR idk::sys::loadGDT()
 {
 	// uint64_t gdt_entries[5];
-	uint16_t num_gdt_entries = 5;
+	uint16_t num_gdt_entries = 3;
 
 	//null descriptor, required to be here.
 	// -------------------------------------------------------
@@ -147,15 +145,15 @@ idk_GDTR idk::sys::loadGDT()
 	gdt_entries[2] = kernel_data << 32;
 	// -------------------------------------------------------
 
-	// -------------------------------------------------------
-	uint64_t user_code = kernel_code | (3 << 13);
-	gdt_entries[3] = user_code;
-	// -------------------------------------------------------
-
-	// -------------------------------------------------------
-	uint64_t user_data = kernel_data | (3 << 13);
-	gdt_entries[4] = user_data;
 	// // -------------------------------------------------------
+	// uint64_t user_code = kernel_code | (3 << 13);
+	// gdt_entries[3] = user_code;
+	// // -------------------------------------------------------
+
+	// // -------------------------------------------------------
+	// uint64_t user_data = kernel_data | (3 << 13);
+	// gdt_entries[4] = user_data;
+	// // // -------------------------------------------------------
 
 
 	idk_GDTR example_gdtr = {

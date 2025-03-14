@@ -7,7 +7,9 @@
 #include "../bootinfo.hpp"
 #include "data_structures/inplace_vector.hpp"
 #include "memory/memory.hpp"
+#include "system/task/task.hpp"
 #include "terminal/terminal.hpp"
+#include "video/video.hpp"
 
 
 namespace idk
@@ -31,14 +33,18 @@ struct idk::CPU
 class idk::System
 {
 private:
-    idk::linear_allocator m_mainblock;
+    idk::linear_allocator     m_mainblock;
+    inplace_vector<Terminal*> m_terminals;
 
 public:
     idk::CPU cpu0, cpu1, cpu2, cpu4;
-    uint32_t value;
 
-    System();
+    idk::TaskDispatcher tasks;
+    idk::Video          video;
+
+    // System();
     int init( const idk_BootInfo &info );
 
+    Terminal *createTerminal( int w, int h );
 };
 

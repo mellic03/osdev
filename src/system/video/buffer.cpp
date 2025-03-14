@@ -3,77 +3,69 @@
 #include "system/memory/memory.hpp"
 
 
-idk::video::Buffer::Buffer()
-:   m_data(nullptr)
-{
+// idk::video::Buffer::Buffer()
+// :   m_data(nullptr)
+// {
 
-}
+// }
 
-idk::video::Buffer::Buffer( int w, int h )
-:   m_data(new uint32_t[w*h])
-{
-    W      = w;
-    H      = h;
-    SZ     = w*h;
-}
+// idk::video::Buffer::Buffer( int w, int h )
+// :   m_data(new uint32_t[w*h])
+// {
+//     W      = w;
+//     H      = h;
+//     SZ     = w*h;
+// }
 
-idk::video::Buffer::Buffer( int w, int h, uint32_t *data )
-:   m_data(data)
-{
-    W      = w;
-    H      = h;
-    SZ     = w*h;
-}
-
-
-idk::video::Buffer::~Buffer()
-{
-    if (m_data)
-    {
-        delete[] m_data;
-    }
-}
+// idk::video::Buffer::Buffer( int w, int h, uint32_t *data )
+// :   m_data(data)
+// {
+//     W      = w;
+//     H      = h;
+//     SZ     = w*h;
+// }
 
 
+// idk::video::Buffer::~Buffer()
+// {
+//     if (m_data)
+//     {
+//         delete[] m_data;
+//     }
+// }
 
-idk::video::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
-:   Buffer(
-        header->infoheader.width,
-        header->infoheader.height,
-        (uint32_t*)((uint8_t*)header + header->offset)
-    )
+
+
+
+idk::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
 {
     serial_printf("[FontBuffer::FontBuffer]\n");
-    auto &info = header->infoheader;
 
+    auto &info = header->infoheader;
     m_data = (uint32_t*)((uint8_t*)header + header->offset);
-    serial_printf("[FontBuffer::FontBuffer] m_data=0x%x\n", m_data);
 
     this->name = filename;
     this->W  = info.width;
     this->H  = info.height;
     this->SZ = W*H;
 
-    // for (int i=0; i<H; i++)
-    // {
-    //     for (int j=0; j<W; j++)
-    //     {
-    //         (*this)[H-1-i][j] = data[W*i + j];
-    //     }
-    // }
+    for (int i=0; i<H/2; i++)
+    {
+        for (int j=0; j<W; j++)
+        {
+            uint32_t temp = (*this)[H-1-i][j];
+            (*this)[H-1-i][j] = (*this)[i][j];
+            (*this)[i][j] = temp;
+        }
+    }
 }
 
-
-// idk::video::FontBuffer::~FontBuffer()
-// {
-
-// }
 
 
 
 
 idk::Bounds
-idk::video::FontBuffer::getGlyph( char c )
+idk::FontBuffer::getGlyph( char c )
 {
     static constexpr char min_idx = ' ';
     static constexpr char max_idx = '~';

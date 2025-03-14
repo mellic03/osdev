@@ -18,16 +18,7 @@ private:
 
 public:
 
-    inplace_vector()
-    {
-        m_cap  = 0;
-        m_base = nullptr;
-        m_top  = nullptr;
-        m_end  = nullptr;
-    }
-
-
-    inplace_vector( size_t capacity, T *baseptr )
+    void init( size_t capacity, T *baseptr )
     {
         m_cap  = capacity;
         m_base = baseptr;
@@ -35,7 +26,7 @@ public:
         m_end  = m_base + capacity;
     }
 
-    ~inplace_vector()
+    void deinit()
     {
         while (!empty())
         {

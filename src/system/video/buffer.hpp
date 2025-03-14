@@ -16,25 +16,30 @@ namespace idk
 }
 
 
-namespace idk::video
+namespace idk
 {
-    class Buffer;
     class FontBuffer;
 }
 
 
-class idk::video::Buffer
+
+class idk::FontBuffer
 {
-protected:
+private:
     uint32_t *m_data;
 
 public:
     int W, H, SZ;
+    const char *name;
 
-    Buffer();
-    Buffer( int w, int h );
-    Buffer( int w, int h, uint32_t *data );
-    virtual ~Buffer();
+    FontBuffer( const char *filename, ck_BMP_header* );
+    // ~FontBuffer();
+    // void init( const char *filename, ck_BMP_header* );
+
+    /**
+     * Returns {xmin, xmax, ymin, ymax}
+     */
+    idk::Bounds getGlyph( char c );
 
 
     void *data() { return m_data; }
@@ -49,22 +54,5 @@ public:
     {
         return &(m_data[W*i]);
     }
-};
-
-
-class idk::video::FontBuffer: public video::Buffer
-{
-public:
-    const char *name;
-
-    FontBuffer( const char *filename, ck_BMP_header* );
-    ~FontBuffer() {  };
-    // void init( const char *filename, ck_BMP_header* );
-
-    /**
-     * Returns {xmin, xmax, ymin, ymax}
-     */
-    idk::Bounds getGlyph( char c );
-
 };
 
