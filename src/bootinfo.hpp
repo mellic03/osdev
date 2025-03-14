@@ -4,11 +4,15 @@
 #include <../../external/limine/limine.h>
 // #include <limine.h>
 
-
-struct ckBootInfo
+struct idk_BootInfo
 {
-    uint64_t fb_count;
-    limine_framebuffer **fb_list;
-    limine_memmap_response *mmap;
-};
+    limine_hhdm_response   *hhdm;
 
+    uint64_t               fb_count;
+    limine_framebuffer   **fb_list;
+
+    limine_dtb_response    *dtb;
+    limine_module_response *modules;
+    limine_memmap_response *mmap;
+    limine_mp_response     *mp;
+};

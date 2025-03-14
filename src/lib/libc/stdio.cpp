@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <idk/syscall.hpp>
+#include <idk/sysio.hpp>
+#include <idk/file.hpp>
+#include "system/drivers/serial.h"
 
 
 FILE *stderr = NULL;
@@ -11,9 +15,24 @@ int __libc_stdio_init( FILE *std_err, FILE *std_in, FILE *std_out )
     stderr = std_err;
     stdin  = std_in;
     stdout = std_out;
-
     return 1;
 }
+
+// int __libc_stdio_init()
+// {
+//     serial_printf("[__libc_stdio_init]\n");
+//     idk::SysRequest req(idk::SysRequestType::FILE_GETSTDIO);
+
+//     auto &res  = idk::syscall(req);
+//     auto &fres = *(idk::SysResponse_FILE*)(&res);
+
+//     idk_FILE *files = (idk_FILE*)(fres.addr);
+//     stderr = (idk_file_t*)(files+0);
+//     stdin  = (idk_file_t*)(files+1);
+//     stdout = (idk_file_t*)(files+2);
+
+//     return 1;
+// }
 
 
 int fflush( FILE *fh )

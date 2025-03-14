@@ -5,6 +5,11 @@
 #include <stdint.h>
 
 
+#define INTERRUPT_RET \
+asm volatile ("iretq"); \
+while (1) {  }; \
+
+
 typedef struct {
 	uint16_t    isr_low;      // The lower 16 bits of the ISR's address
 	uint16_t    kernel_cs;    // The GDT segment selector that the CPU will load into CS before calling the ISR
@@ -25,13 +30,26 @@ namespace idk
 {
 	struct Exception
 	{
+		// https://wiki.osdev.org/Exceptions
 		enum enum_type: uint8_t
 		{
-			BAD_ALLOC 	  = 32,
-			BAD_FREE  	  = 33,
-			OUT_OF_MEMORY = 34,
+			DIVISION_ERROR            = 0,
+			DEBUG 			          = 1,
+			INVALID_OPCODE            = 6,
+			DEVICE_UNAVAILABLE        = 7,
+			DOUBLE_FAULT              = 8,
+			INVALID_TSS               = 10,
+            SEGMENT_NOT_PRESENT       = 11,
+            STACK_SEGFAULT            = 12,
+            GENERAL_PROTECTION_FAULT  = 13,
+			PAGE_FAULT	  	          = 14,
 
-			SYSCALL 	  = 80
+			BAD_ALLOC 	  	          = 32,
+			BAD_FREE  	  	          = 33,
+			OUT_OF_MEMORY 	          = 34,
+    
+			SYSCALL 	  	          = 80,
+			TEST_VALUE		          = 102
 		};
 	};
 

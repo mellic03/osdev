@@ -1,9 +1,13 @@
 
+file(
+    GLOB SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+)
+
 
 add_library(
     idk_drivers STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/kb-ps2.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/serial.cpp
+    ${SOURCES}
 )
 
 

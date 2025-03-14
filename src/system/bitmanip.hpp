@@ -32,7 +32,7 @@ namespace idk
     }
 
 
-    inline constexpr size_t
+    inline static size_t
     nearest_pow2( size_t v )
     {
         v--;
@@ -47,7 +47,7 @@ namespace idk
         return v;
     }
 
-    inline constexpr uint32_t
+    inline static uint32_t
     bit_index( uint32_t v )
     {
         /*

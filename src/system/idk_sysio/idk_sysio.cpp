@@ -4,6 +4,9 @@
 #include "../io.hpp"
 #include "bitmanip.hpp"
 
+// #include "./sysio_syscall.hpp"
+// #include "system/syscall/syscall.hpp"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <cstring.hpp>
@@ -15,18 +18,35 @@
 //     __attribute__((section("__ck_reserved"))); // 4096 bytes
 // }
 
-struct idk_MappedIO
-{
-    idk_FILE iofiles[4];
-    uint8_t iobufs[4][512];
-    uint8_t sysports[256];
-};
+using iobuf_type = uint8_t[512];
+static constexpr size_t NUM_IOFILES = 3;
 
-static idk_MappedIO *__MappedIO;
+static idk_FILE   *__iofiles;
+static iobuf_type *__iobufs;
+
+// struct idk_MappedIO
+// {
+//     idk_FILE iofiles[4];
+//     uint8_t iobufs[4][512];
+//     uint8_t sysports[256];
+// };
+// static idk_MappedIO *__MappedIO;
+
+
+// void
+// idk::sysio::__syscall_file_getstdio()
+// {
+//     // auto &req = *idk::internal::__sysreq;
+//     auto &res = *((SysResponse_FILE*)idk::internal::__sysres);
+//     serial_printf("[__syscall_file_getstdio]\n");
+
+//     res.type = SysResponseType::SUCCESS;
+//     res.addr = (uintptr_t)(__iofiles);
+// }
 
 
 
-int idk_sysio_init( idk::base_allocator *mem )
+int idk_sysio_init( idk::linear_allocator &mem )
 {
     serial_printf("[idk_sysio_init]\n");
 
@@ -34,27 +54,23 @@ int idk_sysio_init( idk::base_allocator *mem )
         idk::FileFlag_STDERR, idk::FileFlag_STDIN, idk::FileFlag_STDOUT
     };
 
-    __MappedIO = mem->alloca<idk_MappedIO>(1);
-    // std::memset(__MappedIO, 0, sizeof(idk_MappedIO));
+    __iofiles = mem.alloca<idk_FILE>(NUM_IOFILES);
+    __iobufs  = mem.alloca<iobuf_type>(NUM_IOFILES);
 
-    auto &map = *__MappedIO;
-
-    for (int i=0; i<3; i++)
+    for (size_t i=0; i<NUM_IOFILES; i++)
     {
-        map.iofiles[i] = idk_FILE(
-            map.iobufs[i],
-            map.iobufs[i] + sizeof(map.iobufs[i]),
+        __iofiles[i] = idk_FILE(
+            __iobufs[i],
+            __iobufs[i] + sizeof(__iobufs[i]),
             flags[i]
         );
     }
 
-    idk_file_t temp[3] = {
-        {(void*)(&(map.iofiles[0]))},
-        {(void*)(&(map.iofiles[1]))},
-        {(void*)(&(map.iofiles[2]))}
-    };
-
-    __libc_stdio_init(temp+0, temp+1, temp+2);
+    __libc_stdio_init(
+        (idk_file_t*)(__iofiles+0),
+        (idk_file_t*)(__iofiles+1),
+        (idk_file_t*)(__iofiles+2)
+    );
 
     return 1;
 }
@@ -62,7 +78,7 @@ int idk_sysio_init( idk::base_allocator *mem )
 
 bool idk_sysio_update()
 {
-    auto &stdout = __MappedIO->iofiles[2];
+    auto &stdout = __iofiles[2];
 
     if (stdout.status & idk::FileStatus_DIRTY)
     {
@@ -82,14 +98,14 @@ bool idk_sysio_update()
 
 
 
-void idk_writeport( uint8_t port, uint8_t byte )
-{
-    __MappedIO->sysports[port] = byte;
-}
+// void idk_writeport( uint8_t port, uint8_t byte )
+// {
+//     __MappedIO->sysports[port] = byte;
+// }
 
 
-uint8_t idk_readport( uint8_t port )
-{
-    return __MappedIO->sysports[port];
-}
+// uint8_t idk_readport( uint8_t port )
+// {
+//     return __MappedIO->sysports[port];
+// }
 

@@ -1,35 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-// #include <initializer_list>
-
-#include "bootinfo.hpp"
-#include "drivers/serial.h"
-#include "drivers/serial.hpp"
-#include "io.hpp"
-#include "memory/memory.hpp"
-#include "video/video.hpp"
-
-#include <stdio.h>
-#include <cstdio.hpp>
-#include <cstring.hpp>
 
 #include "system/system.hpp"
 
-
-// /* Check if RTC is updating */
-// static int is_updating()
-// {
-//     ck::IO::outb(0x70, 0x0A);
-//     return ck::IO::inb(0x71) & 0x80;
-// }
-
-// static unsigned char read(int reg)
-// {
-//     while (is_updating());
-//     ck::IO::outb(0x70, reg);
-//     return ck::IO::inb(0x71);
-// }
 
 static void hcf()
 {
@@ -41,70 +15,70 @@ static void hcf()
 
 
 
-
-void kmain( const ckBootInfo &info )
+void kmain( const idk_BootInfo &info )
 {
-    auto *fb = info.fb_list[0];
-    fb_init(*fb);
-    fb_rect({0, 0, 100, 50}, {0, 255, 0, 255});
+    auto &system = idk::getSystem();
+    system.init(info);
+
+    // if (info.mp)
+    // {
+    //     auto &mp = *info.mp;
+    //     serial_printf("cpu_count: %d\n", mp.cpu_count);
+    // }
+
+    // if (info.dtb)
+    // {
+    //     fdt_header *header = (fdt_header*)(info.dtb->dtb_ptr);
+    //     serial_printf("magic: 0x%x\n", header->magic);
+    // }
+
+    // else
+    // {
+    //     serial_printf("No dtb\n");
+    // }
+
+
+    // serial_printf("model: %d\n", cpu.getModel());
+    // serial_printf("cpu.cr0: %lu\n", *(uint64_t*)(&cpu.cr0));
+
+    // using namespace idk;
+
+    // idk::video::loadFonts(info.modules);
+    // auto &fonts = idk::video::getFonts();
+
+    // idk::Terminal term0(32, 64, (char*)mainblock.alloc(32*64*sizeof(char), alignof(char)));
+    // idk::VWindow win({100, 100}, {350, 500}, uvec4(200));
+    // win.term = &term0;
+    // win.font = &(fonts.fonts[0]);
+
+    // win.children[0] = new idk::VWindow({10, 10}, {330, 200}, uvec4(150));
+    // win.children[0]->term = nullptr;
+    // win.children[0]->font = nullptr;
+
+    // while (true)
+    // {
+    //     char key = idk::PS2::kb_poll();
+
+    //     if (!key)
+    //     {
+    //         continue;
+    //     }
+
+    //     if (key == 'w') { win.y -= 1; }
+    //     if (key == 's') { win.y += 1; }
+    //     if (key == 'a') { win.x -= 1; }
+    //     if (key == 'd') { win.x += 1; }
     
+    //     if (win.x >= 100)
+    //     {
+    //         win.x = 0;
+    //         idk::Interrupt(idk::Exception::TEST_VALUE);
+    //     }
     
-    idk::linear_allocator mainblock;
-    {
-        uint64_t base = 0x00;
-        uint64_t len  = 0;
+    //     idk::video::renderWindow(&win, nullptr);
+    //     idk::video::swapBuffers();
+    // }
 
-        for (uint64_t i=0; i<info.mmap->entry_count; i++)
-        {
-            auto &entry = info.mmap->entries[i];
-
-            if (entry->type == LIMINE_MEMMAP_USABLE)
-            {
-                if (entry->length > len)
-                {
-                    len = entry->length;
-                    base = entry->base;
-                }
-
-                // ck::serial::writeln(": 0x%x\n", entry->base);
-                // serial_printf("memory: 0x%x\n", entry->base);
-            }
-        }
-    
-        mainblock = idk::linear_allocator(len, (void*)(0xFFFF800000000000 + base));
-    }
-
-    if (!idk::memory::init(&mainblock))
-    {
-        return;
-    }
-
-    if (!ck::serial::init(&mainblock))
-    {
-        return;
-    }
-    
-    if (!idk::sys::init(&mainblock))
-    {
-        return;
-    }
-
-
-    auto *buddy = idk::memory::getBuddy();
-    void *deez = buddy->alloc(256*sizeof(uint8_t), 1);
-    // void *nuts = buddy->alloc(54*sizeof(uint8_t), 1);
-    // serial_printf("deez: 0x%x\n", deez);
-    // serial_printf("nuts: 0x%x\n", nuts);
-    buddy->free(deez);
-
-    idk::SysRequest req(
-        idk::SysRequestType::FILE_CREATE,
-        "TestLMAO"
-    );
-
-
-    auto &res = idk::syscall(req);
-    serial_printf("res.type: %d\n", res.type);
 
     hcf();
 }

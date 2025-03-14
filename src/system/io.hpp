@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-namespace ck::IO
+namespace idk::IO
 {
     static constexpr uint16_t COM1 = 0x3F8;
     static constexpr uint16_t COM2 = 0x2F8;

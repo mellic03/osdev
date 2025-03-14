@@ -27,6 +27,24 @@ int strcmp( const char *lhs, const char *rhs )
 }
 
 
+int strncmp( const char *s1, const char *s2, size_t n )
+{
+    while ( n && *s1 && ( *s1 == *s2 ) )
+    {
+        ++s1;
+        ++s2;
+        --n;
+    }
+    if ( n == 0 )
+    {
+        return 0;
+    }
+    else
+    {
+        return ( *(unsigned char *)s1 - *(unsigned char *)s2 );
+    }
+}
+
 
 char *strcpy( char *dst, const char *src )
 {
@@ -108,5 +126,28 @@ int memcmp( const void *s1, const void *s2, size_t n )
     return 0;
 }
 
+
+
+
+void *memcpy32( uint32_t *dst, const uint32_t *src, size_t count )
+{
+    for (size_t i=0; i<count; i++)
+    {
+        dst[i] = src[i];
+    }
+
+    return dst;
+}
+
+
+void *memset32( uint32_t *src, uint32_t value, size_t count )
+{
+    for (size_t i=0; i<count; i++)
+    {
+        src[i] = value;
+    }
+
+    return src;
+}
 
 

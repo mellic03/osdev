@@ -125,7 +125,8 @@
         "cerrno": "c",
         "linear_allocator.hpp": "c",
         "base_allocator.hpp": "c",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "cstring.hpp": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

@@ -47,4 +47,4 @@ idk::sysio::__syscall_file_rename()
     res.type = SysResponseType::FAILURE;
     sprintf(res.msg, "Not implemented");
 }
-    
+

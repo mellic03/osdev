@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include "system/drivers/serial.hpp"
 #include "system/idk_sysio/sysio_syscall.hpp"
+#include "system/system.hpp"
 
 using namespace idk;
 
 
 void internal::__syscall_handler()
 {
+    auto &cpu0 = idk::getSystem().cpu0;
+    cpu0.fxsave();
+
     auto &req = *internal::__sysreq;
     serial_printf("[__syscall_handler] SYSCALL, type=%d\n", req.type);
 
@@ -16,11 +20,12 @@ void internal::__syscall_handler()
         using namespace idk::sysio;
         using enum idk::SysRequestType::____;
 
-        case NONE:          break;
-        case FILE_CREATE:   __syscall_file_create(); break;
-        case FILE_DELETE:   __syscall_file_delete(); break;
-        case FILE_RENAME:   __syscall_file_rename(); break;
-
+        case NONE:                                      break;
+        case FILE_CREATE:   __syscall_file_create();    break;
+        case FILE_DELETE:   __syscall_file_delete();    break;
+        case FILE_RENAME:   __syscall_file_rename();    break;
+        // case FILE_GETSTDIO: __syscall_file_getstdio();  break;
     }
 
+    cpu0.fxrstor();
 }

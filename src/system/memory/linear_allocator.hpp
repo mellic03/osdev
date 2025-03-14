@@ -1,10 +1,11 @@
 #pragma once
+
 #include "base_allocator.hpp"
 
 
 namespace idk
 {
-    class linear_allocator: public idk::base_allocator
+    class linear_allocator
     {
     protected:
         size_t   m_capacity;
@@ -14,13 +15,27 @@ namespace idk
 
     public:
         linear_allocator() {  };
-        linear_allocator( size_t nbytes, base_allocator* );
         linear_allocator( size_t nbytes, void *baseptr );
         ~linear_allocator();
 
-        virtual void *alloc( size_t nbytes, size_t alignment ) override;
-        virtual void  free( void* ) override;
-        virtual void  clear() override;
+        void *alloc( size_t nbytes, size_t alignment );
+        void  free( void* );
+        void  clear();
+
+        template <typename T>
+        T *alloc( size_t count = 1 )
+        {
+            return (T*)(alloc(count*sizeof(T), alignof(T)));
+        }
+
+        template <typename T>
+        T *alloca( size_t count = 1 )
+        {
+            T *base = alloc<T>(count);
+            std::memset((void*)base, 0, count*sizeof(T));
+            return base;
+        }
+
     };
 }
 

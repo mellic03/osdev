@@ -2,34 +2,55 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <../../external/limine/limine.h>
+#include "../../bootinfo.hpp"
+#include "./color.hpp"
+#include "./buffer.hpp"
+#include "./window.hpp"
+#include "../memory/linear_allocator.hpp"
 // #include <limine.h>
 
 
-struct ck_Rect
+
+
+// // void fb_init( limine_framebuffer& );
+// void fb_blit( ck_Rect &src, ck_Rect &dst );
+// void fb_rect( const ck_Rect&, const ck_Color& );
+
+
+namespace idk
 {
-    int x, y, w, h;
-};
+    struct Rect
+    {
+        int x, y, w, h;
+    };
+    
+    inline static uint32_t packRGBA( uint32_t r, uint32_t g, uint32_t b, uint32_t a )
+    {
+        return (b << 24) + (g << 16) + (r << 8) + (a);
+    }
+}
 
 
-struct ck_Color
+
+namespace idk::video
 {
-    uint8_t r, g, b, a;
+    int  init( idk::linear_allocator&, limine_framebuffer* );
+    void swapBuffers();
 
-    // ck_Color(int r, int g, int b, int a)
-    // :   r(r), g(g), b(b), a(a) {  };
+    void renderRect( int x, int y, int w, int h, const uvec4 &color );
+    void renderTerminal( idk::VWindow*, idk::Terminal*, FontBuffer* );
+    void renderWindow( idk::VWindow*, idk::VWindow *parent );
 
-    // ck_Color(float r, float g, float b, float a)
-    // :   r(r), g(g), b(b), a(a) {  };
+    void blit( int x0, int y0, FontBuffer &src );
 
-    // ck_Color(double r, double g, double b, double a)
-    // :   r(r), g(g), b(b), a(a) {  };
+    struct FONTS
+    {
+        size_t count = 0;
+        size_t cap   = 32;
+        FontBuffer *fonts;
+    };
 
-};
-
-
-void fb_init( limine_framebuffer& );
-void fb_blit( ck_Rect &src, ck_Rect &dst );
-void fb_rect( const ck_Rect&, const ck_Color& );
-
+    int loadFonts( limine_module_response* );
+    FONTS &getFonts();
+}
 

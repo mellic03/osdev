@@ -1,12 +1,7 @@
 #include "linear_allocator.hpp"
 #include "bitmanip.hpp"
+#include "system/interrupt/interrupt.hpp"
 
-
-idk::linear_allocator::linear_allocator( size_t nbytes, base_allocator *A )
-:   linear_allocator(nbytes, A->alloc(nbytes, 8))
-{
-
-}
 
 
 idk::linear_allocator::linear_allocator( size_t nbytes, void *baseptr )
@@ -37,6 +32,12 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
     // return static_cast<void*>(top);
 
     m_tail = idk::ptr_align(m_tail, alignment) + nbytes;
+
+    if (m_tail >= m_end)
+    {
+        idk::Interrupt(Exception::OUT_OF_MEMORY);
+        return nullptr;
+    }
 
     // LOG_ASSERT(
     //     m_tail < m_end,

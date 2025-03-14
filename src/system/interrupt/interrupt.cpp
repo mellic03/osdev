@@ -90,6 +90,7 @@
 #include "./interrupt.hpp"
 #include "../gdt/gdt.hpp"
 #include "../drivers/serial.hpp"
+#include "../system.hpp"
 
 using namespace idk;
 using isr_type = interrupt::isr_type;
@@ -101,24 +102,30 @@ inline static isr_type    isr_table[NUM_INTERRUPTS];
 
 
 template <uint8_t code>
-__attribute__((noreturn))
+// __attribute__((noreturn))
 void __isr_callback()
 {
-    serial_printf("[__isr_callback] code: %d\n", code);
-    // asm volatile ("hlt");
-    asm volatile ("iretq");
+    auto &cpu0 = idk::getSystem().cpu0;
+    cpu0.fxsave();
 
-    while (1)
-    {
+    serial_printf("[__isr_callback] code: %u\n", uint32_t(code));
 
-    }
+    cpu0.fxrstor();
 }
 
 
 template <uint8_t idx>
 void __register_isr_callback()
 {
-    isr_table[idx] = __isr_callback<idx>;
+    // Don't generate callback for reserved codes
+    if constexpr (idx == 15) {  }
+    else if (22 <= idx && idx <= 27) {  }
+    else if (idx == 31) {  }
+
+    else
+    {
+        isr_table[idx] = __isr_callback<idx>;
+    }
     __register_isr_callback<idx - 1>();
 }
 
@@ -163,12 +170,18 @@ void interrupt::initIDT()
 }
 
 
+#include "system/drivers/pic.hpp"
+#include "../io.hpp"
+
 void interrupt::loadIDT()
 {
     for (uint8_t i=0; i<NUM_INTERRUPTS; i++)
     {
         idt_set_descriptor(i, isr_table[i], 0x8E);
     }
+    // idk::PIC::remap(0, 8);
+    // idk::IO::outb(0x0021, 0xFD);
+    // idk::IO::outb(0x00A1, 0xFF);
 
 	asm volatile ("cli");                   // Disable interrupts
     asm volatile ("lidt %0" : : "m"(idtr)); // Load IDT

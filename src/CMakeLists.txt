@@ -16,21 +16,23 @@ set(CMAKE_ASM_COMPILER /bin/x86_64-elf-as)
 set(CMAKE_ASM_NASM_COMPILER /bin/nasm)
 
 set(CMAKE_C_FLAGS
-    "-std=c99 -ffreestanding -O2 \
+    "-std=gnu11 -ffreestanding -O2 \
     -Wall \
     -Wextra \
     -mgeneral-regs-only \
     -fno-asynchronous-unwind-tables \
-    -fno-use-cxa-atexit \
     -fno-exceptions \
     -fno-stack-protector \
     -fno-stack-check \
     -fno-PIC \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=kernel -march=x86-64 \
-    -mno-mmx -mno-sse -mno-sse2 \
+    -mmmx -msse -msse2 \
     -Wno-missing-field-initializers"
 )
+
+# -mmmx -msse -msse2 \
+
 
 set(CMAKE_CXX_FLAGS
     "-std=c++23 -ffreestanding -O2 \
@@ -38,7 +40,6 @@ set(CMAKE_CXX_FLAGS
     -Wextra \
     -mgeneral-regs-only \
     -fno-asynchronous-unwind-tables \
-    -fno-use-cxa-atexit \
     -fno-exceptions \
     -fno-rtti \
     -fno-stack-protector \
@@ -47,7 +48,7 @@ set(CMAKE_CXX_FLAGS
     -fpermissive \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=kernel -march=x86-64 \
-    -mno-mmx -mno-sse -mno-sse2 \
+    -mmmx -msse -msse2 \
     -MMD \
     -MP \
     -Wno-missing-field-initializers"
@@ -86,8 +87,9 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/system/)
 
 file(
     GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/kmain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/system/ctor/icxxabi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/boot.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/kmain.cpp
 )
 
 add_executable(

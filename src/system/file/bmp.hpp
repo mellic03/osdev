@@ -29,7 +29,7 @@ struct ck_BMP_header
     uint16_t signature;
     uint32_t filesize;
     uint32_t reserved;
-    uint32_t offset;
+    uint32_t offset; // offset to image data
 
     uint32_t infosize; // should be sizeof(infoheader)
     ck_BMP_infoheader infoheader;

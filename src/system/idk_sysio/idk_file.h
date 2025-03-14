@@ -7,11 +7,12 @@
 extern "C" {
 #endif
 
+// typedef void* idk_file_t;
 
-typedef struct {
-    void *impl;
+typedef struct
+{
+    uint64_t dummy;
 } idk_file_t;
-
 
 
 /** return size of fh in bytes */

@@ -26,6 +26,7 @@ extern FILE *stdout;    // Standard output stream.
 
 
 int __libc_stdio_init( FILE*, FILE*, FILE* );
+// int __libc_stdio_init();
 
 
 int     fflush( FILE* );

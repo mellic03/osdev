@@ -54,8 +54,6 @@ char *ultoa( uint64_t value, char *buf, int radix )
           *tp++ = i + 'a' - 10;
     }
 
-    int len = tp - tmp;
-
     while (tp > tmp)
         *buf++ = *--tp;
 

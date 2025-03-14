@@ -3,11 +3,11 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include "./serial.h"
-#include "../memory/base_allocator.hpp"
+#include "../memory/memory.hpp"
 
 
 
-namespace ck::serial
+namespace idk::serial
 {
     static constexpr uint16_t COM1 = 0x3F8;
     static constexpr uint16_t COM2 = 0x2F8;
@@ -18,7 +18,7 @@ namespace ck::serial
     static constexpr uint16_t COM7 = 0x5E8;
     static constexpr uint16_t COM8 = 0x4E8;
 
-    int init( idk::base_allocator* );
+    int init( idk::linear_allocator& );
     int writeln( const char* );
 
 }

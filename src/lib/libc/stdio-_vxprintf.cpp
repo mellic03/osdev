@@ -2,6 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+static char *__dtoa( double f, char *buf )
+{
+    int whole = int(f);
+    int fract = int(1000.0 * f);
+
+    if (fract < 0)
+    {
+        fract = -fract;
+    }
+
+    buf = itoa(whole, buf, 10);
+    *(buf++) = '.';
+    buf = itoa(fract, buf, 10);
+
+    return buf;
+}
+
 
 static char *__internal_vsprintf( char *buf, const char *&fmt, va_list args )
 {
@@ -21,6 +38,7 @@ static char *__internal_vsprintf( char *buf, const char *&fmt, va_list args )
         case 'd': buf = itoa(va_arg(args,      int), buf, 10);   break;
         case 'u': buf = utoa(va_arg(args, uint32_t), buf, 10);   break;
         case 'x': buf = ultoa(va_arg(args, uint32_t), buf, 16);  break;
+        case 'f': buf = __dtoa(va_arg(args, double), buf);       break;
     }
 
     if (lng)

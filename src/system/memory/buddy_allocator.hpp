@@ -1,15 +1,19 @@
 #pragma once
+
 #include "base_allocator.hpp"
+#include "linear_allocator.hpp"
+
 #include "system/data_structures/array.hpp"
 #include "system/data_structures/inplace_stack.hpp"
 
+
 namespace idk
 {
-    class buddy_allocator: public idk::base_allocator
+    class buddy_allocator
     {
-    public:
-        static constexpr size_t max_idx  = 10 + 10 + 6;
-        static constexpr size_t list_len = 32;
+    private:
+        static constexpr size_t min_idx  = 7;
+        static constexpr size_t max_idx  = 27;
         static constexpr uint64_t BUDDY_MAGIC = 0xA110C;
         // using ptr_type  = void*;
         // using list_type = inplace_stack<void*>[max_idx];
@@ -26,14 +30,24 @@ namespace idk
             uintptr_t baseptr;
             void     *usrptr;
             uint64_t  idx;
-            uint64_t  nbytes;
         };
-    
+        
+        int    _getidx( size_t );
+        void  *_getptr( size_t );
 
-        void init( base_allocator* );
 
-        virtual void *alloc( size_t nbytes, size_t alignment ) final;
-        virtual void  free( void* ) final;
-        virtual void  clear() final;
+    public:
+        buddy_allocator( linear_allocator& );
+
+        void *alloc( size_t nbytes, size_t alignment );
+        void  free( void* );
+        void  clear();
+
+        template <typename T>
+        T *alloc( size_t count = 1 )
+        {
+            return (T*)(alloc(count*sizeof(T), alignof(T)));
+        }
+
     };
 }

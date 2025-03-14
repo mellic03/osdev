@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system/memory/base_allocator.hpp"
+#include "system/memory/memory.hpp"
 #include "system/data_structures/array.hpp"
 
 
@@ -8,14 +8,14 @@ namespace idk
 {
     struct SysRequest;
     struct SysResponse;
-    const SysResponse &syscall( const SysRequest& );
+    const SysResponse &Syscall( const SysRequest& );
 
     namespace internal
     {
         extern idk::SysRequest *__sysreq;
         extern idk::SysResponse *__sysres;
         void __syscall_handler();
-        void __syscall_init( idk::base_allocator* );
+        void __syscall_init( idk::linear_allocator& );
     }
 }
 
@@ -31,18 +31,32 @@ namespace idk
     {
         enum ____: uint32_t
         {
-            NONE        = 0,
-            FILE_CREATE = 1,
-            FILE_DELETE = 2,
-            FILE_RENAME = 3,
+            NONE          = 0,
+            FILE_CREATE   = 1,
+            FILE_DELETE   = 2,
+            FILE_RENAME   = 3,
+            FILE_GETSTDIO = 4,
+        };
+    };
+
+    struct SysRequestFlag
+    {
+        enum ____: uint32_t
+        {
+            NONE    = 0,
+            SPECIAL = 1 << 1,
         };
     };
 
     struct SysRequest
     {
         uint32_t type;
+        uint32_t flags;
         idk::array<char, SysRequest_MAX_BUFSIZE> buf;
-        SysRequest( uint32_t type = SysRequestType::NONE, const char *buffer = "\0\0\0\0" );
+
+        SysRequest( uint32_t type = SysRequestType::NONE,
+                    uint32_t flags = SysRequestFlag::NONE,
+                    const char *buffer = "\0\0\0\0" );
     };
 }
 // ---------------------------------------------------------------------------------------------
@@ -82,8 +96,8 @@ namespace idk
 
     struct SysResponse_FILE
     {
-        uint32_t type;
-        uint64_t addr;
+        uint32_t  type;
+        uintptr_t addr;
         char msg[bsize - sizeof(uint64_t)];
 
     } __attribute__ ((packed));

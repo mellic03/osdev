@@ -11,5 +11,6 @@ namespace idk::sysio
     void __syscall_file_create();
     void __syscall_file_delete();
     void __syscall_file_rename();
+    // void __syscall_file_getstdio();
 }
 

@@ -9,7 +9,7 @@ static size_t __serial_buf_nbytes = 256;
 
 
 int
-ck::serial::init( idk::base_allocator *mem )
+idk::serial::init( idk::linear_allocator &mem )
 {
     static int first = true;
     if (first == false)
@@ -18,7 +18,7 @@ ck::serial::init( idk::base_allocator *mem )
     }
     first = false;
 
-    __serial_buf = mem->alloca<char>(__serial_buf_nbytes);
+    __serial_buf = mem.alloca<char>(__serial_buf_nbytes);
 
     IO::outb(COM1+1, 0x00);    // Disable all interrupts
     IO::outb(COM1+3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -45,7 +45,7 @@ ck::serial::init( idk::base_allocator *mem )
 
 
 int
-ck::serial::writeln( const char *str )
+idk::serial::writeln( const char *str )
 {
     while (*str)
     {
@@ -69,7 +69,7 @@ int serial_printf( const char *fmt, ... )
 
     for (int i=0; i<n; i++)
     {
-        ck::IO::outb(ck::serial::COM1, __serial_buf[i]);
+        idk::IO::outb(idk::serial::COM1, __serial_buf[i]);
     }
     
     return n;

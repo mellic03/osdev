@@ -16,6 +16,7 @@ template <typename T>
 class idk::inplace_stack
 {
 private:
+    bool _self_alloc = false;
     T *m_start;
     T *m_end;
     T *m_top;
@@ -33,6 +34,22 @@ public:
         m_start = start;
         m_end   = start + len;
         m_top   = m_start;
+    }
+
+    inplace_stack( size_t len )
+    {
+        _self_alloc = true;
+        m_start = new T[len];
+        m_end   = m_start + len;
+        m_top   = m_start;
+    }
+
+    ~inplace_stack()
+    {
+        if (_self_alloc)
+        {
+            delete[] m_start;
+        }
     }
 
     void push( const T &data )
