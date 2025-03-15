@@ -96,6 +96,11 @@ idk::Video::renderRect( int x0, int y0, int w, int h, const uvec4 &C )
 void
 idk::Video::renderTerminal( idk::VWindow *win, idk::Terminal *term, FontBuffer *font )
 {
+    if (term)
+    {
+
+    }
+
     blit(win->x, win->y, font);
 }
 
@@ -149,8 +154,6 @@ idk::Video::blit( int x0, int y0, FontBuffer *src )
     {
         for (int x=xmin; x<xmax; x++)
         {
-            float alpha = float(uint8_t(dst[y*W + x])) / 255.0f;
-
             int sx = std::clamp(x-x0, 0, src->W);
             int sy = std::clamp(y-y0, 0, src->H);
             dst[y*W + x] = (*src)[sy][sx];

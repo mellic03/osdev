@@ -80,7 +80,7 @@ idk::buddy_allocator::_getidx( size_t nbytes )
         idx = std::clamp(idx, int(min_idx), int(max_idx));
     auto *stack = &((*m_freelist)[idx]);
 
-    while (stack->empty() && idx < max_idx)
+    while (stack->empty() && idx < int(max_idx))
     {
         idx += 1;
         stack = &((*m_freelist)[idx]);
@@ -116,7 +116,8 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
 
     if (idx == -1)
     {
-        idk::Interrupt(Exception::OUT_OF_MEMORY);
+        asm volatile ("int $34");
+        // idk::Interrupt(Exception::OUT_OF_MEMORY);
         return nullptr;
     }
 
@@ -148,7 +149,8 @@ idk::buddy_allocator::free( void *usrptr )
     if (header->magic != BUDDY_MAGIC)
     {
         serial_printf("[buddy_allocator::free] header->magic != BUDDY_MAGIC\n");
-        idk::Interrupt(Exception::BAD_FREE);
+        asm volatile ("int $33");
+        // idk::Interrupt(Exception::BAD_FREE);
     }
 
     // if (header->usrptr != usrptr)

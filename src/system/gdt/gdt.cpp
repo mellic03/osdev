@@ -106,14 +106,13 @@ uint64_t create_descriptor( uint32_t base, uint32_t limit, uint16_t flag )
 }
  
 
-// extern void setGdt(  uint16_t limit, uint64_t *base );
 static uint64_t gdt_entries[16];
+static idk_GDTR example_gdtr;
 
 
 idk_GDTR idk::sys::loadGDT()
 {
-	// uint64_t gdt_entries[5];
-	uint16_t num_gdt_entries = 3;
+	uint16_t num_gdt_entries = 5;
 
 	//null descriptor, required to be here.
 	// -------------------------------------------------------
@@ -145,24 +144,24 @@ idk_GDTR idk::sys::loadGDT()
 	gdt_entries[2] = kernel_data << 32;
 	// -------------------------------------------------------
 
-	// // -------------------------------------------------------
-	// uint64_t user_code = kernel_code | (3 << 13);
-	// gdt_entries[3] = user_code;
+	// -------------------------------------------------------
+	uint64_t user_code = kernel_code | (3 << 13);
+	gdt_entries[3] = user_code;
+	// -------------------------------------------------------
+
+	// -------------------------------------------------------
+	uint64_t user_data = kernel_data | (3 << 13);
+	gdt_entries[4] = user_data;
 	// // -------------------------------------------------------
 
-	// // -------------------------------------------------------
-	// uint64_t user_data = kernel_data | (3 << 13);
-	// gdt_entries[4] = user_data;
-	// // // -------------------------------------------------------
 
-
-	idk_GDTR example_gdtr = {
+	example_gdtr = {
 		.limit = uint16_t(num_gdt_entries * sizeof(uint64_t) - 1),
 		.base  = (uint64_t)gdt_entries
 	};
 
-	__asm__ ("cli");
-	__asm__ ("lgdt %0" : : "m"(example_gdtr));
+	__asm__ volatile ("cli");
+	__asm__ volatile ("lgdt %0" : : "m"(example_gdtr));
 
 	return example_gdtr;
 }

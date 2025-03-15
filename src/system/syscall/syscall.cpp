@@ -17,18 +17,28 @@ void idk::internal::__syscall_init( idk::linear_allocator &mem )
 }
 
 
-const SysResponse &idk::Syscall( const SysRequest &req )
+// const SysResponse &idk::Syscall( const SysRequest &req )
+// {
+//     serial_printf("[idk::syscall] A\n");
+
+//     *internal::__sysreq = req;
+//     serial_printf("[idk::syscall] B\n");
+
+//     idk::Interrupt(Exception::SYSCALL);
+//     serial_printf("[idk::syscall] C\n");
+
+//     return *internal::__sysres;
+// }
+
+
+void idk::Syscall( uint32_t *type, uint32_t *flags, char buf[256] )
 {
-    serial_printf("[idk::syscall] A\n");
+    auto &req = *internal::__sysreq;
+    auto &res = *internal::__sysres;
 
-    *internal::__sysreq = req;
-    serial_printf("[idk::syscall] B\n");
-
-    // asm volatile ("int $80");
+    req = SysRequest(*type, *flags, buf);
     idk::Interrupt(Exception::SYSCALL);
-    serial_printf("[idk::syscall] C\n");
 
-    return *internal::__sysres;
+    *type  = res.type;
+    *flags = res.flags;
 }
-
-

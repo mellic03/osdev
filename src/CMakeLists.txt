@@ -14,9 +14,37 @@ set(CMAKE_C_COMPILER /bin/x86_64-elf-gcc)
 set(CMAKE_CXX_COMPILER /bin/x86_64-elf-g++)
 set(CMAKE_ASM_COMPILER /bin/x86_64-elf-as)
 set(CMAKE_ASM_NASM_COMPILER /bin/nasm)
+# set(CMAKE_EXE_LINKER /bin/x86_64-elf-ld)
+
+
+set(IDK_SSE true)
+
+if(NOT DEFINED IDK_SSE)
+    set(IDK_SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
+else()
+    add_definitions(-DIDK_SSE)
+    set(IDK_SSE_FLAGS "-mmmx -msse -msse2")
+endif()
+
+# set(IDK_COMMON_FLAGS
+#     -ffreestanding -O2 \
+#     -Wall \
+#     -Wextra \
+#     -mgeneral-regs-only \
+#     -fno-asynchronous-unwind-tables \
+#     -fno-exceptions \
+#     -fno-stack-protector \
+#     -fno-stack-check \
+#     -fno-PIC \
+#     -z max-page-size=0x1000 -mno-red-zone \
+#     -m64 -mcmodel=kernel -march=x86-64 \
+#     -Wno-missing-field-initializers \
+# )
+
 
 set(CMAKE_C_FLAGS
-    "-std=gnu11 -ffreestanding -O2 \
+    "-std=gnu11
+    -ffreestanding -O2 \
     -Wall \
     -Wextra \
     -mgeneral-regs-only \
@@ -27,11 +55,9 @@ set(CMAKE_C_FLAGS
     -fno-PIC \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=kernel -march=x86-64 \
-    -mmmx -msse -msse2 \
-    -Wno-missing-field-initializers"
+    -Wno-missing-field-initializers \
+    ${IDK_SSE_FLAGS}"
 )
-
-# -mmmx -msse -msse2 \
 
 
 set(CMAKE_CXX_FLAGS
@@ -48,10 +74,11 @@ set(CMAKE_CXX_FLAGS
     -fpermissive \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=kernel -march=x86-64 \
-    -mmmx -msse -msse2 \
     -MMD \
     -MP \
-    -Wno-missing-field-initializers"
+    -Wno-missing-field-initializers \
+    ${IDK_SSE_FLAGS}"
+
 )
 
 set(CMAKE_ASM_NASM_FLAGS

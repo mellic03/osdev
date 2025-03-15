@@ -11,7 +11,6 @@ add_library(
 
 target_link_libraries(
     idk_syscall
-    idk_systemio
     ck_libc
 )
 

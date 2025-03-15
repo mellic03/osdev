@@ -8,15 +8,6 @@ namespace idk
 {
     struct SysRequest;
     struct SysResponse;
-    const SysResponse &Syscall( const SysRequest& );
-
-    namespace internal
-    {
-        extern idk::SysRequest *__sysreq;
-        extern idk::SysResponse *__sysres;
-        void __syscall_handler();
-        void __syscall_init( idk::linear_allocator& );
-    }
 }
 
 
@@ -27,16 +18,13 @@ namespace idk
 {
     static constexpr size_t SysRequest_MAX_BUFSIZE = 256;
 
-    struct SysRequestType
+    enum SysRequest_: uint32_t
     {
-        enum ____: uint32_t
-        {
-            NONE          = 0,
-            FILE_CREATE   = 1,
-            FILE_DELETE   = 2,
-            FILE_RENAME   = 3,
-            FILE_GETSTDIO = 4,
-        };
+        SysRequest_NONE          = 0,
+        SysRequest_FILE_CREATE   = 1,
+        SysRequest_FILE_DELETE   = 2,
+        SysRequest_FILE_RENAME   = 3,
+        SysRequest_FILE_GETSTDIO = 4
     };
 
     struct SysRequestFlag
@@ -54,7 +42,7 @@ namespace idk
         uint32_t flags;
         idk::array<char, SysRequest_MAX_BUFSIZE> buf;
 
-        SysRequest( uint32_t type = SysRequestType::NONE,
+        SysRequest( uint32_t type = SysRequest_NONE,
                     uint32_t flags = SysRequestFlag::NONE,
                     const char *buffer = "\0\0\0\0" );
     };
@@ -69,19 +57,17 @@ namespace idk
     static constexpr size_t SysResponse_MAX_BUFSIZE = 256;
     #define bsize SysResponse_MAX_BUFSIZE
 
-    struct SysResponseType
+    enum SysResponse_: uint32_t
     {
-        enum ____: uint32_t
-        {
-            NONE     = 0,
-            FAILURE  = 1,
-            SUCCESS  = 2
-        };
+        SysResponse_NONE     = 0,
+        SysResponse_FAILURE  = 1,
+        SysResponse_SUCCESS  = 2
     };
 
     struct SysResponse
     {
         uint32_t type;
+        uint32_t flags;
 
         union
         {
@@ -94,7 +80,7 @@ namespace idk
     } __attribute__ ((packed));
 
 
-    struct SysResponse_FILE
+    struct SysFileResponse
     {
         uint32_t  type;
         uintptr_t addr;
@@ -106,3 +92,21 @@ namespace idk
     #undef bsize
 }
 // ---------------------------------------------------------------------------------------------
+
+
+
+
+namespace idk
+{
+    // const SysResponse &Syscall( const SysRequest& );
+    void Syscall( uint32_t *type, uint32_t *flags, char buf[256] );
+
+    namespace internal
+    {
+        extern idk::SysRequest *__sysreq;
+        extern idk::SysResponse *__sysres;
+        void __syscall_handler( uint64_t );
+        void __syscall_init( idk::linear_allocator& );
+    }
+}
+

@@ -1,5 +1,6 @@
 #include "./system.hpp"
 
+#include "asm.hpp"
 #include "drivers/kb-ps2.hpp"
 #include "drivers/pic.hpp"
 #include "drivers/serial.hpp"
@@ -8,7 +9,6 @@
 #include "interrupt/interrupt.hpp"
 #include "io.hpp"
 #include "memory/memory.hpp"
-#include "syscall/syscall.hpp"
 #include "video/video.hpp"
 
 #include <stdio.h>
@@ -50,25 +50,20 @@ void printBits( uint64_t value )
 }
 
 
-inline static constexpr
-uint64_t asm_popq()
+
+void __gen_protection_fault( uint64_t ecode )
 {
-    uint64_t value;
-
-    asm volatile(
-        "pop %0"
-        : "=r" (value)
-    );
-
-    return value;
+    SYSLOG("[__gen_protection_fault] ecode=%lu\n", ecode);
+    asm volatile ("cli; hlt");
 }
 
 
-__attribute__((noreturn))
-void __page_fault()
+
+void __page_fault( uint64_t ecode )
 {
-    uint64_t flags = asm_popq();
     serial_printf("[Exception PAGE_FAULT] data=");
+
+    uint64_t flags = ecode;
     printBits(flags);
 
     if (flags & (1<<0))
@@ -99,66 +94,39 @@ void __page_fault()
    
     asm volatile("hlt");
     while (1) {  };
-    // INTERRUPT_RET;
 }
 
 
-// __attribute__((noreturn))
 void __except_bad_alloc()
 {
     serial_printf("[Exception::BAD_ALLOC]\n");
-    // INTERRUPT_RET;
 }
 
-// __attribute__((noreturn))
 void __except_bad_free()
 {
     serial_printf("[Exception::BAD_FREE]\n");
-    // INTERRUPT_RET;
 }
 
-// __attribute__((noreturn))
 void __except_out_of_memory()
 {
     serial_printf("[Exception::OUT_OF_MEMORY]\n");
-    // INTERRUPT_RET;
 }
 
 
 void __keyboard_handler()
 {
-    using namespace idk;
-
-    auto &cpu0 = getSystem().cpu0;
-    cpu0.fxsave();
-
-    uint8_t scancode = IO::inb(0x60);
-    serial_printf("[__keyboard_handler] scancode=%u\n", scancode);
-
-    cpu0.fxrstor();
+    serial_printf("[__keyboard_handler]\n");
 }
 
-
-void __except_rect()
-{
-    using namespace idk;
-    auto &cpu0 = getSystem().cpu0;
-    cpu0.fxsave();
-
-    serial_printf("[__except_rect]\n");
-
-    cpu0.fxrstor();
-
-    // IO::outb(PIC::PIC1_CMD, 0x20);
-    // asm volatile ("iretq");
-}
 
 
 
 int
 idk::System::init( const idk_BootInfo &info )
 {
-    cpu0.enableSSE();
+    #ifdef IDK_SSE
+        cpu0.enableSSE();
+    #endif
 
     if (!idk::memory::init(m_mainblock, info.mmap, info.hhdm->offset))
     {
@@ -169,6 +137,12 @@ idk::System::init( const idk_BootInfo &info )
     {
         return 0;
     }
+
+    #ifdef IDK_SSE
+        SYSLOG("[idk::System::init] SSE Enabled\n");
+    #else
+        SYSLOG("[idk::System::init] SSE not available\n");
+    #endif
 
     if (!this->video.init(m_mainblock, info.fb_list[0]))
     {
@@ -187,20 +161,19 @@ idk::System::init( const idk_BootInfo &info )
     
     {
         using namespace internal;
-        interrupt::initIDT();
-        // interrupt::registerSystemISR(0x01, __keyboard_handler);
-        interrupt::registerSystemISR(Exception::PAGE_FAULT,    __page_fault);
-        interrupt::registerSystemISR(Exception::BAD_ALLOC,     __except_bad_alloc);
-        interrupt::registerSystemISR(Exception::BAD_FREE,      __except_bad_free);
-        interrupt::registerSystemISR(Exception::OUT_OF_MEMORY, __except_out_of_memory);
-        interrupt::registerSystemISR(Exception::SYSCALL,       __syscall_handler);
-        interrupt::registerSystemISR(Exception::TEST_VALUE,    __except_rect);
+
         interrupt::loadIDT();
+        // // interrupt::registerSystemISR(0x01, __keyboard_handler);
+        // interrupt::registerISR(Exception::GENERAL_PROTECTION_FAULT, __gen_protection_fault);
+        // interrupt::registerISR(Exception::PAGE_FAULT,    __page_fault);
+        // interrupt::registerISR(Exception::BAD_ALLOC,     __except_bad_alloc);
+        // interrupt::registerISR(Exception::BAD_FREE,      __except_bad_free);
+        // interrupt::registerISR(Exception::OUT_OF_MEMORY, __except_out_of_memory);
+        interrupt::registerExceptionHandler(Exception::SYSCALL, __syscall_handler);
     }
     serial_printf("IDT loaded\n");
 
     internal::__syscall_init(m_mainblock);
-
 
     return 1;
 }
@@ -223,6 +196,16 @@ idk::System::createTerminal( int w, int h )
 extern "C"
 {
     extern void __enable_SSE(void);
+
+    // void __idk_fxsave(void)
+    // {
+    //     idk::getSystem().cpu0.fxsave();
+    // }
+
+    // void __idk_fxrstor(void)
+    // {
+    //     idk::getSystem().cpu0.fxrstor();
+    // }
 }
 
 void

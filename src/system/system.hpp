@@ -7,9 +7,10 @@
 #include "../bootinfo.hpp"
 #include "data_structures/inplace_vector.hpp"
 #include "memory/memory.hpp"
-#include "system/task/task.hpp"
+#include "syscall/syscall.hpp"
 #include "terminal/terminal.hpp"
 #include "video/video.hpp"
+#include "log.hpp"
 
 
 namespace idk
@@ -38,8 +39,6 @@ private:
 
 public:
     idk::CPU cpu0, cpu1, cpu2, cpu4;
-
-    idk::TaskDispatcher tasks;
     idk::Video          video;
 
     // System();

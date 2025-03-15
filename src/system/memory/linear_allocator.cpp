@@ -35,7 +35,8 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
 
     if (m_tail >= m_end)
     {
-        idk::Interrupt(Exception::OUT_OF_MEMORY);
+        asm volatile ("int $34");
+        // idk::Interrupt(Exception::OUT_OF_MEMORY);
         return nullptr;
     }
 
