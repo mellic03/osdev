@@ -65,8 +65,9 @@ uint64_t invirt64( uint16_t port );
 
 struct virtiodev
 {
-    uint16_t base;
-    uint16_t end;
+    uint16_t  base;
+    uint16_t  end;
+    uint8_t  *ports;
     void (*recv)(uint16_t, uint64_t, size_t);
 };
 

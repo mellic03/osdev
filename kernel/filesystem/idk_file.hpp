@@ -1,7 +1,7 @@
 #pragma once
 
 #include <idk_file.h>
-#include <kernel/inplace_ringbuffer.hpp>
+#include <kinplace/inplace_ringbuffer.hpp>
 
 
 struct idk_FILE

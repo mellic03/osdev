@@ -1,7 +1,7 @@
 #include <kernel/bitmanip.hpp>
 #include <kernel/interrupt.hpp>
-#include <kernel/memory.hpp>
-#include <driver/serial.hpp>
+#include <kmemory/memory.hpp>
+#include <kdriver/serial.hpp>
 
 #include <algorithm>
 

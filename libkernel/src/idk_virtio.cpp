@@ -1,6 +1,6 @@
 #include <idk_virtio.h>
 #include <idk_kret.h>
-#include <driver/serial.hpp>
+#include <kdriver/serial.hpp>
 
 #include <cstring>
 
@@ -53,6 +53,8 @@ bool virtio_map( virtiodev *dev )
     {
         kvirtdevmap[port] = dev;
     }
+
+    dev->ports = kvirtualio;
 
     SYSLOG("success");
     SYSLOG_END();

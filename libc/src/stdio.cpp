@@ -5,6 +5,7 @@
 #include <idk_file.h>
 #include <idk_syscall.h> 
 #include <idk_virtio.h> 
+#include <kdriver/serial.hpp>
 
 
 FILE *stderr = NULL;
@@ -15,6 +16,7 @@ FILE *stdout = NULL;
 extern "C"
 int libc_stdio_init( FILE *std_err, FILE *std_in, FILE *std_out )
 {
+    SYSLOG_BEGIN("libc_stdio_init");
     outvirt8(KFILE_READ, KTRGT_STDERR);
     stderr = (FILE*)(invirt64(KFILE_READ));
 
@@ -24,6 +26,7 @@ int libc_stdio_init( FILE *std_err, FILE *std_in, FILE *std_out )
     outvirt8(KFILE_READ, KTRGT_STDOUT);
     stdout = (FILE*)(invirt64(KFILE_READ));
 
+    SYSLOG_END();
     return 1;
 }
 

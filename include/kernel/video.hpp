@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 #include <kernel/font.hpp>
-#include <kernel/inplace_vector.hpp>
-#include <kernel/memory.hpp>
+#include <kinplace/inplace_vector.hpp>
+#include <kmemory/memory.hpp>
 #include <kernel/terminal.hpp>
-#include <kernel/vec.hpp>
+#include <kmath/vec.hpp>
 
 
 struct limine_framebuffer;

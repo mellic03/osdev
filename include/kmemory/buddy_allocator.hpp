@@ -1,9 +1,9 @@
 #pragma once
 
-#include <kernel/memory.hpp>
+#include <kmemory/memory.hpp>
 #include <kernel/array.hpp>
-#include <kernel/inplace_array.hpp>
-#include <kernel/inplace_stack.hpp>
+#include <kinplace/inplace_array.hpp>
+#include <kinplace/inplace_stack.hpp>
 
 
 namespace idk

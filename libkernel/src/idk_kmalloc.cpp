@@ -2,10 +2,10 @@
 #include <idk_kret.h>
 
 #include <limine/limine.h>
-#include <driver/serial.hpp>
-#include <kernel/inplace_stack.hpp>
-#include <kernel/inplace_vector.hpp>
-#include <kernel/memory.hpp>
+#include <kdriver/serial.hpp>
+#include <kinplace/inplace_stack.hpp>
+#include <kinplace/inplace_vector.hpp>
+#include <kmemory/memory.hpp>
 
 using namespace idk;
 

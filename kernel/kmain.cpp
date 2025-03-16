@@ -61,32 +61,11 @@ static volatile LIMINE_REQUESTS_END_MARKER;
 #include "libk_init.h"
 #include "libc_init.h"
 #include "libc++_init.hpp"
-#include <driver/serial.hpp>
+#include <kdriver/serial.hpp>
 #include <kernel/cpu.hpp>
+#include "./filesystem/filesystem.hpp"
 
 
-
-static virtiodev *dev;
-
-
-void dev_recv( uint16_t p, uint64_t data, size_t nbytes )
-{
-    SYSLOG("dev_recv");
-}
-
-
-void map_stdio()
-{
-    dev = (virtiodev*)kmalloc(sizeof(virtiodev));
-
-    *dev= {
-        .base = 0x0A00,
-        .end  = 0x0B00,
-        .recv = dev_recv,
-    };
-
-    virtio_map(dev);
-}
 
 
 
@@ -118,7 +97,7 @@ void _start()
 
     kmalloc_init(hhdm->offset, (uint64_t)(mmap_req.response));
     kvirtio_init();
-    map_stdio();
+    kfilesystem_init();
 
 
 

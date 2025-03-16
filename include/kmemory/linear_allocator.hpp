@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/memory.hpp>
+#include <kmemory/memory.hpp>
 #include <cstring>
 
 

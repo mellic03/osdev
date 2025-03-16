@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/linear_allocator.hpp>
-#include <kernel/buddy_allocator.hpp>
+#include <kmemory/linear_allocator.hpp>
+#include <kmemory/buddy_allocator.hpp>
 
 
 void *operator new( size_t );
