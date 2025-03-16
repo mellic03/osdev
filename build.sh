@@ -3,7 +3,7 @@ mkdir -p ./build
 cd ./build
 # cmake -G "Ninja" ../src/
 # ninja -j8
-cmake ../src/
+cmake ../
 make -j4
 cd ../
 
@@ -19,10 +19,10 @@ mkdir -p ./iso_root/data
 mkdir -p ./iso_root/boot/limine
 
 
-cp ./src/data/* ./iso_root/data/
+cp ./kernel/data/* ./iso_root/data/
 mv ./iso_root/data/limine.conf ./iso_root/boot/limine/limine.conf
 
-cp -v ./build/ckos ./iso_root/boot/
+cp -v ./build/idkernel ./iso_root/boot/
 cp -v ./external/limine/limine-bios.sys \
       ./external/limine/limine-bios-cd.bin \
       ./external/limine/limine-uefi-cd.bin \
@@ -41,9 +41,9 @@ xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
         -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
         -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
         -efi-boot-part --efi-boot-image --protective-msdos-label \
-        iso_root -o ./output/ckos.iso
+        iso_root -o ./output/idkernel.iso
 
 # Install Limine stage 1 and 2 for legacy BIOS boot.
-./external/limine/limine bios-install ./output/ckos.iso
+./external/limine/limine bios-install ./output/idkernel.iso
 
 

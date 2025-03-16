@@ -126,14 +126,20 @@
         "linear_allocator.hpp": "c",
         "base_allocator.hpp": "c",
         "*.inc": "cpp",
-        "cstring.hpp": "c"
+        "cstring.hpp": "c",
+        "memory.hpp": "c",
+        "idk_header_end.h": "c",
+        "aaa.h": "c",
+        "cxxabiv1": "cpp",
+        "array.hpp": "c",
+        "inplace_stack.hpp": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",
-        "${workspaceFolder}/src/include/",
-        "${workspaceFolder}/src/include/libc/",
-        "${workspaceFolder}/src/include/libc++/",
-        "${workspaceFolder}/src/system/",
-        "${workspaceFolder}/src/"
+        "${workspaceFolder}/external/",
+        "${workspaceFolder}/include/",
+        "${workspaceFolder}/libc/include/",
+        "${workspaceFolder}/libc++/include/",
+        "${workspaceFolder}/libkernel/include/"
     ]
 }

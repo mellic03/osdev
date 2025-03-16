@@ -5,7 +5,7 @@
 qemu-system-x86_64 \
     -m 4G \
     -smp 4 \
-    -cdrom ./output/ckos.iso \
+    -cdrom ./output/idkernel.iso \
     -hdb ./output/sysdisk.img \
     -serial stdio \
 
