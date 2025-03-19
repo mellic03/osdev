@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cpp": "cpp",
         "any": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -132,14 +133,29 @@
         "aaa.h": "c",
         "cxxabiv1": "cpp",
         "array.hpp": "c",
-        "inplace_stack.hpp": "c"
+        "inplace_stack.hpp": "c",
+        "interrupt.hpp": "c",
+        "idk_kernel.h": "c",
+        "idk_hcf.h": "c",
+        "stdbool.h": "c",
+        "idk_interrupt.h": "c",
+        "idk_syscall.h": "c",
+        "libc++_init": "cpp",
+        "kdef.h": "c",
+        "syscall.h": "c",
+        "printc.h": "c",
+        "icxxabi.h": "c",
+        "puts.h": "c",
+        "stim.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/external/",
         "${workspaceFolder}/include/",
-        "${workspaceFolder}/libc/include/",
-        "${workspaceFolder}/libc++/include/",
-        "${workspaceFolder}/libkernel/include/"
-    ]
+        "${workspaceFolder}/lib/libc/include/",
+        "${workspaceFolder}/lib/libc++/include/",
+        "${workspaceFolder}/lib/libstim/include/",
+        "${workspaceFolder}/lib/libkernel/include/"
+    ],
+    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true
 }

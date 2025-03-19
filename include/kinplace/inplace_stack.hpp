@@ -22,6 +22,12 @@ private:
     T *m_top;
 
 public:
+    inplace_stack()
+    :   inplace_stack(size_t(0), nullptr)
+    {
+        
+    }
+
     inplace_stack( T *start, T *end )
     {
         m_start = start;
@@ -29,7 +35,7 @@ public:
         m_top   = m_start;
     }
 
-    inplace_stack( T *start, size_t len )
+    inplace_stack( size_t len, T *start )
     {
         m_start = start;
         m_end   = start + len;

@@ -24,9 +24,13 @@ private:
 
 public:
     inplace_vector()
-    :   inplace_vector(0, nullptr)
+    :   m_cap(0),
+        m_base(0),
+        m_top(0),
+        m_end(0),
+        self_alloc(false)
     {
-        self_alloc = false;
+        
     }
 
     inplace_vector( size_t capacity )
@@ -35,7 +39,7 @@ public:
         self_alloc = true;
     }
 
-    inplace_vector( size_t capacity, T *baseptr )
+    inplace_vector( T *baseptr, size_t capacity )
     :   m_cap(capacity),
         m_base(baseptr),
         m_top(baseptr),
@@ -44,7 +48,7 @@ public:
         self_alloc = false;
     }
 
-    void init( size_t capacity, T *baseptr )
+    void init( T *baseptr, size_t capacity )
     {
         m_cap  = capacity;
         m_base = baseptr;

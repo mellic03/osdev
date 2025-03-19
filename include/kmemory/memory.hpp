@@ -21,6 +21,22 @@ inline void  operator delete[](void *, void *) throw() { };
 
 namespace idk
 {
+    namespace memory
+    {
+        extern uint64_t hhdm;
+
+        inline uint64_t asphysical( uint64_t vaddr )
+        {
+            return vaddr - hhdm;
+        }
+    
+        inline uint64_t asvirtual( uint64_t paddr )
+        {
+            return paddr + hhdm;
+        }
+        
+    }
+ 
     static constexpr size_t KILO = 1024;
     static constexpr size_t MEGA = 1024*KILO;
     static constexpr size_t GIGA = 1024*MEGA;

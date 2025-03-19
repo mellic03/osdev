@@ -18,7 +18,7 @@ namespace idk
 
     public:
         linear_allocator() {  };
-        linear_allocator( size_t nbytes, void *baseptr );
+        linear_allocator( void *baseptr, size_t nbytes );
         ~linear_allocator();
     
         size_t bytesAllocated() { return (m_tail - m_base); }

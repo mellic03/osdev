@@ -127,13 +127,21 @@ struct idk::tvec4
 
 namespace idk
 {
-    using vec2 = tvec2<float>;
-    using vec3 = tvec3<float>;
-    using vec4 = tvec4<float>;
-
-    using dvec2 = tvec2<double>;
-    using dvec3 = tvec3<double>;
-    using dvec4 = tvec4<double>;
+    #ifdef IDKERNEL_SSE
+        using vec2  = tvec2<float>;
+        using vec3  = tvec3<float>;
+        using vec4  = tvec4<float>;
+        using dvec2 = tvec2<double>;
+        using dvec3 = tvec3<double>;
+        using dvec4 = tvec4<double>;
+    #else
+        using vec2  = tvec2<uint32_t>;
+        using vec3  = tvec3<uint32_t>;
+        using vec4  = tvec4<uint32_t>;
+        using dvec2 = tvec2<uint64_t>;
+        using dvec3 = tvec3<uint64_t>;
+        using dvec4 = tvec4<uint64_t>;
+    #endif
 
 
     using ivec2 = tvec2<int32_t>;
