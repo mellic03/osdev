@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <kstackframe.h>
 
 
 namespace idk
@@ -21,5 +22,11 @@ namespace idk
 
     };
 
+}
+
+extern "C"
+{
+    extern void cpu_ctx_load( kstackframe* );
+    extern void cpu_ctx_save( kstackframe* );
 }
 

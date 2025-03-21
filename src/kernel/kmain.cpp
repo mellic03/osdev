@@ -77,6 +77,69 @@ void run_fini_array()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+#include <kstackframe.h>
+
+
+struct CPU_Task
+{
+    uint8_t stack[1024];
+    kstackframe state;
+    CPU_Task *next;
+};
+
+
+CPU_Task *curr_task;
+CPU_Task *next_task;
+
+
+void task_init()
+{
+    curr_task = new CPU_Task();
+    next_task = new CPU_Task();
+
+    curr_task->next = next_task;
+    next_task->next = curr_task;
+
+    cpu_ctx_save(&(curr_task->state));
+    cpu_ctx_save(&(next_task->state));
+}
+
+void task_switch()
+{
+    cpu_ctx_save(&(curr_task->state));
+    curr_task = curr_task->next;
+    cpu_ctx_load(&(curr_task->state));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 idk::KSystem *sys;
 idk::WinFrameSolid *win;
 uint64_t count;
@@ -87,6 +150,36 @@ void pit_irq( kstackframe* )
     idk::PIT_reload();
     idk::PIC::sendEOI(0);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include <string.h>
+
 
 
 
@@ -146,10 +239,19 @@ void _start()
     KFS::Trie trie;
     auto *E = trie.insert("/home/michael/Desktop/sketchy.exec");
     E->print_path();
+
     // auto file = system.getModule("kshell.exec");
     // idk::ExecHeader header = { file->address, file->size };
     // int result = system.execute(&header, 0, nullptr);
     // SYSLOG("\n\nexec result: 0x%lx\n\n", result);
+
+    // void  *exec_addr = (void*)(0xFFFF800100000000);
+    // memcpy(exec_addr, header.addr, header.size);
+    // using YOLO = int (*)(int, char**);
+    // int retvalue = ((YOLO)exec_addr)(0, nullptr);
+    // // return retvalue;
+
+
 
     auto &video = system.video;
     win = video.createWinFrame<idk::WinFrameSolid>(

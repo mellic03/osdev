@@ -19,11 +19,10 @@ CFLAGS="-std=c11 \
         -fno-exceptions \
         -fno-stack-protector \
         -fno-stack-check \
-        -fPIC \
-        -z max-page-size=0x1000 -mno-red-zone \
         -m64 -mcmodel=large -march=x86-64
+        -z max-page-size=0x1000 -mno-red-zone \
         -Wno-missing-field-initializers \
-        -mno-mmx -mno-sse -mno-sse2 \
+        -mmmx -msse -msse2 \
         -nostdlib \
         -ffunction-sections -fdata-sections"
 

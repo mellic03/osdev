@@ -71,7 +71,12 @@ isr_stub_%+%1:
 %endmacro
 
 
-isr_stub_common:
+get_rip:
+    mov rax, [rsp]
+    ret
+
+
+%macro ctx_save 0
     push rbp
     push rsi
     push rdi
@@ -84,8 +89,13 @@ isr_stub_common:
     push r13
     push r12
     push r11
-    mov rdi, rsp
-    call __isr_dispatch
+    call get_rip ;
+    push rax     ; Instruction pointer
+%endmacro
+
+
+%macro ctx_load 0
+    pop rax     ; Instruction pointer
     pop r11
     pop r12
     pop r13
@@ -98,7 +108,14 @@ isr_stub_common:
     pop rdi
     pop rsi
     pop rbp
+%endmacro
 
+
+isr_stub_common:
+    ctx_save
+    mov rdi, rsp
+    call __isr_dispatch
+    ctx_load
 
     add rsp, 16
     iretq

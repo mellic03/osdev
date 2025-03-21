@@ -1,8 +1,12 @@
 #include "cpu.hpp"
+#include <kstackframe.h>
+
 
 extern "C"
 {
     extern void __cpu_enable_SSE(void);
+    // extern void cpu_ctx_load( kstackframe* );
+    // extern void cpu_ctx_save( kstackframe* );
 }
 
 
@@ -30,11 +34,3 @@ idk::CPU::fxrstor()
     asm volatile("fxrstor %0" : : "m"(m_fxsave));
 }
 
-
-
-
-// void asm_jmp( void *addr )
-// {
-//     void (*yolo)(void) = (void (*)())addr;
-//     yolo();
-// }

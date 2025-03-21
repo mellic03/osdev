@@ -61,12 +61,9 @@ int
 KSystem::execute( ExecHeader *exec, int argc, char **argv )
 {
     void  *exec_addr = (void*)(0xFFFF800100000000);
-    // void  *exec_addr = (void*)(0xFFFFFFFF80000000);
     memcpy(exec_addr, exec->addr, exec->size);
-
     using YOLO = int (*)(int, char**);
     int retvalue = ((YOLO)exec_addr)(argc, argv);
-
     return retvalue;
 }
 
