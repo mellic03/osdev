@@ -1,8 +1,6 @@
 #pragma once
 #include <kdef.h>
-#include <stim/interrupt.h>
-#include <stim/syscall.h>
-
+#include "../interrupt/interrupt.hpp"
 
 
 namespace idk

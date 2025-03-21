@@ -1,7 +1,6 @@
-#include <stim/interrupt.h>
-
-#include <kdriver/serial.hpp>
-#include "./interrupt.hpp"
+#include "interrupt.hpp"
+#include "../driver/serial.hpp"
+#include "../driver/pic.hpp"
 #include "../cpu/gdt.hpp"
 
 using namespace idk;
@@ -103,7 +102,7 @@ void idk::IDT_load()
     {
         idt_set_descriptor(i, __isr_table[i], INTERRUPT_GATE);
     }
-    
+
     asm volatile ("lidt %0" : : "m"(idtr)); // Load IDT
 
     SYSLOG_END();

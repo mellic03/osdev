@@ -4,9 +4,11 @@ extern "C"
     #include <limine/limine.h>
 }
 
+#include "video.hpp"
+#include "../driver/serial.hpp"
 #include <kmalloc.h>
-#include <kvideo/video.hpp>
-#include <kdriver/serial.hpp>
+#include <kmemxx.h>
+#include <string.h>
 #include <algorithm>
 
 
@@ -65,9 +67,9 @@ idk::Video::swapBuffers()
 {
     size_t count = m_W * m_H;
 
-    memcpy32(m_frontbuffer[0], m_backbuffer[0], count);
+    KMemcpy<uint32_t>(m_frontbuffer[0], m_backbuffer[0], count);
     // memset(m_depthbuffer[0], 127, count);
-    memset32(m_backbuffer[0], 0, count);
+    KMemset<uint32_t>(m_backbuffer[0], 0, count);
 }
 
 

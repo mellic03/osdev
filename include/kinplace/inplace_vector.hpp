@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <kmemory/memory.hpp>
+#include <kernel/memory.hpp>
 
 
 namespace idk

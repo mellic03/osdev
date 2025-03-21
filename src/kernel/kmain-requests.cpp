@@ -46,7 +46,6 @@ __attribute__((used, section(".limine_requests_end")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
 
-
 // const char *mmap_str( uint32_t type )
 // {
 //     switch (type)

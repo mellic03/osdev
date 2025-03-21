@@ -1,7 +1,5 @@
 [bits 64]
 
-
-
 section .text
 
 global __cpu_enable_SSE
@@ -14,5 +12,4 @@ __cpu_enable_SSE:
     or   ax, 3 << 9
     mov cr4, rax
     ret
-
 

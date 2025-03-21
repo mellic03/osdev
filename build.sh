@@ -1,50 +1,42 @@
 #!/bin/bash
 
-
-cd lib/libstim
-./build.sh
-cd ../../
-
-cd src/programs
-./build.sh
-cd ../../
-
-
-
 mkdir -p ./build
 cd ./build
-# cmake -G "Ninja" ../
-# ninja -j8
-cmake -DCMAKE_LINKER=./external/x86_64-elf-tools-linux/bin/x86e_64-elf-ld \
-      -DCMAKE_TOOLCHAIN_FILE=./toolchain.cmake ../
+cmake -DCMAKE_TOOLCHAIN_FILE=./toolchain.cmake ../
 make -j8
 cd ../
+
+
+cd src/programs
+./build.sh # > /dev/null 2>&1
+cd ../../
 
 
 # # git clone https://github.com/limine-bootloader/limine.git \
 # #       --branch=v9.x-binary --depth=8 \
 # #       ./external/limine
 
-# # cd external
-# # make -C limine
-# # cd ../
+# cd external
+# make -C limine
+# cd ../
 
-mkdir -p ./iso_root/data
-mkdir -p ./iso_root/boot/limine
+rm -rf ./output
+mkdir -p ./output/iso_root/data
+mkdir -p ./output/iso_root/boot/limine
 
-cp -R ./src/data/* ./iso_root/data/
-mv ./iso_root/data/limine.conf ./iso_root/boot/limine/limine.conf
+cp -R ./src/data/* ./output/iso_root/data/
+mv ./output/iso_root/data/limine.conf ./output/iso_root/boot/limine/limine.conf
 
-cp -v ./build/idkernel ./iso_root/boot/
+cp -v ./sysroot/bin/idkernel ./output/iso_root/boot/
 cp -v ./external/limine/limine-bios.sys \
       ./external/limine/limine-bios-cd.bin \
       ./external/limine/limine-uefi-cd.bin \
-      ./iso_root/boot/limine/
+      ./output/iso_root/boot/limine/
 
 # Create the EFI boot tree and copy Limine's EFI executables over.
-mkdir -p ./iso_root/EFI/BOOT
-cp -v ./external/limine/BOOTX64.EFI ./iso_root/EFI/BOOT/
-cp -v ./external/limine/BOOTIA32.EFI ./iso_root/EFI/BOOT/
+mkdir -p ./output/iso_root/EFI/BOOT
+cp -v ./external/limine/BOOTX64.EFI ./output/iso_root/EFI/BOOT/
+cp -v ./external/limine/BOOTIA32.EFI ./output/iso_root/EFI/BOOT/
 
 
 # Create ISO.
@@ -53,7 +45,7 @@ xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
         -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
         -apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
         -efi-boot-part --efi-boot-image --protective-msdos-label \
-        iso_root -o ./output/idkernel.iso
+        output/iso_root -o ./output/idkernel.iso
 
 # Install Limine stage 1 and 2 for legacy BIOS boot.
 limine bios-install ./output/idkernel.iso

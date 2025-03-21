@@ -1,4 +1,4 @@
-#include <kernel/cpu.hpp>
+#include "cpu.hpp"
 
 extern "C"
 {
@@ -9,20 +9,18 @@ extern "C"
 void
 idk::CPU::init()
 {
-    #ifdef IDKERNEL_SSE
+    #ifdef __libk_sse
         __cpu_enable_SSE();
         fxsave();
     #endif
-
 }
-
 
 
 
 void
 idk::CPU::fxsave()
 {
-    asm volatile("fxsave %0 "::"m"(m_fxsave));
+    asm volatile("fxsave %0 " : : "m"(m_fxsave));
 }
 
 

@@ -2,20 +2,18 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/cpu.hpp>
-#include <kmemory/memory.hpp>
-#include <kvideo/video.hpp>
+
+#include "cpu/cpu.hpp"
+#include "video/video.hpp"
+#include <kernel/memory.hpp>
 #include <kinplace/inplace_vector.hpp>
 
 
-struct limine_hhdm_response;
 struct limine_framebuffer_response;
 struct limine_module_response;
 struct limine_memmap_response;
 struct limine_mp_response;
-
 struct limine_file;
-
 
 
 namespace idk
@@ -25,16 +23,16 @@ namespace idk
         void *addr;
         uint64_t size;
     };
-
-    struct KRequests
+        
+    struct Krequests
     {
-        limine_hhdm_response         *hhdm;
+        uint64_t                      hhdm;
         limine_framebuffer_response  *fb;
         limine_module_response       *modules;
         limine_memmap_response       *mmaps;
         limine_mp_response           *mp;
     };
-    
+
 
     class KSystem;
 }
@@ -43,8 +41,6 @@ namespace idk
 class idk::KSystem
 {
 private:
-    KRequests m_reqs;
-
     uint64_t m_uptime_ticks;
     uint64_t m_uptime_msec;
 
@@ -57,15 +53,20 @@ private:
     void _load_modules();
 
 public:
+    Krequests m_reqs;
     idk::CPU cpu0, cpu1, cpu2, cpu4;
     idk::Video video;
 
-    KSystem( const KRequests& );
+    KSystem( const Krequests& );
+    // void init();
 
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();
     limine_file *getModule( const char *label );
     int          execute( ExecHeader*, int argc, char **argv );
+
+    void         shell( bool );
+    void         lsmem();
 
 };
 

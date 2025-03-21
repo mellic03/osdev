@@ -1,10 +1,10 @@
 #include <kernel.h>
 #include <kernel/bitmanip.hpp>
-#include <kernel/interrupt.hpp>
-#include <kmemory/memory.hpp>
-#include <kdriver/serial.hpp>
-
+#include <kinterrupt.h>
 #include <algorithm>
+
+#include <kernel/memory.hpp>
+#include "../driver/serial.hpp"
 
 // size_t size_table[3][10] = {
 // //     1    2    4    8    16   32  64   128  256  512
@@ -138,7 +138,7 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
 
     if (idx == -1)
     {
-        idk::Interrupt<INT_OUT_OF_MEMORY>();
+        KInterrupt<INT_OUT_OF_MEMORY>();
         return nullptr;
     }
 

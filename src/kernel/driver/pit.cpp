@@ -1,5 +1,5 @@
-#include <kdriver/pit.hpp>
-#include <kdriver/serial.hpp>
+#include "pit.hpp"
+#include "serial.hpp"
 #include <algorithm>
 
 
@@ -37,30 +37,39 @@
 void
 idk::PIT_init()
 {
-    IO::outb(PIT_CMD, CMD_MODE2 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
-    IO::outb(PIT_COUNTER0, PIT_HERTZ & 0xFF);                   // Send low byte
-    IO::outb(PIT_COUNTER0, (PIT_HERTZ >> 8) & 0xFF);            // Send high byte
+    IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
+    PIT_reload();
 }
 
-uint32_t
+
+void
+idk::PIT_reload()
+{
+    uint16_t reload_value = 1200;
+    IO::outb(PIT_COUNTER0, reload_value & 0xFF);
+    IO::outb(PIT_COUNTER0, (reload_value >> 8) & 0xFF);
+}
+
+
+uint16_t
 idk::PIT_read()
 {
     IO::outb(PIT_CMD, CMD_LATCH | CMD_COUNTER0); // Latch the current counter value
     uint8_t low = IO::inb(PIT_COUNTER0);        // Read the low byte
     uint8_t high = IO::inb(PIT_COUNTER0);       // Read the high byte
-    return (high << 8) | low;                   // Combine high and low bytes
+    return (uint16_t(high) << 8) | low;         // Combine high and low bytes
 }
 
 bool
 idk::PIT_edge()
 {
-    static uint32_t lastValue = 0;
-    uint32_t currentValue = PIT_read();
+    static uint16_t prev = 0;
+    uint16_t curr = PIT_read();
 
-    // Check if the counter has wrapped around
-    bool wrapped = currentValue > lastValue;
-    lastValue = currentValue;
-    return wrapped;
+    bool edge = (curr > prev);
+    prev = curr;
+
+    return edge;
 }
 
 

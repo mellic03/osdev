@@ -1,19 +1,19 @@
 #include <string.h>
 
 
-size_t strspn( const char *dst, const char *ct )
+size_t strspn( const char *str, const char *chars )
 {
-    int i;
+    size_t i;
     char ch[256] = {0};
   
-    for (i=0; i<strlen(ct); i++)
+    for (i=0; i<strlen(chars); i++)
     {
-        ch[ct[i]] = 1;
+        ch[int(chars[i])] = 1;
     }
   
-    for (i=0; i<strlen(ct); i++)
+    for (i=0; i<strlen(str); i++)
     {
-        if (ch[ct[i]] == 0)
+        if (ch[int(str[i])] == 0)
         {
             break;
         }
@@ -37,11 +37,11 @@ size_t strcspn( const char *str, const char *bad )
         marker++;
     }
     for (ch = bad; *ch != 0; ch++)
-        table[*ch] = marker;
+        table[int(*ch)] = marker;
 
     /* Test the string */
     for (ch = str; *ch != 0; ch++)
-        if (table[*ch] == marker)
+        if (table[int(*ch)] == marker)
             return -1;
 
     return 1;

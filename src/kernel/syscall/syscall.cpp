@@ -1,31 +1,13 @@
 #include <kernel.h>
-#include <kdriver/serial.hpp>
+#include "../driver/serial.hpp"
 #include <string.h>
+#include <stdio.h>
 
 #include "./syscall.hpp"
 #include "../interrupt/interrupt.hpp"
+#include "../kfs/kfs.hpp"
 
 using namespace idk;
-
-// static uint32_t sc_type;
-// static uint32_t sc_flags;
-// static char     sc_buf[256];
-
-
-// kret_t
-// idk::syscall( uint32_t *type, uint32_t *flags, char buf[256] )
-// {
-//     sc_type  = *type;
-//     sc_flags = *flags;
-//     memcpy(sc_buf, buf, sizeof(sc_buf));
-
-//     idk::Interrupt<INT_SYSCALL>();
-
-//     return KRET_SUCCESS;
-// }
-
-
-
 
 
 static void
@@ -40,11 +22,57 @@ file_create()
 
 
 static void
-put_string( ksysc_file_request *req )
+sysc_printf( ksysc_stdio_request *req )
 {
-    char *str = (char*)(req->data);
-    serialf("%s", str);
+    __serialf(req->fmt, *(req->vlist));
 }
+
+
+static void
+sysc_file_create( ksysc_request *req )
+{
+    const char *path = (const char*)req->data;
+    KFile *fh = KFS::KFile_create(1024, nullptr);
+
+}
+
+
+
+static void
+file_get( ksysc_request *req )
+{
+    KFile *fh = nullptr;
+
+    switch (req->flags)
+    {
+        default: break;
+        case SYSF_FILE_KDEVKEY: fh = KFS::kdevkey;   break;
+        case SYSF_FILE_KDEVSCN: fh = KFS::kdevscn;   break;
+    }
+
+    req->data = reinterpret_cast<void*>(fh);
+}
+
+
+
+static void
+file_flush( ksysc_request *req )
+{
+    // SYSLOG_BEGIN("file_flush");
+    KFile *fh = reinterpret_cast<KFile*>(req->data);
+    fh->fsh(fh);
+    // SYSLOG_END();
+}
+
+
+
+static void
+stdio_get( ksysc_request *req )
+{
+    req->data = (void*)(&KFS::kstdio);
+}
+
+
 
 
 
@@ -54,13 +82,17 @@ idk::syscall_handler( kstackframe *frame )
     // SYSLOG_BEGIN("syscall_handler");
     auto *req = (ksysc_request*)(frame->rax);
 
-    // SYSLOG("type:  %u", frame->rax);
-    // SYSLOG("data:  %u", frame->rbx);
+    // SYSLOG("type:  %u", req->type);
 
     switch (req->type)
     {
         default: break;
-        case SYSC_PUT_STRING: put_string((ksysc_file_request*)req); break;
+        case SYSC_FILE_CREATE:   sysc_file_create(req); break;
+        case SYSC_FILE_GET:      file_get(req);         break;
+        case SYSC_FILE_FLUSH:    file_flush(req);       break;
+        case SYSC_FILE_GETSTDIO: stdio_get(req);        break;
+        case SYSC_MEM_ALLOC:     req->data = kmalloc(req->size); break;
+        case SYSC_MEM_FREE:      kfree(req->data);
     }
 
     // SYSLOG_END();

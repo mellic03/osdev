@@ -10,15 +10,22 @@ ENABLE_LANGUAGE(ASM_NASM)
 set(IDKERNEL_LIBRARIES "")
 set(IDKERNEL_SOURCES "")
 
+set(KERNEL_SYSROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/sysroot")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/sysroot/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/sysroot/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/sysroot/bin")
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
+
 
 include_directories("${CMAKE_SOURCE_DIR}/external/")
-include_directories("${CMAKE_SOURCE_DIR}/lib/libstim/include/")
-include_directories("${CMAKE_SOURCE_DIR}/lib/libkernel/include/")
+include_directories("${CMAKE_SOURCE_DIR}/lib/libk/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libc/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libc++/include/")
 include_directories("${CMAKE_SOURCE_DIR}/include/")
 
-add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libkernel/")
+add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
@@ -36,9 +43,18 @@ add_library(
 )
 
 
+
+
+
+
 add_executable(
     ${PROJECT_NAME}
     ${IDKERNEL_SOURCES}
+)
+
+target_compile_definitions(
+    ${PROJECT_NAME} PUBLIC 
+    -D__is_kernel
 )
 
 target_link_libraries(
@@ -47,11 +63,12 @@ target_link_libraries(
     crti_o
     # ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/crtbegin.o
 
-    idk_libc
-    idk_libc++
+    libc_k
+    libc++
     ${IDKERNEL_LIBRARIES}
 
     # ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/crtend.o
     crtn_o
 )
+
 

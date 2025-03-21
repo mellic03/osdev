@@ -1,10 +1,11 @@
 
 file(
     GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/_start.asm
+    # ${CMAKE_CURRENT_SOURCE_DIR}/_start.asm
+    # ${CMAKE_CURRENT_SOURCE_DIR}/kmain-requests.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kmain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ksystem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/module.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ksystem-shell.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/abi/icxxabi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.cpp
@@ -13,7 +14,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/gdt.asm
 
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/filesystem/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/kfs/*.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/interrupt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/stub.asm

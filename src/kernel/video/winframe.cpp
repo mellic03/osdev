@@ -1,7 +1,7 @@
-#include <kvideo/buf_wrapper.hpp>
-#include <kvideo/font.hpp>
-#include <kvideo/winframe.hpp>
-#include <kvideo/video.hpp>
+#include "buf_wrapper.hpp"
+#include "font.hpp"
+#include "winframe.hpp"
+#include "video.hpp"
 
 // ---------------------------------------------------------------------------------------------
 idk::WinFrameBase::WinFrameBase( const vec2 &tl, const vec2 &sp )
@@ -32,7 +32,7 @@ idk::WinFrameBase::giveChild( WinFrameBase *child )
 
 
 // ---------------------------------------------------------------------------------------------
-#include <kdriver/serial.hpp>
+#include "../driver/serial.hpp"
 
 void
 idk::WinFrameSolid::render( idk::Video &video )

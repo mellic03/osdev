@@ -52,6 +52,36 @@ public:
     T& operator[] ( int i ) { return m_data[i]; }
     const T& operator[] ( int i ) const { return m_data[i]; }
 
+
+    struct iterator;
+    iterator begin() { return iterator(m_data); };
+    iterator end()   { return iterator(m_end);  };
+
 };
 
+
+template <typename T, size_t N>
+struct idk::array<T, N>::iterator
+{
+    T *ptr;
+
+    iterator( T *p )                 : ptr(p)         {  };
+    iterator( const iterator &other ): ptr(other.ptr) {  };
+
+    iterator &operator++()
+    {
+        ptr++;
+        return *this;
+    };
+
+    iterator operator++(int)
+    {
+        return iterator(ptr++);
+    };
+
+    bool operator == ( const iterator &rhs ) { return ptr == rhs.ptr; };
+    bool operator != ( const iterator &rhs ) { return ptr != rhs.ptr; };
+    T &operator * () { return *ptr; };
+
+};
 

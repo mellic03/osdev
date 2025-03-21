@@ -1,24 +1,32 @@
-#include "./kmain-requests.cpp"
+#ifndef __is_kernel
+    #define __is_kernel
+#endif
 
+#include "kmain-requests.cpp"
 
 #include <cxxabiv1>
 #include <kernel.h>
 #include <kinterrupt.h>
 
-#include <kdriver/pic.hpp>
-#include <kdriver/ps2_keyboard.hpp>
-#include <kdriver/serial.hpp>
+#include <libc.h>
+#include <libc++>
+
+#include "driver/pic.hpp"
+#include "driver/pit.hpp"
+// #include "driver/ps2_keyboard.hpp"
+#include "driver/keyboard.hpp"
+#include "driver/serial.hpp"
+
 #include <kinplace/inplace_vector.hpp>
-#include <kmemory/memory.hpp>
-#include <kernel/cpu.hpp>
-#include <kvideo/video.hpp>
+
+#include <kscancode.h>
 
 #include "./cpu/gdt.hpp"
 #include "./interrupt/interrupt.hpp"
-#include "./lang/lang.hpp"
+#include "./kfs/kfs.hpp"
+// #include "./lang/lang.hpp"
 #include "./syscall/syscall.hpp"
 #include "./ksystem.hpp"
-
 
 
 
@@ -30,6 +38,7 @@ void genfault_handler( kstackframe *frame )
     kernel_hcf();
     SYSLOG_END();
 }
+
 
 
 uint64_t idk::memory::hhdm;
@@ -68,6 +77,19 @@ void run_fini_array()
 
 
 
+idk::KSystem *sys;
+idk::WinFrameSolid *win;
+uint64_t count;
+
+void pit_irq( kstackframe* )
+{
+    count++;
+    idk::PIT_reload();
+    idk::PIC::sendEOI(0);
+}
+
+
+
 
 extern "C"
 void _start()
@@ -83,68 +105,99 @@ void _start()
 
     SYSLOG_BEGIN("_start");
     SYSLOG("serial initialized");
-
-    idk::KRequests lim_reqs = {
-        .hhdm    = lim_hhdm_req.response,
+    
+    Krequests reqs = {
+        .hhdm    = lim_hhdm_req.response->offset,
         .fb      = lim_fb_req.response,
         .modules = lim_module_req.response,
         .mmaps   = lim_mmap_req.response,
         .mp      = lim_mp_req.response
     };
-    
-    idk::KSystem system(lim_reqs);
 
-    PIC::remap(60, 68);
-    PIC::unmaskAll();
+    idk::KSystem system(reqs);
+    sys = &system;
+    count = 0;
+    double timer = 0;
+
+
     asm volatile("cli");
-
+    idk::PIT_init();
     idk::GDT_load();
     idk::GDT_flush();
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
-    // idk::EnableInterrupts();
+    idk::onInterrupt(0x20+0,  pit_irq);
+    idk::onInterrupt(0x20+1,  keyboard_irq_handler);
 
-    system.video.init(lim_reqs.fb);
+    PIC::remap(32, 40);
+    PIC::disable();
+    PIC::unmask(0);
+    PIC::unmask(1);
+	asm volatile ("sti");
 
 
-    auto file = system.getModule("hello_world.exec");
-    idk::ExecHeader header = { file->address, file->size };
-    int result = system.execute(&header, 0, nullptr);
-    SYSLOG("\n\nexec result: 0x%lx\n\n", uint32_t(result));
+    system.video.init(system.m_reqs.fb);
 
+    libc_init();
+    std::detail::libcpp_init();
+
+    KFS::Trie trie;
+    auto *E = trie.insert("/home/michael/Desktop/sketchy.exec");
+    E->print_path();
+    // auto file = system.getModule("kshell.exec");
+    // idk::ExecHeader header = { file->address, file->size };
+    // int result = system.execute(&header, 0, nullptr);
+    // SYSLOG("\n\nexec result: 0x%lx\n\n", result);
 
     auto &video = system.video;
-    auto *win = video.createWinFrame<idk::WinFrameSolid>(
+    win = video.createWinFrame<idk::WinFrameSolid>(
         vec2(100, 100), vec2(400, 500)
     );
 
     win->m_bg = uvec4(255, 155, 155, 255);
     win->m_depth = 0.5f;
 
-    ps2_keyboard kb;
+
+    // uint64_t ticks = 0;
+    // uint64_t msecs = 0;
+    // static uint64_t seconds = 0;
 
     while (true)
     {
+        timer = double(count);
+        SYSLOG("timer=%f", timer/1000.0);
+
+
+        // if (PIT_edge())
+        // {
+        //     ticks += PIT_HERTZ;
+        //     msecs = ticks / 1000;
+        //     uint64_t scnds = msecs / 1000;
+        
+        //     if (scnds > seconds)
+        //     {
+        //         seconds = scnds;
+        //         SYSLOG("seconds=%lu\n", seconds); // Print delta
+        //     }
+        // }
+
         video.update();
+        uint8_t key = 0;
 
-        char key = kb.poll();
-
-        if (kb.state['w']) { win->m_tl.y -= 1; }
-        if (kb.state['s']) { win->m_tl.y += 1; }
-        if (kb.state['a']) { win->m_tl.x -= 1; }
-        if (kb.state['d']) { win->m_tl.x += 1; }
+        while (KFile_read(&key, KFS::kdevscn, 1))
+        {
+            if (key==DOWN_W) win->m_tl.y -= 1;
+            if (key==DOWN_S) win->m_tl.y += 1;
+            if (key==DOWN_A) win->m_tl.x -= 1;
+            if (key==DOWN_D) win->m_tl.x += 1;
+        }
 
         // if (win->m_tl.x > 100)
         // {
-        //     idk::Interrupt<INT_SYSCALL>();
+        //     KInterrupt<INT_SYSCALL>();
         // }
-
-        if (!key)
-        {
-            continue;
-        }
     }
 
 
@@ -190,6 +243,10 @@ void pagefault_handler( kstackframe *frame )
     if (flags & (1<<15))
         SYSLOG("\t- Fault was due to an SGX violation. The fault is unrelated to ordinary paging.");
 
+    kernel_hcf();
 
     SYSLOG_END();
 }
+
+
+

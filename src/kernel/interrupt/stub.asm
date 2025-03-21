@@ -59,25 +59,19 @@ extern __isr_dispatch
 
 %macro _err_stub 1
 isr_stub_%+%1:
-    cli
-    mov rdi, qword %1
-    mov rsi, 1234
-    call __isr_dispatch
-    add rsp, 8
-    iretq
-
+    push qword %1
+    jmp isr_stub_common
 %endmacro
-
-
-
 
 %macro _noerr_stub 1
 isr_stub_%+%1:
-    cli
-
     push 0 ; Dummy error code
     push qword %1
+    jmp isr_stub_common
+%endmacro
 
+
+isr_stub_common:
     push rbp
     push rsi
     push rdi
@@ -90,14 +84,25 @@ isr_stub_%+%1:
     push r13
     push r12
     push r11
-
     mov rdi, rsp
     call __isr_dispatch
+    pop r11
+    pop r12
+    pop r13
+    pop r14
+    pop r15
+    pop rax
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rdi
+    pop rsi
+    pop rbp
 
-    add rsp, 112
+
+    add rsp, 16
     iretq
 
-%endmacro
 
 
 

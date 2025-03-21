@@ -1,38 +1,34 @@
 #define LIMINE_API_REVISION 3
 #include <limine/limine.h>
 
-
 #include <kdef.h>
+#include <kfile.h>
 #include <kmalloc.h>
-#include <kdriver/serial.hpp>
-#include <libc/libc_init.h>
-#include <libc++/libc++_init>
+#include <string.h>
 
+#include "driver/serial.hpp"
 #include "./ksystem.hpp"
-#include "./filesystem/filesystem.hpp"
+#include "./kfs/kfs.hpp"
+
 using namespace idk;
 
 
-extern kret_t kvirtio_init();
 
-
-KSystem::KSystem( const KRequests &reqs )
+KSystem::KSystem( const Krequests &reqs )
+:   m_reqs(reqs)
 {
+
     SYSLOG_BEGIN("KSystem::KSystem");
 
-    m_reqs = reqs;
     cpu0.init();
     
     _load_mmaps();
+    lsmem();
+    kmalloc_init(m_mmaps[0]);
+    // kvirtio_init();
 
-    kmalloc_init((void*)(m_mmaps[0].addr), m_mmaps[0].len);
-    kvirtio_init();
-
+    KFS::init();
     _load_modules();
-
-    kfilesystem_init();
-    libc_init();
-    libcpp_init();
 
     SYSLOG_END();
 }
@@ -41,7 +37,7 @@ KSystem::KSystem( const KRequests &reqs )
 uint64_t
 KSystem::getHHDM()
 {
-    return m_reqs.hhdm->offset;
+    return m_reqs.hhdm;
 }
 
 
@@ -65,6 +61,7 @@ int
 KSystem::execute( ExecHeader *exec, int argc, char **argv )
 {
     void  *exec_addr = (void*)(0xFFFF800100000000);
+    // void  *exec_addr = (void*)(0xFFFFFFFF80000000);
     memcpy(exec_addr, exec->addr, exec->size);
 
     using YOLO = int (*)(int, char**);
@@ -76,13 +73,31 @@ KSystem::execute( ExecHeader *exec, int argc, char **argv )
 
 
 
+const char *mmap_str( uint32_t type )
+{
+    switch (type)
+    {
+        default: return "UNKNOWN_TYPE";
+        case LIMINE_MEMMAP_USABLE:  return "LIMINE_MEMMAP_USABLE";
+        case LIMINE_MEMMAP_RESERVED:    return "LIMINE_MEMMAP_RESERVED";
+        case LIMINE_MEMMAP_ACPI_RECLAIMABLE:    return "LIMINE_MEMMAP_ACPI_RECLAIMABLE";
+        case LIMINE_MEMMAP_ACPI_NVS:    return "LIMINE_MEMMAP_ACPI_NVS";
+        case LIMINE_MEMMAP_BAD_MEMORY:  return "LIMINE_MEMMAP_BAD_MEMORY";
+        case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:  return "LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE";
+        case LIMINE_MEMMAP_EXECUTABLE_AND_MODULES:  return "LIMINE_MEMMAP_EXECUTABLE_AND_MODULES";
+        case LIMINE_MEMMAP_FRAMEBUFFER: return "LIMINE_MEMMAP_FRAMEBUFFER";
+    }
+}
+
 
 
 void
 KSystem::_load_mmaps()
 {
+    SYSLOG_BEGIN("KSystem::_load_mmaps");
+
     auto *res = m_reqs.mmaps;
-    auto hhdm = m_reqs.hhdm->offset;
+    auto hhdm = getHHDM();
 
     m_mmaps = inplace_vector<MemoryMap>(m_mmap_buf, res->entry_count);
 
@@ -94,7 +109,7 @@ KSystem::_load_mmaps()
         if (e->type == LIMINE_MEMMAP_USABLE)
         {
             m_mmaps.push_back(
-                MemoryMap(hhdm+e->base, e->length)
+                MemoryMap(e->base, e->length, hhdm)
             );
         }
     }
@@ -113,7 +128,29 @@ KSystem::_load_mmaps()
         }
     }
 
+    SYSLOG_END();
 }
+
+void
+KSystem::lsmem()
+{
+    SYSLOG("LSMEM");
+    uint64_t hhdm = getHHDM();
+
+    for (auto &[phys, addr, len]: m_mmaps)
+    {
+        SYSLOG("Memmap USABLE");
+        SYSLOG("\tphys:\t0x%lx", phys);
+        SYSLOG("\tbase:\t0x%lx", addr);
+        SYSLOG("\tend: \t0x%lx", addr+len);
+        SYSLOG("\tsize:\t%luB",  len);
+        SYSLOG("\t     \t%luKB", len/idk::KILO);
+        SYSLOG("\t     \t%luMB", len/idk::MEGA);
+        SYSLOG("\n");
+    }
+
+}
+
 
 
 
@@ -143,7 +180,6 @@ KSystem::_load_modules()
 
     SYSLOG("modules: %d\n", m_modules.size());
     SYSLOG("execs:   %d\n", m_execs.size());
-
 
     SYSLOG_END();
 

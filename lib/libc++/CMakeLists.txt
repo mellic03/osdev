@@ -4,11 +4,17 @@ file(
 )
 
 add_library(
-    idk_libc++ STATIC
+    libc++ STATIC
     ${SOURCES}
 )
 
 target_link_libraries(
-    idk_libc++
-    idk_libc
+    libc++
+    libc
+)
+
+
+file(
+    COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
+    DESTINATION ${KERNEL_SYSROOT_DIRECTORY}
 )

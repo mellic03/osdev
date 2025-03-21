@@ -1,5 +1,4 @@
-#include <kdriver/serial.hpp>
-
+#include "serial.hpp"
 #include <stdio.h>
 #include <string.h>
 
@@ -98,15 +97,10 @@ void idk::IO::wait()
 
 
 
-
-void idk::serialf( const char *fmt, ... )
+void idk::__serialf( const char *fmt, va_list args )
 {
-    va_list args;
-    va_start (args, fmt);
     int n = vsprintf(__serial_buf, fmt, args);
-    __serial_buf[n-1] = '\n';
-    __serial_buf[n]   = '\0';
-    va_end(args);
+    // __serial_buf[n]   = '\0';
 
     for (int i=0; i<__syslog_indent; i++)
     {
@@ -122,6 +116,17 @@ void idk::serialf( const char *fmt, ... )
 
 
 
+void idk::serialf( const char *fmt, ... )
+{
+    va_list args;
+    va_start (args, fmt);
+    __serialf(fmt, args);
+    va_end(args);
+}
+
+
+
+
 
 
 
@@ -132,42 +137,28 @@ void __popIndent( int n )
     __syslog_indent = (__syslog_indent < 0) ? 0 : __syslog_indent;
 }
 
-extern "C"
+void SYSLOG_BEGIN( const char *title )
 {
-    void SYSLOG_BEGIN( const char *title )
-    {
-        SYSLOG("[%s]", title);
-        SYSLOG("{");
-        __pushIndent(4);
-    }
-
-
-    void SYSLOG( const char *fmt, ... )
-    {
-        va_list args;
-        va_start (args, fmt);
-        int n = vsprintf(__serial_buf, fmt, args);
-        __serial_buf[n-1] = '\n';
-        __serial_buf[n]   = '\0';
-        va_end(args);
-
-        for (int i=0; i<__syslog_indent; i++)
-        {
-            idk::IO::outb(idk::IO::COM1, ' ');
-        }
-
-        for (int i=0; i<n; i++)
-        {
-            idk::IO::outb(idk::IO::COM1, __serial_buf[i]);
-        }
-    }
-
-
-    void SYSLOG_END()
-    {
-        __popIndent(4);
-        SYSLOG("}");
-    }
-
-
+    SYSLOG("[%s]", title);
+    SYSLOG("{");
+    __pushIndent(4);
 }
+
+
+void SYSLOG( const char *fmt, ... )
+{
+    va_list args;
+    va_start (args, fmt);
+    idk::__serialf(fmt, args);
+    idk::serialf("\n");
+    va_end(args);
+}
+
+
+void SYSLOG_END()
+{
+    __popIndent(4);
+    SYSLOG("}");
+}
+
+

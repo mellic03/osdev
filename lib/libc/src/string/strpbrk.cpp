@@ -1,17 +1,20 @@
 #include <string.h>
 
 
-char *strpbrk( const char *str, const char *brk )
+char *strpbrk( const char *s, const char *accept )
 {
-    while (*str)
+    while (*s != '\0')
     {
-        if (strchr(brk, *str))
+        const char *a = accept;
+        while (*a != '\0')
         {
-            return (char*)str;
+            if (*a++ == *s)
+            {
+                return (char *)s;
+            }
         }
-
-        str++;
+        ++s;
     }
-
+  
     return nullptr;
 }

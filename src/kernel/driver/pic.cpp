@@ -1,5 +1,5 @@
-#include <kdriver/pic.hpp>
-#include <kdriver/serial.hpp>
+#include "pic.hpp"
+#include "serial.hpp"
 
 // https://wiki.osdev.org/Inline_Assembly/Examples#I/O_access
 
@@ -37,7 +37,6 @@ idk::PIC::remap( int offset1, int offset2 )
 
 	IO::outb(PIC2_DATA, 2);                       // ICW3: tell Slave PIC its cascade identity (0000 0010)
 	IO::wait();
-
 	
 	IO::outb(PIC1_DATA, ICW4_8086);               // ICW4: have the PICs use 8086 mode (and not 8080 mode)
 	IO::wait();
@@ -78,7 +77,7 @@ void idk::PIC::unmask( uint8_t IRQline )
 	IO::outb(port, value);        
 }
 
-void idk::PIC::unmaskAll()
+void idk::PIC::disable()
 {
     IO::outb(PIC1_DATA, 0xFF);
     IO::outb(PIC2_DATA, 0xFF);

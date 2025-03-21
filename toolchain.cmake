@@ -27,9 +27,10 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 
 
-# set(IDKERNEL_SSE_FLAGS "-mmmx -msse -msse2")
-# add_definitions(-DIDKERNEL_SSE)
-set(IDKERNEL_SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
+set(SSE_FLAGS "-mmmx -msse -msse2")
+# set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
+add_definitions(-D__libk_sse=true)
+
 
 set(IDKERNEL_C_CXX_FLAGS
     "-O0 \
@@ -46,7 +47,7 @@ set(IDKERNEL_C_CXX_FLAGS
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=large -march=x86-64 \
-    ${IDKERNEL_SSE_FLAGS} \
+    ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )
 
@@ -80,3 +81,9 @@ set(
     -z max-page-size=0x1000  -mno-red-zone \
     -T ${CMAKE_SOURCE_DIR}/src/linker.ld"
 )
+
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/include
+)
+

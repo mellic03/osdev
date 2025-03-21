@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <stim/stim.h>
+#include <kstackframe.h>
 
 
 struct idt_entry_t

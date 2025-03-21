@@ -127,7 +127,7 @@ struct idk::tvec4
 
 namespace idk
 {
-    #ifdef IDKERNEL_SSE
+    #ifdef __libk_sse
         using vec2  = tvec2<float>;
         using vec3  = tvec3<float>;
         using vec4  = tvec4<float>;

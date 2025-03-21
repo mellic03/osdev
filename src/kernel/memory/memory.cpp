@@ -1,3 +1,4 @@
+#include <kernel/memory.hpp>
 #include <kmalloc.h>
 
 void *operator new( size_t nbytes )

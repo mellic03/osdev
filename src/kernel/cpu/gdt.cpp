@@ -1,5 +1,5 @@
 #include "./gdt.hpp"
-#include <kdriver/serial.hpp>
+#include "../driver/serial.hpp"
 
 // Each define here is for a specific flag in the descriptor.
 // Refer to the intel documentation for a description of what each one does.
@@ -117,17 +117,12 @@ idk::GDT_load()
     fill_entry(0, 0, 0, 0, 0);
     fill_entry(1, 0, 0xFFFFF, 0x9A, 0xA); // Kernel mode code segment
     fill_entry(2, 0, 0xFFFFF, 0x92, 0xC); // Kernel mode data segment
-    fill_entry(3, 0, 0xFFFFF, 0xFA, 0xA); // User mode code segment
-    fill_entry(4, 0, 0xFFFFF, 0xF2, 0xC); // User mode data segment
+    fill_entry(3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
+    fill_entry(4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
     // fill_entry(5, (uint64_t)(&__TSS), sizeof(__TSS)-1, 0x89, 0x0); // TSS
 
     for (int i=0; i<5; i++)
     {
-        // __gdt[0] = 0x00A09A0000000000;
-        // __gdt[1] = 0x00C0920000000000;
-        // __gdt[2] = 0x00A0FA0000000000;
-        // __gdt[3] = 0x00C0F20000000000;
-
         SYSLOG("GDT[%d]: 0x%lx", i, __gdt[i]);
     }
 
@@ -145,7 +140,7 @@ idk::GDT_load()
 
 
 
-#include <kmemory/memory.hpp>
+#include <kernel/memory.hpp>
 
 void
 idk::GDT_flush()

@@ -40,10 +40,10 @@ private:
     // }
 
 public:
-    inplace_ringbuffer( T *start, T *end )
+    inplace_ringbuffer( T *data, size_t size )
     {
-        m_data = start;
-        m_cap  = end - start;
+        m_data = data;
+        m_cap  = size;
         m_head = 0;
         m_tail = 0;
         m_size = 0;
