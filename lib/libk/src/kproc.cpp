@@ -77,6 +77,44 @@ void kproc_schedule( kstackframe *frame )
 
 
 
+static void kproc_idle( void* )
+{
+    while (true)
+    {
+        printf("idle\n");
+        asm volatile ("nop");
+    }
+}
+
+
+void kproc_init()
+{
+    m_curr = nullptr;
+    m_first = true;
+
+    // auto *idle = kproc_new(kproc_idle, nullptr);
+    // kproc_detach(idle);
+}
+
+
+
+void kproc_yield()
+{
+    KInterrupt<INT_PROCESS_SWITCH>();
+}
+
+
+static void process_wrapper( void (*fn)(void*), void *arg )
+{
+    fn(arg);
+    m_curr->status = KPROC_DEAD;
+    while (true) { asm volatile ("hlt"); }
+}
+
+
+
+
+
 static void __kproc_add( kproc_t *th )
 {
     if (m_curr == nullptr)
@@ -99,53 +137,13 @@ static void __kproc_add( kproc_t *th )
 }
 
 
-
-static void kproc_idle( void* )
-{
-    while (true)
-    {
-        printf("idle\n");
-        asm volatile ("nop");
-    }
-}
-
-
-void kproc_init()
-{
-    m_curr = nullptr;
-    m_first = true;
-
-    // auto *idle = kproc_new(kproc_idle, nullptr);
-    // kproc_detach(idle);
-}
-
-
-
-extern "C"
-{
-    extern void __kproc_yield( kproc_t *current );
-}
-
-void kproc_yield()
-{
-    KInterrupt<INT_PROCESS_SWITCH>();
-}
-
-
-static void process_wrapper( void (*fn)(void*), void *arg )
-{
-    fn(arg);
-    m_curr->status = KPROC_DEAD;
-    while (true) { asm volatile ("hlt"); }
-}
-
-
 kproc_t *kproc_new( void (*fn)(void*), void *arg )
 {
+
     uint8_t *stack = (uint8_t*)kmalloc(4096);
     uint8_t *top   = stack + 4096;
              top   = (uint8_t *)((uintptr_t)top & ~0xF);
-             top -= sizeof(void *);
+             top  -= sizeof(uint64_t);
     memset(stack, 0, 4096);
 
 
@@ -164,7 +162,7 @@ kproc_t *kproc_new( void (*fn)(void*), void *arg )
     asm volatile ("cli");
     __kproc_add(thread);
 	asm volatile ("sti");
-
+ 
     return thread;
 }
 
@@ -173,10 +171,6 @@ kproc_t *kproc_new( void (*fn)(void*), void *arg )
 // {
 
 // }
-
-
-
-
 
 
 

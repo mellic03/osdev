@@ -10,4 +10,5 @@
 void keyboard_irq_handler( kstackframe* );
 
 char scode_getalpha( uint8_t );
+char scode_getchar( uint8_t );
 

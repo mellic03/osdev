@@ -33,10 +33,12 @@
 
 
 
+uint16_t idk::PIT_HERTZ = 500;
 
 void
 idk::PIT_init()
 {
+    PIT_set_ms(10);
     IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
     PIT_reload();
 }
@@ -45,11 +47,32 @@ idk::PIT_init()
 void
 idk::PIT_reload()
 {
-    uint16_t reload_value = 1200;
-    // uint16_t reload_value = 0;
+    uint16_t reload_value = PIT_FREQUENCY / PIT_HERTZ;
     IO::outb(PIT_COUNTER0, reload_value & 0xFF);
     IO::outb(PIT_COUNTER0, (reload_value >> 8) & 0xFF);
 }
+
+
+
+
+void
+idk::PIT_set_hz( uint16_t hz )
+{
+    PIT_HERTZ = hz;
+}
+
+
+void
+idk::PIT_set_ms( uint16_t ms )
+{
+    constexpr uint32_t re = 1000000 / (1000 * 2);
+    PIT_set_hz(1000000 / (1000 * ms));
+
+}
+
+
+
+
 
 
 uint16_t

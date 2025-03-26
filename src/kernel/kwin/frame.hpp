@@ -16,10 +16,10 @@ namespace kwin
 class kwin::Frame
 {
 public:
-    ivec2 m_tl, m_sp;
-    uvec4 m_col;
+    vec2 m_tl, m_sp;
+    vec4 m_col;
 
-    Frame( ivec2 tl, ivec2 sp, uvec4 c = uvec4(255) )
+    Frame( vec2 tl, vec2 sp, vec4 c = vec4(1.0f) )
     :   m_tl(tl), m_sp(sp), m_col(c)
     {  }
 

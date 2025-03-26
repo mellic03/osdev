@@ -6,6 +6,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/kmain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ksystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kshell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/tty.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/kwin/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kvideo/*.cpp
@@ -18,6 +19,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/gdt.asm
 
     ${CMAKE_CURRENT_SOURCE_DIR}/driver/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/driver/*.asm
     ${CMAKE_CURRENT_SOURCE_DIR}/kfs/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/log/*.cpp
 
@@ -26,7 +28,6 @@ file(
 
 
     ${CMAKE_CURRENT_SOURCE_DIR}/memory/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/process/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/syscall/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp
     # ${CMAKE_CURRENT_SOURCE_DIR}/sse.asm

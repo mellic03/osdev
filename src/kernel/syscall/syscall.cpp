@@ -6,7 +6,6 @@
 #include "./syscall.hpp"
 #include "../interrupt/interrupt.hpp"
 #include "../kfs/kfs.hpp"
-#include "../process/process.hpp"
 
 using namespace idk;
 

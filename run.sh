@@ -6,7 +6,7 @@
 qemu-system-x86_64 \
     -enable-kvm \
     -m 4G \
-    -smp 2 \
+    -smp 4 \
     -cdrom ./output/idkernel.iso \
     -serial stdio
     # -vga qxl \

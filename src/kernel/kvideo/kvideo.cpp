@@ -42,7 +42,7 @@ void kvideo::swapBuffers()
 
 
 void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
-                   const kframebuffer<uint32_t> &buf )
+                   const kframebuffer<vec4> &buf )
 {
     int xmin = std::max(dst.x, 0);
     int xmax = std::min(dst.x+sp.x, backbuffer.w-1);
@@ -53,7 +53,13 @@ void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
     {
         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
         {
-            backbuffer[y][x] = buf[sy][sx];
+            vec4 argb = buf[sy][sx];
+
+            uint32_t r = uint32_t(255.0f * argb.r);
+            uint32_t g = uint32_t(255.0f * argb.g);
+            uint32_t b = uint32_t(255.0f * argb.b);
+
+            backbuffer[y][x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
         }
     }
 }

@@ -20,7 +20,7 @@ idk::serial_init()
     IO::outb(COM1+1, 0x00);    //                  (hi byte)
     IO::outb(COM1+3, 0x03);    // 8 bits, no parity, one stop bit
     IO::outb(COM1+2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
-    IO::outb(COM1+4, 0x0B);    // IRQs enabled, RTS/DSR set
+    // IO::outb(COM1+4, 0x0B);    // IRQs enabled, RTS/DSR set
     IO::outb(COM1+4, 0x1E);    // Set in loopback mode, test the serial chip
     IO::outb(COM1+0, 0xAE);    // Test serial chip (send byte 0xAE and check if serial returns same byte)
  
@@ -38,18 +38,16 @@ idk::serial_init()
 }
 
 
-// int __pushIndent( int n )
+
+// extern "C"
 // {
-//     int prev = __syslog_indent;
-//     __syslog_indent += n;
-//     return prev;
+//     extern void    serial_outb( uint16_t port, uint8_t b );
+//     extern uint8_t serial_inb( uint16_t port );
 // }
-
-
-
 
 uint8_t idk::IO::inb( uint16_t port )
 {
+    // return serial_inb(port);
     uint8_t ret;
     __asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
     return ret;
@@ -65,13 +63,14 @@ uint16_t idk::IO::inw( uint16_t port )
 uint32_t idk::IO::inl( uint16_t port )
 {
     uint32_t ret;
-    __asm__ __volatile__ ("inl %w1,%0":"=a" (ret):"Nd" (port));
+    __asm__ volatile ("inl %w1,%0":"=a" (ret):"Nd" (port));
     return ret;
 }
 
 
 void idk::IO::outb( uint16_t port, uint8_t value )
 {
+    // serial_outb(port, value);
     __asm__ volatile("outb %0, %1" : : "a"(value), "Nd"(port));
 }
 

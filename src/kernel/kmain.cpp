@@ -76,10 +76,7 @@ void run_fini_array()
 
 uint64_t idk::memory::hhdm;
 idk::KSystem *sys;
-idk::Video   *vid;
-uint64_t count;
-
-
+uint64_t uptime_ms;
 
 
 #include <string.h>
@@ -90,7 +87,8 @@ void pit_irq( kstackframe *frame )
     kproc_switch(frame);
     // kproc_yield();
 
-    count++;
+    uptime_ms += 10;
+
     idk::PIT_reload();
     idk::PIC::sendEOI(0);
 }
@@ -105,42 +103,111 @@ void proccess_switch_handler( kstackframe *frame )
 
 #include "kwin/frame_tty.hpp"
 
-void proc_video( void* )
+void video_main( void* )
 {
-    printf("[proc_video] A\n");
+    printf("[video_main] A\n");
 
     auto ctx = kwin::Context(1280, 720);
-    auto *frame = ctx.createFrame<kwin::FrameTest>(
-        ivec2(100, 100), ivec2(400, 500), uvec4(255, 0, 255, 255)
-    );
-
-    // auto *frame = ctx.createFrame<kwin::FrameTTY>(
-    //     ivec2(100, 100), ivec2(400, 500)
+    // auto *frame = ctx.createFrame<kwin::FrameTest>(
+    //     ivec2(100, 100), ivec2(400, 500), uvec4(255, 0, 255, 255)
     // );
+
+    auto *frame = ctx.createFrame<kwin::FrameTTY>(
+        ivec2(10, 10), ivec2(500, ctx.m_sp.y-10),
+        sys->tty0, &(sys->m_fonts[6])
+    );
 
     while (true)
     {
+        kproc_yield();
+        ctx.rectOutline(ivec2(0, 0), ctx.m_sp, vec4(1.0, 0.0, 0.0, 1.0));
         frame->draw(ctx);
-        ctx.m_tl.x += 1;
+        // ctx.m_tl.x += 0.02f;
 
+        // printf("[video_main]\n");
         ctx.flush();
     }
 
 }
 
 
-void proc_text( void* )
+
+void tty_main( void *arg )
 {
-    printf("[proc_text] A\n");
+    auto &tty = *((kn_TTY*)arg);
 
     while (true)
     {
-        printf("[proc_text]\n");
-        // kproc_yield();
+        char ch;
+
+        if (KFile_read(&ch, KFS::kdevkey, 1))
+        {
+            // printf("tty.putchar(%c)\n", ch);
+            tty.putchar(ch);
+        }
+
+        // printf("[tty_main]\n");
+        kproc_yield();
     }
 }
 
 
+#include <ctype.h>
+
+void keyprocess_main( void *arg )
+{
+    struct
+    {
+        uint8_t modifier;
+        uint8_t code;
+    } packet;
+
+
+    char shift_table[256];
+    memset(shift_table, '\0', sizeof(shift_table));
+
+    char mod_0_9[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
+    memcpy(&(shift_table['0']), mod_0_9, sizeof(mod_0_9));
+
+    for (int i=0; i<='z'-'a'; i++)
+    {
+        shift_table['a'+i] = toupper('a'+i);
+    }
+
+    shift_table[';'] = ':';
+    shift_table['\''] = '\"';
+    shift_table[','] = '<';
+    shift_table['.'] = '>';
+
+
+    while (true)
+    {
+        packet = {0, 0};
+
+        if (KFile_read(&packet, KFS::kdevscn, sizeof(packet)))
+        {
+            char ch = scode_getchar(packet.code);
+    
+            if (ch == '\0')
+            {
+                continue;
+            }
+
+            if (packet.modifier & MODIFIER_SHIFT)
+            {
+                if (shift_table[ch])
+                {
+                    ch = shift_table[ch];
+                }
+            }
+
+            KFile_write(KFS::kdevkey, &ch, 1);
+        }
+
+        // printf("[keyprocess_main]\n");
+        kproc_yield();
+    }
+}
 
 
 
@@ -171,15 +238,14 @@ void _start()
     idk::KSystem system(reqs);
     sys = &system;
 
-    // sch = &(system.sched);
-    count = 0;
+    uptime_ms = 0;
     double timer = 0;
 
 
     asm volatile("cli");
     kproc_init();
-
     idk::PIT_init();
+    idk::PIT_set_ms(10);
     idk::GDT_load();
     idk::GDT_flush();
     idk::IDT_load();
@@ -197,25 +263,19 @@ void _start()
 
     libc_init();
     std::detail::libcpp_init();
+
+    kvideo::init(system.m_reqs.fb);
 	asm volatile ("sti");
 
-    system.video.init(system.m_reqs.fb);
-    kvideo::init(reqs.fb);
-
-    auto &video = system.video;
-    vid = &video;
-
-    auto *A = kproc_new(proc_video, nullptr);
-    auto *B = kproc_new(kshell, nullptr); // needs to be blocking
+    kproc_new(video_main, nullptr);
+    kproc_new(tty_main, system.tty0);
+    kproc_new(keyprocess_main, nullptr);
 
 
     while (true)
     {
-        // kproc_yield();
-        // printf("WOOP\n");
+        asm volatile ("hlt");
     }
-
-    uint64_t ree = 0xffff'8000'0000'0000;
 
     run_fini_array();
     kernel_hcf();

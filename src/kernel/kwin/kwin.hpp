@@ -22,15 +22,18 @@ class kwin::Context
 private:
 
 public:
-    ivec2 m_tl, m_sp;
-    kframebuffer<uint32_t> fb;
-    kframebuffer<uint32_t> depth;
+    vec2 m_tl, m_sp;
+    kframebuffer<vec4> m_fb;
+    kframebuffer<uint32_t> m_depth;
     idk::vector<kwin::Frame*> frames;
 
          Context( int w, int h );
+        ~Context();
     void flush();
-    void rectOutline( ivec2 tl, ivec2 sp, uvec4 color );
-    void rect( ivec2 tl, ivec2 sp, uvec4 color );
+    void rectOutline( vec2 tl, vec2 sp, vec4 color );
+    void rect( vec2 tl, vec2 sp, vec4 color );
+    void blit( vec2 tl0, vec2 tl1, vec2 sp, const kframebuffer<vec4>& );
+
 
     template <typename frame_type, typename... Args>
     frame_type *createFrame( Args... );

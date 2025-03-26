@@ -11,8 +11,8 @@ template <typename T>
 inline constexpr
 void *kmemcpy( void *dst, const void *src, size_t count )
 {
-    auto *d = (uint32_t*)dst;
-    auto *s = (uint32_t*)src;
+    auto *d = (T*)dst;
+    auto *s = (T*)src;
     for (size_t i=0; i<count; i++)
         *(d++) = *(s++);
     return dst;
@@ -22,7 +22,7 @@ template <typename T>
 inline constexpr
 void *kmemset( void *dst, T value, size_t count )
 {
-    auto *d = (uint32_t*)dst;
+    auto *d = (T*)dst;
     for (size_t i=0; i<count; i++)
         *(d++) = value;
     return dst;

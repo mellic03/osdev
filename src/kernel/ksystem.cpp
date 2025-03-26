@@ -14,6 +14,7 @@
 
 using namespace idk;
 
+uint64_t kernel::uptime_ms = 0;
 
 
 KSystem::KSystem( const Krequests &reqs )
@@ -26,6 +27,8 @@ KSystem::KSystem( const Krequests &reqs )
     _load_mmaps();
     kmalloc_init(m_mmaps[0]);
     // kvirtio_init();
+
+    tty0 = new kn_TTY();
 
     KFS::init();
     _load_modules();
@@ -171,6 +174,7 @@ KSystem::_load_modules()
 
     m_modules = inplace_vector<limine_file*>(new limine_file*[64], 64);
     m_execs   = inplace_vector<ExecHeader>(new ExecHeader[32], 32);
+    m_fonts   = inplace_vector<FontBuffer>(new FontBuffer[32], 32);
 
     auto *res = m_reqs.modules;
 
@@ -180,27 +184,29 @@ KSystem::_load_modules()
         log("file: \"%s\"", file->string);
 
         size_t len = strlen(file->string);
-        if (len >= 4 && strcmp(file->string+len-4, "exec") == 0)
+    
+        if (len == 0)
+        {
+            continue;
+        }
+
+        if (strcmp(file->string+len-4, "exec") == 0)
         {
             m_execs.push_back({file->address, file->size});
         }
-        
+
+        else if (strncmp(file->string, "font", 4) == 0)
+        {
+            auto *header = (ck_BMP_header*)file->address;
+            m_fonts.push_back(FontBuffer(file->string, header));
+        }
+
         m_modules.push_back(file);
     }
 
-    log("modules: %d\n", m_modules.size());
-    log("execs:   %d\n", m_execs.size());
+    log("modules: %d", m_modules.size());
+    log("execs:   %d", m_execs.size());
+    log("fonts:   %d", m_fonts.size());
 
-    // for (size_t i=0; i<res->module_count; i++)
-    // {
-    //     auto *file = res->modules[i];
-
-    //     if (strncmp(file->string, "exec", 4) == 0)
-    //     {
-    //         log("exec: \"%s\"\n", file->string);
-    //         // auto *header = (ck_BMP_header*)file->address;
-    //         // m_fonts.push_back(FontBuffer(file->string, header));
-    //     }
-    // }
 }
 

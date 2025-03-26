@@ -44,9 +44,7 @@ idk::PIC::remap( int offset1, int offset2 )
 	IO::outb(PIC2_DATA, ICW4_8086);
 	IO::wait();
 
-	// Unmask both PICs.
-	IO::outb(PIC1_DATA, 0);
-	IO::outb(PIC2_DATA, 0);
+	PIC::disable();
 }
 
 

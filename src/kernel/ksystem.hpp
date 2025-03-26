@@ -5,8 +5,7 @@
 
 #include "cpu/cpu.hpp"
 #include "tty.hpp"
-#include "process/process.hpp"
-#include "video/video.hpp"
+#include "kvideo/font.hpp"
 #include <kernel/memory.hpp>
 #include <kinplace/inplace_vector.hpp>
 
@@ -17,6 +16,12 @@ struct limine_module_response;
 struct limine_memmap_response;
 struct limine_mp_response;
 struct limine_file;
+
+
+namespace kernel
+{
+    extern uint64_t uptime_ms;
+}
 
 
 namespace idk
@@ -52,19 +57,18 @@ private:
     inplace_vector<MemoryMap>    m_mmaps;
     inplace_vector<limine_file*> m_modules;
     inplace_vector<ExecHeader>   m_execs;
-    inplace_vector<kn_TTY*>      m_ttys;
-
 
     void _load_mmaps();
     void _load_modules();
 
 public:
     Krequests m_reqs;
+    inplace_vector<FontBuffer>   m_fonts;
     idk::CPU cpu0, cpu1, cpu2, cpu4;
-    idk::Video video;
+    kn_TTY   *tty0;
 
     KSystem( const Krequests& );
-    // void init();
+    // void init( Krequests* );
 
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();

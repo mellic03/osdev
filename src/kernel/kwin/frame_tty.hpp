@@ -1,5 +1,7 @@
 #pragma once
 #include "frame.hpp"
+#include "../tty.hpp"
+#include "../kvideo/font.hpp"
 
 namespace kwin
 {
@@ -11,13 +13,13 @@ namespace kwin
 class kwin::FrameTTY: public kwin::Frame
 {
 private:
-    int m_row, m_col;
-    uint8_t m_buf[25*80];
+    kn_TTY *m_tty;
+    idk::FontBuffer *m_font;
 
 public:
     using kwin::Frame::Frame;
 
-    FrameTTY( ivec2 tl, ivec2 sp );
+    FrameTTY( vec2 tl, vec2 sp, kn_TTY*, idk::FontBuffer* );
     virtual void draw( kwin::Context& ) final;
 
 };

@@ -48,6 +48,6 @@ namespace kvideo
     void swapBuffers();
 
     void blit( ivec2 dst, ivec2 src, ivec2 sp,
-               const kframebuffer<uint32_t> &buf );
+               const kframebuffer<vec4> &buf );
 }
 

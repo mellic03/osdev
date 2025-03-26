@@ -21,7 +21,6 @@ KFile *KFS::kdevscn;
 
 void dummy_flush( KFile *fh )
 {
-    syslog log("dummy_flush");
     fh->read  = fh->base;
     fh->write = fh->base;
 }

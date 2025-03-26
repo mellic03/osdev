@@ -1,6 +1,20 @@
 #pragma once
 #include <AAA.h>
 
+
+enum PS2_MODIFIER: uint8_t
+{
+    MODIFIER_SHIFT = 0b0000'0001,
+
+    MODIFIER_CTRL  = 0b0000'1000,
+    MODIFIER_LCTRL = 0b0000'1010,
+    MODIFIER_RCTRL = 0b0000'1100,
+
+    MODIFIER_ALT   = 0b0100'0000,
+    MODIFIER_LALT  = 0b0101'0000,
+    MODIFIER_RALT  = 0b0110'0000
+};
+
 enum PS2_SCANCODE: uint8_t
 {
     DOWN_ESC = 0x01, // 0x01 	
