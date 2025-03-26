@@ -1,5 +1,6 @@
 #include "kfs.hpp"
 #include "../driver/serial.hpp"
+#include "../log/log.hpp"
 #include <kernel.h>
 #include <kfile.h>
 #include <kinplace/inplace_vector.hpp>
@@ -20,10 +21,9 @@ KFile *KFS::kdevscn;
 
 void dummy_flush( KFile *fh )
 {
-    SYSLOG_BEGIN("dummy_flush");
+    syslog log("dummy_flush");
     fh->read  = fh->base;
     fh->write = fh->base;
-    SYSLOG_END();
 }
 
 
@@ -42,7 +42,7 @@ void kstdout_flush( KFile *fh )
 
 void KFS::init()
 {
-    SYSLOG_BEGIN("KFS::init");
+    syslog log("KFS::init");
 
     KFS_files = inplace_vector<KFile*>(KMalloc<KFile*>(128), 128);
     kstdio[0] = KFS::KFile_create(256, dummy_flush);
@@ -57,12 +57,11 @@ void KFS::init()
     kdevkey   = kdevio[0];
     kdevscn   = kdevio[1];
 
-    SYSLOG("KFS_files: %u", KFS_files.size());
-    SYSLOG("kstderr: 0x%lx", kstderr);
-    SYSLOG("kstdin:  0x%lx", kstdin);
-    SYSLOG("kstdout: 0x%lx", kstdout);
+    log("KFS_files: %u", KFS_files.size());
+    log("kstderr: 0x%lx", kstderr);
+    log("kstdin:  0x%lx", kstdin);
+    log("kstdout: 0x%lx", kstdout);
 
-    SYSLOG_END();
 }
 
 

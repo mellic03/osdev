@@ -1,6 +1,8 @@
 #include <kernel.h>
 #include <kernel/bitmanip.hpp>
 
+#include <kinterrupt.h>
+
 #include <kernel/memory.hpp>
 #include "../driver/serial.hpp"
 
@@ -12,7 +14,7 @@ idk::linear_allocator::linear_allocator( void *baseptr, size_t nbytes )
     // IDK_ASSERT("Capacity must be > 0", nbytes > 0);
 
     m_capacity = nbytes;
-    m_base     = (uint8_t*)baseptr;
+    m_base     = (uintptr_t)baseptr;
     m_tail     = m_base;
     m_end      = m_base + nbytes;
 
@@ -30,16 +32,13 @@ idk::linear_allocator::~linear_allocator()
 void*
 idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
 {
-    // uint8_t *top = reinterpret_cast<uint8_t*>(m_top.fetch_add(nbytes));
-    //          top = align_ptr(top, alignment);
-    // return static_cast<void*>(top);
-
-    m_tail = idk::ptr_align(m_tail, alignment) + nbytes;
+    m_tail  = (m_tail + alignment - 1) & ~(alignment - 1);
+    m_tail += nbytes;
+    m_tail  = (m_tail + alignment - 1) & ~(alignment - 1);
 
     if (m_tail >= m_end)
     {
-        asm volatile ("int $34");
-        // idk::Interrupt(Exception::OUT_OF_MEMORY);
+        KInterrupt<INT_OUT_OF_MEMORY>();
         return nullptr;
     }
 
@@ -50,15 +49,17 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
     //     static_cast<size_t>(m_end-m_base)
     // );
 
-    return static_cast<void*>(m_tail - nbytes);
+    return reinterpret_cast<void*>(m_tail - nbytes);
 }
 
 
 void
 idk::linear_allocator::free( void *ptr )
 {
-    uint64_t addr = (uint64_t)(ptr);
-    addr++;
+    if (ptr)
+    {
+
+    }
 }
 
 

@@ -7,29 +7,10 @@ BINDIR="../../sysroot/bin"
 INCLUDES="-I../../sysroot/include"
 LIBRARIES="../../sysroot/lib"
 
-CFLAGS="-std=c11 \
-        -O0 \
-        $INCLUDES \
-        -ffreestanding \
-        -Wall \
-        -Wextra \
-        -Werror=return-type \
-        -mgeneral-regs-only \
-        -fno-asynchronous-unwind-tables \
-        -fno-exceptions \
-        -fno-stack-protector \
-        -fno-stack-check \
-        -m64 -mcmodel=large -march=x86-64
-        -z max-page-size=0x1000 -mno-red-zone \
-        -Wno-missing-field-initializers \
-        -mmmx -msse -msse2 \
-        -nostdlib \
-        -ffunction-sections -fdata-sections"
-
 CXXFLAGS="-std=c++23 \
+        -D__libk_sse \
         -O0 \
         $INCLUDES \
-        -D__libk_sse \
         -ffreestanding \
         -Wall \
         -Wextra \
@@ -39,13 +20,12 @@ CXXFLAGS="-std=c++23 \
         -fno-exceptions \
         -fno-stack-protector \
         -fno-stack-check \
-        -m64 -mcmodel=large -march=x86-64
+        -fno-PIC \
+        -mno-80387 \
         -z max-page-size=0x1000 -mno-red-zone \
-        -Wno-missing-field-initializers \
+        -m64 -mcmodel=large -march=x86-64 \
         -mmmx -msse -msse2 \
-        -nostdlib \
-        -static \
-        -ffunction-sections -fdata-sections"
+        -Wno-missing-field-initializers"
 
  
 
@@ -54,35 +34,43 @@ mkdir -p $OBJDIR
 # mkdir -p $BINDIR
 
 # nasm -felf64 src/_start.asm -o $OBJDIR/_start.o
-# # g++ -c  src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $CXXFLAGS
+# g++ -c  src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $CXXFLAGS
 
 
-# g++     -o $NAME.elf $CXXFLAGS \
-#         $OBJDIR/_start.o \
-#         src/$NAME.cpp \
-#         $LIBRARIES/libc.a \
-#         $LIBRARIES/libk.a \
-#         -Ttext 0xFFFF800100000000 \
-
-
-
-
-nasm -felf64 src/_start.asm -o $OBJDIR/_start.o
-g++ -c src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $CXXFLAGS
-
-
-ld   -o $OBJDIR/$NAME.elf \
+g++  -o $OBJDIR/$NAME.elf \
         $OBJDIR/_start.o \
-        $OBJDIR/$NAME.cpp.o \
+        src/$NAME.cpp \
+        $CXXFLAGS \
         ../../sysroot/lib/libk.a \
         ../../sysroot/lib/libc.a \
         ../../sysroot/lib/libc++.a \
         -nostdlib \
         -static \
         -z max-page-size=0x1000 \
-        -Ttext 0xFFFF800100000000 \
-        --no-relax \
-        --gc-sections
+        -T ./linker.ld \
+        -Wl,--no-relax \
+        -Wl,--gc-sections
+
+
+
+# nasm -felf64 src/_start.asm -o $OBJDIR/_start.o
+# g++ -c src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $CXXFLAGS
+
+
+# ld   -o $OBJDIR/$NAME.elf \
+#         $OBJDIR/_start.o \
+#         $OBJDIR/$NAME.cpp.o \
+#         ../../sysroot/lib/libk.a \
+#         ../../sysroot/lib/libc.a \
+#         ../../sysroot/lib/libc++.a \
+#         -nostdlib \
+#         -static \
+#         -z max-page-size=0x1000 \
+#         -Ttext 0xFFFF800100000000 \
+#         --no-relax \
+#         --gc-sections
+
+#         # -T ./linker.ld \
 
 
 objcopy -O binary $OBJDIR/$NAME.elf ../data/exec/$NAME.exec
@@ -101,7 +89,7 @@ objcopy -O binary $OBJDIR/$NAME.elf ../data/exec/$NAME.exec
 # echo ""
 # echo "-------------------------------hexdump-------------------------------"
 # echo $BINDIR/$NAME.exec
-# hexdump -C $BINDIR/$NAME.exec
+# hexdump -C ../data/exec/$NAME.exec
 # echo "---------------------------------------------------------------------"
 # echo ""
 # echo ""

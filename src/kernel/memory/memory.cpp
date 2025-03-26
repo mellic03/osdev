@@ -31,4 +31,3 @@ void operator delete[]( void *p, size_t )
     kfree(p);
 }
 
-

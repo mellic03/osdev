@@ -1,36 +1,23 @@
 #include <kernel.h>
-#include "../driver/serial.hpp"
 #include <string.h>
 #include <stdio.h>
 
+#include "../log/log.hpp"
 #include "./syscall.hpp"
 #include "../interrupt/interrupt.hpp"
 #include "../kfs/kfs.hpp"
+#include "../process/process.hpp"
 
 using namespace idk;
 
 
-static void
-file_create()
-{
-    SYSLOG_BEGIN("file_create");
-
-    
-
-    SYSLOG_END();
-}
-
-
-static void
-sysc_printf( ksysc_stdio_request *req )
-{
-    __serialf(req->fmt, *(req->vlist));
-}
 
 
 static void
 sysc_file_create( ksysc_request *req )
 {
+    syslog log("sysc_file_create");
+
     const char *path = (const char*)req->data;
     KFile *fh = KFS::KFile_create(1024, nullptr);
 
@@ -58,10 +45,8 @@ file_get( ksysc_request *req )
 static void
 file_flush( ksysc_request *req )
 {
-    // SYSLOG_BEGIN("file_flush");
     KFile *fh = reinterpret_cast<KFile*>(req->data);
     fh->fsh(fh);
-    // SYSLOG_END();
 }
 
 
@@ -75,14 +60,12 @@ stdio_get( ksysc_request *req )
 
 
 
-
 void
 idk::syscall_handler( kstackframe *frame )
 {
-    // SYSLOG_BEGIN("syscall_handler");
+    syslog log("syscall_handler");
     auto *req = (ksysc_request*)(frame->rax);
-
-    // SYSLOG("type:  %u", req->type);
+    log("type: %u", req->type);
 
     switch (req->type)
     {
@@ -97,6 +80,4 @@ idk::syscall_handler( kstackframe *frame )
 
     // SYSLOG_END();
 }
-
-
 

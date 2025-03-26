@@ -6,7 +6,6 @@
 namespace idk
 {
     void syscall_handler( kstackframe* );
-    
 }
 
 

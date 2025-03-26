@@ -1,3 +1,6 @@
+
+
+
 set(CMAKE_SYSTEM_NAME "Generic")
 
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
@@ -26,7 +29,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 
 
-
+set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/linker.ld")
 set(SSE_FLAGS "-mmmx -msse -msse2")
 # set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
 add_definitions(-D__libk_sse=true)
@@ -46,11 +49,10 @@ set(IDKERNEL_C_CXX_FLAGS
     -fno-PIC \
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
-    -m64 -mcmodel=large -march=x86-64 \
+    -m64 -mcmodel=kernel -march=x86-64 \
     ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )
-
 
 set(CMAKE_C_FLAGS
     "-std=c11 \
@@ -79,11 +81,14 @@ set(
     -static \
     -mgeneral-regs-only \
     -z max-page-size=0x1000  -mno-red-zone \
-    -T ${CMAKE_SOURCE_DIR}/src/linker.ld"
+    -T ${LINKER_SCRIPT}"
 )
 
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/include
 )
+
+
+
 

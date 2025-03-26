@@ -8,10 +8,10 @@ namespace idk
     class linear_allocator
     {
     private:
-        size_t   m_capacity;
-        uint8_t *m_base;
-        uint8_t *m_tail;
-        uint8_t *m_end;
+        size_t    m_capacity;
+        uintptr_t m_base;
+        uintptr_t m_tail;
+        uintptr_t m_end;
 
     public:
         linear_allocator() {  };
@@ -35,7 +35,7 @@ namespace idk
         // T *alloca( size_t count = 1 )
         // {
         //     T *base = alloc<T>(count);
-        //     std::memset((void*)base, 0, count*sizeof(T));
+        //     memset((void*)base, 0, count*sizeof(T));
         //     return base;
         // }
 

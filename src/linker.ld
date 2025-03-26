@@ -11,18 +11,13 @@ PHDRS
     text PT_LOAD;
     rodata PT_LOAD;
     data PT_LOAD;
+    exec PT_LOAD;
 
 }
 
 SECTIONS
 {
-    /* We want to be placed in the topmost 2GiB of the address space, for optimisations */
-    /* and because that is what the Limine spec mandates. */
-    /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
-    /* that is the beginning of the region. */
-    kernOffset = 0xFFFFFFFF80000000;
-	. = kernOffset;
-
+    . = 0xFFFFFFFF80000000;
     /* Define a section to contain the Limine requests and assign it to its own PHDR */
     .limine_requests : {
         KEEP(*(.limine_requests_start))
@@ -47,6 +42,7 @@ SECTIONS
     .data : {
         *(.data .data.*)
     } :data
+
 
     /* Place .init_array for constructors */
     . = ALIGN(8);

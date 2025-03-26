@@ -1,12 +1,6 @@
 [bits 64]
 
 
-
-section .data
-    align 8
-    global syscall_arg
-    syscall_arg dq 0
-
 ; global __cpu_saved_state
 ; __cpu_saved_state:
 ;     __cpu_rax dq 0
@@ -57,26 +51,13 @@ section .text
 extern __isr_dispatch
 
 
-%macro _err_stub 1
-isr_stub_%+%1:
-    push qword %1
-    jmp isr_stub_common
-%endmacro
-
-%macro _noerr_stub 1
-isr_stub_%+%1:
-    push 0 ; Dummy error code
-    push qword %1
-    jmp isr_stub_common
-%endmacro
-
 
 get_rip:
     mov rax, [rsp]
     ret
 
 
-%macro ctx_save 0
+%macro ctx_push 0
     push rbp
     push rsi
     push rdi
@@ -89,13 +70,10 @@ get_rip:
     push r13
     push r12
     push r11
-    call get_rip ;
-    push rax     ; Instruction pointer
 %endmacro
 
 
-%macro ctx_load 0
-    pop rax     ; Instruction pointer
+%macro ctx_pop 0
     pop r11
     pop r12
     pop r13
@@ -111,16 +89,27 @@ get_rip:
 %endmacro
 
 
-isr_stub_common:
-    ctx_save
+%macro _err_stub 1
+isr_stub_%+%1:
+    push qword %1
+    isr_stub_common
+%endmacro
+
+%macro _noerr_stub 1
+isr_stub_%+%1:
+    push 0 ; Dummy error code
+    push qword %1
+    isr_stub_common
+%endmacro
+
+%macro isr_stub_common 0
+    ctx_push
     mov rdi, rsp
     call __isr_dispatch
-    ctx_load
-
+    ctx_pop
     add rsp, 16
     iretq
-
-
+%endmacro
 
 
 _noerr_stub 0

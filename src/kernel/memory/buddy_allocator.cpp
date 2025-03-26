@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include <kernel/memory.hpp>
-#include "../driver/serial.hpp"
+#include "../log/log.hpp"
 
 // size_t size_table[3][10] = {
 // //     1    2    4    8    16   32  64   128  256  512
@@ -32,7 +32,7 @@ idk::buddy_allocator::buddy_allocator()
 
 idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
 {
-    SYSLOG_BEGIN("buddy_allocator::buddy_allocator");
+    syslog log("buddy_allocator::buddy_allocator");
 
     // uint8_t  m_freelist[
     // B 1 2 4 8 16 32 64 128 256 512
@@ -81,14 +81,12 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
         }
     }
 
-    SYSLOG("m_size = %luB",  m_size);
-    SYSLOG("       = %luKB", m_size/idk::KILO);
-    SYSLOG("       = %luMB", m_size/idk::MEGA);
-    SYSLOG("m_end  = 0x%lx", m_end);
-    SYSLOG("tail   = 0x%lx", tail);
+    log("m_size = %luB",  m_size);
+    log("       = %luKB", m_size/idk::KILO);
+    log("       = %luMB", m_size/idk::MEGA);
+    log("m_end  = 0x%lx", m_end);
+    log("tail   = 0x%lx", tail);
 
-
-    SYSLOG_END();
 }
 
 

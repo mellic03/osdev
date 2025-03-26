@@ -6,7 +6,9 @@
 #include <kmalloc.h>
 #include <string.h>
 
-#include "driver/serial.hpp"
+// #include "driver/serial.hpp"
+#include "log/log.hpp"
+
 #include "./ksystem.hpp"
 #include "./kfs/kfs.hpp"
 
@@ -17,20 +19,16 @@ using namespace idk;
 KSystem::KSystem( const Krequests &reqs )
 :   m_reqs(reqs)
 {
-
-    SYSLOG_BEGIN("KSystem::KSystem");
+    syslog log("KSystem::KSystem");
 
     cpu0.init();
     
     _load_mmaps();
-    lsmem();
     kmalloc_init(m_mmaps[0]);
     // kvirtio_init();
 
     KFS::init();
     _load_modules();
-
-    SYSLOG_END();
 }
 
 
@@ -58,13 +56,24 @@ KSystem::getModule( const char *label )
 
 
 int
-KSystem::execute( ExecHeader *exec, int argc, char **argv )
+KSystem::execute( const char *filepath, int argc, char **argv )
 {
-    void  *exec_addr = (void*)(0xFFFF800100000000);
-    memcpy(exec_addr, exec->addr, exec->size);
+    syslog log("KSystem::execute");
+
     using YOLO = int (*)(int, char**);
-    int retvalue = ((YOLO)exec_addr)(argc, argv);
-    return retvalue;
+
+    auto   file  = getModule(filepath);
+    void  *entry = (void*)(getHHDM() + 0xFFFF800100000000);
+    memcpy(entry, file->address, file->size);
+
+    uint8_t *base = (uint8_t*)(entry);
+
+    for (int i=0; i<0xDF; i++)
+    {
+        log("0x%lx:  0x%lx", entry+i, base[i]);
+    }
+
+    return ((YOLO)entry)(argc, argv);
 }
 
 
@@ -91,7 +100,7 @@ const char *mmap_str( uint32_t type )
 void
 KSystem::_load_mmaps()
 {
-    SYSLOG_BEGIN("KSystem::_load_mmaps");
+    syslog log("KSystem::_load_mmaps");
 
     auto *res = m_reqs.mmaps;
     auto hhdm = getHHDM();
@@ -124,28 +133,31 @@ KSystem::_load_mmaps()
             }
         }
     }
-
-    SYSLOG_END();
 }
+
+
 
 void
 KSystem::lsmem()
 {
-    SYSLOG("LSMEM");
-    uint64_t hhdm = getHHDM();
+    syslog log("KSystem::lsmem");
 
-    for (auto &[phys, addr, len]: m_mmaps)
+    auto *res = m_reqs.mmaps;
+    auto hhdm = getHHDM();
+
+    // Load usable memmaps
+    for (uint64_t i=0; i<res->entry_count; i++)
     {
-        SYSLOG("Memmap USABLE");
-        SYSLOG("\tphys:\t0x%lx", phys);
-        SYSLOG("\tbase:\t0x%lx", addr);
-        SYSLOG("\tend: \t0x%lx", addr+len);
-        SYSLOG("\tsize:\t%luB",  len);
-        SYSLOG("\t     \t%luKB", len/idk::KILO);
-        SYSLOG("\t     \t%luMB", len/idk::MEGA);
-        SYSLOG("\n");
-    }
+        auto *e = res->entries[i];
 
+        log("%s", mmap_str(e->type));
+        log("phys:\t\t0x%lx", e->base);
+        log("base:\t\t0x%lx", hhdm + e->base);
+        log("end: \t\t0x%lx", hhdm + e->base + e->length);
+        log("size:\t\t%luB",  e->length);
+        log("     \t\t%luKB", e->length/idk::KILO);
+        log("     \t\t%luMB", e->length/idk::MEGA);
+    }
 }
 
 
@@ -155,16 +167,17 @@ KSystem::lsmem()
 void
 KSystem::_load_modules()
 {
+    syslog log("KSystem::_load_modules");
+
     m_modules = inplace_vector<limine_file*>(new limine_file*[64], 64);
     m_execs   = inplace_vector<ExecHeader>(new ExecHeader[32], 32);
 
-    SYSLOG_BEGIN("KSystem::_load_modules");
     auto *res = m_reqs.modules;
 
     for (uint64_t i=0; i<res->module_count; i++)
     {
         auto *file = res->modules[i];
-        SYSLOG("file: \"%s\"", file->string);
+        log("file: \"%s\"", file->string);
 
         size_t len = strlen(file->string);
         if (len >= 4 && strcmp(file->string+len-4, "exec") == 0)
@@ -175,11 +188,8 @@ KSystem::_load_modules()
         m_modules.push_back(file);
     }
 
-    SYSLOG("modules: %d\n", m_modules.size());
-    SYSLOG("execs:   %d\n", m_execs.size());
-
-    SYSLOG_END();
-
+    log("modules: %d\n", m_modules.size());
+    log("execs:   %d\n", m_execs.size());
 
     // for (size_t i=0; i<res->module_count; i++)
     // {
@@ -187,7 +197,7 @@ KSystem::_load_modules()
 
     //     if (strncmp(file->string, "exec", 4) == 0)
     //     {
-    //         SYSLOG("exec: \"%s\"\n", file->string);
+    //         log("exec: \"%s\"\n", file->string);
     //         // auto *header = (ck_BMP_header*)file->address;
     //         // m_fonts.push_back(FontBuffer(file->string, header));
     //     }

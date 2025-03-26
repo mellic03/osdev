@@ -5,7 +5,7 @@ extern "C"
 }
 
 #include "video.hpp"
-#include "../driver/serial.hpp"
+#include "../log/log.hpp"
 #include <kmalloc.h>
 #include <kmemxx.h>
 #include <string.h>
@@ -18,7 +18,7 @@ using namespace idk;
 void
 Video::init( limine_framebuffer_response *res )
 {
-    SYSLOG_BEGIN("idk::Video::init");
+    syslog log("idk::Video::init");
     auto *fb = res->framebuffers[0];
 
     m_W = fb->width;
@@ -31,10 +31,8 @@ Video::init( limine_framebuffer_response *res )
     m_winframes.init((WinFrameBase**)kmalloc(64*sizeof(WinFrameBase*)), 32);
     m_fonts.init((FontBuffer*)kmalloc(16*sizeof(FontBuffer)), 16);
 
-    SYSLOG("framebuffer: 0x%x", m_frontbuffer);
-    SYSLOG("resolution:  %ux%ux%u", m_W, m_H, fb->bpp);
-
-    SYSLOG_END();
+    log("framebuffer: 0x%x", m_frontbuffer);
+    log("resolution:  %ux%ux%u", m_W, m_H, fb->bpp);
 }
 
 
@@ -67,9 +65,9 @@ idk::Video::swapBuffers()
 {
     size_t count = m_W * m_H;
 
-    KMemcpy<uint32_t>(m_frontbuffer[0], m_backbuffer[0], count);
+    kmemcpy<uint32_t>(m_frontbuffer[0], m_backbuffer[0], count);
     // memset(m_depthbuffer[0], 127, count);
-    KMemset<uint32_t>(m_backbuffer[0], 0, count);
+    kmemset<uint32_t>(m_backbuffer[0], 0, count);
 }
 
 
@@ -134,8 +132,8 @@ idk::Video::blit( ivec2 dst, ivec2 src, ivec2 sp, const buf_wrapper<uint32_t> &b
 void
 idk::Video::loadFonts( limine_module_response *res )
 {
-    SYSLOG_BEGIN("idk::Video::loadFonts");
-    SYSLOG("module_count=%d\n", res->module_count);
+    syslog log("idk::Video::loadFonts");
+    log("module_count=%d\n", res->module_count);
 
     for (size_t i=0; i<res->module_count; i++)
     {
@@ -143,13 +141,12 @@ idk::Video::loadFonts( limine_module_response *res )
 
         if (strncmp(file->string, "font", 4) == 0)
         {
-            SYSLOG("font: \"%s\"\n", file->string);
+            log("font: \"%s\"\n", file->string);
             auto *header = (ck_BMP_header*)file->address;
             m_fonts.push_back(FontBuffer(file->string, header));
         }
     }
 
-    SYSLOG_END();
 }
 
 

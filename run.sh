@@ -6,10 +6,10 @@
 qemu-system-x86_64 \
     -enable-kvm \
     -m 4G \
-    -smp 4 \
+    -smp 2 \
     -cdrom ./output/idkernel.iso \
-    -serial stdio \
-    -vga qxl \
+    -serial stdio
+    # -vga qxl \
     # -device virtio-vga,id=display0 \
     # -device virtio-vga,id=display1 \
     # -spice port=5900,disable-ticketing=on

@@ -25,18 +25,23 @@ KFile *stdout = NULL;
 //     return 1;
 // }
 
+#ifdef __is_kernel
+    #include <kproc.hpp>
+#endif
+
 
 int fflush( FILE *fh )
 {
     #ifdef __is_kernel
+        fh->fsh(fh);
+        kproc_yield();
+
+    #else
         ksysc_request req = {
             .type = SYSC_FILE_FLUSH,
             .data = fh
         };
         libk_syscall(&req);
-
-    #else
-        fh->fsh(fh);
 
     #endif
 

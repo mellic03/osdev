@@ -7,15 +7,16 @@
 #include <cxxabiv1>
 #include <kernel.h>
 #include <kinterrupt.h>
+#include <kproc.hpp>
 
 #include <libc.h>
 #include <libc++>
 
 #include "driver/pic.hpp"
 #include "driver/pit.hpp"
-// #include "driver/ps2_keyboard.hpp"
 #include "driver/keyboard.hpp"
 #include "driver/serial.hpp"
+#include "log/log.hpp"
 
 #include <kinplace/inplace_vector.hpp>
 
@@ -24,30 +25,24 @@
 #include "./cpu/gdt.hpp"
 #include "./interrupt/interrupt.hpp"
 #include "./kfs/kfs.hpp"
-// #include "./lang/lang.hpp"
 #include "./syscall/syscall.hpp"
 #include "./ksystem.hpp"
-
+#include "kvideo/kvideo.hpp"
+#include "kwin/kwin.hpp"
+#include "kshell.hpp"
+#include "memory/pmm.hpp"
+#include "memory/vmm.hpp"
 
 
 void pagefault_handler( kstackframe* );
 
 void genfault_handler( kstackframe *frame )
 {
-    SYSLOG_BEGIN("Exception GENERAL_PROTECTION_FAULT");
+    syslog("Exception GENERAL_PROTECTION_FAULT");
     kernel_hcf();
-    SYSLOG_END();
 }
 
 
-
-uint64_t idk::memory::hhdm;
-
-void asm_yolo( void *addr )
-{
-    void (*yolo)(void) = (void (*)())addr;
-    yolo();
-}
 
 
 
@@ -79,106 +74,71 @@ void run_fini_array()
 
 
 
-
-
-
-
-
-
-
-
-
-#include <kstackframe.h>
-
-
-struct CPU_Task
-{
-    uint8_t stack[1024];
-    kstackframe state;
-    CPU_Task *next;
-};
-
-
-CPU_Task *curr_task;
-CPU_Task *next_task;
-
-
-void task_init()
-{
-    curr_task = new CPU_Task();
-    next_task = new CPU_Task();
-
-    curr_task->next = next_task;
-    next_task->next = curr_task;
-
-    cpu_ctx_save(&(curr_task->state));
-    cpu_ctx_save(&(next_task->state));
-}
-
-void task_switch()
-{
-    cpu_ctx_save(&(curr_task->state));
-    curr_task = curr_task->next;
-    cpu_ctx_load(&(curr_task->state));
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+uint64_t idk::memory::hhdm;
 idk::KSystem *sys;
-idk::WinFrameSolid *win;
+idk::Video   *vid;
 uint64_t count;
 
-void pit_irq( kstackframe* )
+
+
+
+#include <string.h>
+#include <stdio.h>
+
+void pit_irq( kstackframe *frame )
 {
+    kproc_switch(frame);
+    // kproc_yield();
+
     count++;
     idk::PIT_reload();
     idk::PIC::sendEOI(0);
 }
 
 
+void proccess_switch_handler( kstackframe *frame )
+{
+    kproc_switch(frame);
+}
 
 
 
+#include "kwin/frame_tty.hpp"
+
+void proc_video( void* )
+{
+    printf("[proc_video] A\n");
+
+    auto ctx = kwin::Context(1280, 720);
+    auto *frame = ctx.createFrame<kwin::FrameTest>(
+        ivec2(100, 100), ivec2(400, 500), uvec4(255, 0, 255, 255)
+    );
+
+    // auto *frame = ctx.createFrame<kwin::FrameTTY>(
+    //     ivec2(100, 100), ivec2(400, 500)
+    // );
+
+    while (true)
+    {
+        frame->draw(ctx);
+        ctx.m_tl.x += 1;
+
+        ctx.flush();
+    }
+
+}
 
 
+void proc_text( void* )
+{
+    printf("[proc_text] A\n");
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include <string.h>
+    while (true)
+    {
+        printf("[proc_text]\n");
+        // kproc_yield();
+    }
+}
 
 
 
@@ -196,12 +156,13 @@ void _start()
         return;
     }
 
-    SYSLOG_BEGIN("_start");
-    SYSLOG("serial initialized");
+    syslog log("_start");
+    log("serial initialized");
     
     Krequests reqs = {
         .hhdm    = lim_hhdm_req.response->offset,
         .fb      = lim_fb_req.response,
+        .addr    = lim_addr_req.response,
         .modules = lim_module_req.response,
         .mmaps   = lim_mmap_req.response,
         .mp      = lim_mp_req.response
@@ -209,102 +170,53 @@ void _start()
 
     idk::KSystem system(reqs);
     sys = &system;
+
+    // sch = &(system.sched);
     count = 0;
     double timer = 0;
 
 
     asm volatile("cli");
+    kproc_init();
+
     idk::PIT_init();
     idk::GDT_load();
     idk::GDT_flush();
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
+    idk::onInterrupt(INT_PROCESS_SWITCH, proccess_switch_handler);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
-    idk::onInterrupt(0x20+0,  pit_irq);
-    idk::onInterrupt(0x20+1,  keyboard_irq_handler);
+    idk::onInterrupt(32+0,  pit_irq);
+    idk::onInterrupt(32+1,  keyboard_irq_handler);
 
     PIC::remap(32, 40);
     PIC::disable();
     PIC::unmask(0);
     PIC::unmask(1);
-	asm volatile ("sti");
-
-
-    system.video.init(system.m_reqs.fb);
 
     libc_init();
     std::detail::libcpp_init();
+	asm volatile ("sti");
 
-    KFS::Trie trie;
-    auto *E = trie.insert("/home/michael/Desktop/sketchy.exec");
-    E->print_path();
-
-    // auto file = system.getModule("kshell.exec");
-    // idk::ExecHeader header = { file->address, file->size };
-    // int result = system.execute(&header, 0, nullptr);
-    // SYSLOG("\n\nexec result: 0x%lx\n\n", result);
-
-    // void  *exec_addr = (void*)(0xFFFF800100000000);
-    // memcpy(exec_addr, header.addr, header.size);
-    // using YOLO = int (*)(int, char**);
-    // int retvalue = ((YOLO)exec_addr)(0, nullptr);
-    // // return retvalue;
-
-
+    system.video.init(system.m_reqs.fb);
+    kvideo::init(reqs.fb);
 
     auto &video = system.video;
-    win = video.createWinFrame<idk::WinFrameSolid>(
-        vec2(100, 100), vec2(400, 500)
-    );
+    vid = &video;
 
-    win->m_bg = uvec4(255, 155, 155, 255);
-    win->m_depth = 0.5f;
+    auto *A = kproc_new(proc_video, nullptr);
+    auto *B = kproc_new(kshell, nullptr); // needs to be blocking
 
-
-    // uint64_t ticks = 0;
-    // uint64_t msecs = 0;
-    // static uint64_t seconds = 0;
 
     while (true)
     {
-        timer = double(count);
-        SYSLOG("timer=%f", timer/1000.0);
-
-
-        // if (PIT_edge())
-        // {
-        //     ticks += PIT_HERTZ;
-        //     msecs = ticks / 1000;
-        //     uint64_t scnds = msecs / 1000;
-        
-        //     if (scnds > seconds)
-        //     {
-        //         seconds = scnds;
-        //         SYSLOG("seconds=%lu\n", seconds); // Print delta
-        //     }
-        // }
-
-        video.update();
-        uint8_t key = 0;
-
-        while (KFile_read(&key, KFS::kdevscn, 1))
-        {
-            if (key==DOWN_W) win->m_tl.y -= 1;
-            if (key==DOWN_S) win->m_tl.y += 1;
-            if (key==DOWN_A) win->m_tl.x -= 1;
-            if (key==DOWN_D) win->m_tl.x += 1;
-        }
-
-        // if (win->m_tl.x > 100)
-        // {
-        //     KInterrupt<INT_SYSCALL>();
-        // }
+        // kproc_yield();
+        // printf("WOOP\n");
     }
 
+    uint64_t ree = 0xffff'8000'0000'0000;
 
-
-    SYSLOG_END();
     run_fini_array();
     kernel_hcf();
 }
@@ -314,40 +226,56 @@ void _start()
 
 void pagefault_handler( kstackframe *frame )
 {
-    SYSLOG_BEGIN("Exception PAGE_FAULT");
+    syslog log("Exception PAGE_FAULT");
+
+    log("r11:   0x%lx", frame->r11);
+    log("r12:   0x%lx", frame->r12);
+    log("r13:   0x%lx", frame->r13);
+    log("r14:   0x%lx", frame->r14);
+    log("r15:   0x%lx", frame->r15);
+    log("rax:   0x%lx", frame->rax);
+    log("rbx:   0x%lx", frame->rbx);
+    log("rcx:   0x%lx", frame->rcx);
+    log("rdx:   0x%lx", frame->rdx);
+    log("rdi:   0x%lx", frame->rdi);
+    log("rsi:   0x%lx", frame->rsi);
+    log("rbp:   0x%lx", frame->rbp);
+    log("vcode: %lu", frame->vcode);
+    log("ecode: %lu", frame->ecode);
+
+
 
     uint64_t flags = frame->ecode;
     // printBits(flags);
 
     if (flags & (1<<0))
-         SYSLOG("\t- Page-protection violation");
-    else SYSLOG("\t- Non-present page");
+         log("\t- Page-protection violation");
+    else log("\t- Non-present page");
 
     if (flags & (1<<1))
-         SYSLOG("\t- Caused by write-access");
-    else SYSLOG("\t- Caused by read-access");
+         log("\t- Caused by write-access");
+    else log("\t- Caused by read-access");
 
     if (flags & (1<<2))
-        SYSLOG("\t- Caused while CPL=3, not necessarily privilege violation");
+        log("\t- Caused while CPL=3, not necessarily privilege violation");
 
     if (flags & (1<<3))
-        SYSLOG("\t- One or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1. ");
+        log("\t- One or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1. ");
 
     if (flags & (1<<4))
-        SYSLOG("\t- Caused by instruction fetch");
+        log("\t- Caused by instruction fetch");
 
     if (flags & (1<<5))
-        SYSLOG("\t- Caused by a protection-key violation");
+        log("\t- Caused by a protection-key violation");
 
     if (flags & (1<<6))
-        SYSLOG("\t- Caused by a shadow stack access");
+        log("\t- Caused by a shadow stack access");
 
     if (flags & (1<<15))
-        SYSLOG("\t- Fault was due to an SGX violation. The fault is unrelated to ordinary paging.");
+        log("\t- Fault was due to an SGX violation. The fault is unrelated to ordinary paging.");
 
     kernel_hcf();
 
-    SYSLOG_END();
 }
 
 

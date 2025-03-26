@@ -23,6 +23,18 @@ namespace idk
         return b ^ (1<<n);
     }
 
+    template <typename T>
+    constexpr T mask_set( T b, T mask )
+    {
+        return b | mask;
+    }
+
+    template <typename T>
+    constexpr T mask_unset( T b, T mask )
+    {
+        return b & ~mask;
+    }
+
 
     template <typename T>
     constexpr T *ptr_align( T *ptr, size_t alignment )

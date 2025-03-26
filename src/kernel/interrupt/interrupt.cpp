@@ -1,5 +1,5 @@
 #include "interrupt.hpp"
-#include "../driver/serial.hpp"
+#include "../log/log.hpp"
 #include "../driver/pic.hpp"
 #include "../cpu/gdt.hpp"
 
@@ -23,25 +23,10 @@ extern "C"
 void __isr_dispatch( kstackframe *frame )
 // void __isr_dispatch( uint64_t vcode, uint64_t ecode )
 {
-    // SYSLOG_BEGIN("__interrupt_dispatch");
+    // syslog log("__interrupt_dispatch");
+    // log("vcode: %u", frame->vcode);
 
-    uint64_t vcode = frame->vcode;
-    uint64_t ecode = frame->ecode;
-
-    // SYSLOG("r11:   0x%lx", frame->r11);
-    // SYSLOG("r12:   0x%lx", frame->r12);
-    // SYSLOG("r13:   0x%lx", frame->r13);
-    // SYSLOG("r14:   0x%lx", frame->r14);
-    // SYSLOG("r15:   0x%lx", frame->r15);
-    // SYSLOG("rax:   0x%lx", frame->rax);
-    // SYSLOG("rbx:   0x%lx", frame->rbx);
-    // SYSLOG("rcx:   0x%lx", frame->rcx);
-    // SYSLOG("rdx:   0x%lx", frame->rdx);
-    // SYSLOG("rdi:   0x%lx", frame->rdi);
-    // SYSLOG("rsi:   0x%lx", frame->rsi);
-    // SYSLOG("rbp:   0x%lx", frame->rbp);
-    // SYSLOG("vcode: %lu", vcode);
-    // SYSLOG("ecode: %lu", ecode);
+    uint32_t vcode = frame->vcode;
 
     if (vcode > NUM_INTERRUPTS)
     {
@@ -85,7 +70,7 @@ void idt_set_descriptor( uint8_t idx, void *isr, uint8_t flags )
 
 void idk::IDT_load()
 {
-    SYSLOG_BEGIN("idk::IDT_load");
+    syslog log("idk::IDT_load");
     
     for (int i=0; i<NUM_INTERRUPTS; i++)
     {
@@ -95,8 +80,8 @@ void idk::IDT_load()
     idtr.base = (uint64_t)(&idt[0]);
     idtr.limit = (uint16_t)sizeof(idt_entry_t) * NUM_INTERRUPTS - 1;
 
-    SYSLOG("idtr.base:  0x%x", idtr.base);
-    SYSLOG("idtr.limit: %u", idtr.limit);
+    log("idtr.base:  0x%x", idtr.base);
+    log("idtr.limit: %u", idtr.limit);
 
     for (uint8_t i=0; i<NUM_INTERRUPTS; i++)
     {
@@ -104,8 +89,6 @@ void idk::IDT_load()
     }
 
     asm volatile ("lidt %0" : : "m"(idtr)); // Load IDT
-
-    SYSLOG_END();
 }
 
 

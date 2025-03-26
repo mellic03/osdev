@@ -30,13 +30,6 @@ namespace idk::IO
 namespace idk
 {
     kret_t serial_init();
-    void __serialf( const char *fmt, va_list args );
-    void serialf( const char *fmt, ... );
+
 }
 
-
-
-void SYSLOG_BEGIN( const char* );
-void SYSLOG( const char *fmt, ... );
-void SYSLOG_END();
-#define SYSLOG_RET(_r) SYSLOG_END(); return _r

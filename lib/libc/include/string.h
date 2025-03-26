@@ -15,6 +15,7 @@ char    *antistrchr( const char *str, int ch );
 int      strcmp( const char*, const char* );
 int      strncmp( const char*, const char*, size_t );
 char    *strcpy( char*, const char* );
+char    *strncpy( char*, const char*, size_t );
 size_t   strlen( const char* );
 char    *strpbrk( const char *dst, const char *breakset );
 size_t   strspn( const char *str, const char *ct );

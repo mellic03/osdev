@@ -5,6 +5,7 @@
 
 #include <kscancode.h>
 #include <kmalloc.h>
+#include <stdio.h>
 #include <string.h>
 
 using namespace idk;
@@ -14,15 +15,8 @@ void keyboard_irq_handler( kstackframe *frame )
 {
     uint8_t code = IO::inb(0x60);
 
-    auto *fh = KFS::kdevscn;
-    *(fh->write++) = code;
-
-    if (fh->write >= fh->eof)
-    {
-        fh->fsh(fh);
-    }
-
-    // SYSLOG("[keyboard] code=%u", code);
+    KFile_write(KFS::kdevscn, &code, 1);
+    // printf("[keyboard] code=%u\n", code);
 
     PIC::sendEOI(1);
 }

@@ -14,6 +14,12 @@ static volatile struct limine_hhdm_request lim_hhdm_req = {
 };
 
 __attribute__((used, section(".limine_requests")))
+static volatile struct limine_executable_address_request lim_addr_req = {
+    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".limine_requests")))
 static volatile struct limine_framebuffer_request lim_fb_req = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0
@@ -35,7 +41,8 @@ static volatile struct limine_memmap_request lim_mmap_req = {
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
-    .revision = 0
+    .revision = 0,
+    .flags = 1
 };
 
 

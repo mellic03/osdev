@@ -1,5 +1,5 @@
 #include "./gdt.hpp"
-#include "../driver/serial.hpp"
+#include "../log/log.hpp"
 
 // Each define here is for a specific flag in the descriptor.
 // Refer to the intel documentation for a description of what each one does.
@@ -68,7 +68,6 @@ uint64_t create_descriptor( uint32_t base, uint32_t limit, uint16_t flag )
 }
 
 
-constexpr uint16_t __gdt_count = 5;
 static uint64_t    __gdt[16];
 static tss_entry_t __TSS;
 
@@ -107,11 +106,12 @@ extern "C"
     extern void __GDT_flush(void);
 }
  
+constexpr uint16_t __gdt_count = 5;
 
 void
 idk::GDT_load()
 {
-    SYSLOG_BEGIN("GDT_load");
+    syslog log("GDT_load");
 
     // https://wiki.osdev.org/GDT_Tutorial#How_to_Set_Up_The_GDT
     fill_entry(0, 0, 0, 0, 0);
@@ -119,22 +119,19 @@ idk::GDT_load()
     fill_entry(2, 0, 0xFFFFF, 0x92, 0xC); // Kernel mode data segment
     fill_entry(3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
     fill_entry(4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
-    // fill_entry(5, (uint64_t)(&__TSS), sizeof(__TSS)-1, 0x89, 0x0); // TSS
 
-    for (int i=0; i<5; i++)
+    for (int i=0; i<__gdt_count; i++)
     {
-        SYSLOG("GDT[%d]: 0x%lx", i, __gdt[i]);
+        log("GDT[%d]: 0x%lx", i, __gdt[i]);
     }
 
     __gdtr_limit = uint16_t(__gdt_count * sizeof(uint64_t) - 1);
     __gdtr_base  = (uint64_t)(&__gdt[0]);
 
-	SYSLOG("gdtr.limit: %lu",   __gdtr_limit);
-	SYSLOG("gdtr.base:  0x%lx", __gdtr_base);
+	log("gdtr.limit: %lu",   __gdtr_limit);
+	log("gdtr.base:  0x%lx", __gdtr_base);
 
     __GDT_load();
-
-	SYSLOG_END();
 }
 
 
@@ -145,7 +142,6 @@ idk::GDT_load()
 void
 idk::GDT_flush()
 {
-	SYSLOG_BEGIN("GDT_flush");
+	syslog log("GDT_flush");
     __GDT_flush();
-	SYSLOG_END();
 }

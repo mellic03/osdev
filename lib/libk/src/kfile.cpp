@@ -14,6 +14,11 @@ KFile_write( KFile *fh, const void *src, size_t nbytes )
         count += 1;
     }
 
+    if (fh->write >= fh->eof)
+    {
+        fh->fsh(fh);
+    }
+
     return count;
 }
 

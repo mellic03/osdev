@@ -20,13 +20,16 @@ namespace idk
         void fxsave(); 
         void fxrstor();
 
+        uint64_t getCR3();
+        void     setCR3( uint64_t );
     };
 
 }
 
+
 extern "C"
 {
-    extern void cpu_ctx_load( kstackframe* );
-    extern void cpu_ctx_save( kstackframe* );
+    extern void cpu_ctx_switch( uint8_t *stack );
+    // extern void cpu_ctx_load( uint8_t *stack );
 }
 

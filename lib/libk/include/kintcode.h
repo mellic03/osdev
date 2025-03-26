@@ -20,6 +20,8 @@ enum Kintcode: uint8_t
     INT_OUT_OF_MEMORY 	          = 54,
 
     INT_KEYBOARD				  = 90,
+
+    INT_PROCESS_SWITCH            = 98,
     INT_SYSCALL 	  	          = 99
 };
 

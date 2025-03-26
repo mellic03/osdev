@@ -33,16 +33,16 @@ kn_TTY::putchar( char ch )
 
 
 
-void
-kn_TTY::update()
-{
-    uint8_t ch;
+// void
+// kn_TTY::update()
+// {
+//     uint8_t ch;
 
-    while (KFile_read(&ch, stream, 1))
-    {
-        if (isalpha(ch))
-        {
-            putchar(ch);
-        }
-    }
-}
+//     while (KFile_read(&ch, stream, 1))
+//     {
+//         if (isalpha(ch))
+//         {
+//             putchar(ch);
+//         }
+//     }
+// }

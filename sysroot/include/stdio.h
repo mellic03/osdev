@@ -23,6 +23,7 @@ extern FILE *stdout;    // Standard output stream.
 
 
 int     fflush( FILE* );
+int     fgetc( FILE* );
 char   *fgets( char *str, int n, FILE* );
 int     fputc( char, FILE* );
 int     fputs( const char*, FILE* );

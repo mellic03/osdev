@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-static char __serial_buf[256];
-static int  __syslog_indent;
+// static char __serial_buf[256];
+// static int  __syslog_indent;
 
 
 kret_t
@@ -11,8 +11,8 @@ idk::serial_init()
 {
     using namespace IO;
 
-    memset(__serial_buf, '\0', 256);
-    __syslog_indent = 0;
+    // memset(__serial_buf, '\0', 256);
+    // __syslog_indent = 0;
 
     IO::outb(COM1+1, 0x00);    // Disable all interrupts
     IO::outb(COM1+3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -38,12 +38,12 @@ idk::serial_init()
 }
 
 
-int __pushIndent( int n )
-{
-    int prev = __syslog_indent;
-    __syslog_indent += n;
-    return prev;
-}
+// int __pushIndent( int n )
+// {
+//     int prev = __syslog_indent;
+//     __syslog_indent += n;
+//     return prev;
+// }
 
 
 
@@ -97,33 +97,31 @@ void idk::IO::wait()
 
 
 
-void idk::__serialf( const char *fmt, va_list args )
-{
-    int n = vsprintf(__serial_buf, fmt, args);
-    // __serial_buf[n]   = '\0';
+// void idk::__serialf( const char *fmt, va_list args )
+// {
+//     int n = vsprintf(__serial_buf, fmt, args);
 
-    for (int i=0; i<__syslog_indent; i++)
-    {
-        idk::IO::outb(idk::IO::COM1, ' ');
-    }
+//     for (int i=0; i<__syslog_indent; i++)
+//     {
+//         idk::IO::outb(idk::IO::COM1, ' ');
+//     }
 
-    for (int i=0; i<n; i++)
-    {
-        idk::IO::outb(idk::IO::COM1, __serial_buf[i]);
-    }
-}
-
+//     for (int i=0; i<n; i++)
+//     {
+//         idk::IO::outb(idk::IO::COM1, __serial_buf[i]);
+//     }
+// }
 
 
 
-void idk::serialf( const char *fmt, ... )
-{
-    va_list args;
-    va_start (args, fmt);
-    __serialf(fmt, args);
-    va_end(args);
-}
 
+// void idk::serialf( const char *fmt, ... )
+// {
+//     va_list args;
+//     va_start (args, fmt);
+//     __serialf(fmt, args);
+//     va_end(args);
+// }
 
 
 
@@ -131,34 +129,35 @@ void idk::serialf( const char *fmt, ... )
 
 
 
-void __popIndent( int n )
-{
-    __syslog_indent -= n;
-    __syslog_indent = (__syslog_indent < 0) ? 0 : __syslog_indent;
-}
 
-void SYSLOG_BEGIN( const char *title )
-{
-    SYSLOG("[%s]", title);
-    SYSLOG("{");
-    __pushIndent(4);
-}
+// void __popIndent( int n )
+// {
+//     __syslog_indent -= n;
+//     __syslog_indent = (__syslog_indent < 0) ? 0 : __syslog_indent;
+// }
 
-
-void SYSLOG( const char *fmt, ... )
-{
-    va_list args;
-    va_start (args, fmt);
-    idk::__serialf(fmt, args);
-    idk::serialf("\n");
-    va_end(args);
-}
+// void SYSLOG_BEGIN( const char *title )
+// {
+//     SYSLOG("[%s]", title);
+//     SYSLOG("{");
+//     __pushIndent(4);
+// }
 
 
-void SYSLOG_END()
-{
-    __popIndent(4);
-    SYSLOG("}");
-}
+// void SYSLOG( const char *fmt, ... )
+// {
+//     va_list args;
+//     va_start (args, fmt);
+//     idk::__serialf(fmt, args);
+//     idk::serialf("\n");
+//     va_end(args);
+// }
+
+
+// void SYSLOG_END()
+// {
+//     __popIndent(4);
+//     SYSLOG("}");
+// }
 
 

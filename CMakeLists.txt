@@ -52,6 +52,11 @@ add_executable(
     ${IDKERNEL_SOURCES}
 )
 
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES
+    LINK_DEPENDS ${LINKER_SCRIPT}
+)
+
 target_compile_definitions(
     ${PROJECT_NAME} PUBLIC 
     -D__is_kernel

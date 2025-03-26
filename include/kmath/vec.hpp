@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 
-namespace idk
-{
+// namespace idk
+// {
     // template <typename T, size_t N>
     // struct tvec;
 
@@ -18,12 +18,12 @@ namespace idk
     template <typename T>
     struct tvec4;
 
-}
+// }
 
 
 
 template <typename T>
-struct idk::tvec2
+struct tvec2
 {
     union { T x, r; };
     union { T y, g; };
@@ -33,11 +33,11 @@ struct idk::tvec2
     tvec2( T _x, T _y ): x(_x), y(_y) {  };
 
     template <typename U>
-    tvec2( const idk::tvec2<U> &rhs )
+    tvec2( const tvec2<U> &rhs )
     :   tvec2(T(rhs.x), T(rhs.y)) {  };
 
     template <typename U>
-    tvec2( const idk::tvec3<U> &rhs )
+    tvec2( const tvec3<U> &rhs )
     :   tvec2(T(rhs.x), T(rhs.y)) {  };
 
 
@@ -84,7 +84,7 @@ struct idk::tvec2
 
 
     template <typename U>
-    tvec2 operator=( const idk::tvec2<U> &rhs )
+    tvec2 operator=( const tvec2<U> &rhs )
     {
         x = T(rhs.x);
         y = T(rhs.y);
@@ -94,7 +94,7 @@ struct idk::tvec2
 
 
 template <typename T>
-struct idk::tvec3
+struct tvec3
 {
     union { T x, r; };
     union { T y, g; };
@@ -110,7 +110,7 @@ struct idk::tvec3
 
 
 template <typename T>
-struct idk::tvec4
+struct tvec4
 {
     union { T x, r; };
     union { T y, g; };
@@ -125,8 +125,8 @@ struct idk::tvec4
 
 
 
-namespace idk
-{
+// namespace idk
+// {
     #ifdef __libk_sse
         using vec2  = tvec2<float>;
         using vec3  = tvec3<float>;
@@ -169,7 +169,7 @@ namespace idk
     using u16vec3 = tvec3<uint16_t>;
     using u16vec4 = tvec4<uint16_t>;
 
-}
+// }
 
 
 

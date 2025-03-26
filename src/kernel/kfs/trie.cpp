@@ -227,40 +227,27 @@ KFS::Trie::insert( const char *path )
 kfsEntry*
 KFS::Trie::find( const char *path )
 {
-    if (m_root == nullptr)
-    {
-        m_root = new kfsEntry(nullptr, "root");
-    }
-
     kfsEntry *E = m_root;
     static char name[32];
 
-    while (*path)
+    while (*path && E)
     {
         auto *A = skip_ch(path, '/');
         auto *B = seek_ch(A+1, '/');
         memcpy(name, A, B-A);
         name[B-A] = '\0';
 
-        E = E->getChild(name);
+        auto *child = E->getChild(name);
 
-        printf("\"%s\"", name);
-        printf(" / ");
-    
+        if (!child)
+        {
+            return nullptr;
+        }
+
+        E = child;
         path = B;
     }
 
-    if (!E)
-    {
-        printf("!E\n");
-    }
-
-    else
-    {
-        printf("E.name: \"%s\"", E->name);
-    }
-
-
-
-    return nullptr;
+    return E;
 }
+

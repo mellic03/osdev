@@ -4,12 +4,15 @@
 #include <stdint.h>
 
 #include "cpu/cpu.hpp"
+#include "tty.hpp"
+#include "process/process.hpp"
 #include "video/video.hpp"
 #include <kernel/memory.hpp>
 #include <kinplace/inplace_vector.hpp>
 
 
 struct limine_framebuffer_response;
+struct limine_executable_address_response;
 struct limine_module_response;
 struct limine_memmap_response;
 struct limine_mp_response;
@@ -28,6 +31,7 @@ namespace idk
     {
         uint64_t                      hhdm;
         limine_framebuffer_response  *fb;
+        limine_executable_address_response *addr;
         limine_module_response       *modules;
         limine_memmap_response       *mmaps;
         limine_mp_response           *mp;
@@ -48,6 +52,8 @@ private:
     inplace_vector<MemoryMap>    m_mmaps;
     inplace_vector<limine_file*> m_modules;
     inplace_vector<ExecHeader>   m_execs;
+    inplace_vector<kn_TTY*>      m_ttys;
+
 
     void _load_mmaps();
     void _load_modules();
@@ -63,9 +69,7 @@ public:
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();
     limine_file *getModule( const char *label );
-    int          execute( ExecHeader*, int argc, char **argv );
-
-    void         shell( bool );
+    int          execute( const char *filepath, int argc, char **argv );
     void         lsmem();
 
 };

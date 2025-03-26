@@ -23,11 +23,6 @@ public:
     kfsEntry *children['z'-'0'][16];
     uint32_t  nchildren['z'-'0'];
 
-    // idk::vector<idk::vector<kfsEntry*>> children;
-    // kfsEntry **children['z'-'0'];
-    // uint16_t   nchildren['z'-'0'];
-    // uint16_t   capacity['z'-'0'];
-
     kfsEntry( kfsEntry *parent, const char *filename );
     kfsEntry *getChild( const char *filename );
     kfsEntry *giveChild( const char *filename );

@@ -155,7 +155,9 @@
         "def.h": "c",
         "kernel.h": "c",
         "buddy_allocator.hpp": "c",
-        "inplace_array.hpp": "c"
+        "inplace_array.hpp": "c",
+        "kstackframe.h": "c",
+        "expected": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",

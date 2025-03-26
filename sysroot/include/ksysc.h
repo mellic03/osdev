@@ -70,12 +70,12 @@ extern "C"
     inline void libk_syscall( struct ksysc_request *req )
     {
         __asm__ volatile (
-        "mov %0, %%rax\n\t"  // Move the pointer to rax
-        "int $99\n\t"        // Trigger interrupt 99
-        :                    // No output operands
-        : "r" (req)          // Input operand
-        : "rax"              // Clobbered register
-    );
+            "mov %0, %%rax\n\t"  // Move the pointer to rax
+            "int $99\n\t"        // Trigger interrupt 99
+            :                    // No output operands
+            : "r" (req)          // Input operand
+            : "rax"              // Clobbered register
+        );
 
     }
 }

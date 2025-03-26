@@ -24,12 +24,12 @@ private:
 public:
 
     inplace_array()
-    :   inplace_array(0, nullptr)
+    :   inplace_array(nullptr, 0)
     {
 
     }
 
-    inplace_array( size_t capacity, T *buf )
+    inplace_array( T *buf, size_t capacity )
     :   m_cap   (capacity),
         m_data  (buf),
         m_begin (buf),

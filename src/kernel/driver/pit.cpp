@@ -46,6 +46,7 @@ void
 idk::PIT_reload()
 {
     uint16_t reload_value = 1200;
+    // uint16_t reload_value = 0;
     IO::outb(PIT_COUNTER0, reload_value & 0xFF);
     IO::outb(PIT_COUNTER0, (reload_value >> 8) & 0xFF);
 }
