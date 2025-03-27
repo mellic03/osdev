@@ -1,8 +1,25 @@
 #include "mouse.hpp"
 #include "serial.hpp"
 #include "pic.hpp"
+#include <stdio.h>
 
 using namespace idk;
+
+
+#define PS2Leftbutton 0b00000001
+#define PS2Middlebutton 0b00000100
+#define PS2Rightbutton 0b00000010
+#define PS2XSign 0b00010000
+#define PS2YSign 0b00100000
+#define PS2XOverflow 0b01000000
+#define PS2YOverflow 0b10000000
+
+
+bool mouseleft = false;
+bool mouseright = false;
+vec2 mousexy = vec2(0.0, 0.0);
+vec2 mouseprev = vec2(0.0, 0.0);
+vec2 mousedelta = vec2(0.0, 0.0);
 
 
 uint8_t MousePointer[] = {
@@ -91,79 +108,57 @@ void mouse_irq( kstackframe* )
     PIC::sendEOI(12);
 }
 
-void ProcessMousePacket(){
-    if (!MousePacketReady) return;
+void ProcessMousePacket()
+{
+    if (!MousePacketReady)
+    {
+        return;
+    }
 
-        bool xNegative, yNegative, xOverflow, yOverflow;
+    mouseprev = mousexy;
 
-        if (MousePacket[0] & PS2XSign){
-            xNegative = true;
-        }else xNegative = false;
+    bool xNegative, yNegative, xOverflow, yOverflow;
 
-        if (MousePacket[0] & PS2YSign){
-            yNegative = true;
-        }else yNegative = false;
+    mouseleft  = (MousePacket[0] & 0b01);
+    mouseright = (MousePacket[0] & 0b10);
 
-        if (MousePacket[0] & PS2XOverflow){
-            xOverflow = true;
-        }else xOverflow = false;
+    xNegative = (MousePacket[0] & PS2XSign);
+    yNegative = (MousePacket[0] & PS2YSign);
+    xOverflow = (MousePacket[0] & PS2XOverflow);
+    yOverflow = (MousePacket[0] & PS2YOverflow);
 
-        if (MousePacket[0] & PS2YOverflow){
-            yOverflow = true;
-        }else yOverflow = false;
-
-        if (!xNegative){
-            mouse_x += MousePacket[1];
-            if (xOverflow){
-                mouse_x += 255;
-            }
-        } else
-        {
-            MousePacket[1] = 256 - MousePacket[1];
-            mouse_x -= MousePacket[1];
-            if (xOverflow){
-                mouse_x -= 255;
-            }
+    if (!xNegative){
+        mouse_x += MousePacket[1];
+        if (xOverflow){
+            mouse_x += 255;
         }
-
-        if (!yNegative){
-            mouse_y -= MousePacket[2];
-            if (yOverflow){
-                mouse_y -= 255;
-            }
-        } else
-        {
-            MousePacket[2] = 256 - MousePacket[2];
-            mouse_y += MousePacket[2];
-            if (yOverflow){
-                mouse_y += 255;
-            }
+    } else
+    {
+        MousePacket[1] = 256 - MousePacket[1];
+        mouse_x -= MousePacket[1];
+        if (xOverflow){
+            mouse_x -= 255;
         }
+    }
 
-        // if (mouse_x < 0) mouse_x = 0;
-        // if (mouse_x > GlobalRenderer->TargetFramebuffer->Width-1) mouse_x = GlobalRenderer->TargetFramebuffer->Width-1;
-        
-        // if (mouse_y < 0) mouse_y = 0;
-        // if (mouse_y > GlobalRenderer->TargetFramebuffer->Height-1) mouse_y = GlobalRenderer->TargetFramebuffer->Height-1;
-        
-        // GlobalRenderer->ClearMouseCursor(MousePointer, MousePositionOld);
-        // GlobalRenderer->DrawOverlayMouseCursor(MousePointer, MousePosition, 0xffffffff);
+    if (!yNegative){
+        mouse_y -= MousePacket[2];
+        if (yOverflow){
+            mouse_y -= 255;
+        }
+    } else
+    {
+        MousePacket[2] = 256 - MousePacket[2];
+        mouse_y += MousePacket[2];
+        if (yOverflow){
+            mouse_y += 255;
+        }
+    }
 
-        // if (MousePacket[0] & PS2Leftbutton){
-        //     GlobalRenderer->PutChar('a', mouse_x, mouse_y);
-        // }
-        // if (MousePacket[0] & PS2Middlebutton){
-            
-        // }
-        // if (MousePacket[0] & PS2Rightbutton){
-        //     uint32_t colour = GlobalRenderer->Colour;
-        //     GlobalRenderer->Colour = 0x0000ff00;
-        //     GlobalRenderer->PutChar('a', mouse_x, mouse_y);
-        //     GlobalRenderer->Colour = colour;
-        // }
+    mousexy = vec2(mouse_x, mouse_y);
+    mousedelta = mousexy - mouseprev;
 
-        MousePacketReady = false;
-        // MousePositionOld = MousePosition;
+    MousePacketReady = false;
 }
 
 void mouse_init()

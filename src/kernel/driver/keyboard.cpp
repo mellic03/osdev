@@ -14,28 +14,52 @@ using namespace idk;
 
 void keyboard_irq_handler( kstackframe *frame )
 {
+    static bool multi = false;
     static uint8_t mod = 0;
-
     uint8_t code = IO::inb(0x60);
+
+    if (code == 0xE0)
+    {
+        multi = true;
+        PIC::sendEOI(1);
+        return;
+    }
+
+    if (multi)
+    {
+        multi = false;
+
+        // if (code == 0x6B)
+        //     code = DOWN_LEFT;
+        // if (code == 0x74)
+        //     code = DOWN_RIGHT;
+        
+        mod |= MODIFIER_CURSOR;
+    }
+    else
+    {
+        mod &= ~MODIFIER_CURSOR;
+    }
+
 
     switch (code)
     {
         default: break;
         case DOWN_LSHIFT:   mod |=  MODIFIER_SHIFT;  break;
         case UP_LSHIFT:     mod &= ~MODIFIER_SHIFT;  break;
-        case DOWN_LCTRL:    mod |=  MODIFIER_LCTRL;  break;
-        case UP_LCTRL:      mod &= ~MODIFIER_LCTRL;  break;
-        case DOWN_LALT:     mod |=  MODIFIER_LALT;   break;
-        case UP_LALT:       mod &= ~MODIFIER_LALT;   break;
+        case DOWN_LCTRL:    mod |=  MODIFIER_CTRL;   break;
+        case UP_LCTRL:      mod &= ~MODIFIER_CTRL;   break;
+        case DOWN_LALT:     mod |=  MODIFIER_ALT;    break;
+        case UP_LALT:       mod &= ~MODIFIER_ALT;    break;
     }
 
     struct {
-        uint8_t code;
         uint8_t modifier;
+        uint8_t code;
     } packet;
 
     {
-        packet = { mod, code };
+        packet = { mod, code};
         KFile_write(KFS::kdevscn, &packet, sizeof(packet));
     }
 

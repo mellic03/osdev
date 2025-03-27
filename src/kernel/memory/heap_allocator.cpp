@@ -1,9 +1,9 @@
-// #include <kernel.h>
-// #include <kernel/bitmanip.hpp>
-// #include <kinterrupt.h>
-// #include <algorithm>
-
-// #include "heap_allocator.hpp"
+#include <kernel.h>
+#include <kernel/bitmanip.hpp>
+#include <kinterrupt.h>
+#include <algorithm>
+#include "heap_allocator.hpp"
+#include "../log/log.hpp"
 // #include "../driver/serial.hpp"
 
 
@@ -16,81 +16,102 @@
 // // }
 
 
+idk::heap_allocator::heap_allocator( uintptr_t base, uint64_t size )
+{
+    m_freelist = (FreeNode*)(base);
 
-// idk::heap_allocator::heap_allocator( uint64_t *base, uint64_t size )
-// {
-//     FreeNode *node = (FreeNode*)base;
+    m_freelist->magic = 0xDEADBEBE;
+    m_freelist->size = size; // - 2048*sizeof(FreeNode);
+    m_freelist->next = nullptr;
 
-//     while ((uint64_t*)node < (base + size))
-//     {
-//         node->size = 1024;
-//         node->base = (uint64_t*)node + 3;
-//         node->next = node + node->size;
-//         node = node->next;
-//     }
 
-//     node->size = 0;
-//     node->base = (uint64_t*)node + 3;
-//     node->next = nullptr;
-// }
+    syslog log("heap_allocator::heap_allocator");
+    log("m_freelist->size: 0x%lx", m_freelist->size);
+
+}
 
 
 
-// void*
-// idk::heap_allocator::alloc( size_t nbytes )
-// {
-//     FreeNode *node = m_freelist;
+idk::heap_allocator::FreeNode*
+idk::heap_allocator::find( size_t nbytes )
+{
+    FreeNode *node = m_freelist;
 
-//     while (node)
-//     {
-//         if (node->size > nbytes)
-//         {
-//             break;
-//         }
+    while (node)
+    {
+        if (node->size > nbytes)
+        {
+            return node;
+        }
 
-//         node = node->next;
-//     }
+        node = node->next;
+    }
 
-//     if (!node)
-//     {
-//         return nullptr;
-//     }
-
-//     return (void*)(node->base);
-
-//     // void    *baseptr   = _getptr(idx);
-//     // uint8_t *aligned   = ptr_align(unaligned + sizeof(AllocHeader), alignment);
-//     // auto    *header    = (AllocHeader*)(aligned - sizeof(AllocHeader));
-
-//     // return (void*)aligned;
-// }
+    return nullptr;
+}
 
 
-// void
-// idk::heap_allocator::free( void *usrptr )
-// {
-//     uint64_t *base  = (uint64_t*)usrptr;
-//     FreeNode *unode = (FreeNode*)(base - 3);
-//     FreeNode *fnode = m_freelist;
+void
+idk::heap_allocator::insert( FreeNode *A )
+{
+    FreeNode *prev = nullptr;
+    FreeNode *curr = m_freelist;
 
-//     while (fnode && fnode->next)
-//     {
-//         uint64_t lsize = fnode->size;
-//         uint64_t usize = unode->size;
-//         uint64_t rsize = fnode->next->size;
+    while (curr)
+    {
+        if (prev && prev->size <= A->size && A->size <= curr->size)
+        {
+            A->next = curr;
+            prev->next = A;
+            return;
+        }
 
-//         if (lsize <= usize && usize <= rsize)
-//         {
-//             unode->next = fnode->next;
-//             fnode->next = unode;
-//             return;
-//         }
+        prev = curr;
+    }
+}
 
-//         fnode = fnode->next;
-//     }
 
-//     // Raise exception
-// }
+
+void*
+idk::heap_allocator::alloc( size_t nbytes )
+{
+    syslog log("heap_allocator::heap_allocator");
+    log("m_freelist->size: 0x%lx", m_freelist->size);
+
+    auto *A = find(nbytes);
+    auto Abase = (uintptr_t)(A);
+
+    size_t Asize     = (nbytes + 8-1) & ~(8-1);
+    size_t remainder = Asize - A->size;
+
+    FreeNode *B = (FreeNode*)(Abase + sizeof(FreeNode) + Asize);
+
+    B->magic = 0xDEADBEBE;
+    B->size = remainder;
+    B->next = A->next;
+
+    A->size = Asize;
+    A->next = nullptr;
+
+    return (void*)(Abase + sizeof(FreeNode));
+}
+
+
+void
+idk::heap_allocator::free( void *ptr )
+{
+    FreeNode *A = (FreeNode*)((uintptr_t)ptr - sizeof(FreeNode));
+
+    if (A->magic != 0xDEADBEBE)
+    {
+        KInterrupt<INT_BAD_FREE>();
+    }
+
+    insert(A);
+
+
+    // Raise exception
+}
 
 
 // void

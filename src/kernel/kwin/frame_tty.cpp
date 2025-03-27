@@ -1,17 +1,43 @@
 #include "frame_tty.hpp"
 #include "../driver/keyboard.hpp"
 #include "../kfs/kfs.hpp"
+#include <kmalloc.h>
 #include <stdio.h>
 
 
-kwin::FrameTTY::FrameTTY( vec2 tl, vec2 sp, kn_TTY *tty, idk::FontBuffer *font )
+kwin::FrameTTY::FrameTTY( ivec2 tl, ivec2 sp, kn_TTY *tty, idk::FontBuffer *font )
 :   Frame  (tl, sp, vec4(1.0f)),
     m_tty  (tty),
     m_font (font)
 {
-
+    m_buf = kframebuffer<vec4>(sp.x, sp.y, (vec4*)kmalloc(sp.x * sp.y * sizeof(vec4)));
 }
 
+
+
+void
+kwin::FrameTTY::_blit( kwin::Context &ctx )
+{
+    kvideo::blit(m_tl, vec2(0.0f), m_sp, ctx.m_fb, m_buf);
+
+    {
+        int row = (m_tty->CSR) / m_tty->W;
+        int col = (m_tty->CSR) % m_tty->W;
+
+        auto *bd = m_font->getGlyph('_');
+
+        vec2 src  = bd->corner;
+        vec2 span = bd->extents;
+        
+        vec2 dst  = vec2(
+            m_tl.x + (span.x/2)*col,
+            m_tl.y + span.y*row
+        );
+        
+        kvideo::blit(dst, src, span, ctx.m_fb, kframebuffer<vec4>(m_font->W, m_font->H, (*m_font)[0]));
+    }
+    ctx.rectOutline(m_tl, m_sp, m_col);
+}
 
 
 
@@ -22,33 +48,16 @@ kwin::FrameTTY::draw( kwin::Context &ctx )
     auto &font = *m_font;
     char *data = tty.data;
 
-    if (tty.dirty)
+    if (tty.dirty == false)
     {
-        kmemset<vec4>(ctx.m_fb.buf, vec4(0, 0, 0, 255), ctx.m_sp.x * ctx.m_sp.y);
-        tty.dirty = false;
+        _blit(ctx);
+        return;
     }
 
+    kmemset<vec4>(m_buf.buf, vec4(0.0f), m_sp.x * m_sp.y);
+    tty.dirty = false;
 
-    {
-        int row = (tty.CSR) / tty.W;
-        int col = (tty.CSR) % tty.W;
-
-        auto *bd = font.getGlyph('_');
-
-        vec2 src  = bd->corner;
-        vec2 span = bd->extents;
-        
-        vec2 dst  = vec2(
-            m_tl.x + span.x*col,
-            m_tl.y + span.y*row
-        );
-        
-        ctx.blit(dst, src, span, kframebuffer<vec4>(font.W, font.H, font[0]));
-    }
-
-
-
-    for (int csr=0; csr<tty.CSR; csr++)
+    for (int csr=0; csr<tty.W*tty.H; csr++)
     {
         int row = csr / tty.W;
         int col = csr % tty.W;
@@ -74,15 +83,14 @@ kwin::FrameTTY::draw( kwin::Context &ctx )
         vec2 span = bd->extents;
 
         vec2 dst  = vec2(
-            m_tl.x + span.x*col,
-            m_tl.y + span.y*row
+            (span.x/2)*col,
+            span.y*row
         );
 
-        ctx.blit(dst, src, span, kframebuffer<vec4>(font.W, font.H, font[0]));
+        kvideo::blit(dst, src, span, m_buf, kframebuffer<vec4>(font.W, font.H, font[0]));
     }
 
-
-    ctx.rectOutline(m_tl, m_sp, m_col);
+    _blit(ctx);
 }
 
 

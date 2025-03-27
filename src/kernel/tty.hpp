@@ -6,6 +6,9 @@
 struct kn_TTY
 {
 private:
+    void _shift_left( int r );
+    void _shift_right( int r );
+    void _insert( char );
 
 public:
     // idk::static_vector<char, 80*25> data;
@@ -27,8 +30,11 @@ public:
     void movecol( int dir );
 
     void backspace();
+
     void putchar( char c );
 
 };
 
 
+void tty_main( void *arg );
+void keyprocess_main( void *arg );

@@ -88,13 +88,45 @@ kn_TTY::movecol( int dir )
 
 
 
+void
+kn_TTY::_shift_left( int r )
+{
+    int c = CSR % W;
+
+    for (int i=c+1; i<W; i++)
+    {
+        data[W*r + i] = data[W*r + i+1];
+    }
+}
+
+void
+kn_TTY::_shift_right( int r )
+{
+    int c = CSR % W;
+
+    for (int i=W-1; i>c; i--)
+    {
+        data[W*r + i] = data[W*r + i-1];
+    }
+}
+
+
+void
+kn_TTY::_insert( char c )
+{
+    _shift_right(CSR/W);
+    data[CSR] = c;
+    movecursor(1);
+}
+
+
 
 void
 kn_TTY::backspace()
 {
-    dirty = true;
+    _shift_left(CSR/W);
+    data[CSR] = ' ';
     movecursor(-1);
-    data[CSR] = '\0';
 }
 
 
@@ -125,24 +157,113 @@ kn_TTY::putchar( char ch )
 
     else
     {
-        data[CSR] = ch;
-        movecursor(1);
+        _insert(ch);
     }
 
 }
 
 
 
-// void
-// kn_TTY::update()
-// {
-//     uint8_t ch;
+#include <kscancode.h>
+#include <kproc.hpp>
+#include "kfs/kfs.hpp"
+#include "driver/keyboard.hpp"
 
-//     while (KFile_read(&ch, stream, 1))
-//     {
-//         if (isalpha(ch))
-//         {
-//             putchar(ch);
-//         }
-//     }
-// }
+void tty_main( void *arg )
+{
+    auto &tty = *((kn_TTY*)arg);
+
+    while (true)
+    {
+        char ch;
+
+        if (KFile_read(&ch, KFS::kdevkey, 1))
+        {
+            // printf("tty.putchar(%c)\n", ch);
+            tty.putchar(ch);
+        }
+
+        // printf("[tty_main]\n");
+        kproc_yield();
+    }
+}
+
+
+
+#include <ctype.h>
+
+void keyprocess_main( void *arg )
+{
+    auto &tty = *((kn_TTY*)arg);
+
+    struct
+    {
+        uint8_t modifier;
+        uint8_t code;
+    } packet;
+
+
+    char shift_table[256];
+    memset(shift_table, '\0', sizeof(shift_table));
+
+    char mod_0_9[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
+    memcpy(&(shift_table['0']), mod_0_9, sizeof(mod_0_9));
+
+    for (int i=0; i<='z'-'a'; i++)
+    {
+        shift_table['a'+i] = toupper('a'+i);
+    }
+
+    shift_table['/'] = '?';
+    shift_table['['] = '{';
+    shift_table[']'] = '}';
+    shift_table[';'] = ':';
+    shift_table['\''] = '\"';
+    shift_table[','] = '<';
+    shift_table['.'] = '>';
+
+
+    while (true)
+    {
+        packet = {0, 0};
+
+        if (KFile_read(&packet, KFS::kdevscn, sizeof(packet)))
+        {
+            if (packet.modifier == MODIFIER_CURSOR)
+            {
+                if (packet.code == 0x4B)
+                {
+                    tty.movecursor(-1);
+                }
+                if (packet.code == 0x4D)
+                {
+                    tty.movecursor(+1);
+                }
+
+                continue;
+            }
+
+            char ch = scode_getchar(packet.code);
+    
+            if (ch == '\0')
+            {
+                continue;
+            }
+
+            if (packet.modifier & MODIFIER_SHIFT)
+            {
+                if (shift_table[ch])
+                {
+                    ch = shift_table[ch];
+                }
+            }
+
+            KFile_write(KFS::kdevkey, &ch, 1);
+        }
+
+        // printf("[keyprocess_main]\n");
+        kproc_yield();
+    }
+}
+
+

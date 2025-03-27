@@ -1,10 +1,11 @@
 #include <kfile.h>
 // #include <string.h>
 
-
 size_t
 KFile_write( KFile *fh, const void *src, size_t nbytes )
 {
+    // klock_acquire(&fh->lock);
+
     const uint8_t *s = (const uint8_t*)src;
     size_t count = 0;
 
@@ -19,6 +20,8 @@ KFile_write( KFile *fh, const void *src, size_t nbytes )
         fh->fsh(fh);
     }
 
+    // klock_release(&fh->lock);
+
     return count;
 }
 
@@ -26,6 +29,8 @@ KFile_write( KFile *fh, const void *src, size_t nbytes )
 size_t
 KFile_read( void *dst, KFile *fh, size_t nbytes )
 {
+    // klock_acquire(&fh->lock);
+
     uint8_t *d = (uint8_t*)dst;
     size_t count = 0;
 
@@ -34,6 +39,8 @@ KFile_read( void *dst, KFile *fh, size_t nbytes )
         *(d++) = (*fh->read++);
         count += 1;
     }
+
+    // klock_release(&fh->lock);
 
     return count;
 }

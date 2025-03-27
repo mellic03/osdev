@@ -35,13 +35,12 @@ kwin::Context::~Context()
 void kwin::Context::flush()
 {
     using namespace idk;
-    
-    // uint32_t *dst = kvideo::backbuffer.buf;
-    // uint32_t *src = m_fb.buf;
 
-    kvideo::blit(m_tl, vec2(0, 0), m_sp, m_fb);
-    kvideo::swapBuffers();
-    kproc_yield();
+    // kvideo::blit(m_tl, vec2(0, 0), m_sp, m_fb);
+    // kvideo::swapBuffers();
+    // kmemset<vec4>(m_fb.buf, vec4(0.0f), m_sp.x * m_sp.y);
+
+    // kproc_yield();
 }
 
 
@@ -136,8 +135,13 @@ kwin::Context::blit( vec2 tl0, vec2 tl1, vec2 sp, const kframebuffer<vec4> &buf 
 
             // vec4 src = (src0 + src1 + src2 + src3);
             //      src /= 4.0f;
-        
-            m_fb[y][x] = buf[sy][sx];
+
+            float a = buf[sy][sx].a;
+
+            if (a > 0.1f)
+            {
+                m_fb[y][x] = buf[sy][sx];
+            }
         }
     }
 }

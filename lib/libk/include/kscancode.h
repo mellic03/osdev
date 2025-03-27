@@ -4,15 +4,12 @@
 
 enum PS2_MODIFIER: uint8_t
 {
-    MODIFIER_SHIFT = 0b0000'0001,
+    MODIFIER_SHIFT = 1 << 0,
 
-    MODIFIER_CTRL  = 0b0000'1000,
-    MODIFIER_LCTRL = 0b0000'1010,
-    MODIFIER_RCTRL = 0b0000'1100,
+    MODIFIER_CTRL  = 1 << 1,
+    MODIFIER_ALT   = 1 << 2,
 
-    MODIFIER_ALT   = 0b0100'0000,
-    MODIFIER_LALT  = 0b0101'0000,
-    MODIFIER_RALT  = 0b0110'0000
+    MODIFIER_CURSOR  = 1 << 3
 };
 
 enum PS2_SCANCODE: uint8_t
@@ -188,6 +185,9 @@ enum PS2_SCANCODE: uint8_t
     // 0x53 	(keypad) . pressed
     // 0x57 	F11 pressed 
     // 0x58 	F12 pressed 
+
+    DOWN_LEFT,
+    DOWN_RIGHT
 };
 
 

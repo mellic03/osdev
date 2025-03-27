@@ -10,199 +10,267 @@
 
 extern "C"
 {
-    extern uint64_t __cpu_get_cr3(void);
-    extern void     __cpu_set_cr3(uint64_t);
+    extern uint64_t cpu_get_cr3(void);
+    extern void     cpu_set_cr3(uint64_t);
 }
 
-const uint64_t &hhdm = PMM::hhdm;
+static inline void flush_tlb(unsigned long addr) {
+    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+}
 
 
-#define MMU_RECURSIVE_SLOT      (510UL)
+static constexpr uint64_t MASK_PRESENT    = 1 << 0;
+static constexpr uint64_t MASK_WRITE      = 1 << 1;
+static constexpr uint64_t MASK_SUPERVISOR = 1 << 2;
+static constexpr uint64_t MASK_PWT        = 1 << 3;
+static constexpr uint64_t MASK_PCD        = 1 << 4;
+static constexpr uint64_t MASK_ACCESSED   = 1 << 5;
+static constexpr uint64_t MASK_PAGESIZE   = 1 << 7;
+static constexpr uint64_t MASK_ADDRESS    = 0x000FFFFFFFFFF000;
+static constexpr uint64_t MASK_EXECUTE    = uint64_t(1) << uint64_t(63);
 
 
-// Convert an address into array index of a structure
-// E.G. int index = MMU_PML4_INDEX(0xFFFFFFFFFFFFFFFF); // index = 511
-#define MMU_PML4_INDEX(addr_)    ((((uintptr_t)(addr_))>>39) & 511)
-#define MMU_PDPT_INDEX(addr_)    ((((uintptr_t)(addr_))>>30) & 511)
-#define MMU_PD_INDEX(addr_)      ((((uintptr_t)(addr_))>>21) & 511)
-#define MMU_PT_INDEX(addr_)      ((((uintptr_t)(addr_))>>12) & 511)
-
-// Base address for paging structures
-#define KADDR_MMU_PT            (0xFFFF000000000000UL + (MMU_RECURSIVE_SLOT<<39))
-#define KADDR_MMU_PD            (KADDR_MMU_PT         + (MMU_RECURSIVE_SLOT<<30))
-#define KADDR_MMU_PDPT          (KADDR_MMU_PD         + (MMU_RECURSIVE_SLOT<<21))
-#define KADDR_MMU_PML4          (KADDR_MMU_PDPT       + (MMU_RECURSIVE_SLOT<<12))
-
-// Structures for given address, for example
-// uint64_t* pt = MMU_PT(addr)
-// uint64_t physical_addr = pt[MMU_PT_INDEX(addr)];
-#define MMU_PML4(addr_)          ((uint64_t*)  KADDR_MMU_PML4 )
-#define MMU_PDPT(addr_)          ((uint64_t*)( KADDR_MMU_PDPT + (((addr_)>>27) & 0x00001FF000) ))
-#define MMU_PD(addr_)            ((uint64_t*)( KADDR_MMU_PD   + (((addr_)>>18) & 0x003FFFF000) ))
-#define MMU_PT(addr_)            ((uint64_t*)( KADDR_MMU_PT   + (((addr_)>>9)  & 0x7FFFFFF000) ))
-
-
-
-
-
-
-int indent;
-bool found;
-uint64_t lvls[4];
-uint64_t result[4];
-PML4_entry PML4;
-PageDirectory rootdir;
-
-
-void walk_page_tables( uintptr_t phys, int level )
+union PD_Entry
 {
-    #define INDENT { for (int k=0; k<indent; k++) printf(" ", k); }
-
-    if (found == false)
+    struct
     {
-        lvls[level-1] = phys;
+        uint64_t present:   1;  // 0
+        uint64_t rw:        1;  // 1
+        uint64_t us:        1;  // 2
+        uint64_t pwt:       1;  // 3
+        uint64_t pcd:       1;  // 4
+        uint64_t A:         1;  // 5
+        uint64_t res0:      1;  // 6
+        uint64_t PS:        1;  // 7  -If set, entry points to a 2MB page.
+                                //     If clear, entry points to a Page Table (PT).
+                                //
+                                //
+        uint64_t res1:      1;  // 8
+        uint64_t avl0:      3;  // 9 10 11
+        uint64_t address:   28; // Table base address
+                                // 12 13 14 15 16 17 18 19 20 21
+                                // 22 23 24 25 26 27 28 29 30 31
+                                // 32 33 34 35 36 37 38 39
+                                //
+        uint64_t res2:      12; // 40 41 42 43 44 45 46 47 48 49
+                                // 50 51
+                                //
+        uint64_t avl1:      7;  // 52 53 54 55 56 57 58
+        uint64_t pk:        3;  // 59 60 61 62
+        uint64_t xd:        1;  // 63
+    };
+    
+    uint64_t qword;
+
+} __attribute__((packed));
+
+
+union PT_Entry
+{
+    struct
+    {
+        uint64_t present:   1;  // 0
+        uint64_t rw:        1;  // 1
+        uint64_t us:        1;  // 2
+        uint64_t pwt:       1;  // 3
+        uint64_t pcd:       1;  // 4
+        uint64_t A:         1;  // 5
+        uint64_t D:         1;  // 6
+        uint64_t pat:       1;  // 7
+        uint64_t G:         1;  // 8
+        uint64_t avl0:      3;  // 9 10 11
+        uint64_t address:   28; // Page base address
+                                // 12 13 14 15 16 17 18 19 20 21
+                                // 22 23 24 25 26 27 28 29 30 31
+                                // 32 33 34 35 36 37 38 39
+                                //
+        uint64_t res2:      12; // 40 41 42 43 44 45 46 47 48 49
+                                // 50 51
+                                //
+        uint64_t avl1:      7;  // 52 53 54 55 56 57 58
+        uint64_t pk:        3;  // 59 60 61 62
+        uint64_t xd:        1;  // 63
+    };
+    
+    uint64_t qword;
+
+} __attribute__((packed));
+
+
+#define PML4_INDEX(va) (((va) >> 39) & 0x1FF)
+#define PDPT_INDEX(va) (((va) >> 30) & 0x1FF)
+#define PD_INDEX(va) (((va) >> 21) & 0x1FF)
+#define PT_INDEX(va) (((va) >> 12) & 0x1FF)
+
+#define KERNEL_VIRT_BASE 0xFFFFFFFF80000000
+#define HHDM_BASE 0xFFFF800000000000
+#define PAGE_PRESENT 0x1
+#define PAGE_WRITE 0x2
+#define PAGE_HUGE 0x80
+#define PHYS_TO_HHDM(addr) (uintptr_t(addr) + HHDM_BASE)
+
+#define PAGE_PRESENT 0x1
+#define PAGE_WRITE   0x2
+#define PAGE_EXECUTE (uint64_t(1)<<63)  // Optional: Usually 0 since x86 uses NX (bit 63)
+
+
+
+void map4KB(uint64_t *pml4, uint64_t phys, uint64_t virt, uint64_t flags)
+{
+    // Traverse or allocate PDPT
+    uint64_t *pdpt;
+    if (!(pml4[PML4_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdpt_phys = PMM::alloc();
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pdpt_phys);
+        pml4[PML4_INDEX(virt)] = pdpt_phys | flags;
+    } else {
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
     }
 
-    if (level == 1)
-    {
-        INDENT
-        printf("[level 1] 0x%lx --> 0x%lx\n", phys, phys+PMM::hhdm);
+    // Traverse or allocate PDT
+    uint64_t *pdt;
+    if (!(pdpt[PDPT_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdt_phys = PMM::alloc();
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdt_phys);
+        pdpt[PDPT_INDEX(virt)] = pdt_phys | flags;
+    } else {
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdpt[PDPT_INDEX(virt)] & ~0xFFF);
+    }
 
-        if (phys == 0x100000000)
-        {
-            INDENT
-            printf("Found!\n");
-            memcpy(result, lvls, 4*sizeof(uint64_t));
-            found = true;
-        }
+    // Traverse or allocate PT
+    uint64_t *pt;
+    if (!(pdt[PT_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pt_phys = PMM::alloc();
+        pt = (uint64_t *)PHYS_TO_HHDM(pt_phys);
+        pdt[PT_INDEX(virt)] = pt_phys | flags;
+    } else {
+        pt = (uint64_t *)PHYS_TO_HHDM(pdt[PT_INDEX(virt)] & ~0xFFF);
+    }
+
+    // Map the page
+    pt[PT_INDEX(virt)] = phys | flags;
+}
+
+
+void map2MB( uint64_t *pml4, uint64_t phys, uint64_t virt, uint64_t flags )
+{
+    // Traverse or allocate PDPT
+    uint64_t *pdpt;
+    if (!(pml4[PML4_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdpt_phys = PMM::alloc();
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pdpt_phys);
+        pml4[PML4_INDEX(virt)] = pdpt_phys | flags;
+    } else {
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
+    }
+
+    // Traverse or allocate PDT
+    uint64_t *pdt;
+    if (!(pdpt[PDPT_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdt_phys = PMM::alloc();
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdt_phys);
+        pdpt[PDPT_INDEX(virt)] = pdt_phys | flags;
+    } else {
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdpt[PDPT_INDEX(virt)] & ~0xFFF);
+    }
+
+    pdt[PD_INDEX(virt)] = (phys & ~0x1FFFFF) | flags | MASK_PAGESIZE;
+}
+
+
+void
+VMM_unmapPage( uint64_t *pml4, uint64_t virt )
+{
+    // Walk to the PDPT
+    if (!(pml4[PML4_INDEX(virt)] & PAGE_PRESENT)) {
+        return; // Mapping does not exist
+    }
+    uint64_t *pdpt = (uint64_t *)PHYS_TO_HHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
+
+    // Walk to the PDT
+    if (!(pdpt[PDPT_INDEX(virt)] & PAGE_PRESENT)) {
+        return; // Mapping does not exist
+    }
+    uint64_t *pdt = (uint64_t *)PHYS_TO_HHDM(pdpt[PDPT_INDEX(virt)] & ~0xFFF);
+
+    // Check if this is a 2 MiB page
+    if (pdt[PD_INDEX(virt)] & 0x80) {
+        // This is a 2 MiB page
+        pdt[PD_INDEX(virt)] = 0; // Clear the entry
+        flush_tlb(virt);         // Flush TLB
         return;
     }
 
-    else
+    // Walk to the PT
+    if (!(pdt[PD_INDEX(virt)] & PAGE_PRESENT)) {
+        return; // Mapping does not exist
+    }
+    uint64_t *pt = (uint64_t *)PHYS_TO_HHDM(pdt[PD_INDEX(virt)] & ~0xFFF);
+
+    // Clear the 4 KiB page entry
+    pt[PT_INDEX(virt)] = 0; // Clear the entry
+    flush_tlb(virt);        // Flush TLB
+}
+
+
+void
+VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt )
+{
+    #ifdef PMM_2MB_PAGES
+        map2MB(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
+    #else
+        map4KB(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
+    #endif
+}
+
+
+void
+VMM::mapPage( uintptr_t phys, uintptr_t virt )
+{
+    asm volatile ("cli");
+    uint64_t *pml4 = (uint64_t *)PHYS_TO_HHDM(cpu_get_cr3());
+    VMM_mapPage(pml4, phys, virt);
+    asm volatile ("sti");
+}
+
+
+void
+VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes )
+{
+    asm volatile ("cli");
+    uint64_t *pml4 = (uint64_t *)PHYS_TO_HHDM(cpu_get_cr3());
+
+    for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
     {
-        INDENT
-        printf("[level %d] [phys 0x%lx]\n", level, phys);
+        VMM_mapPage(pml4, phys+offset, virt+offset);
     }
 
-
-    INDENT
-    printf("{\n");
-    indent += 4;
-
-    for (int i=0; i<512; i++)
-    {
-        uint64_t *addr = (uint64_t*)(PMM::hhdm + phys + i*sizeof(uint64_t));
-        uint64_t entry = *addr;
-
-        if ((entry & MASK_PRESENT) == 0)
-        {
-            continue;
-        }
-
-        uint64_t next = entry & MASK_ADDRESS;
-        walk_page_tables(next, level-1);
-    }
-
-    indent -= 4;
-    INDENT
-    printf("}\n");
-
+    asm volatile ("sti");
 }
 
 
-static inline void vmm_flush_tlb(uintptr_t page ) 
+void
+VMM::unmapPage( uintptr_t virt )
 {
-	__asm__ volatile ("invlpg (%0)" :: "r" (page) : "memory");
+    asm volatile ("cli");
+    uint64_t *pml4 = (uint64_t *)PHYS_TO_HHDM(cpu_get_cr3());
+    VMM_unmapPage(pml4, virt);
+    asm volatile ("sti");
 }
 
 
-
-PageDirectory vmm_get_page_map_level( PageDirectory pmlx, uintptr_t idx, int flags)
-{
-    if (pmlx[idx] & 1)
-        return (PageDirectory)((pmlx+hhdm/sizeof(uint64_t))[idx] & ~(511));
-    else
-    {
-        pmlx[idx] = (PMM::alloc() - hhdm) | flags;
-        return (PageDirectory)((pmlx+hhdm/sizeof(uint64_t))[idx] & ~(511));
-    }
-}
-
-
-void map_page( PageDirectory curr_pml4, uintptr_t phys, uintptr_t virt, uint32_t flags )
-{
-    syslog log("map_page");
-
-    uintptr_t index4 = (virt & ((uintptr_t)0x1ff << 39)) >> 39;
-    uintptr_t index3 = (virt & ((uintptr_t)0x1ff << 30)) >> 30;
-    uintptr_t index2 = (virt & ((uintptr_t)0x1ff << 21)) >> 21;
-    uintptr_t index1 = (virt & ((uintptr_t)0x1ff << 12)) >> 12;
-
-    PageDirectory pml4 = curr_pml4;
-    log("pml4: 0x%lx", pml4);
-
-    PageDirectory pml3 = vmm_get_page_map_level(pml4, index4, flags);
-    log("pml3: 0x%lx", pml3);
-
-    PageDirectory pml2 = vmm_get_page_map_level(pml3, index3, flags);
-    log("pml2: 0x%lx", pml2);
-
-    PageDirectory pml1 = vmm_get_page_map_level(pml2, index2, flags);
-    log("pml1: 0x%lx", pml1);
-
-
-    (pml1+hhdm/sizeof(uint64_t))[index1] = phys | flags;
-    log("pml1[index1]: 0x%lx", phys | flags);
-
-    vmm_flush_tlb(virt);
-}
-
-void unmap_page( PageDirectory curr_pml4, uintptr_t virt )
-{
-    syslog log("unmap_page");
-
-    uintptr_t index4 = (virt & ((uintptr_t)0x1ff << 39)) >> 39;
-    uintptr_t index3 = (virt & ((uintptr_t)0x1ff << 30)) >> 30;
-    uintptr_t index2 = (virt & ((uintptr_t)0x1ff << 21)) >> 21;
-    uintptr_t index1 = (virt & ((uintptr_t)0x1ff << 12)) >> 12;
-
-    PageDirectory pml4 = curr_pml4;
-    PageDirectory pml3 = NULL;
-    PageDirectory pml2 = NULL;
-    PageDirectory pml1 = NULL;
-
-    pml3 = vmm_get_page_map_level(pml4, index4, 0);
-    pml2 = vmm_get_page_map_level(pml3, index3, 0);
-    pml1 = vmm_get_page_map_level(pml2, index2, 0);
-
-    pml1[index1] = 0;
-
-    vmm_flush_tlb(virt);
-}
 
 void VMM::init() 
 {
     // syslog log("VMM::init");
 
-    // uint64_t cr3 = __cpu_get_cr3();
+    // VMM::mapPage(0x0010'0000, 0xDEADBEBE);
 
-    // // rootdir = (PageDirectory)cr3;
-    // rootdir = (PageDirectory)(PMM::alloc() - hhdm);
-    // memset((uint8_t*)rootdir + hhdm, 0, PMM::PAGE_SIZE);
+    // auto *test = (uint64_t*)0xDEADBEBE;
 
-	// // PML4 = __cpu_get_cr3();
-    // // PML4 = MASK_PRESENT | MASK_WRITE | MASK_SUPERVISOR;
-    // // PML4.address = PMM::alloc();
-    // log("PML4 qword:   0x%lx", PML4.qword);
-    // log("PML4 address: 0x%lx", PML4.address);
+    // log("writing 123456789 to 0x%lx", test);
+    // test[4] = 123456789;
+    // log("0x%lx: %u", test, test[4]);
 
-    // map_page(
-    //     rootdir,
-    //     (uintptr_t)0x00000000AFF26000,
-    //     (uintptr_t)0xFFFFFFFF800A0000,
-    //     MASK_PRESENT|MASK_WRITE|MASK_SUPERVISOR
-    // );
-
-    // __cpu_set_cr3((uint64_t)rootdir);
-    
+    // VMM::unmapPage(0xDEADBEBE);
 }

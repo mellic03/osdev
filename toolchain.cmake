@@ -49,7 +49,7 @@ set(IDKERNEL_C_CXX_FLAGS
     -fno-PIC \
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
-    -m64 -mcmodel=kernel -march=x86-64 \
+    -m64 -mcmodel=large -march=x86-64 \
     ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )

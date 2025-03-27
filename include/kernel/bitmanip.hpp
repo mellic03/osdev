@@ -35,6 +35,17 @@ namespace idk
         return b & ~mask;
     }
 
+    template <typename T>
+    constexpr T align_down( T value, size_t alignment )
+    {
+        return T(uintptr_t(value) & ~(alignment-1));
+    }
+
+    template <typename T>
+    constexpr T align_up( T value, size_t alignment )
+    {
+        return T((uintptr_t(value) + alignment-1) & ~(alignment-1));
+    }
 
     template <typename T>
     constexpr T *ptr_align( T *ptr, size_t alignment )

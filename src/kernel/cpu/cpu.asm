@@ -21,13 +21,13 @@ section .text
         ret
 
 
-    global __cpu_get_cr3
-    __cpu_get_cr3:
+    global cpu_get_cr3
+    cpu_get_cr3:
         mov rax, cr3
         ret
 
-    global __cpu_set_cr3
-    __cpu_set_cr3:
+    global cpu_set_cr3
+    cpu_set_cr3:
         mov cr3, rdi
         ret
     

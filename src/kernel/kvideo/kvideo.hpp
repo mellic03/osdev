@@ -44,8 +44,13 @@ namespace kvideo
     extern kframebuffer<uint32_t> frontbuffer;
     extern kframebuffer<uint32_t> backbuffer;
 
+
     void init( limine_framebuffer_response* );
     void swapBuffers();
+
+
+    void blit( ivec2 dst, ivec2 src, ivec2 sp, kframebuffer<vec4> &dstbuf,
+               const kframebuffer<vec4> &srcbuf );
 
     void blit( ivec2 dst, ivec2 src, ivec2 sp,
                const kframebuffer<vec4> &buf );

@@ -1,5 +1,6 @@
 #pragma once
 #include <AAA.h>
+#include <kproc.hpp>
 
 #define IDK_FILE_MAGIC = 0xDEADBEBE;
 
@@ -35,6 +36,7 @@ typedef struct KFile
     uint8_t  *read;    
     uint8_t  *write;    
     uint8_t  *eof;
+    klock_t   lock;
 
     void (*fsh)(struct KFile*);
 
