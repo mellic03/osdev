@@ -1,12 +1,7 @@
 
 file(
     GLOB SOURCES
-    # ${CMAKE_CURRENT_SOURCE_DIR}/_start.asm
-    # ${CMAKE_CURRENT_SOURCE_DIR}/kmain-requests.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/kmain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ksystem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/kshell.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tty.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/kwin/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kvideo/*.cpp

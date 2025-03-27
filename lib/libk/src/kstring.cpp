@@ -25,19 +25,28 @@ const char *seek_ch( const char *s, char ch )
 }
 
 
-
 const char *skip_brk( const char *s, const char *brk )
 {
-    size_t len = strlen(brk);
-    bool good = true;
+    size_t slen = strlen(s);
+    size_t blen = strlen(brk);
 
-    while (good)
+    while (*s)
     {
-        for (size_t i=0; i<len; i++)
+        bool good = false;
+
+        for (size_t i=0; i<blen; i++)
         {
-            good = good || (*s == brk[i]);
+            if (*s == brk[i])
+            {
+                good = true;
+            }
         }
-    
+
+        if (!good)
+        {
+            return s;
+        }
+
         s++;
     }
 
@@ -48,20 +57,21 @@ const char *skip_brk( const char *s, const char *brk )
 
 const char *seek_brk( const char *s, const char *brk )
 {
-    size_t slen = strlen(brk);
+    size_t slen = strlen(s);
     size_t blen = strlen(brk);
 
-    const char *nearest = s + slen;
+    auto *nearest = s + slen;
 
     for (size_t i=0; i<blen; i++)
     {
-        const char *ptr = seek_ch(s, brk[i]);
-        if (ptr < nearest)
+        auto *ptr = seek_ch(s, brk[i]);
+    
+        if ((ptr - s) < (nearest - s))
         {
             nearest = ptr;
         }
     }
-
+    
     return nearest;
 }
 

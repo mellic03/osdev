@@ -7,8 +7,44 @@
 // #include "../log/log.hpp"
 
 
+klock_t  global_lock;
 kproc_t *m_curr  = nullptr;
 bool     m_first;
+
+
+
+size_t kthread::this_tid()
+{
+    size_t tid = 0;
+
+    klock_acquire(&global_lock);
+    tid = m_curr->tid;
+    klock_release(&global_lock);
+
+    return tid;
+}
+
+void kthread::yield()
+{
+    KInterrupt<INT_PROCESS_SWITCH>();
+}
+
+
+void kthread::exit()
+{
+    klock_acquire(&global_lock);
+    m_curr->status = KPROC_DEAD;
+    klock_release(&global_lock);
+}
+
+
+void kthread::create( void (*fn)(void*), void *arg )
+{
+    kproc_new(fn, arg);
+}
+
+
+
 
 
 void kproc_free( kproc_t *P )
@@ -66,7 +102,13 @@ void kproc_switch( kstackframe *frame )
     frame->rbp      = m_curr->rbp;
 }
 
+
 void kproc_schedule( kstackframe *frame )
+{
+    kproc_switch(frame);
+}
+
+void kproc_yield_irq( kstackframe *frame )
 {
     kproc_switch(frame);
 }
@@ -89,6 +131,7 @@ static void kproc_idle( void* )
 
 void kproc_init()
 {
+    global_lock.locked = false;
     m_curr = nullptr;
     m_first = true;
 
@@ -102,7 +145,6 @@ void kproc_yield()
 {
     KInterrupt<INT_PROCESS_SWITCH>();
 }
-
 
 static void process_wrapper( void (*fn)(void*), void *arg )
 {
@@ -139,6 +181,7 @@ static void __kproc_add( kproc_t *th )
 
 kproc_t *kproc_new( void (*fn)(void*), void *arg )
 {
+    asm volatile ("cli");
 
     uint8_t *stack = (uint8_t*)kmalloc(4096);
     uint8_t *top   = stack + 4096;
@@ -159,7 +202,6 @@ kproc_t *kproc_new( void (*fn)(void*), void *arg )
     thread->flags = 0x202;
     thread->next = nullptr;
 
-    asm volatile ("cli");
     __kproc_add(thread);
 	asm volatile ("sti");
  

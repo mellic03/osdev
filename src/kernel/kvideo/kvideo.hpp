@@ -5,12 +5,6 @@
 #include <kmath/vec.hpp>
 
 
-extern "C"
-{
-    struct limine_framebuffer_response;
-}
-
-
 template <typename T>
 struct kframebuffer
 {
@@ -45,7 +39,7 @@ namespace kvideo
     extern kframebuffer<uint32_t> backbuffer;
 
 
-    void init( limine_framebuffer_response* );
+    void init( uintptr_t fb_res );
     void swapBuffers();
 
 

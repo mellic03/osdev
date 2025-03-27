@@ -18,6 +18,7 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 
+include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include_directories("${CMAKE_SOURCE_DIR}/external/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libk/include/")
@@ -29,6 +30,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
 
 
 add_library(
@@ -52,10 +54,19 @@ add_executable(
     ${IDKERNEL_SOURCES}
 )
 
-set_target_properties(
-    ${PROJECT_NAME} PROPERTIES
-    LINK_DEPENDS ${LINKER_SCRIPT}
+
+target_link_options(
+    ${PROJECT_NAME} PRIVATE
+    -Wl,-m,elf_x86_64
+    -Wl,--build-id=none
+    -nostdlib
+    -static
+    -mgeneral-regs-only
+    -zmax-page-size=0x1000
+    -mno-red-zone
+    -T${CMAKE_SOURCE_DIR}/src/linker.ld
 )
+
 
 target_compile_definitions(
     ${PROJECT_NAME} PUBLIC 

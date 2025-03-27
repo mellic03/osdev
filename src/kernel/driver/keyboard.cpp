@@ -67,39 +67,59 @@ void keyboard_irq_handler( kstackframe *frame )
 }
 
 
-char scode_getalpha( uint8_t code )
-{
-    switch (code)
-    {
-        default: return '\0';
-        case DOWN_Q: return 'Q';
-        case DOWN_W: return 'W';
-        case DOWN_E: return 'E';
-        case DOWN_R: return 'R';
-        case DOWN_T: return 'T';
-        case DOWN_Y: return 'Y';
-        case DOWN_U: return 'U';
-        case DOWN_I: return 'I';
-        case DOWN_O: return 'O';
-        case DOWN_P: return 'P';
-        case DOWN_A: return 'A';
-        case DOWN_S: return 'S';
-        case DOWN_D: return 'D';
-        case DOWN_F: return 'F';
-        case DOWN_G: return 'G';
-        case DOWN_H: return 'H';
-        case DOWN_J: return 'J';
-        case DOWN_K: return 'K';
-        case DOWN_L: return 'L';
-        case DOWN_Z: return 'Z';
-        case DOWN_X: return 'X';
-        case DOWN_C: return 'C';
-        case DOWN_V: return 'V';
-        case DOWN_B: return 'B';
-        case DOWN_N: return 'N';
-        case DOWN_M: return 'M';
-    }
-}
+
+
+// void
+// kdriver::ps2_kb::driver_main( void *arg )
+// {
+//     KFile *fh = (KFile*)arg;
+//     Packet packet;
+
+//     while (true)
+//     {
+//         packet = {0, 0};
+
+//         if (KFile_read(&packet, fh, sizeof(packet)))
+//         {
+//             if (packet.modifier == MODIFIER_CURSOR)
+//             {
+//                 if (packet.code == 0x4B)
+//                 {
+//                     tty.movecursor(-1);
+//                 }
+//                 if (packet.code == 0x4D)
+//                 {
+//                     tty.movecursor(+1);
+//                 }
+
+//                 continue;
+//             }
+
+//             char ch = scode_getchar(packet.code);
+    
+//             if (ch == '\0')
+//             {
+//                 continue;
+//             }
+
+//             if (packet.modifier & MODIFIER_SHIFT)
+//             {
+//                 if (shift_table[ch])
+//                 {
+//                     ch = shift_table[ch];
+//                 }
+//             }
+
+//             KFile_write(KFS::kdevkey, &ch, 1);
+//         }
+
+//         // printf("[keyprocess_main]\n");
+//         kproc_yield();
+//     }
+
+// }
+
+
 
 
 
@@ -114,7 +134,6 @@ char scode_getchar( uint8_t code )
     {
         return char('0' + code - 1);
     }
-
 
     switch (code)
     {

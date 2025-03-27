@@ -1,4 +1,5 @@
 // #include "ksystem.hpp"
+#include "kshell.hpp"
 #include "kfs/kfs.hpp"
 #include "tty.hpp"
 #include "driver/serial.hpp"
@@ -25,107 +26,100 @@ enum Command: uint32_t
     CMD_EXIT
 };
 
-struct Token
-{
-    uint32_t cmd;
-    char args[4][32];
 
-    Token()
-    {
-        cmd = CMD_INVALID;
-        memset(args, '\0', sizeof(args));
-    }
+using fn_type = char *(*)( char *dst, const char *src );
+
+
+char *cmd_unknown( char *, const char* );
+char *cmd_cwd( char*, const char* );
+char *cmd_ls( char*, const char* );
+char *cmd_tid( char*, const char* );
+char *cmd_exit( char*, const char* );
+
+
+
+const char *cmd_names[] = {
+    "cwd",
+    "ls",
+    "tid",
+    // "lsmem",
+    // "lsgfx",
+    "exit"
 };
 
-static kn_TTY   *kshell_tty;
-static kfsEntry *kshell_cwd;
-static KFile *kdevscn;
-Token next_token();
+
+const fn_type cmd_methods[] = {
+    cmd_cwd,
+    cmd_ls,
+    cmd_tid,
+    // cmd_unknown,
+    // cmd_unknown,
+    cmd_exit
+};
 
 
 
 
-void kshell( void* )
+char *kshell_interpret( char *dst, const char *src )
 {
-    bool running = true;
-    static bool nline = true;
-
-    while (running)
+    if (strlen(src) == 0)
     {
-        printf(">> ");
-        Token T = next_token();
-
-        switch (T.cmd)
-        {
-            case CMD_INVALID: printf("\n  Invalid command"); break;
-            case CMD_LSMEM:   printf("\n"); break;
-            case CMD_LSGFX:   printf("\n  --lsgfx"); break;
-            case CMD_EXIT:    running=false; break;
-        }
-
-        printf("\n");
+        return dst;
     }
 
+    char  buf[64];
+    memset(buf, 0, sizeof(buf));
+
+    char *top = dst;
+    auto *A = skip_brk(src, " \n");
+    auto *B = seek_brk(A, " \n");
+    strncpy(buf, A, B-A);
+
+    int count = sizeof(cmd_names) / sizeof(char*);
+
+    for (int i=0; i<count; i++)
+    {
+        if (strcmp(buf, cmd_names[i]) == 0)
+        {
+            return cmd_methods[i](top, B);
+        }
+    }
+
+    return cmd_unknown(top, B);
 }
 
 
 
-
-
-
-
-#include <kproc.hpp>
-
-
-
-Token next_token()
+char *cmd_unknown( char *dst, const char* )
 {
-    Token T;
-
-    char buf[256];
-    uint8_t idx = 0;
-    memset(buf, '\0', sizeof(buf));
-
-    while (true)
-    {
-        uint8_t key;
-
-        if (KFile_read(&key, KFS::kdevscn, 1))
-        {
-            char ch = scode_getalpha(key);
-        
-            if (key == DOWN_ENTER)
-            {
-                break;
-            }
-
-            // else if (key == '\n')
-            // {
-            //     memset(buf, '\0', sizeof(buf));
-            //     idx = 0;
-            //     printf("\n");
-            // }
-
-            else if (ch)
-            {
-                ch = tolower(ch);
-                buf[idx++] = ch;
-                printf("%c", ch);
-            }
-        }
-
-        // Don't want to manually call this
-        kproc_yield();
-    }
-    
-    
-    if (strncmp(buf, "ls",    2) == 0) T.cmd = CMD_LS;
-    if (strncmp(buf, "lsmem", 5) == 0) T.cmd = CMD_LSMEM;
-    if (strncmp(buf, "lsgfx", 5) == 0) T.cmd = CMD_LSGFX;
-    if (strncmp(buf, "exit",  4) == 0) T.cmd = CMD_EXIT;
-
-
-    return T;
+    return strcpy(dst, "unrecognised command");
 }
+
+
+char *cmd_cwd( char *dst, const char *src )
+{
+    return strcpy(dst, "/");
+}
+
+char *cmd_ls( char *dst, const char *src )
+{
+    return strcpy(dst, "--ls");
+}
+
+
+char *cmd_tid( char *dst, const char *src )
+{
+    size_t tid = kthread::this_tid();
+    int n = sprintf(dst, "tid: %lu", tid);
+    return dst + n;
+}
+
+
+char *cmd_exit( char *dst, const char *src )
+{
+    kthread::exit();
+    return dst;
+}
+
 
 

@@ -1,29 +1,25 @@
-#pragma once
-#include "frame.hpp"
-#include "../tty.hpp"
-#include "../kvideo/font.hpp"
+// #pragma once
+// #include "frame_text.hpp"
 
-namespace kwin
-{
-    class FrameTTY;
-}
+// namespace kwin
+// {
+//     class TTYFrame;
+// }
 
 
 
-class kwin::FrameTTY: public kwin::Frame
-{
-private:
-    kn_TTY *m_tty;
-    idk::FontBuffer *m_font;
-    kframebuffer<vec4> m_buf;
-    void _blit( kwin::Context& );
+// class kwin::TTYFrame: public kwin::TextFrame
+// {
+// private:
+//     void _blit( kwin::Context& );
 
-public:
-    using kwin::Frame::Frame;
+//     void _draw_prompt( kwin::Context& );
+//     void _draw( vec2 tl, const char *start, size_t len );
 
-    FrameTTY( ivec2 tl, ivec2 sp, kn_TTY*, idk::FontBuffer* );
-    virtual void draw( kwin::Context& ) final;
+// public:
+//     TTYFrame( ivec2 tl, ivec2 sp );
+//     virtual void draw( kwin::Context& ) final;
 
-};
+// };
 
 

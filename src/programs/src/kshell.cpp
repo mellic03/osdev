@@ -1,6 +1,7 @@
-// #include <stdio.h>
-// #include <string.h>
-// #include <ctype.h>
+#include <libc.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 // #include <algorithm>
 
 // #include <kscancode.h>
@@ -101,7 +102,6 @@
 // }
 
 
-
 int main( int argc, char **argv )
 {
     if (argc || argv)
@@ -109,30 +109,8 @@ int main( int argc, char **argv )
         
     }
 
-    // ksysc_request req1 = {SYSC_FILE_GET, SYSF_FILE_KDEVSCN};
-    // libk_syscall(&req1);
-
-    // kdevscn  = reinterpret_cast<KFile*>(req1.data);
-    // bool running = true;
-
-    // while (running)
-    // {
-    //     printf(">> ");
+    printf("[kshell] >> exit\n");
 
 
-    //     Command cmd = next_cmd();
-
-    //     switch (cmd)
-    //     {
-    //         case CMD_INVALID: printf("\n  Invalid command"); break;
-    //         case CMD_LSMEM:   printf("\n  --lsmem"); break;
-    //         case CMD_LSGFX:   printf("\n  --lsgfx"); break;
-    //         case CMD_EXIT:    running=false; break;
-    //     }
-
-
-    //     printf("\n");
-    // }
-
-    return 0xDEADBEBE;
+    return 0;
 }

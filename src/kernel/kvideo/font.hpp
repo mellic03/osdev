@@ -37,7 +37,8 @@ public:
     FontBuffer( const char *filename, ck_BMP_header* );
     // void init( const char *filename, ck_BMP_header* );
 
-    idk::Bounds *getGlyph( char c );
+    ivec2 getGlyphExtents();
+    ivec2 getGlyphCorner( char c );
 
 
     void *data()

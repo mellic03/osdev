@@ -11,7 +11,17 @@ tvec<T, N> operator op( const tvec<T, N> &L, const tvec<T, N> &R ) \
 { \
     tvec<T, N> v;   for (int i=0; i<N; i++)     v[i] = L[i] op R[i]; \
     return v; \
-} \
+}
+
+
+
+#define TVEC_OPEQ_VEC_VEC(op) \
+template <typename T, size_t N> \
+tvec<T, N> &operator op( tvec<T, N> &L, const tvec<T, N> &R ) \
+{ \
+    for (int i=0; i<N; i++) L[i] op R[i]; \
+    return L; \
+}
 
 
 #define TVEC_OPERATOR_SCALAR_VEC(op) \
@@ -20,7 +30,7 @@ tvec<T, N> operator op( T L, const tvec<T, N> &R ) \
 { \
     tvec<T, N> v;   for (int i=0; i<N; i++)     v[i] = L op R[i]; \
     return v; \
-} \
+}
 
 #define TVEC_OPERATOR_VEC_SCALAR(op) \
 template <typename T, size_t N> \
@@ -28,7 +38,7 @@ tvec<T, N> operator op( const tvec<T, N> &L, T R ) \
 { \
     tvec<T, N> v;   for (int i=0; i<N; i++)     v[i] = L[i] op R; \
     return v; \
-} \
+}
 
 
 #define TVEC_OPERATOR_ARRAY() \
@@ -41,7 +51,7 @@ template <typename U> \
 tvec( const tvec<U, sz> &R ) \
 { \
     for (int i=0; i<sz; i++)     data[i] = T(R[i]); \
-} \
+}
 
 
 #define TVEC_OPERATOR_ASSIGN(sz) \
@@ -50,7 +60,7 @@ tvec operator=( const tvec<U, sz> &R ) \
 { \
     for (int i=0; i<sz; i++)     data[i] = T(R[i]); \
     return *this; \
-} \
+}
 
 
 
@@ -58,6 +68,12 @@ TVEC_OPERATOR_VEC_VEC(+)
 TVEC_OPERATOR_VEC_VEC(-)
 TVEC_OPERATOR_VEC_VEC(*)
 TVEC_OPERATOR_VEC_VEC(/)
+
+TVEC_OPEQ_VEC_VEC(+=)
+TVEC_OPEQ_VEC_VEC(-=)
+TVEC_OPEQ_VEC_VEC(*=)
+TVEC_OPEQ_VEC_VEC(/=)
+
 
 TVEC_OPERATOR_SCALAR_VEC(+)
 TVEC_OPERATOR_SCALAR_VEC(-)
@@ -404,6 +420,14 @@ using u8vec4 = tvec4<uint8_t>;
 using u16vec2 = tvec2<uint16_t>;
 using u16vec3 = tvec3<uint16_t>;
 using u16vec4 = tvec4<uint16_t>;
+
+using u32vec2 = tvec2<uint32_t>;
+using u32vec3 = tvec3<uint32_t>;
+using u32vec4 = tvec4<uint32_t>;
+
+using u64vec2 = tvec2<uint64_t>;
+using u64vec3 = tvec3<uint64_t>;
+using u64vec4 = tvec4<uint64_t>;
 
 
 

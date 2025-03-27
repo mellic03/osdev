@@ -34,17 +34,26 @@ void *memset_u8( uint8_t *p, uint8_t c, size_t n )
 
 void *memset( void *s, uint8_t c, size_t n )
 {
-    uint32_t v = uint32_t(c);
-    uint32_t value = (v<<24) + (v<<16) + (v<<8) + (v<<0);
+    // uint32_t v = uint32_t(c);
+    // uint32_t value = (v<<24) + (v<<16) + (v<<8) + (v<<0);
 
-    size_t count = n / sizeof(uint32_t);
-    size_t rem   = n % sizeof(uint32_t);
-    memset_sse32(s, value, count);
+    // size_t count = n / sizeof(uint32_t);
+    // size_t rem   = n % sizeof(uint32_t);
+    // memset_sse32(s, value, count);
 
 
-    size_t offset = count * sizeof(uint32_t);
-    memset_u8((uint8_t *)s + offset, c, 4*rem);
+    // size_t offset = count * sizeof(uint32_t);
+    // memset_u8((uint8_t *)s + offset, c, 4*rem);
 
-    return s;
+    // return s;
+
+    uint8_t *p = (uint8_t*)s;
+
+    for (size_t i = 0; i < n; i++)
+    {
+        p[i] = (uint8_t)c;
+    }
+
+    return p;
 }
 

@@ -2,14 +2,16 @@
 
 mkdir -p ./build
 cd ./build
-cmake -DCMAKE_TOOLCHAIN_FILE=./toolchain.cmake ../
+cmake ../
 make -j8
 cd ../
 
 
+cp sysroot/bin/*.elf src/programs/build/
 cd src/programs
-./build.sh # > /dev/null 2>&1
+./build.sh >> /dev/null 2>&1
 cd ../../
+cp src/programs/bin/* src/data/exec
 
 
 # # git clone https://github.com/limine-bootloader/limine.git \

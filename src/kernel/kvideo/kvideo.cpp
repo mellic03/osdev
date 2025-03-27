@@ -19,8 +19,10 @@ kframebuffer<uint32_t> kvideo::frontbuffer;
 kframebuffer<uint32_t> kvideo::backbuffer;
 
 
-void kvideo::init( limine_framebuffer_response *res )
+void kvideo::init( uintptr_t fbres )
 {
+    auto *res = (limine_framebuffer_response*)fbres;
+
     syslog log("idk::Video::init");
     auto *fb = res->framebuffers[0];
 

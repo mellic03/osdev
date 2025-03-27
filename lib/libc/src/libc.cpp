@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <ksysc.h>
 
+#ifdef __is_kernel
+    #include <kfs.hpp>
+#endif
 
-
-int libc_init_stdio();
 
 
 int libc_init()
@@ -13,10 +14,8 @@ int libc_init()
     return 1;
 }
 
-#ifdef __is_kernel
-    #include <kfs.hpp>
-#endif
 
+static ksysc_request req;
 
 int libc_init_stdio()
 {
@@ -26,10 +25,10 @@ int libc_init_stdio()
         files = KFS::kstdio;
 
     #else
-        ksysc_request req = {
+        req = {
             .type = SYSC_FILE_GETSTDIO
         };
-        libk_syscall(&req);
+        libc_syscall(&req);
         files = (FILE**)(req.data);
 
     #endif
@@ -37,7 +36,6 @@ int libc_init_stdio()
     stderr = files[0];
     stdin  = files[1];
     stdout = files[2];
-    // stdout = (FILE*)(req.data);
 
     return 1;
 }

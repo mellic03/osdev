@@ -157,7 +157,8 @@
         "buddy_allocator.hpp": "c",
         "inplace_array.hpp": "c",
         "kstackframe.h": "c",
-        "expected": "cpp"
+        "expected": "cpp",
+        "zzz.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

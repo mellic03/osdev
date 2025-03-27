@@ -4,13 +4,17 @@
 #include <kdef.h>
 #include <kfile.h>
 #include <kmalloc.h>
+#include <kernel/bitmanip.hpp>
 #include <string.h>
 
 // #include "driver/serial.hpp"
 #include "log/log.hpp"
 
-#include "./ksystem.hpp"
-#include "./kfs/kfs.hpp"
+#include "ksystem.hpp"
+#include "kfs/kfs.hpp"
+#include "memory/pmm.hpp"
+#include "memory/vmm.hpp"
+
 
 using namespace idk;
 
@@ -26,10 +30,10 @@ KSystem::KSystem( const Krequests &reqs )
     
     _load_mmaps();
     kmalloc_init(m_mmaps[0]);
-    // kvirtio_init();
+    PMM::init(m_mmaps[1], reqs.hhdm);
+    VMM::init();
 
     tty0 = new kn_TTY();
-
     KFS::init();
     _load_modules();
 }
@@ -58,25 +62,34 @@ KSystem::getModule( const char *label )
 
 
 
+#include "memory/pmm.hpp"
+#include "memory/vmm.hpp"
+
 int
 KSystem::execute( const char *filepath, int argc, char **argv )
 {
     syslog log("KSystem::execute");
 
+    uintptr_t entry = 0xBEBE0000;
+    auto     *file  = getModule(filepath);
+
+    uintptr_t page = (uintptr_t)kmalloc(16*PMM::PAGE_SIZE);
+              page = idk::align_up(page, PMM::PAGE_SIZE);
+    VMM::mapRange(page-PMM::hhdm, entry, 15*PMM::PAGE_SIZE);
+
+    log("entry: 0x%lx", entry);
+    memset((void*)entry, 0, 14*PMM::PAGE_SIZE);
+    memcpy((void*)entry, file->address, file->size);
+
     using YOLO = int (*)(int, char**);
+    int result = ((YOLO)entry)(argc, argv);
 
-    auto   file  = getModule(filepath);
-    void  *entry = (void*)(getHHDM() + 0xFFFF800100000000);
-    memcpy(entry, file->address, file->size);
+    log("result: %d", result);
 
-    uint8_t *base = (uint8_t*)(entry);
+    // VMM::unmapPage(0xBEBE0000);
+    // kfree((void*)page);
 
-    for (int i=0; i<0xDF; i++)
-    {
-        log("0x%lx:  0x%lx", entry+i, base[i]);
-    }
-
-    return ((YOLO)entry)(argc, argv);
+    return result;
 }
 
 

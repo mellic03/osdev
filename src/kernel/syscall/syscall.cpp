@@ -44,8 +44,10 @@ file_get( ksysc_request *req )
 static void
 file_flush( ksysc_request *req )
 {
+    syslog log("file_flush");
     KFile *fh = reinterpret_cast<KFile*>(req->data);
     fh->fsh(fh);
+    log("fh: 0x%lx", fh);
 }
 
 
@@ -63,7 +65,7 @@ void
 idk::syscall_handler( kstackframe *frame )
 {
     syslog log("syscall_handler");
-    auto *req = (ksysc_request*)(frame->rax);
+    auto *req = (ksysc_request*)(frame->rdi);
     log("type: %u", req->type);
 
     switch (req->type)

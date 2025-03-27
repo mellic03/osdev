@@ -29,7 +29,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 
 
-set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/linker.ld")
+# set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/linker.ld")
+# set(KPROGRAM_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/programs/linker.ld")
 set(SSE_FLAGS "-mmmx -msse -msse2")
 # set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
 add_definitions(-D__libk_sse=true)
@@ -73,16 +74,15 @@ set(CMAKE_ASM_NASM_FLAGS
     -f elf64"
 )
 
-set(
-    CMAKE_EXE_LINKER_FLAGS
-    "-Wl,-m,elf_x86_64 \
-    -Wl,--build-id=none \
-    -nostdlib \
-    -static \
-    -mgeneral-regs-only \
-    -z max-page-size=0x1000  -mno-red-zone \
-    -T ${LINKER_SCRIPT}"
-)
+# set(
+#     CMAKE_EXE_LINKER_FLAGS
+#     "-Wl,-m,elf_x86_64 \
+#     -Wl,--build-id=none \
+#     -nostdlib \
+#     -static \
+#     -mgeneral-regs-only \
+#     -z max-page-size=0x1000  -mno-red-zone"
+# )
 
 
 include_directories(

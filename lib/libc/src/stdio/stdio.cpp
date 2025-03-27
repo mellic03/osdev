@@ -32,16 +32,17 @@ KFile *stdout = NULL;
 
 int fflush( FILE *fh )
 {
+    fh->fsh(fh);
+
     #ifdef __is_kernel
-        fh->fsh(fh);
         kproc_yield();
 
     #else
-        ksysc_request req = {
-            .type = SYSC_FILE_FLUSH,
-            .data = fh
-        };
-        libk_syscall(&req);
+        // ksysc_request req = {
+        //     .type = SYSC_FILE_FLUSH,
+        //     .data = fh
+        // };
+        // libk_syscall(&req);
 
     #endif
 

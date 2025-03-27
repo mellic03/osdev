@@ -27,12 +27,22 @@ struct kproc_t
 
 void kproc_switch( kstackframe* );
 void kproc_schedule( kstackframe* );
+void kproc_yield_irq( kstackframe* );
 
 void kproc_init();
 void kproc_yield();
+
 kproc_t *kproc_new( void (*)(void*), void *arg );
 // void kproc_exit( kproc_t* );
 
+
+namespace kthread
+{
+    size_t this_tid();
+    void   create( void (*)(void*), void *arg );
+    void   yield();
+    void   exit();
+}
 
 
 

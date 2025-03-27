@@ -2,15 +2,13 @@
 #!/bin/bash
 NAME=$1
 OBJDIR="./build"
-BINDIR="../../sysroot/bin"
+BINDIR="./bin"
 
 INCLUDES="-I../../sysroot/include"
 LIBRARIES="../../sysroot/lib"
 
 CXXFLAGS="-std=c++23 \
-        -D__libk_sse \
         -O0 \
-        $INCLUDES \
         -ffreestanding \
         -Wall \
         -Wextra \
@@ -24,33 +22,46 @@ CXXFLAGS="-std=c++23 \
         -mno-80387 \
         -z max-page-size=0x1000 -mno-red-zone \
         -m64 -mcmodel=large -march=x86-64 \
-        -mmmx -msse -msse2 \
-        -Wno-missing-field-initializers"
-
+        ${SSE_FLAGS} \
+        -Wno-missing-field-initializers
+        -fno-rtti \
+        -MMD \
+        -MP"
  
 
 
 mkdir -p $OBJDIR
-# mkdir -p $BINDIR
+mkdir -p $BINDIR
 
 # nasm -felf64 src/_start.asm -o $OBJDIR/_start.o
-# g++ -c  src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $CXXFLAGS
+# g++  -c src/$NAME.cpp -o $OBJDIR/$NAME.cpp.o $INCLUDES $CXXFLAGS \
 
+# g++  -o $OBJDIR/$NAME.elf \
+#         $OBJDIR/_start.o \
+#         src/$NAME.cpp \
+#         $CXXFLAGS \
+#         ../../sysroot/lib/libk.a \
+#         ../../sysroot/lib/libc.a \
+#         ../../sysroot/lib/libc++.a \
+#         -nostdlib \
+#         -static \
+#         -z max-page-size=0x1000 \
+#         -T ./linker.ld \
+#         -Wl,--no-relax \
+#         -Wl,--gc-sections
 
-g++  -o $OBJDIR/$NAME.elf \
-        $OBJDIR/_start.o \
-        src/$NAME.cpp \
-        $CXXFLAGS \
-        ../../sysroot/lib/libk.a \
-        ../../sysroot/lib/libc.a \
-        ../../sysroot/lib/libc++.a \
-        -nostdlib \
-        -static \
-        -z max-page-size=0x1000 \
-        -T ./linker.ld \
-        -Wl,--no-relax \
-        -Wl,--gc-sections
-
+# ld   -o $OBJDIR/$NAME.elf \
+#         $OBJDIR/_start.o \
+#         $OBJDIR/$NAME.cpp.o \
+#         $INCLUDES \
+#         ../../sysroot/lib/libk.a \
+#         ../../sysroot/lib/libc.a \
+#         ../../sysroot/lib/libc++.a \
+#         -nostdlib \
+#         -static  \
+#         --no-relax --gc-sections \
+#         -z max-page-size=0x1000 \
+#         -T ./linker.ld
 
 
 # nasm -felf64 src/_start.asm -o $OBJDIR/_start.o
@@ -69,12 +80,10 @@ g++  -o $OBJDIR/$NAME.elf \
 #         -Ttext 0xFFFF800100000000 \
 #         --no-relax \
 #         --gc-sections
+# #         # -T ./linker.ld \
 
-#         # -T ./linker.ld \
 
-
-objcopy -O binary $OBJDIR/$NAME.elf ../data/exec/$NAME.exec
-
+objcopy -O binary $OBJDIR/$NAME.elf $BINDIR/$NAME.exec
 
 
 # echo ""
@@ -82,19 +91,18 @@ objcopy -O binary $OBJDIR/$NAME.elf ../data/exec/$NAME.exec
 # echo ""
 # echo ""
 # echo "-------------------------------objdump-------------------------------"
-# objdump -d $OBJDIR/$NAME.elf
+objdump -d $OBJDIR/$NAME.elf
 # echo "---------------------------------------------------------------------"
 # echo ""
 # echo ""
 # echo ""
 # echo "-------------------------------hexdump-------------------------------"
 # echo $BINDIR/$NAME.exec
-# hexdump -C ../data/exec/$NAME.exec
+hexdump -C ../data/exec/$NAME.exec
 # echo "---------------------------------------------------------------------"
 # echo ""
 # echo ""
 # echo ""
-
 
 # rm $OBJDIR/$NAME.elf
 # rm $OBJDIR/$NAME.cpp.o

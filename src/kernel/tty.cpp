@@ -7,106 +7,101 @@
 
 kn_TTY::kn_TTY()
 :   W(80), H(25),
-    row(0), col(0),
-    CSR(0),
     dirty(false)
 {
-    memset(data, '\0', 80*20);
+    data_top = data + 0;
+    data_end = data + 80*25;
+
+    memset(data, '\0', 80*25);
+    memset(prompt, '\0', sizeof(prompt));
+
+    memcpy(prompt, ">> ", 3);
+    prompt_csr = 3;
+
 }
 
 
-void
-kn_TTY::setcursor( int csr )
-{
-    CSR = csr;
-    row = CSR / W;
-    col = CSR % W;
-}
+// void
+// kn_TTY::setcursor( int csr )
+// {
+//     CSR = csr;
+//     row = CSR / W;
+//     col = CSR % W;
+// }
 
 
-void
-kn_TTY::setrow( int r )
-{
-    CSR = W*r + col;
-}
+// void
+// kn_TTY::setrow( int r )
+// {
+//     CSR = W*r + col;
+// }
 
 
-void
-kn_TTY::setcol( int c )
-{
-    CSR = W*row + c;
-}
+// void
+// kn_TTY::setcol( int c )
+// {
+//     CSR = W*row + c;
+// }
 
 
 
 void
 kn_TTY::movecursor( int dir )
 {
-    int r = row;
+    // CSR += dir;
 
-    CSR += dir;
-    row = CSR / W;
-    col = CSR % W;
+    // for (int i=0; i<W; i++)
+    // {
+    //     if (data[W*row+i] == '\0')
+    //     {
+    //         col = i;
+    //         break;
+    //     }
+    // }
 
-    if (row < r)
+    prompt_csr = std::clamp(prompt_csr+dir, 0, W-1);
+}
+
+
+// void
+// kn_TTY::moverow( int dir )
+// {
+//     row = CSR / W;
+//     col = CSR % W;
+//     row += dir;
+//     CSR = W*row + col;
+// }
+
+
+// void
+// kn_TTY::movecol( int dir )
+// {
+//     row = CSR / W;
+//     col = CSR % W;
+//     col += dir;
+//     CSR = W*row + col;
+// }
+
+
+
+
+
+
+void
+kn_TTY::_shift_left()
+{
+    for (int i=prompt_csr; i<W-1; i++)
     {
-        for (int i=0; i<W; i++)
-        {
-            if (data[W*row+i] == '\0')
-            {
-                col = i;
-                break;
-            }
-        }
-    }
-
-    CSR = std::clamp(W*row + col, 0, W*H);
-}
-
-
-void
-kn_TTY::moverow( int dir )
-{
-    row = CSR / W;
-    col = CSR % W;
-    row += dir;
-    CSR = W*row + col;
-}
-
-
-void
-kn_TTY::movecol( int dir )
-{
-    row = CSR / W;
-    col = CSR % W;
-    col += dir;
-    CSR = W*row + col;
-}
-
-
-
-
-
-
-void
-kn_TTY::_shift_left( int r )
-{
-    int c = CSR % W;
-
-    for (int i=c+1; i<W; i++)
-    {
-        data[W*r + i] = data[W*r + i+1];
+        prompt[i] = prompt[i+1];
     }
 }
 
 void
-kn_TTY::_shift_right( int r )
+kn_TTY::_shift_right()
 {
-    int c = CSR % W;
-
-    for (int i=W-1; i>c; i--)
+    for (int i=W-1; i>prompt_csr; i--)
     {
-        data[W*r + i] = data[W*r + i-1];
+        prompt[i] = prompt[i-1];
     }
 }
 
@@ -114,9 +109,9 @@ kn_TTY::_shift_right( int r )
 void
 kn_TTY::_insert( char c )
 {
-    _shift_right(CSR/W);
-    data[CSR] = c;
-    movecursor(1);
+    _shift_right();
+    prompt[prompt_csr] = c;
+    prompt_csr = std::min(prompt_csr+1, W-1);
 }
 
 
@@ -124,10 +119,18 @@ kn_TTY::_insert( char c )
 void
 kn_TTY::backspace()
 {
-    _shift_left(CSR/W);
-    data[CSR] = ' ';
-    movecursor(-1);
+    prompt_csr = std::max(prompt_csr-1, 3);
+    prompt[prompt_csr] = ' ';
+    _shift_left();
 }
+
+
+void
+kn_TTY::enter()
+{
+
+}
+
 
 
 void
@@ -150,9 +153,16 @@ kn_TTY::putchar( char ch )
 
     else if (ch == '\n')
     {
-        moverow(1);
-        col = 0;
-        CSR = W*row + col;
+        memcpy(data_top, prompt, sizeof(prompt));
+        memset(prompt, 0, sizeof(prompt));
+        data_top += sizeof(prompt);
+
+        memcpy(prompt, ">> ", 3);
+        prompt_csr = 3;
+
+        // moverow(1);
+        // col = 0;
+        // CSR = W*row + col;
     }
 
     else
@@ -164,14 +174,59 @@ kn_TTY::putchar( char ch )
 
 
 
+
+
+
+
+
+
 #include <kscancode.h>
 #include <kproc.hpp>
 #include "kfs/kfs.hpp"
 #include "driver/keyboard.hpp"
 
-void tty_main( void *arg )
+#define TERM_BACKSP 8
+#define TERM_TAB    9
+#define TERM_ENTER  13
+
+
+// void tty_main( void *arg )
+// {
+//     auto &tty = *((kn_TTY*)arg);
+
+//     while (true)
+//     {
+//         char ch;
+
+//         if (KFile_read(&ch, KFS::kdevkey, 1))
+//         {
+//             tty.putchar(ch);
+//         }
+
+//         kproc_yield();
+//     }
+// }
+
+
+#include "kshell.hpp"
+#include <kmath/vec.hpp>
+#include <stdio.h>
+
+
+void prompt_main( void *arg )
 {
-    auto &tty = *((kn_TTY*)arg);
+    u64vec2 data = *(u64vec2*)(arg);
+
+    char *prompt  = (char*)(data[0]);
+    char *ptop    = prompt;
+    char *pend    = prompt + 80;
+
+    char *history = (char*)(data[1]);
+    char *htop    = history;
+    char *hend    = history + 25*80;
+
+    KShellCommand cmd;
+    cmd.prompt = prompt;
 
     while (true)
     {
@@ -179,14 +234,42 @@ void tty_main( void *arg )
 
         if (KFile_read(&ch, KFS::kdevkey, 1))
         {
-            // printf("tty.putchar(%c)\n", ch);
-            tty.putchar(ch);
+            if (ch == '\n')
+            {
+                if (strlen(prompt) == 0)
+                {
+                    continue;
+                }
+
+                htop += sprintf(htop, " >> %s\n", prompt);
+                htop += sprintf(htop, "    ");
+                htop = kshell_interpret(htop, prompt);
+                *(htop++) = '\n';
+
+                memset(prompt, 0, 80);
+                ptop = prompt;
+            }
+
+            else if (ch == 8) // backspace
+            {
+                ptop = std::max(ptop-1, prompt);
+                *ptop = '\0';
+            }
+
+            else
+            {
+                *ptop = ch;
+                ptop = std::min(ptop+1, pend-1);
+                *ptop = '\0';
+            }
         }
 
-        // printf("[tty_main]\n");
         kproc_yield();
     }
 }
+
+
+
 
 
 

@@ -2,42 +2,71 @@
 
 #include "kwin.hpp"
 #include <kdef.h>
+#include <idk_vector.hpp>
 
 
 namespace kwin
 {
     class Context;
+
+    struct Style;
     class Frame;
-    class FrameTest;
+    // class BorderFrame;
 }
 
+
+struct kwin::Style
+{
+    vec4 border;
+
+    Style( const vec4 &bd = vec4(0.0f) )
+    :   border(bd)
+    {
+
+    }
+};
 
 
 class kwin::Frame
 {
 public:
-    ivec2 m_tl, m_sp;
+    ivec2 m_local, m_world;
+    ivec2 &m_tl, m_sp;
     vec4 m_col;
+    kwin::Style m_style;
 
-    Frame( ivec2 tl, ivec2 sp, vec4 c = vec4(1.0f) )
-    :   m_tl(tl), m_sp(sp), m_col(c)
-    {  }
+    kwin::Frame              *m_parent;
+    idk::vector<kwin::Frame*> m_children;
+
+
+    Frame( ivec2 tl, ivec2 sp, vec4 c = vec4(1.0f), const Style &style = Style() );
+    void updateTransforms();
+
+    template <typename frame_type, typename... Args>
+    frame_type *giveChild( Args... args )
+    {
+        frame_type *F = new frame_type(args...);
+        F->m_parent = this;
+        m_children.push_back(dynamic_cast<kwin::Frame*>(F));
+        return F;
+    }
+
 
     virtual ~Frame() = default;
-    virtual void draw( kwin::Context& ) = 0;
+    virtual void draw( kwin::Context& );
 };
 
 
 
 
-class kwin::FrameTest: public kwin::Frame
-{
-public:
+// class kwin::BorderFrame: public kwin::Frame
+// {
+// public:
 
-    using kwin::Frame::Frame;
-    virtual void draw( kwin::Context& ) final;
+//     using kwin::Frame::Frame;
+//     virtual void draw( kwin::Context& ) override;
 
-};
+// };
 
 
 

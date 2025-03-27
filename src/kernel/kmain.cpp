@@ -2,7 +2,7 @@
     #define __is_kernel
 #endif
 
-#include "kmain-requests.cpp"
+#include "boot/requests.cpp"
 
 #include <cxxabiv1>
 #include <kernel.h>
@@ -30,8 +30,7 @@
 #include "kvideo/kvideo.hpp"
 #include "kwin/kwin.hpp"
 #include "kshell.hpp"
-#include "memory/pmm.hpp"
-#include "memory/vmm.hpp"
+
 
 
 void pagefault_handler( kstackframe* );
@@ -85,7 +84,7 @@ uint64_t uptime_ms;
 
 void pit_irq( kstackframe *frame )
 {
-    kproc_switch(frame);
+    kproc_schedule(frame);
     // kproc_yield();
 
     uptime_ms += 10;
@@ -95,20 +94,9 @@ void pit_irq( kstackframe *frame )
 }
 
 
-void vblank_irq( kstackframe * )
-{
-    printf("[vblank_irq]\n");
-}
-
-
-void proccess_switch_handler( kstackframe *frame )
-{
-    kproc_switch(frame);
-}
-
-
 
 #include "kwin/frame_tty.hpp"
+#include "kwin/frame_text.hpp"
 
 bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
 {
@@ -118,73 +106,10 @@ bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
 }
 
 
-void video_main( void* )
-{
-    auto ctx = kwin::Context(1280, 720);
-    auto *frame = ctx.createFrame<kwin::FrameTTY>(
-        ivec2(10, 10), ivec2(500, 450),
-        sys->tty0, &(sys->m_fonts[6])
-    );
+static char *prompt;
+static char *history;
 
-    bool grabbing = false;
-    vec2 start = vec2(0.0f);
-
-    while (true)
-    {
-        ctx.rectOutline(ivec2(0, 0), ctx.m_sp, vec4(1.0, 0.0, 0.0, 1.0));
-        frame->draw(ctx);
-
-        if (mouseleft)
-        {
-            ctx.rect(mousexy, vec2(24, 24), vec4(0.5f));
-        }
-    
-        else
-        {
-            ctx.rect(mousexy, vec2(24, 24), vec4(1.0f));
-        }
-
-        if (mouseleft && !grabbing)
-        {
-            start = mousexy;
-            grabbing = true;
-        }
-
-        if (!mouseleft)
-        {
-            grabbing = false;
-        }
-
-        if (grabbing)
-        {
-            float dx = (mousexy.x - start.x);
-            float dy = (mousexy.y - start.y);
-
-            start.x = mousexy.x;
-            start.y = mousexy.y;
-
-            frame->m_tl.x += dx;
-            frame->m_tl.y += dy;
-        }
-
-        // printf("[video_main]\n");
-        if (uptime_ms > 30)
-        {
-            kvideo::swapBuffers();
-            uptime_ms = 0;
-        }
-        else
-        {
-            kvideo::blit(ctx.m_tl, vec2(0, 0), ctx.m_sp, ctx.m_fb);
-            kmemset<vec4>(ctx.m_fb.buf, vec4(0.0f), ctx.m_sp.x * ctx.m_sp.y);
-        }
-        kproc_yield();
-    }
-
-}
-
-
-
+extern void video_main( void* );
 
 void mouse_main( void* )
 {
@@ -243,11 +168,10 @@ void _start()
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
-    idk::onInterrupt(INT_PROCESS_SWITCH, proccess_switch_handler);
+    idk::onInterrupt(INT_PROCESS_SWITCH, kproc_yield_irq);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  keyboard_irq_handler);
-    idk::onInterrupt(32+2,  vblank_irq);
     idk::onInterrupt(32+12, mouse_irq);
     PIC::remap(32, 40);
     PIC::disable();
@@ -259,18 +183,28 @@ void _start()
     libc_init();
     std::detail::libcpp_init();
 
-    kvideo::init(system.m_reqs.fb);
-
-
-    PMM::init(system.getMmaps()[1], system.getHHDM());
-    VMM::init();
+    // system.execute("kshell.exec", 0, nullptr);
 
 	asm volatile ("sti");
 
-    kproc_new(video_main, nullptr);
-    kproc_new(tty_main, system.tty0);
+    prompt = (char*)kmalloc(80*sizeof(char));
+    history = (char*)kmalloc(25*80*sizeof(char));
+
+    u64vec2 data2(
+        (uintptr_t)prompt, (uintptr_t)history
+    );
+
+    u64vec4 data4(
+        (uintptr_t)reqs.fb, (uintptr_t)prompt,
+        (uintptr_t)history, (uintptr_t)sys
+    );
+
+
+    // kproc_new(tty_main, system.tty0);
     kproc_new(keyprocess_main, system.tty0);
     kproc_new(mouse_main, nullptr);
+    kproc_new(prompt_main, &data2);
+    kproc_new(video_main, &data4);
 
     while (true)
     {

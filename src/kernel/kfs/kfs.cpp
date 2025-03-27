@@ -14,10 +14,9 @@ KFile *KFS::kstderr;
 KFile *KFS::kstdin;
 KFile *KFS::kstdout;
 
-KFile *KFS::kdevio[2];
+KFile *KFS::kdevio[16];
 KFile *KFS::kdevkey;
 KFile *KFS::kdevscn;
-
 
 void dummy_flush( KFile *fh )
 {
@@ -51,10 +50,10 @@ void KFS::init()
     kstdin  = kstdio[1];
     kstdin  = kstdio[2];
 
-    kdevio[0] = KFS::KFile_create(64, dummy_flush);
-    kdevio[1] = KFS::KFile_create(64, dummy_flush);
-    kdevkey   = kdevio[0];
-    kdevscn   = kdevio[1];
+    kdevio[0]    = KFS::KFile_create(64, dummy_flush);
+    kdevio[1]    = KFS::KFile_create(64, dummy_flush);
+    kdevkey      = kdevio[0];
+    kdevscn      = kdevio[1];
 
     log("KFS_files: %u", KFS_files.size());
     log("kstderr: 0x%lx", kstderr);

@@ -54,17 +54,26 @@ idk::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
 
 
 
-idk::Bounds*
-idk::FontBuffer::getGlyph( char c )
+ivec2
+idk::FontBuffer::getGlyphExtents()
 {
-    static Bounds bounds;
+    static constexpr int GLYPH_ROWS = 6;
+    static constexpr int GLYPH_COLS = 16;
+    const int GLYPH_W = this->W / GLYPH_COLS;
 
+    return ivec2(GLYPH_W, GLYPH_W);
+}
+
+
+ivec2
+idk::FontBuffer::getGlyphCorner( char c )
+{
     static constexpr char cmin = ' ';
     static constexpr char cmax = '~';
 
     if ((cmin<=c && c<=cmax) == false)
     {
-        return nullptr;
+        return ivec2(-1, -1);
     }
 
     static constexpr int GLYPH_ROWS = 6;
@@ -77,10 +86,6 @@ idk::FontBuffer::getGlyph( char c )
     int row = idx / GLYPH_COLS;
     int col = idx % GLYPH_COLS;
 
-    ivec2 corner(col*GLYPH_W, row*GLYPH_H);
-    ivec2 extents(GLYPH_W, GLYPH_H);
-
-    bounds = {corner, extents};
-    return &bounds;
+    return ivec2(col*GLYPH_W, row*GLYPH_H);
 }
 
