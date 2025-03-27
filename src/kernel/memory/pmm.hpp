@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <kernel/memory.hpp>
 
-// #define PMM_2MB_PAGES
+#define PMM_2MB_PAGES
 
 
 namespace PMM

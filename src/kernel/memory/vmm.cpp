@@ -115,6 +115,70 @@ union PT_Entry
 
 
 
+uint64_t *get_entry( uint64_t *table, size_t idx, uint64_t flags )
+{
+    uint64_t *entry;
+
+    if (!(table[idx] & PAGE_PRESENT))
+    {
+        uint64_t phys = PMM::alloc();
+        entry = (uint64_t *)PHYS_TO_HHDM(phys);
+        table[idx] = phys | flags;
+    }
+
+    else
+    {
+        entry = (uint64_t *)PHYS_TO_HHDM(table[idx] & ~0xFFF);
+    }
+
+    return entry;
+}
+
+
+void map_page(uint64_t *pml4, uint64_t phys, uint64_t virt, uint64_t flags)
+{
+    // Traverse or allocate PDPT
+    uint64_t *pdpt;
+    if (!(pml4[PML4_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdpt_phys = PMM::alloc();
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pdpt_phys);
+        pml4[PML4_INDEX(virt)] = pdpt_phys | flags;
+    } else {
+        pdpt = (uint64_t *)PHYS_TO_HHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
+    }
+
+    // Traverse or allocate PDT
+    uint64_t *pdt;
+    if (!(pdpt[PDPT_INDEX(virt)] & PAGE_PRESENT)) {
+        uint64_t pdt_phys = PMM::alloc();
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdt_phys);
+        pdpt[PDPT_INDEX(virt)] = pdt_phys | flags;
+    } else {
+        pdt = (uint64_t *)PHYS_TO_HHDM(pdpt[PDPT_INDEX(virt)] & ~0xFFF);
+    }
+
+    #ifdef PMM_2MB_PAGES
+        pdt[PD_INDEX(virt)] = (phys & ~0x1FFFFF) | flags | MASK_PAGESIZE;
+
+    #else
+        // Traverse or allocate PT
+        uint64_t *pt;
+        if (!(pdt[PT_INDEX(virt)] & PAGE_PRESENT)) {
+            uint64_t pt_phys = PMM::alloc();
+            pt = (uint64_t *)PHYS_TO_HHDM(pt_phys);
+            pdt[PT_INDEX(virt)] = pt_phys | flags;
+        } else {
+            pt = (uint64_t *)PHYS_TO_HHDM(pdt[PT_INDEX(virt)] & ~0xFFF);
+        }
+
+        // Map the page
+        pt[PT_INDEX(virt)] = phys | flags;
+
+    #endif
+}
+
+
+
 void map4KB(uint64_t *pml4, uint64_t phys, uint64_t virt, uint64_t flags)
 {
     // Traverse or allocate PDPT
@@ -216,11 +280,7 @@ VMM_unmapPage( uint64_t *pml4, uint64_t virt )
 void
 VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt )
 {
-    #ifdef PMM_2MB_PAGES
-        map2MB(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
-    #else
-        map4KB(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
-    #endif
+    map_page(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
 }
 
 
