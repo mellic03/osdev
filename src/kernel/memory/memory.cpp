@@ -1,6 +1,16 @@
 #include <kernel/memory.hpp>
 #include <kmalloc.h>
 
+
+
+// void *operator new( size_t );
+// void *operator new[]( size_t );
+// void  operator delete( void* );
+// void  operator delete[]( void* );
+// void  operator delete( void*, size_t );
+// void  operator delete[]( void*, size_t );
+
+
 void *operator new( size_t nbytes )
 {
     return kmalloc(nbytes);

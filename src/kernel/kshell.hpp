@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tty.hpp"
 
 
 struct KShellCommand
@@ -10,4 +11,5 @@ struct KShellCommand
 
 // void kshell_main( void* );
 // Returns new dst pointer
-char *kshell_interpret( char *dst, const char *src );
+// char *kshell_interpret( char *dst, const char *src, kTTY *tty );
+void kshell_interpret( kTTY *tty );

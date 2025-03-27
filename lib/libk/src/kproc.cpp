@@ -182,6 +182,7 @@ static void __kproc_add( kproc_t *th )
 kproc_t *kproc_new( void (*fn)(void*), void *arg )
 {
     asm volatile ("cli");
+    static size_t tid = 0;
 
     uint8_t *stack = (uint8_t*)kmalloc(4096);
     uint8_t *top   = stack + 4096;
@@ -192,6 +193,7 @@ kproc_t *kproc_new( void (*fn)(void*), void *arg )
 
     kproc_t *thread = (kproc_t*)kmalloc(sizeof(kproc_t));
 
+    thread->tid    = tid++;
     thread->status = KPROC_READY;
     thread->stack  = stack;
     thread->rsp = (uint64_t)top;

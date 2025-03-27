@@ -7,17 +7,17 @@
 #include <stdio.h>
 
 
-char *prompt;
-char *history;
 kwin::Context *context;
 idk::KSystem *system;
 
 
 void terminal_main( void* )
 {
+    kTTY *tty = system->tty0;
+
     auto *frame = context->createFrame<kwin::TerminalFrame>(
         ivec2(10, 10), ivec2(500, 450),
-        &(system->m_fonts[6]), prompt, history, kwin::Style(vec4(1.0f))
+        &(system->m_fonts[6]), tty->prompt, tty->history, kwin::Style(vec4(1.0f))
     );
 
     bool grabbing = false;
@@ -57,12 +57,10 @@ void terminal_main( void* )
 
 void video_main( void *ptr )
 {
-    u64vec4 args = *(u64vec4*)ptr;
+    u64vec2 args = *(u64vec2*)ptr;
 
     kvideo::init(args[0]);
-    prompt  = (char*)args[1];
-    history = (char*)args[2];
-    system  = (idk::KSystem*)args[3];
+    system  = (idk::KSystem*)args[1];
 
     auto ctx = kwin::Context(1280, 720);
     context = &ctx;

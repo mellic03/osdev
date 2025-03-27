@@ -13,8 +13,8 @@ namespace KFS
     extern KFile *kstdout;
 
     extern KFile *kdevio[16];
+    extern KFile *kdevraw;
     extern KFile *kdevkey;
-    extern KFile *kdevscn;
 
 }
 

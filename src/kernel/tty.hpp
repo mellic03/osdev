@@ -1,48 +1,37 @@
 #pragma once
-
 #include <kfile.h>
+#include "kfs/kfs.hpp"
 
 
-
-struct kn_TTY
+struct kTTY
 {
-private:
-    void _shift_left();
-    void _shift_right();
-    void _insert( char );
+    char *history;
+    char *htop, *hend;
 
-public:
-    // idk::static_vector<char, 80*25> data;
-    char data[25*80];
-    char *data_top;
-    char *data_end;
-    int  W, H;
-    bool dirty;
+    char *prompt;
+    char *ptop, *pend;
 
-    char prompt[80];
-    int  prompt_csr;
-    // KFile *stream;
+    vfsDirEntry *cwd;
 
-    kn_TTY();
+    kTTY();
+    kTTY( size_t size );
 
-    // void setcursor( int csr );
-    // void setrow( int r );
-    // void setcol( int c );
+    void hclear();
+    void pclear();
+    void clear();
 
-    void movecursor( int dir );
-    // void moverow( int dir );
-    // void movecol( int dir );
+    void _putc( char *&top, char *end, char ch );
+    void hputc( char ch ) { _putc(htop, hend, ch); };
+    void pputc( char ch ) { _putc(ptop, pend, ch); };
 
-    void backspace();
-    void enter();
+    void _puts( char *&top, char *end, const char *str );
+    void hputs( const char *str ) { _puts(htop, hend, str); }
+    void pputs( const char *str ) { _puts(ptop, pend, str); }
 
-    void putchar( char c );
+    // const char *submit();
 
 };
 
 
+void kshell_main( void *arg );
 
-
-// void tty_main( void *arg );
-void prompt_main( void *arg );
-void keyprocess_main( void *arg );

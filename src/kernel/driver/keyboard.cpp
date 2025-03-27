@@ -11,113 +11,132 @@
 
 using namespace idk;
 
+#define STATE_NORMAL 0
+#define STATE_PREFIX 1
 
-void keyboard_irq_handler( kstackframe *frame )
+
+
+void
+kdriver::ps2_kb::irq_handler( kstackframe *frame )
 {
-    static bool multi = false;
-    static uint8_t mod = 0;
     uint8_t code = IO::inb(0x60);
-
-    if (code == 0xE0)
-    {
-        multi = true;
-        PIC::sendEOI(1);
-        return;
-    }
-
-    if (multi)
-    {
-        multi = false;
-
-        // if (code == 0x6B)
-        //     code = DOWN_LEFT;
-        // if (code == 0x74)
-        //     code = DOWN_RIGHT;
-        
-        mod |= MODIFIER_CURSOR;
-    }
-    else
-    {
-        mod &= ~MODIFIER_CURSOR;
-    }
-
-
-    switch (code)
-    {
-        default: break;
-        case DOWN_LSHIFT:   mod |=  MODIFIER_SHIFT;  break;
-        case UP_LSHIFT:     mod &= ~MODIFIER_SHIFT;  break;
-        case DOWN_LCTRL:    mod |=  MODIFIER_CTRL;   break;
-        case UP_LCTRL:      mod &= ~MODIFIER_CTRL;   break;
-        case DOWN_LALT:     mod |=  MODIFIER_ALT;    break;
-        case UP_LALT:       mod &= ~MODIFIER_ALT;    break;
-    }
-
-    struct {
-        uint8_t modifier;
-        uint8_t code;
-    } packet;
-
-    {
-        packet = { mod, code};
-        KFile_write(KFS::kdevscn, &packet, sizeof(packet));
-    }
-
+    KFile_write(KFS::kdevraw, &code, 1);
     PIC::sendEOI(1);
 }
 
 
 
 
-// void
-// kdriver::ps2_kb::driver_main( void *arg )
-// {
-//     KFile *fh = (KFile*)arg;
-//     Packet packet;
+static char *shift_table;
 
-//     while (true)
-//     {
-//         packet = {0, 0};
+static void create_shift_table()
+{
+    shift_table = (char*)kmalloc(256);
+    memset(shift_table, '\0', 256);
 
-//         if (KFile_read(&packet, fh, sizeof(packet)))
-//         {
-//             if (packet.modifier == MODIFIER_CURSOR)
-//             {
-//                 if (packet.code == 0x4B)
-//                 {
-//                     tty.movecursor(-1);
-//                 }
-//                 if (packet.code == 0x4D)
-//                 {
-//                     tty.movecursor(+1);
-//                 }
+    char mod_0_9[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
+    memcpy(&(shift_table['0']), mod_0_9, sizeof(mod_0_9));
 
-//                 continue;
-//             }
+    for (int i=0; i<='z'-'a'; i++)
+    {
+        shift_table['a'+i] = toupper('a'+i);
+    }
 
-//             char ch = scode_getchar(packet.code);
-    
-//             if (ch == '\0')
-//             {
-//                 continue;
-//             }
+    shift_table['/'] = '?';
+    shift_table['['] = '{';
+    shift_table[']'] = '}';
+    shift_table[';'] = ':';
+    shift_table['\''] = '\"';
+    shift_table[','] = '<';
+    shift_table['.'] = '>';
 
-//             if (packet.modifier & MODIFIER_SHIFT)
-//             {
-//                 if (shift_table[ch])
-//                 {
-//                     ch = shift_table[ch];
-//                 }
-//             }
+}
 
-//             KFile_write(KFS::kdevkey, &ch, 1);
-//         }
 
-//         // printf("[keyprocess_main]\n");
-//         kproc_yield();
-//     }
 
-// }
+static void
+driver_update( uint8_t scancode )
+{
+    using namespace kdriver::ps2_kb;
+    static uint8_t state = STATE_NORMAL;
+    static uint8_t mask = 0;
+
+    uint8_t key  = scode_getchar(scancode);
+
+    if (scancode == 0xE0)
+    {
+        state = STATE_PREFIX;
+        return;
+    }
+
+    else if (state == STATE_PREFIX)
+    {
+        switch (scancode)
+        {
+            default: break;
+            case 0x48: case 0xC8: mask |= KeyEvent_U; break;
+            case 0x4B: case 0xCB: mask |= KeyEvent_L; break;
+            case 0x4D: case 0xCD: mask |= KeyEvent_R; break;
+            case 0x50: case 0xD0: mask |= KeyEvent_D; break;
+        }
+ 
+        state = STATE_NORMAL;
+    }
+
+    else
+    {
+        if (scancode >= UP_ESC) mask |=  KeyEvent_UP;
+        else                    mask &= ~KeyEvent_UP;
+
+        switch (scancode)
+        {
+            default: break;
+
+            case DOWN_LSHIFT:   mask |=  KeyEvent_SHIFT; break;
+            case UP_LSHIFT:     mask &= ~KeyEvent_SHIFT; break;
+        
+            case DOWN_LCTRL:    mask |=  KeyEvent_CTRL;  break;
+            case UP_LCTRL:      mask &= ~KeyEvent_CTRL;  break;
+        
+            case DOWN_LALT:     mask |=  KeyEvent_ALT;   break;
+            case UP_LALT:       mask &= ~KeyEvent_ALT;   break;
+        }
+
+        if (mask & KeyEvent_SHIFT)
+        {
+            key = isalpha(key) ? toupper(key) : shift_table[key];
+        }
+    }
+
+    KeyEvent event = {
+        .mask = mask,
+        .key  = key
+    };
+
+    // klock_acquire(&KFS::kdevkey->lock);
+    KFile_write(KFS::kdevkey, &event, sizeof(KeyEvent));
+    // klock_release(&KFS::kdevkey->lock);
+}
+
+
+
+void
+kdriver::ps2_kb::driver_main( void* )
+{
+    create_shift_table();
+    uint8_t scancode;
+
+    while (true)
+    {
+        if (KFile_read(&scancode, KFS::kdevraw, 1))
+        {
+            driver_update(scancode);
+        }
+
+        kproc_yield();
+    }
+
+}
 
 
 
@@ -165,10 +184,10 @@ char scode_getchar( uint8_t code )
         case DOWN_N: return 'n';
         case DOWN_M: return 'm';
 
-        case DOWN_BACKSPACE:    return 8;
-        case DOWN_TAB:          return '\t';
-
-        case DOWN_ENTER: return '\n';
+        case DOWN_MINUS:            return '-';
+        case DOWN_BACKSPACE:        return 8;
+        case DOWN_TAB:              return '\t';
+        case DOWN_ENTER:            return '\n';
         case DOWN_LEFT_BRACKET:     return '(';
         case DOWN_RIGHT_BRACKET:    return ')';
         case DOWN_SPACE:            return ' ';

@@ -8,19 +8,26 @@
 
 namespace kdriver::ps2_kb
 {
-    enum KeyModifier: uint8_t
+    enum KeyEvent_: uint32_t
     {
-        MODIFIER_SHIFT  = 1 << 0,
-        MODIFIER_CTRL   = 1 << 1,
-        MODIFIER_ALT    = 1 << 2
+        KeyEvent_UP     = 1<<0,
+        KeyEvent_SHIFT  = 1<<1,
+        KeyEvent_CTRL   = 1<<2,
+        KeyEvent_ALT    = 1<<3,
+        KeyEvent_L      = 1<<4,
+        KeyEvent_R      = 1<<5,
+        KeyEvent_U      = 1<<6,
+        KeyEvent_D      = 1<<7,
     };
 
-    struct Packet
+    struct KeyEvent
     {
-        uint8_t modifier;
-        uint8_t scancode;
+        uint8_t mask;
+        uint8_t key;
     };
 
+
+    void irq_handler( kstackframe* );
     void driver_main( void* );
 
 }

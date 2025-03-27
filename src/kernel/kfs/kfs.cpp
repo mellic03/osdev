@@ -1,4 +1,5 @@
 #include "kfs.hpp"
+#include "trie.hpp"
 #include "../driver/serial.hpp"
 #include "../log/log.hpp"
 #include <kernel.h>
@@ -15,8 +16,8 @@ KFile *KFS::kstdin;
 KFile *KFS::kstdout;
 
 KFile *KFS::kdevio[16];
+KFile *KFS::kdevraw;
 KFile *KFS::kdevkey;
-KFile *KFS::kdevscn;
 
 void dummy_flush( KFile *fh )
 {
@@ -38,9 +39,17 @@ void kstdout_flush( KFile *fh )
 }
 
 
-void KFS::init()
+#include "../ksystem.hpp"
+#include "../boot/boot.hpp"
+#include <stdio.h>
+
+static KFS::Trie fs_trie;
+
+void KFS::init( uintptr_t sys )
 {
     syslog log("KFS::init");
+
+    fs_trie = KFS::Trie();
 
     KFS_files = inplace_vector<KFile*>(KMalloc<KFile*>(128), 128);
     kstdio[0] = KFS::KFile_create(256, dummy_flush);
@@ -50,17 +59,58 @@ void KFS::init()
     kstdin  = kstdio[1];
     kstdin  = kstdio[2];
 
-    kdevio[0]    = KFS::KFile_create(64, dummy_flush);
-    kdevio[1]    = KFS::KFile_create(64, dummy_flush);
-    kdevkey      = kdevio[0];
-    kdevscn      = kdevio[1];
+    kdevio[0]    = KFS::KFile_create(128, dummy_flush);
+    kdevio[1]    = KFS::KFile_create(128, dummy_flush);
+    kdevraw      = kdevio[0];
+    kdevkey      = kdevio[1];
 
     log("KFS_files: %u", KFS_files.size());
     log("kstderr: 0x%lx", kstderr);
     log("kstdin:  0x%lx", kstdin);
     log("kstdout: 0x%lx", kstdout);
 
+
+    auto &system = *(idk::KSystem*)sys;
+    char buf[64];
+
+    KFS::insertDirectory("fonts/");
+
+    // for (auto *file: system.getModules())
+    // {
+    //     if (strncmp(file->string, "font", 4) == 0)
+    //     {
+    //         sprintf(buf, "fonts/%s", file->string);
+    //         auto *E = KFS::insertFile(buf);
+    //         log("created file \"%s\"", E->get_path());
+    //     }
+    // }
+
 }
+
+
+vfsFileEntry *KFS::insertFile( const char *path )
+{
+    return fs_trie.insertFile(path);
+}
+
+
+vfsFileEntry *KFS::findFile( const char *path )
+{
+    return fs_trie.findFile(path);
+}
+
+vfsDirEntry *KFS::insertDirectory( const char *path )
+{
+    return fs_trie.insertDirectory(path);
+}
+
+vfsDirEntry *KFS::findDirectory( const char *path )
+{
+    return fs_trie.findDirectory(path);
+}
+
+
+
 
 
 
@@ -79,6 +129,8 @@ KFile *KFS::KFile_create( size_t nbytes, void (*fsh)(KFile*) )
         .read   = base+0,
         .write  = base+0,
         .eof    = base+nbytes,
+
+        .lock   = { false },
 
         .fsh    = (fsh == nullptr) ? dummy_flush : fsh
     };

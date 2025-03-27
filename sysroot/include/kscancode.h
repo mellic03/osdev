@@ -2,15 +2,15 @@
 #include <AAA.h>
 
 
-enum PS2_MODIFIER: uint8_t
-{
-    MODIFIER_SHIFT = 1 << 0,
+// enum PS2_MODIFIER: uint8_t
+// {
+//     MODIFIER_SHIFT = 1 << 0,
 
-    MODIFIER_CTRL  = 1 << 1,
-    MODIFIER_ALT   = 1 << 2,
+//     MODIFIER_CTRL  = 1 << 1,
+//     MODIFIER_ALT   = 1 << 2,
 
-    MODIFIER_CURSOR  = 1 << 3
-};
+//     MODIFIER_CURSOR  = 1 << 3
+// };
 
 enum PS2_SCANCODE: uint8_t
 {

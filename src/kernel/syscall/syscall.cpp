@@ -33,7 +33,7 @@ file_get( ksysc_request *req )
     {
         default: break;
         case SYSF_FILE_KDEVKEY: fh = KFS::kdevkey;   break;
-        case SYSF_FILE_KDEVSCN: fh = KFS::kdevscn;   break;
+        // case SYSF_FILE_KDEVSCN: fh = KFS::kdevscn;   break;
     }
 
     req->data = reinterpret_cast<void*>(fh);

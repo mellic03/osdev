@@ -158,7 +158,8 @@
         "inplace_array.hpp": "c",
         "kstackframe.h": "c",
         "expected": "cpp",
-        "zzz.h": "c"
+        "zzz.h": "c",
+        "kmalloc.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

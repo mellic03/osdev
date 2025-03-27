@@ -65,13 +65,14 @@ public:
     Krequests m_reqs;
     inplace_vector<FontBuffer>   m_fonts;
     idk::CPU cpu0, cpu1, cpu2, cpu4;
-    kn_TTY   *tty0;
+    kTTY    *tty0;
 
     KSystem( const Krequests& );
     // void init( Krequests* );
 
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();
+    auto        &getModules() { return m_modules; };
     limine_file *getModule( const char *label );
     int          execute( const char *filepath, int argc, char **argv );
     void         lsmem();

@@ -5,14 +5,6 @@
 #include "linear_allocator.hpp"
 #include "buddy_allocator.hpp"
 
-
-void *operator new( size_t );
-void *operator new[]( size_t );
-void  operator delete( void* );
-void  operator delete[]( void* );
-void  operator delete( void*, size_t );
-void  operator delete[]( void*, size_t );
-
 inline void *operator new(size_t, void *p)     throw() { return p; }
 inline void *operator new[](size_t, void *p)   throw() { return p; }
 inline void  operator delete  (void *, void *) throw() { };

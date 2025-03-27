@@ -1,7 +1,4 @@
-
-#define LIMINE_API_REVISION 3
-#include "limine.h"
-
+#include "boot.hpp"
 
 __attribute__((used, section(".limine_requests")))
 static volatile LIMINE_BASE_REVISION(3);

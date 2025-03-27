@@ -9,8 +9,6 @@
 #include <kinterrupt.h>
 #include <kproc.hpp>
 
-#include <libc.h>
-#include <libc++>
 
 #include "driver/pic.hpp"
 #include "driver/pit.hpp"
@@ -106,9 +104,6 @@ bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
 }
 
 
-static char *prompt;
-static char *history;
-
 extern void video_main( void* );
 
 void mouse_main( void* )
@@ -171,7 +166,7 @@ void _start()
     idk::onInterrupt(INT_PROCESS_SWITCH, kproc_yield_irq);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
-    idk::onInterrupt(32+1,  keyboard_irq_handler);
+    idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
     idk::onInterrupt(32+12, mouse_irq);
     PIC::remap(32, 40);
     PIC::disable();
@@ -180,31 +175,25 @@ void _start()
     PIC::unmask(2);
     PIC::unmask(12);
 
-    libc_init();
-    std::detail::libcpp_init();
+	asm volatile ("sti");
+
 
     // system.execute("kshell.exec", 0, nullptr);
 
-	asm volatile ("sti");
+    // KFS::Trie trie;
+    // auto *E = trie.insert("/home/michael/Desktop/sketchy.exec");
+    // E->print_path();
 
-    prompt = (char*)kmalloc(80*sizeof(char));
-    history = (char*)kmalloc(25*80*sizeof(char));
 
     u64vec2 data2(
-        (uintptr_t)prompt, (uintptr_t)history
+        (uintptr_t)reqs.fb, (uintptr_t)sys
     );
-
-    u64vec4 data4(
-        (uintptr_t)reqs.fb, (uintptr_t)prompt,
-        (uintptr_t)history, (uintptr_t)sys
-    );
-
 
     // kproc_new(tty_main, system.tty0);
-    kproc_new(keyprocess_main, system.tty0);
     kproc_new(mouse_main, nullptr);
-    kproc_new(prompt_main, &data2);
-    kproc_new(video_main, &data4);
+    kproc_new(kshell_main, system.tty0);
+    kproc_new(video_main, &data2);
+    kproc_new(kdriver::ps2_kb::driver_main, nullptr);
 
     while (true)
     {

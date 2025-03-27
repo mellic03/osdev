@@ -24,6 +24,21 @@ const char *seek_ch( const char *s, char ch )
     return s;
 }
 
+size_t count_ch( const char *s, char ch )
+{
+    size_t n = 0;
+
+    while (*s)
+    {
+        if (*s == ch)
+            n++;
+        s++;
+    }
+
+    return n;
+}
+
+
 
 const char *skip_brk( const char *s, const char *brk )
 {

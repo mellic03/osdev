@@ -1,5 +1,7 @@
-#define LIMINE_API_REVISION 3
-#include <limine/limine.h>
+#include "boot/boot.hpp"
+
+#include <libc.h>
+#include <libc++>
 
 #include <kdef.h>
 #include <kfile.h>
@@ -33,9 +35,13 @@ KSystem::KSystem( const Krequests &reqs )
     PMM::init(m_mmaps[1], reqs.hhdm);
     VMM::init();
 
-    tty0 = new kn_TTY();
-    KFS::init();
+    libc_init();
+    std::detail::libcpp_init();
+
+    tty0 = new kTTY(25*80);
+
     _load_modules();
+    KFS::init((uintptr_t)this);
 }
 
 

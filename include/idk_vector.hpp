@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <kmalloc.h>
 #include <algorithm>
 #include <kernel/memory.hpp>
 
@@ -26,11 +27,11 @@ private:
     void _realloc( size_t cap )
     {
         size_t sz = size();
-        T *bigga = new T[cap];
+        T *bigga = (T*)kmalloc(cap*sizeof(T));
         if (m_base)
         {
             memcpy(bigga, m_base, sz);
-            delete[] m_base;
+            kfree(m_base);
         }
     
         m_cap  = cap;
@@ -41,18 +42,14 @@ private:
 
 
 public:
-    vector()
-    :   m_cap  (8),
-        m_base (new T[m_cap]),
-        m_top  (m_base + 0),
-        m_end  (m_base + m_cap)
+    vector(): vector(16)
     {
-        
+        resize(0);
     }
 
     vector( size_t size )
     :   m_cap  (std::max(2*size, size_t(8))),
-        m_base (new T[m_cap]),
+        m_base ((T*)kmalloc(m_cap*sizeof(T))),
         m_top  (m_base + size),
         m_end  (m_base + m_cap)
     {
@@ -109,14 +106,14 @@ public:
     T*       data()        { return m_base; }
     const T* data()  const { return m_base; }
 
-    size_t   size()     const { return static_cast<size_t>(m_top - m_base); }
+    size_t   size()     const { return m_top - m_base; }
     size_t   capacity() const { return m_cap; }
     bool     empty()    const { return m_top == m_base; }
     void     clear()          { this->resize(0); }
 
     void resize( size_t s )
     {
-        while (size() > 0) { pop_back();     }
+        while (size() > s) { pop_back();     }
         while (size() < s) { push_back(T()); }
     }
 
