@@ -1,7 +1,6 @@
 file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/_start.asm
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/kshell.cpp
 )
 
 
@@ -18,7 +17,12 @@ set(
 )
 
 
-add_executable(kshell.elf ${SOURCES})
+add_executable(kshell.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/kshell.cpp)
 target_link_libraries(kshell.elf PUBLIC libk libc)
 target_link_options(kshell.elf PUBLIC ${USERPROGRAM_FLAGS})
+
+
+add_executable(sum.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/sum.cpp)
+target_link_libraries(sum.elf PUBLIC libk libc)
+target_link_options(sum.elf PUBLIC ${USERPROGRAM_FLAGS})
 

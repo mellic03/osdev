@@ -114,7 +114,7 @@
 // }
 
 
-int main( int argc, char **argv )
+int main( int argc, int *argv )
 {
     if (argc || argv)
     {

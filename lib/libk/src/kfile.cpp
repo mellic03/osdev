@@ -1,11 +1,16 @@
 #include <kfile.h>
 #include <string.h>
-#include <kproc.hpp>
+#include <kthread.hpp>
 
 
 size_t
 KFile_write( KFile *fh, const void *src, size_t nbytes )
 {
+    if (fh->write >= fh->eof)
+    {
+        fh->fsh(fh);
+    }
+
     if (fh->write + nbytes < fh->eof)
     {
         memcpy(fh->write, src, nbytes);
@@ -13,30 +18,24 @@ KFile_write( KFile *fh, const void *src, size_t nbytes )
         return nbytes;
     }
 
+    return 0;
 
-    const uint8_t *s = (const uint8_t*)src;
-    size_t count = 0;
+    // const uint8_t *s = (const uint8_t*)src;
+    // size_t count = 0;
 
-    while ((count < nbytes) && (fh->write < fh->eof))
-    {
-        *(fh->write++) = *(s++);
-        count += 1;
-    }
+    // while ((count < nbytes) && (fh->write < fh->eof))
+    // {
+    //     *(fh->write++) = *(s++);
+    //     count += 1;
+    // }
 
-    if (fh->write >= fh->eof)
-    {
-        fh->fsh(fh);
-    }
-
-    return count;
+    // return count;
 }
 
 
 size_t
 KFile_read( void *dst, KFile *fh, size_t nbytes )
 {
-    kthread::yield();
-
     if (fh->read + nbytes < fh->write)
     {
         memcpy(dst, fh->read, nbytes);
@@ -44,17 +43,20 @@ KFile_read( void *dst, KFile *fh, size_t nbytes )
         return nbytes;
     }
 
-    uint8_t *d = (uint8_t*)dst;
-    size_t count = 0;
+    return 0;
 
-    while ((count < nbytes) && (fh->read < fh->write))
-    {
-        *(d++) = (*fh->read++);
-        count += 1;
-    }
+    // uint8_t *d = (uint8_t*)dst;
+    // size_t count = 0;
 
-    return count;
+    // while ((count < nbytes) && (fh->read < fh->write))
+    // {
+    //     *(d++) = (*fh->read++);
+    //     count += 1;
+    // }
+
+    // return count;
 }
+
 // size_t
 // KFile_write( KFile *fh, const uint8_t *src, size_t nbytes )
 // {

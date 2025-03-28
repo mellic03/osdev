@@ -44,18 +44,19 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
     // - Take free pointer from m_freelist[14]
 
     size_t size_table[3*10] = {
-    //     1    2    4    8    16   32  64   128  256  512
-           0,   0,   0,   0,   0,   0,  64,  64,  64,  64, // B
-          64,  64,  32,  32,  32,  16,  16,  16,  32,  32, // KB
-          16,  16,  16,  16,   4,   4,   2,   2,   1,   0  // MB
+    //  1     2     4    8    16   32   64    128   256   512
+        0,    0,    0,   0,   0,   0,   256,  256,  256,  256, // B
+        256,  256,  64,  32,  32,  16,  16,   16,   32,   32, // KB
+        16,   16,   16,  16,  4,   4,   2,    2,    1,    0  // MB
     }; 
 
     size_t m_size = 0;
-    for (size_t i=0; i<10; i++)
+    for (size_t i=0; i<30; i++)
     {
-        m_size += size_table[0*10 + i] * (1<<i);
-        m_size += size_table[1*10 + i] * (1<<i) * idk::KILO;
-        m_size += size_table[2*10 + i] * (1<<i) * idk::MEGA;
+        m_size += (1<<i) * size_table[i];
+        // m_size += size_table[0*10 + i] * (1<<i);
+        // m_size += size_table[1*10 + i] * (1<<i) * idk::KILO;
+        // m_size += size_table[2*10 + i] * (1<<i) * idk::MEGA;
     }
 
     m_freelist = A.alloc<list_type>(1);
@@ -63,9 +64,9 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
     m_end      = m_data + m_size;
 
 
-    uint8_t *tail = m_data;
+    uintptr_t tail = (uintptr_t)m_data;
 
-    for (size_t i=min_idx; i<max_idx; i++)
+    for (size_t i=min_idx; i<=max_idx; i++)
     {
         size_t block_nbytes = (1<<i);
         size_t block_count  = size_table[i];
@@ -75,17 +76,18 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
 
         for (size_t j=0; j<block_count; j++)
         {
-            void *ptr = (void*)tail;
-            stack.push((uintptr_t)ptr);
+            stack.push(tail);
             tail += block_nbytes;
         }
     }
 
-    log("m_size = %luB",  m_size);
-    log("       = %luKB", m_size/idk::KILO);
-    log("       = %luMB", m_size/idk::MEGA);
-    log("m_end  = 0x%lx", m_end);
-    log("tail   = 0x%lx", tail);
+    log("m_size: %luB",  m_size);
+    log("        %luKB", m_size/idk::KILO);
+    log("        %luMB", m_size/idk::MEGA);
+    log("base:   0x%lx", m_data);
+    log("end:    0x%lx", m_end);
+    log("sz:     %lu",   m_end-m_data);
+    log("tail:   0x%lx", tail);
 
 }
 
@@ -127,11 +129,6 @@ idk::buddy_allocator::_getptr( size_t idx )
 void*
 idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
 {
-    // SYSLOG(
-    //     "[buddy_allocator::alloc] size=%uB (%uKB, %uMB)",
-    //     nbytes, nbytes/idk::KILO, nbytes/idk::MEGA
-    // );
-
     int idx = _getidx(nbytes);
 
     if (idx == -1)
@@ -146,7 +143,6 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
     auto    *header    = (AllocHeader*)(aligned - sizeof(AllocHeader));
 
     *header = {
-        // .magic   = BUDDY_MAGIC,
         .baseptr = (uintptr_t)baseptr,
         .idx     = uint64_t(idx)
     };

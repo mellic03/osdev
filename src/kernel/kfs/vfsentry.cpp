@@ -5,29 +5,17 @@
 #include <kmalloc.h>
 #include <stdio.h>
 
-
+static char m_buf[128];
 
 kfsEntry::kfsEntry( vfsDirEntry *P, const char *fname )
 :   parent(P)
 {
+    syslog log("kfsEntry::kfsEntry");
     memset(name, 0, sizeof(name));
-    strncpy(name, fname, sizeof(name)-1);
+    strcpy(name, fname);
+    log("name: \"%s\"", name);
 }
 
-
-kfsEntry*
-vfsDirEntry::getChild( const char *fname )
-{
-    for (kfsEntry *E: children)
-    {
-        if (strcmp(E->name, fname) == 0)
-        {
-            return E;
-        }
-    }
-
-    return nullptr;
-}
 
 
 // kfsEntry*
@@ -49,20 +37,18 @@ vfsDirEntry::getChild( const char *fname )
 const char*
 vfsDirEntry::get_path()
 {
-    // syslog log("vfsDirEntry::print_path");
-    memset(m_buf, 0, sizeof(m_buf));
+    syslog log("vfsDirEntry::print_path");
+    memset(m_buf, '\0', sizeof(m_buf));
     char *top = m_buf;
 
     int  idx = 0;
     vfsDirEntry *nodes[32];
-    vfsDirEntry *prev = this;
     vfsDirEntry *E = this;
 
     while (E)
     {
-        // log("nodes[%d] = \"%s\"", idx, E->name);
+        log("nodes[%d] = \"%s\"", idx, E->name);
         nodes[idx++] = E;
-        prev = E;
         E = E->parent;
     }
     idx--;
@@ -73,7 +59,7 @@ vfsDirEntry::get_path()
     while (idx >= 0)
     {
         E = nodes[idx];
-        // log("nodes[%d] = \"%s\"", idx, E->name);
+        log("nodes[%d] = \"%s\"", idx, E->name);
         top += sprintf(top, "%s", E->name);
         idx--;
     }
@@ -85,13 +71,13 @@ vfsDirEntry::get_path()
 const char*
 vfsFileEntry::get_path()
 {
-    char  buf[128];
-    char *top = buf;
+    memset(m_buf, '\0', sizeof(m_buf));
+    char *top = m_buf;
 
     top += sprintf(top, "%s", parent->get_path());
     top += sprintf(top, "%s", this->name);
 
-    return buf;
+    return m_buf;
 }
 
 

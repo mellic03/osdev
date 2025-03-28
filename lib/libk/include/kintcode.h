@@ -21,7 +21,7 @@ enum Kintcode: uint8_t
 
     INT_KEYBOARD				  = 90,
 
-    INT_PROCESS_SWITCH            = 98,
+    INT_KTHREAD_YIELD             = 98,
     INT_SYSCALL 	  	          = 99
 };
 

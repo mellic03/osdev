@@ -4,8 +4,14 @@
 
 using namespace idk;
 
-static int indent = 0;
+static bool enabled = true;
+static int  indent  = 0;
 static char buf[128];
+
+void syslog::enable()  { enabled = true;  }
+void syslog::disable() { enabled = false; }
+
+
 
 
 syslog::syslog( const char *title )
@@ -26,6 +32,11 @@ syslog::~syslog()
 void
 syslog::operator()( const char *fmt, ... )
 {
+    if (!enabled)
+    {
+        return;
+    }
+
     va_list args;
     va_start(args, fmt);
     int n = vsprintf(buf, fmt, args);

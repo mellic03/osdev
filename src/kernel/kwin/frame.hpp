@@ -2,7 +2,7 @@
 
 #include "kwin.hpp"
 #include <kdef.h>
-#include <idk_vector.hpp>
+#include <kinplace/inplace_vector.hpp>
 
 
 namespace kwin
@@ -29,15 +29,17 @@ struct kwin::Style
 
 class kwin::Frame
 {
+private:
+    Frame *m_fbuf[16];
+
 public:
     ivec2 m_local, m_world;
     ivec2 &m_tl, m_sp;
     vec4 m_col;
     kwin::Style m_style;
 
-    kwin::Frame              *m_parent;
-    idk::vector<kwin::Frame*> m_children;
-
+    kwin::Frame *m_parent;
+    idk::inplace_vector<kwin::Frame*> m_children;
 
     Frame( ivec2 tl, ivec2 sp, vec4 c = vec4(1.0f), const Style &style = Style() );
     void updateTransforms();

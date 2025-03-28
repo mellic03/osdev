@@ -21,8 +21,8 @@ namespace KShell
     template <typename... Args>
     char *kssprintf( char *dst, const char *fmt, Args... args )
     {
-        // for (int i=0; i<kshell_indent; i++)
-        //     dst += sprintf(dst, " ");
+        for (int i=0; i<kshell_indent; i++)
+            dst += sprintf(dst, " ");
         dst += sprintf(dst, fmt, args...);
         dst += sprintf(dst, "\n");
         return dst;

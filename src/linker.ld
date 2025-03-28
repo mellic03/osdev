@@ -11,7 +11,6 @@ PHDRS
     text PT_LOAD;
     rodata PT_LOAD;
     data PT_LOAD;
-    exec PT_LOAD;
 
 }
 
@@ -31,36 +30,24 @@ SECTIONS
         *(.text .text.*)
     } :text
 
-    /* Move to the next memory page for .rodata */
+    . += CONSTANT(MAXPAGESIZE);
+    .init_array : {
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP (*(.init_array .ctors))
+        PROVIDE_HIDDEN (__init_array_end = .);
+    }
+
     . = ALIGN(CONSTANT(MAXPAGESIZE));
     .rodata : {
-        *(.rodata .rodata.*)
+        *(.rodata .rodata*)
     } :rodata
 
-    /* Move to the next memory page for .data */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
     .data : {
         *(.data .data.*)
     } :data
 
-
-    /* Place .init_array for constructors */
-    . = ALIGN(8);
-    __init_array_start = .;
-    .init_array : {
-        KEEP(*(.init_array))
-        KEEP(*(.init_array.*))
-    }
-    __init_array_end = .;
-
-    /* Place .fini_array for destructors */
-    . = ALIGN(8);
-    __fini_array_start = .;
-    .fini_array : {
-        KEEP(*(.fini_array))
-        KEEP(*(.fini_array.*))
-    }
-    __fini_array_end = .;
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */

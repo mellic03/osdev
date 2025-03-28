@@ -1,7 +1,10 @@
 #include "kshell.hpp"
 #include "kfs/kfs.hpp"
+#include "../kwin/kwin.hpp"
+#include "../kwin/frame_text.hpp"
 #include "../driver/keyboard.hpp"
 #include <kstring.h>
+#include <kmalloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <idk_vector.hpp>
@@ -18,6 +21,7 @@ extern char *kshell_cwd    ( char*, int, char** );
 extern char *kshell_ls     ( char*, int, char** );
 extern char *kshell_cd     ( char*, int, char** );
 extern char *kshell_exec   ( char*, int, char** );
+extern char *kshell_font   ( char*, int, char** );
 extern char *kshell_info   ( char*, int, char** );
 extern char *kshell_tid    ( char*, int, char** );
 extern char *kshell_clear  ( char*, int, char** );
@@ -31,6 +35,7 @@ const char *cmd_names[] = {
     "ls",
     "cd",
     "exec",
+    "font",
     "info",
     "tid",
     "clear",
@@ -42,6 +47,7 @@ const fn_type cmd_methods[] = {
     kshell_ls,
     kshell_cd,
     kshell_exec,
+    kshell_font,
     kshell_info,
     kshell_tid,
     kshell_clear,
@@ -80,7 +86,7 @@ kshell_parse( kTTY *tty )
         }
     }
 
-    dst = kssprintf(dst, "unrecognised command \"%s\"", kshell_buf);
+    dst = kssprintf(dst, "unrecognised command \"%s\"", kshell_argv[0]);
 }
 
 
@@ -117,10 +123,9 @@ char *kshell_clear( char *dst, int, char** )
 
 char *kshell_exit( char *dst, int, char** )
 {
-    kthread::exit();
+    kshell_tty->running = false;
     return dst;
 }
-
 
 
 
@@ -134,20 +139,23 @@ void kshell_main( void *arg )
         kshell_argv[i] = (char*)kmalloc(MAX_ARG_LENGTH);
     }
 
+    kTTY *tty    = (kTTY*)arg;
+    auto *stream = (kfstream*)(KFS::findFile("dev/kb0/event")->addr);
 
-    kTTY *tty = (kTTY*)arg;
+    auto *ctx = kwin::createContext(550, 500);
+    auto *root = ctx->createFrame<kwin::Frame>(
+        ivec2(10, 10), ivec2(500, 450), vec4(1.0f), kwin::Style(vec4(1.0f, 1.0, 0.8f, 1.0f))
+    );
+    root->giveChild<kwin::TerminalFrame>(
+        ivec2(25, 25), ivec2(480, 420), tty, vec4(0.0f)
+    );
 
     KeyEvent event;
-    size_t nbytes = 0;
 
-    while (true)
+    while (tty->running)
     {
-        nbytes = KFile_read(&event, KFS::kdevkey, sizeof(KeyEvent));
-
-        if (nbytes == sizeof(KeyEvent))
+        if (stream->read(&event, sizeof(KeyEvent)))
         {
-            nbytes = 0;
-
             uint8_t  mask  = event.mask;
             uint8_t  ch    = event.key;
         
@@ -182,9 +190,11 @@ void kshell_main( void *arg )
             {
                 tty->pputc(ch);
             }
-
         }
     }
+
+    kwin::destroyContext(ctx);
+
 }
 
 

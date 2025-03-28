@@ -20,25 +20,24 @@
 
 using namespace idk;
 
-uint64_t kernel::uptime_ms = 0;
+
 
 
 KSystem::KSystem( const Krequests &reqs )
 :   m_reqs(reqs)
+// void KSystem::init( Krequests reqs )
 {
     syslog log("KSystem::KSystem");
 
+    // m_reqs = reqs;
     cpu0.init();
     
     _load_mmaps();
     kmalloc_init(m_mmaps[0]);
     PMM::init(m_mmaps[1], reqs.hhdm);
     VMM::init();
-
     libc_init();
     std::detail::libcpp_init();
-
-    tty0 = new kTTY(25*80);
 
     _load_modules();
     KFS::init((uintptr_t)this);
@@ -71,8 +70,8 @@ KSystem::getModule( const char *label )
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 
-int
-KSystem::execute( void *address, size_t size, int argc, char **argv )
+uint64_t
+KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
 {
     syslog log("KSystem::execute");
 
@@ -90,13 +89,8 @@ KSystem::execute( void *address, size_t size, int argc, char **argv )
     memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
     memcpy((void*)entry, address, size);
 
-    using YOLO = int (*)(int, char**);
-    int result = ((YOLO)entry)(argc, argv);
-
-    log("result: %d", result);
-
-    // VMM::unmapPage(0xBEBE0000);
-    // kfree((void*)page);
+    using YOLO = uint64_t (*)(int, uint64_t*);
+    uint64_t result = ((YOLO)entry)(argc, argv);
 
     return result;
 }
@@ -218,11 +212,17 @@ KSystem::_load_modules()
             m_execs.push_back({file->address, file->size});
         }
 
-        else if (strncmp(file->string, "font", 4) == 0)
+        else if (strncmp(file->path, "/data/font", 10) == 0)
         {
             auto *header = (ck_BMP_header*)file->address;
             m_fonts.push_back(FontBuffer(file->string, header));
         }
+
+        // else if (strncmp(file->string, "font", 4) == 0)
+        // {
+        //     auto *header = (ck_BMP_header*)file->address;
+        //     m_fonts.push_back(FontBuffer(file->string, header));
+        // }
 
         m_modules.push_back(file);
     }

@@ -26,7 +26,7 @@ KFile *stdout = NULL;
 // }
 
 #ifdef __is_kernel
-    #include <kproc.hpp>
+    #include <kthread.hpp>
 #endif
 
 
@@ -71,7 +71,7 @@ char *fgets( char *str, int n, FILE *fh )
 }
 
 
-int fputc( char c, FILE *fh )
+int fputc( char, FILE* )
 {
     return 0;
     // return idk_file_write(fh, &c, 1);

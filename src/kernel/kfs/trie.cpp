@@ -59,7 +59,6 @@ KFS::Trie::insertDirectory( const char *pth )
     memset(m_buf0, 0, sizeof(m_buf0));
     memset(m_buf1, 0, sizeof(m_buf1));
 
-
     size_t plen = strlen(pth);
     char  *path = m_buf0;
 
@@ -72,12 +71,11 @@ KFS::Trie::insertDirectory( const char *pth )
     size_t num_dirs = count_ch(path, '/');
     size_t count = 0;
 
-    auto  len   = strlen(path);
     char *name  = m_buf1;
     const char *start = path;
     const char *end   = start;
 
-    syslog log("KFS::Trie::insertDirectory");
+    syslog log("KFS::Trie::insertDirectory( const char* )");
     log("root: 0x%lx", m_root);
     log("num_dirs: %lu", num_dirs);
     log("path: \"%s\"", path);
@@ -92,12 +90,13 @@ KFS::Trie::insertDirectory( const char *pth )
         // log("start: \'%c\' 0x%lx", *start, start);
         // log("end:   \'%c\' 0x%lx", *end, end);
         start = end+1;
-
         auto *child = dir->getChild(name);
 
         if (!child)
         {
+            log("%s.giveChild<vfsDirEntry>(%s)", dir->name, name);
             child = dir->giveChild<vfsDirEntry>(name);
+            log("child = 0x%lx", child);
         }
     
         else if (child->is_file())
@@ -131,6 +130,12 @@ KFS::Trie::findDirectory( vfsDirEntry *cwd, const char *pth )
         return m_root;
     }
 
+    if (pth[0] == '/')
+    {
+        cwd = m_root;
+        pth++;
+    }
+
     memset(m_buf0, 0, sizeof(m_buf0));
     memset(m_buf1, 0, sizeof(m_buf1));
 
@@ -151,7 +156,7 @@ KFS::Trie::findDirectory( vfsDirEntry *cwd, const char *pth )
     const char *start = path;
     const char *end   = start;
 
-    syslog log("KFS::Trie::findDirectory");
+    syslog log("KFS::Trie::findDirectory( vfsDirEntry*, const char* )");
     log("cwd: \"%s\"", cwd->get_path());
     log("num_dirs: %lu", num_dirs);
     log("path: \"%s\"", path);
@@ -163,6 +168,8 @@ KFS::Trie::findDirectory( vfsDirEntry *cwd, const char *pth )
         end = seek_brk(start, "/\0");
         strncpy(name, start, end-start+1);
         start = end+1;
+
+        log("name: \"%s\"", name);
 
         auto *child = dir->getChild(name);
 
@@ -183,43 +190,55 @@ KFS::Trie::findDirectory( vfsDirEntry *cwd, const char *pth )
 }
 
 
+vfsFileEntry*
+KFS::Trie::insertFile( const char *dr, const char *fname,
+                       void *addr, size_t size, uint8_t type )
+{
+    syslog log("KFS::Trie::insertFile( const char*, const char*, uintptr_t, size_t )");
+
+    auto *dir = findDirectory(dr);
+
+    if (!dir) dir = insertDirectory(dr);
+    if (!dir) return nullptr;
+
+    kfsEntry *entry = dir->getChild(fname);
+
+    if (entry)
+    {
+        if (entry->is_dir())
+        {
+            log("path already exists as directory");
+            return nullptr;
+        }
+    
+        log("file already exists");
+        return static_cast<vfsFileEntry*>(entry);
+    }
+
+    vfsFileEntry *file = dir->giveChild<vfsFileEntry>(fname);
+
+    file->type = type;
+    file->addr = (void*)addr;
+    file->size = size;
+    log("created file \"%s\"", file->get_path());
+
+    return file;
+}
 
 
 vfsFileEntry*
-KFS::Trie::insertFile( const char *dr, const char *fname, uintptr_t addr, size_t size )
+KFS::Trie::insertFile( const char *dr, const char *fname, kfstream *stream )
 {
-    syslog log("KFS::Trie::insertFile");
+    syslog log("KFS::Trie::insertFile( const char*, const char*, kfstream* )");
 
-    vfsDirEntry *dir = findDirectory(dr);
+    vfsFileEntry *file = insertFile(
+        dr, fname, (void*)stream, stream->m_size, vfsFileType_STREAM
+    );
 
-    if (!dir)
-    {
-        dir = insertDirectory(dr);
-    }
-
-    if (!dir)
-    {
-        return nullptr;
-    }
-
-    log("dir: %s", dir->name);
-
-    if (dir->hasChild(fname))
-    {
-        log("file already exists");
-        return nullptr;
-    }
-
-    auto *file  = dir->giveChild<vfsFileEntry>(fname);
-    file->base  = (uint8_t*)addr;
-    file->top   = file->base;
-    file->read  = &file->base;
-    file->write = &file->base;
-    file->eof   = file->base + size;
-    file->size  = size;
-
-    return static_cast<vfsFileEntry*>(file);
+    return file;
 }
+
+
 
 
 vfsFileEntry*
@@ -229,26 +248,34 @@ KFS::Trie::findFile( const char *fname )
 }
 
 
+
+static klock_t trie_lock = { false };
+
 vfsFileEntry*
 KFS::Trie::findFile( vfsDirEntry *cwd, const char *pth )
 {
+    klock_acquire(&trie_lock);
+
     syslog log("KFS::Trie::findFile");
-    log("cwd:  \"%s\"", cwd->get_path());
-    log("path: \"%s\"", pth);
+
+    if (pth[0] == '/')
+    {
+        cwd = m_root;
+        pth++;
+    }
 
     size_t plen = strlen(pth);
     char  *path = m_buf0;
-
-    if (pth[plen-1] != '/')
-        sprintf(path, "%s/", pth);
-    else
+    
+    // if (pth[plen-1] != '/')
+    //     sprintf(path, "%s/", pth);
+    // else
         sprintf(path, "%s", pth);
 
 
     size_t num_dirs = count_ch(pth, '/');
     size_t count = 0;
 
-    auto  len   = strlen(path);
     char *name  = m_buf1;
     const char *start = path;
     const char *end   = start;
@@ -264,10 +291,13 @@ KFS::Trie::findFile( vfsDirEntry *cwd, const char *pth )
     
         auto *child = dir->getChild(name);
 
-        if (child && child->is_directory())
+        if (child && child->is_dir())
             dir = static_cast<vfsDirEntry*>(child);
         else
+        {
+            klock_release(&trie_lock);
             return nullptr;
+        }
 
         count++;
     }
@@ -280,9 +310,15 @@ KFS::Trie::findFile( vfsDirEntry *cwd, const char *pth )
     auto *child = dir->getChild(name);
 
     if (child && child->is_file())
+    {
+        klock_release(&trie_lock);
         return static_cast<vfsFileEntry*>(child);
+    }
     else
+    {
+        klock_release(&trie_lock);
         return nullptr;
+    }
 
 }
 

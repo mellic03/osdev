@@ -12,10 +12,6 @@ namespace KFS
     extern KFile *kstdin;
     extern KFile *kstdout;
 
-    extern KFile *kdevio[16];
-    extern KFile *kdevraw;
-    extern KFile *kdevkey;
-
 }
 
 

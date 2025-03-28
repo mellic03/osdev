@@ -13,12 +13,12 @@ using namespace idk;
 
 
 static void
-sysc_file_create( ksysc_request *req )
+sysc_file_create( ksysc_request* )
 {
-    syslog log("sysc_file_create");
+    // syslog log("sysc_file_create");
 
-    const char *path = (const char*)req->data;
-    KFile *fh = KFS::KFile_create(1024, nullptr);
+    // const char *path = (const char*)req->data;
+    // KFile *fh = KFS::KFile_create(1024, nullptr);
 
 }
 
@@ -32,7 +32,7 @@ file_get( ksysc_request *req )
     switch (req->flags)
     {
         default: break;
-        case SYSF_FILE_KDEVKEY: fh = KFS::kdevkey;   break;
+        // case SYSF_FILE_KDEVKEY: fh = KFS::kdevkey;   break;
         // case SYSF_FILE_KDEVSCN: fh = KFS::kdevscn;   break;
     }
 

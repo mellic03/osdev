@@ -1,5 +1,5 @@
 #include "kwin.hpp"
-#include <kproc.hpp>
+#include <kthread.hpp>
 #include <kmalloc.h>
 #include <stdio.h>
 #include <kernel/memory.hpp>
@@ -7,7 +7,8 @@
 #include "../log/log.hpp"
 
 kwin::Frame::Frame( ivec2 tl, ivec2 sp, vec4 c, const Style &style )
-:   m_local(tl), m_world(tl), m_tl(m_world), m_sp(sp), m_col(c), m_style(style)
+:   m_local(tl), m_world(tl), m_tl(m_world), m_sp(sp), m_col(c), m_style(style),
+    m_children(m_fbuf, 16)
 {
 
 }

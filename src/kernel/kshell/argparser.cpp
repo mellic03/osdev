@@ -1,6 +1,7 @@
 #include "kshell.hpp"
 #include "../log/log.hpp"
 #include <kstring.h>
+#include <string.h>
 
 using namespace KShell;
 

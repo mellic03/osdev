@@ -31,6 +31,11 @@ kwin::TextFrame::_putchar( kwin::Context &ctx, char ch, bool move )
     ivec2 &dst   = text_dst;
     ivec2 &span  = text_spn;
 
+    if (dst.x > m_sp.x || dst.y > m_sp.y)
+    {
+        return;
+    }
+
     if (move && ch == '\n')
     {
         dst.x = 0;
@@ -55,7 +60,7 @@ kwin::TextFrame::_putchar( kwin::Context &ctx, char ch, bool move )
         return;
     }
 
-    dst.x += span.x/2;
+    dst.x += span.x;
 
     if (dst.x > m_sp.x)
     {
@@ -93,12 +98,11 @@ kwin::TextFrame::draw( kwin::Context &ctx )
 
 
 
-kwin::TerminalFrame::TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer *font, kTTY *tty,
+kwin::TerminalFrame::TerminalFrame( ivec2 tl, ivec2 sp, kTTY *tty,
                                     const Style &style )
-:   TextFrame (tl, sp, font, nullptr, style),
+:   TextFrame (tl, sp, tty->font, nullptr, style),
     m_tty     (tty)
 {
-
 
 }
 
@@ -107,6 +111,8 @@ void
 kwin::TerminalFrame::draw( kwin::Context &ctx )
 {
     Frame::draw(ctx);
+
+    m_font = m_tty->font;
 
     _reset();
     _putstr(ctx, m_tty->history);

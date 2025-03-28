@@ -2,6 +2,7 @@
 #include <kfile.h>
 #include <stdio.h>
 #include "kfs/kfs.hpp"
+#include "kvideo/font.hpp"
 
 
 struct kTTY
@@ -10,13 +11,14 @@ private:
     vfsDirEntry *cwd;
 
 public:
-
     char *history;
     char *htop, *hend;
 
     char *prompt;
     char *ptop, *pend;
 
+    idk::FontBuffer *font;
+    bool running;
 
     kTTY();
     kTTY( size_t size );

@@ -38,7 +38,7 @@ private:
     kTTY *m_tty;
 
 public:
-    TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer*, kTTY *tty,
+    TerminalFrame( ivec2 tl, ivec2 sp, kTTY *tty,
                    const Style &s=Style() );
 
     virtual void draw( kwin::Context& ) final;

@@ -8,6 +8,7 @@ idk::FontBuffer::FontBuffer()
     W = 0;
     H = 0;
     SZ = 0;
+    glyph_scale = vec2(1.0f, 1.0f);
 }
 
 
@@ -25,6 +26,7 @@ vec4 ree_vec4( uint32_t src )
 #include <kmalloc.h>
 
 idk::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
+:   glyph_scale(1.0f)
 {
     auto &info = header->infoheader;
 
@@ -60,8 +62,11 @@ idk::FontBuffer::getGlyphExtents()
     static constexpr int GLYPH_ROWS = 6;
     static constexpr int GLYPH_COLS = 16;
     const int GLYPH_W = this->W / GLYPH_COLS;
+    const int GLYPH_H = this->H / GLYPH_ROWS;
 
-    return ivec2(GLYPH_W, GLYPH_W);
+    vec2 sp = glyph_scale * vec2(GLYPH_W, GLYPH_H);
+
+    return ivec2(sp);
 }
 
 

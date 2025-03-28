@@ -33,22 +33,24 @@ void *memcpy_u8( void *dst, const void *src, size_t n )
         pdst[i] = psrc[i];
     }
 
-    return dst;
+    return (void*)(pdst + n);
 }
 
 
 
 void *memcpy( void *dst, const void *src, size_t n )
 {
-    size_t count = n / sizeof(uint32_t);
-    size_t rem   = n % sizeof(uint32_t);
-    memcpy_sse32(dst, src, count);
+    // size_t count = n / sizeof(uint32_t);
+    // size_t rem   = n % sizeof(uint32_t);
+    // memcpy_sse32(dst, src, count);
 
-    uint8_t *pdst = (uint8_t *)dst;
-    const uint8_t *psrc = (const uint8_t *)src;
+    // uint8_t *pdst = (uint8_t *)dst;
+    // const uint8_t *psrc = (const uint8_t *)src;
 
-    size_t offset = count * sizeof(uint32_t);
-    memcpy_u8(pdst+offset, psrc+offset, 4*rem);
+    // size_t offset = count * sizeof(uint32_t);
+    // memcpy_u8(pdst+offset, psrc+offset, 4*rem);
+
+    dst = memcpy_u8(dst, src, n);
 
     return dst;
 }

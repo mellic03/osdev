@@ -2,6 +2,7 @@
 #include "serial.hpp"
 #include "pic.hpp"
 #include "../kfs/kfs.hpp"
+#include "../log/log.hpp"
 
 #include <kscancode.h>
 #include <kmalloc.h>
@@ -15,12 +16,21 @@ using namespace idk;
 #define STATE_PREFIX 1
 
 
+static kfstream *rawstreams[2] = { nullptr, nullptr };
+static kfstream *keystreams[2] = { nullptr, nullptr };
+
 
 void
-kdriver::ps2_kb::irq_handler( kstackframe *frame )
+kdriver::ps2_kb::irq_handler( kstackframe* )
 {
-    uint8_t code = IO::inb(0x60);
-    KFile_write(KFS::kdevraw, &code, 1);
+    uint8_t status = IO::inb(0x64);
+    uint8_t code   = IO::inb(0x60);
+
+    kfstream *rawstream = nullptr;
+
+    if (status & 0x20)  rawstreams[1]->write(&code, 1);
+    else                rawstreams[0]->write(&code, 1);
+
     PIC::sendEOI(1);
 }
 
@@ -33,6 +43,11 @@ static void create_shift_table()
 {
     shift_table = (char*)kmalloc(256);
     memset(shift_table, '\0', 256);
+
+    for (int i=0; i<256; i++)
+    {
+        shift_table[i] = char(i);
+    }
 
     char mod_0_9[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
     memcpy(&(shift_table['0']), mod_0_9, sizeof(mod_0_9));
@@ -55,11 +70,11 @@ static void create_shift_table()
 
 
 static void
-driver_update( uint8_t scancode )
+driver_update( uint8_t &state, uint8_t &mask, uint8_t scancode, kfstream *keystream )
 {
     using namespace kdriver::ps2_kb;
-    static uint8_t state = STATE_NORMAL;
-    static uint8_t mask = 0;
+    // static uint8_t state = STATE_NORMAL;
+    // static uint8_t mask = 0;
 
     uint8_t key  = scode_getchar(scancode);
 
@@ -92,7 +107,8 @@ driver_update( uint8_t scancode )
             .mask = mask,
             .key  = 0
         };
-        KFile_write(KFS::kdevkey, &event, sizeof(KeyEvent));
+
+        keystream->write(&event, sizeof(KeyEvent));
     
         state = STATE_NORMAL;
         return;
@@ -125,22 +141,32 @@ driver_update( uint8_t scancode )
         .key  = key
     };
 
-    KFile_write(KFS::kdevkey, &event, sizeof(KeyEvent));
+    keystream->write(&event, sizeof(KeyEvent));
 }
-
 
 
 void
 kdriver::ps2_kb::driver_main( void* )
 {
     create_shift_table();
+
+    rawstreams[0] = (kfstream*)(KFS::findFile("dev/kb0/raw")->addr);
+    rawstreams[1] = (kfstream*)(KFS::findFile("dev/kb1/raw")->addr);
+    keystreams[0] = (kfstream*)(KFS::findFile("dev/kb0/event")->addr);
+    keystreams[1] = (kfstream*)(KFS::findFile("dev/kb1/event")->addr);
+
+    static uint8_t states[2] = {0, 0};
+    static uint8_t masks[2]  = {0, 0};
     uint8_t scancode;
 
     while (true)
     {
-        if (KFile_read(&scancode, KFS::kdevraw, 1))
+        for (int i=0; i<2; i++)
         {
-            driver_update(scancode);
+            if (rawstreams[i]->read(&scancode, 1))
+            {
+                driver_update(states[i], masks[i], scancode, keystreams[i]);
+            }
         }
 
         kthread::yield();

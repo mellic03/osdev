@@ -65,9 +65,7 @@ idk::PIT_set_hz( uint16_t hz )
 void
 idk::PIT_set_ms( uint16_t ms )
 {
-    constexpr uint32_t re = 1000000 / (1000 * 2);
     PIT_set_hz(1000000 / (1000 * ms));
-
 }
 
 

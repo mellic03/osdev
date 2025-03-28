@@ -30,8 +30,9 @@ private:
     vec4 *m_data;
 
 public:
-    int W, H, SZ;
     const char *name;
+    int W, H, SZ;
+    vec2 glyph_scale;
 
     FontBuffer();
     FontBuffer( const char *filename, ck_BMP_header* );

@@ -1,7 +1,15 @@
 #include "mouse.hpp"
 #include "serial.hpp"
 #include "pic.hpp"
+#include "../kfs/kfs.hpp"
+#include "../log/log.hpp"
+
+#include <kscancode.h>
+#include <kmalloc.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
 
 using namespace idk;
 
@@ -81,32 +89,6 @@ int prev_mouse_y;
 // Point MousePosition;
 // Point MousePositionOld;
 
-void mouse_irq( kstackframe* )
-{
-    uint8_t data = IO::inb(0x60);
-
-    switch(MouseCycle){
-        case 0:
-            if (MousePacketReady) break;
-            if (data & 0b00001000 == 0) break;
-            MousePacket[0] = data;
-            MouseCycle++;
-            break;
-        case 1:
-            if (MousePacketReady) break;
-            MousePacket[1] = data;
-            MouseCycle++;
-            break;
-        case 2:
-            if (MousePacketReady) break;
-            MousePacket[2] = data;
-            MousePacketReady = true;
-            MouseCycle = 0;
-            break;
-    }
-
-    PIC::sendEOI(12);
-}
 
 void ProcessMousePacket()
 {
@@ -163,7 +145,6 @@ void ProcessMousePacket()
 
 void mouse_init()
 {
- 
     IO::outb(0x64, 0xA8); //enabling the auxiliary device - mouse
 
     MouseWait();
@@ -182,4 +163,72 @@ void mouse_init()
     MouseWrite(0xF4);
     MouseRead();
 }
+
+
+using namespace kdriver;
+
+void
+ps2_mouse::irq_handler( kstackframe* )
+{
+    uint8_t data = IO::inb(0x60);
+    switch(MouseCycle){
+        case 0:
+            if (MousePacketReady) break;
+            if ((data & 0b00001000) == 0) break;
+            MousePacket[0] = data;
+            MouseCycle++;
+            break;
+        case 1:
+            if (MousePacketReady) break;
+            MousePacket[1] = data;
+            MouseCycle++;
+            break;
+        case 2:
+            if (MousePacketReady) break;
+            MousePacket[2] = data;
+            MousePacketReady = true;
+            MouseCycle = 0;
+            break;
+    }
+
+    PIC::sendEOI(12);
+}
+
+
+// static kfstream *rawstream   = nullptr;
+// static kfstream *eventstream = nullptr;
+
+// void
+// ps2_mouse::irq_handler( kstackframe* )
+// {
+//     uint8_t byte = IO::inb(0x60);
+
+//     if (rawstream)
+//     {
+//         rawstream->write(&byte, 1);
+//     }
+
+//     PIC::sendEOI(12);
+// }
+
+
+void
+ps2_mouse::driver_main( void* )
+{
+    // rawstream   = (kfstream*)(KFS::findFile("dev/ms0/raw")->addr);
+    kfstream *stream = (kfstream*)(KFS::findFile("dev/ms0/event")->addr);
+
+    static uint8_t packet[4];
+    static uint8_t idx = 0;
+    static vec2 mouse(512.0f);
+
+    while (true)
+    {
+        ProcessMousePacket();
+        mouse = vec2(mouse_x, mouse_y);
+        stream->write(&mouse, sizeof(vec2));
+        kthread::yield();
+    }
+}
+
 

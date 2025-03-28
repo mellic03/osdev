@@ -2,9 +2,10 @@
 #include "trie.hpp"
 #include "../driver/serial.hpp"
 #include "../log/log.hpp"
+#include <kinplace/inplace_vector.hpp>
 #include <kernel.h>
 #include <kfile.h>
-#include <kinplace/inplace_vector.hpp>
+#include <string.h>
 
 using namespace idk;
 
@@ -14,10 +15,6 @@ KFile *KFS::kstdio[3];
 KFile *KFS::kstderr;
 KFile *KFS::kstdin;
 KFile *KFS::kstdout;
-
-KFile *KFS::kdevio[16];
-KFile *KFS::kdevraw;
-KFile *KFS::kdevkey;
 
 void dummy_flush( KFile *fh )
 {
@@ -59,55 +56,49 @@ void KFS::init( uintptr_t sys )
     kstdin  = kstdio[1];
     kstdin  = kstdio[2];
 
-    kdevio[0]    = KFS::KFile_create(128, dummy_flush);
-    kdevio[1]    = KFS::KFile_create(128, dummy_flush);
-    kdevraw      = kdevio[0];
-    kdevkey      = kdevio[1];
-
     log("KFS_files: %u", KFS_files.size());
     log("kstderr: 0x%lx", kstderr);
     log("kstdin:  0x%lx", kstdin);
     log("kstdout: 0x%lx", kstdout);
 
-
     auto &system = *(idk::KSystem*)sys;
-    char buf[64];
 
-    KFS::insertDirectory("bin/");
-    KFS::insertDirectory("fonts/");
+    // KFS::insertDirectory("bin/");
+    // KFS::insertDirectory("fonts/");
 
-    for (auto *F: system.getModules())
-    {
-        size_t len = strlen(F->string);
-
-        if (len == 0)
-            continue;
-
-        else if (strncmp(F->path, "/data/exec", 10) == 0)
-            KFS::insertFile("bin/", F->string, (uintptr_t)(F->address), F->size);
-
-        else if (strncmp(F->string, "font", 4) == 0)
-            KFS::insertFile("fonts/", F->string, (uintptr_t)(F->address), F->size);
-
-    }
 
 }
 
 
-vfsFileEntry *KFS::insertFile( const char *dir, const char *name, uintptr_t base, size_t size )
+
+
+
+
+vfsFileEntry *KFS::insertFile( const char *dir, const char *name,
+                               void *ad, size_t sz, uint8_t type )
 {
-    return fs_trie.insertFile(dir, name, base, size);
+    return fs_trie.insertFile(dir, name, ad, sz, type);
 }
 
+vfsFileEntry *KFS::insertFile( const char *dir, const char *name, kfstream *stream )
+{
+    return fs_trie.insertFile(dir, name, stream);
+}
 
 vfsFileEntry *KFS::findFile( const char *fname )
 {
-    return fs_trie.findFile(fname);
+    kthread::global_lock();
+    vfsFileEntry *entry = fs_trie.findFile(fname);
+    kthread::global_unlock();
+    return entry;
 }
 
 vfsFileEntry *KFS::findFile( vfsDirEntry *cwd, const char *fname )
 {
-    return fs_trie.findFile(cwd, fname);
+    kthread::global_lock();
+    vfsFileEntry *entry = fs_trie.findFile(cwd, fname);
+    kthread::global_unlock();
+    return entry;
 }
 
 vfsDirEntry *KFS::insertDirectory( const char *path )
@@ -132,27 +123,23 @@ vfsDirEntry *KFS::findDirectory( vfsDirEntry *cwd, const char *path )
 
 KFile *KFS::KFile_create( size_t nbytes, void (*fsh)(KFile*) )
 {
-    auto *fh    = KMalloc<KFile>(1);
-    auto *base  = KMalloc<uint8_t>(512);
+    KFile   *fh   = (KFile*)kmalloc(1 * sizeof(KFile));
+    uint8_t *base = (uint8_t*)kmalloc(nbytes * sizeof(uint8_t));
 
-    *fh = {
-        .fd     = 0,
-        .flags  = 0,
-        .status = 0,
-        .size   = nbytes,
-
-        .base   = base,
-        .read   = base+0,
-        .write  = base+0,
-        .eof    = base+nbytes,
-
-        .lock   = { false },
-
-        .fsh    = (fsh == nullptr) ? dummy_flush : fsh
-    };
+    fh->fd     = 0;
+    fh->flags  = 0;
+    fh->status = 0;
+    fh->size   = nbytes;
+    fh->base   = base;
+    fh->read   = base;
+    fh->write  = base;
+    fh->eof    = base+nbytes;
+    fh->lock   = { false };
+    fh->fsh    = (fsh == nullptr) ? dummy_flush : fsh;
 
     KFS_files.push_back(fh);
-    return fh;
+
+    return KFS_files.back();
 }
 
 

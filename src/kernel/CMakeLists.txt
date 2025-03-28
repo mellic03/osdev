@@ -7,8 +7,6 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/kvideo/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/kshell/*.cpp
 
-
-    ${CMAKE_CURRENT_SOURCE_DIR}/abi/icxxabi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.asm
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/gdt.cpp
@@ -21,7 +19,6 @@ file(
 
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/interrupt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/stub.asm
-
 
     ${CMAKE_CURRENT_SOURCE_DIR}/memory/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/syscall/*.cpp

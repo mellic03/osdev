@@ -6,7 +6,7 @@
 
 
 #include <kscancode.h>
-#include <kproc.hpp>
+#include <kthread.hpp>
 #include "kfs/kfs.hpp"
 #include "driver/keyboard.hpp"
 
@@ -17,22 +17,28 @@
 
 
 kTTY::kTTY()
-:   history(nullptr), htop(nullptr), hend(nullptr),
-    prompt(nullptr),  ptop(nullptr), pend(nullptr)
+:   cwd(nullptr),
+    history(nullptr), htop(nullptr), hend(nullptr),
+    prompt(nullptr),  ptop(nullptr), pend(nullptr),
+    font(nullptr),
+    running(true)
 {
-
+    // syslog log("kTTY::kTTY( void )");
 }
 
 
 kTTY::kTTY( size_t size )
-:   history ((char*)kmalloc(size)),
+:   cwd     (KFS::insertDirectory("dev/tty0/")),
+    history (new char[size]),
     htop    (history),
     hend    (history + size),
-    prompt  ((char*)kmalloc(80)),
+    prompt  (new char[80]),
     ptop    (prompt),
-    pend    (prompt + size)
+    pend    (prompt + size),
+    font    (nullptr),
+    running (true)
 {
-    // cwd = KFS::insert("/home/tty0");
+    // syslog log("kTTY::kTTY( size_t )");
     clear();
 }
 
@@ -107,46 +113,10 @@ vfsDirEntry *&kTTY::getCWD()
     if (cwd == nullptr)
     {
         cwd = KFS::insertDirectory("dev/tty0/");
-        auto *A = KFS::insertFile("dev/tty0/", "kdevraw", (uintptr_t)KFS::kdevraw, 128);
-        auto *B = KFS::insertFile("dev/tty0/", "kdevkey", (uintptr_t)KFS::kdevkey, 128);
 
-        A->read  = &KFS::kdevraw->read;
-        A->write = &KFS::kdevraw->write;
-        B->read  = &KFS::kdevkey->read;
-        B->write = &KFS::kdevkey->write;
     }
 
     return cwd;
 }
-
-// void kTTY::hputc( char ch )
-// {
-//     _putc(htop, hend, ch);
-// }
-
-// void kTTY::pputc( char ch )
-// {
-//     _putc(ptop, pend, ch);
-// }
-
-
-// const char*
-// kTTY::submit()
-// {
-//     if (strlen(prompt) == 0)
-//     {
-//         return nullptr;
-//     }
-
-//     htop += sprintf(htop, " >> %s\n", prompt);
-//     htop += sprintf(htop, "    ");
-//     htop = kshell_interpret(htop, prompt, this);
-//     *(htop++) = '\n';
-
-//     memset(prompt, 0, 80);
-//     ptop = prompt;
-
-//     return nullptr;
-// }
 
 

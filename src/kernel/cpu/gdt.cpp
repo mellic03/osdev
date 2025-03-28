@@ -69,7 +69,7 @@ uint64_t create_descriptor( uint32_t base, uint32_t limit, uint16_t flag )
 
 
 static uint64_t    __gdt[16];
-static tss_entry_t __TSS;
+// static tss_entry_t __TSS;
 
 
 

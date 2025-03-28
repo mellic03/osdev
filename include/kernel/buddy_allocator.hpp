@@ -15,7 +15,7 @@ namespace idk
     {
     private:
         static constexpr size_t min_idx  = 7;
-        static constexpr size_t max_idx  = 27;
+        static constexpr size_t max_idx  = 28;
         // static constexpr uint64_t BUDDY_MAGIC = 0xA110C;
 
         using list_type = idk::array<inplace_stack<uintptr_t>, max_idx>;

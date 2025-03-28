@@ -1,4 +1,4 @@
-#include <kproc.hpp>
+#include <kthread.hpp>
 #include <kmalloc.h>
 #include <kintcode.h>
 #include <kinterrupt.h>
@@ -7,9 +7,16 @@
 // #include "../log/log.hpp"
 
 
-klock_t  global_lock;
-kthread *kthread::m_curr  = nullptr;
-bool     kthread::m_first = true;
+void kthread::global_lock()
+{
+    klock_acquire(&m_global_lock);
+}
+
+
+void kthread::global_unlock()
+{
+    klock_release(&m_global_lock);
+}
 
 
 
@@ -17,24 +24,24 @@ size_t kthread::this_tid()
 {
     size_t tid = 0;
 
-    klock_acquire(&global_lock);
+    kthread::global_lock();
     tid = m_curr->tid;
-    klock_release(&global_lock);
+    kthread::global_unlock();
 
     return tid;
 }
 
 void kthread::yield()
 {
-    KInterrupt<INT_PROCESS_SWITCH>();
+    KInterrupt<INT_KTHREAD_YIELD>();
 }
 
 
 void kthread::exit()
 {
-    klock_acquire(&global_lock);
+    kthread::global_lock();
     m_curr->status = KPROC_DEAD;
-    klock_release(&global_lock);
+    kthread::global_unlock();
 }
 
 
@@ -42,6 +49,11 @@ void kthread::exit()
 
 void kthread::schedule( kstackframe *frame )
 {
+    if (m_global_lock.locked)
+    {
+        return;
+    }
+
     if (m_curr == nullptr)
     {
         return;
@@ -161,7 +173,7 @@ kthread::kthread( void (*fn)(void*), void *arg )
 
 kthread::~kthread()
 {
-    kfree(this->stack);
+    // kfree(this->stack);
 }
 
 

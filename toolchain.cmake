@@ -48,9 +48,12 @@ set(IDKERNEL_C_CXX_FLAGS
     -fno-stack-protector \
     -fno-stack-check \
     -fno-PIC \
+    -fno-PIE \
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
     -m64 -mcmodel=large -march=x86-64 \
+    --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
+    -nostartfiles \
     ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )

@@ -2,13 +2,16 @@
     #define __is_kernel
 #endif
 
+#include "abi/cxxabi.hpp"
+
 #include "boot/requests.cpp"
 
-#include <cxxabiv1>
 #include <kernel.h>
 #include <kinterrupt.h>
-#include <kproc.hpp>
+#include <kthread.hpp>
 
+#include <string.h>
+#include <stdio.h>
 
 #include "driver/pic.hpp"
 #include "driver/pit.hpp"
@@ -30,43 +33,22 @@
 #include "kshell/kshell.hpp"
 
 
+#include "driver/mouse.hpp"
+
 
 void pagefault_handler( kstackframe* );
 
-void genfault_handler( kstackframe *frame )
+void genfault_handler( kstackframe* )
 {
     syslog("Exception GENERAL_PROTECTION_FAULT");
     kernel_hcf();
 }
 
-
-
-
-
-extern "C" {
-    // Symbols defined by the linker script
-    extern void (**__init_array_start)(void);
-    extern void (**__init_array_end)(void);
-    extern void (**__fini_array_start)(void);
-    extern void (**__fini_array_end)(void);
-}
-
-void run_init_array()
+void oom_handler( kstackframe* )
 {
-    for (void (**func)(void) = __init_array_start; func < __init_array_end; ++func)
-    {
-        (*func)();
-    }
+    syslog("Exception OUT_OF_MEMORY");
+    kernel_hcf();
 }
-
-void run_fini_array()
-{
-    for (void (**func)(void) = __fini_array_start; func < __fini_array_end; ++func)
-    {
-        (*func)();
-    }
-}
-
 
 
 
@@ -74,16 +56,9 @@ uint64_t idk::memory::hhdm;
 idk::KSystem *sys;
 uint64_t uptime_ms;
 
-
-#include <string.h>
-#include <stdio.h>
-#include "driver/mouse.hpp"
-
 void pit_irq( kstackframe *frame )
 {
     kthread::schedule(frame);
-    // kthread::yield();
-
     uptime_ms += 10;
 
     idk::PIT_reload();
@@ -103,30 +78,33 @@ bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
 }
 
 
-extern void video_main( void* );
 
-void mouse_main( void* )
+
+
+extern "C"
 {
-    while (true)
-    {
-        ProcessMousePacket();
-        kthread::yield();
-    }
+    using constructor_t = void (*)();
+    extern constructor_t __init_array_start[];
+    extern constructor_t __init_array_end[];
 
+    void ctor_init( void )
+    {
+        syslog log("ctor_init");
+
+        for (constructor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
+        {
+            log("ctor: 0x%lx", ctor);
+            (*ctor)();
+        }
+    }
 }
 
-
-
-
-#include "memory/heap_allocator.hpp"
 
 
 extern "C"
 void _start()
 {
-    run_init_array();
-
-    using namespace idk;
+    using namespace idk;    
 
     if (!idk::serial_init())
     {
@@ -135,7 +113,7 @@ void _start()
 
     syslog log("_start");
     log("serial initialized");
-    
+
     Krequests reqs = {
         .hhdm    = lim_hhdm_req.response->offset,
         .fb      = lim_fb_req.response,
@@ -144,15 +122,23 @@ void _start()
         .mmaps   = lim_mmap_req.response,
         .mp      = lim_mp_req.response
     };
+    asm volatile("cli");
 
     idk::KSystem system(reqs);
     sys = &system;
-
+    ctor_init();
     uptime_ms = 0;
-    double timer = 0;
 
+    KFS::insertFile("dev/kb0/", "raw",   new kfstream(64));
+    KFS::insertFile("dev/kb0/", "event", new kfstream(64));
+    KFS::insertFile("dev/kb1/", "raw",   new kfstream(64));
+    KFS::insertFile("dev/kb1/", "event", new kfstream(64));
 
-    asm volatile("cli");
+    KFS::insertFile("dev/ms0", "raw",   new kfstream(64));
+    KFS::insertFile("dev/ms0", "event", new kfstream(64));
+    KFS::insertFile("dev/ms1", "raw",   new kfstream(64));
+    KFS::insertFile("dev/ms1", "event", new kfstream(64));
+
     mouse_init();
     idk::PIT_init();
     idk::PIT_set_ms(2);
@@ -161,35 +147,47 @@ void _start()
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
-    idk::onInterrupt(INT_PROCESS_SWITCH, kthread::schedule);
+    idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
+    idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
-    idk::onInterrupt(32+12, mouse_irq);
+    idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
     PIC::remap(32, 40);
     PIC::disable();
     PIC::unmask(0);
     PIC::unmask(1);
     PIC::unmask(2);
     PIC::unmask(12);
-
 	asm volatile ("sti");
 
-    u64vec2 data2(
-        (uintptr_t)reqs.fb, (uintptr_t)sys
-    );
+    for (auto *F: system.getModules())
+    {
+        size_t len = strlen(F->string);
+        if (len == 0)
+            continue;
 
-    // kproc_new(tty_main, system.tty0);
-    kthread t0(mouse_main, nullptr);
-    kthread t1(video_main, &data2);
-    kthread t2(kdriver::ps2_kb::driver_main, nullptr);
+        else if (strncmp(F->path, "/data/exec", 10) == 0)
+            KFS::insertFile("bin/", F->string, F->address, F->size);
+
+        else if (strncmp(F->path, "/data/font", 10) == 0)
+            KFS::insertFile("font/", F->string, F->address, F->size);
+    }
+
+    kTTY tty0(25*80);
+    tty0.font = &system.m_fonts[0];
+
+    kthread t0(kdriver::ps2_mouse::driver_main, nullptr);
+    kthread t1(kdriver::ps2_kb::driver_main, nullptr);
+    kthread t2(kwin_main, (void*)(reqs.fb));
+    kthread t3(kshell_main, (void*)&tty0);
+
 
     while (true)
     {
         asm volatile ("hlt");
     }
 
-    run_fini_array();
     kernel_hcf();
 }
 

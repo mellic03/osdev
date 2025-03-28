@@ -20,7 +20,7 @@ struct limine_file;
 
 namespace kernel
 {
-    extern uint64_t uptime_ms;
+    // extern uint64_t uptime_ms;
 }
 
 
@@ -50,8 +50,8 @@ namespace idk
 class idk::KSystem
 {
 private:
-    uint64_t m_uptime_ticks;
-    uint64_t m_uptime_msec;
+    // uint64_t m_uptime_ticks;
+    // uint64_t m_uptime_msec;
 
     MemoryMap m_mmap_buf[32];
     inplace_vector<MemoryMap>    m_mmaps;
@@ -65,16 +65,15 @@ public:
     Krequests m_reqs;
     inplace_vector<FontBuffer>   m_fonts;
     idk::CPU cpu0, cpu1, cpu2, cpu4;
-    kTTY    *tty0;
 
     KSystem( const Krequests& );
-    // void init( Krequests* );
+    // void init( Krequests );
 
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();
     auto        &getModules() { return m_modules; };
     limine_file *getModule( const char *label );
-    int          execute( void *address, size_t size, int argc, char **argv );
+    uint64_t     execute( void *address, size_t size, int argc, uint64_t *argv );
     void         lsmem();
 
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include <AAA.h>
-#include <kproc.hpp>
+#include <kthread.hpp>
 
 #define IDK_FILE_MAGIC = 0xDEADBEBE;
 
@@ -26,6 +26,7 @@ enum KFileStatus
 };
 
 
+
 typedef struct KFile
 {
     uint32_t  fd;
@@ -37,12 +38,9 @@ typedef struct KFile
     uint8_t  *write;    
     uint8_t  *eof;
     klock_t   lock;
+    void (*fsh)(KFile*);
 
-    void (*fsh)(struct KFile*);
-
-} KFile;
-
-
+}  KFile;
 
 // struct KSteam
 // {

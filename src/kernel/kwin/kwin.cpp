@@ -1,12 +1,91 @@
 #include "kwin.hpp"
-#include <kproc.hpp>
+#include <kthread.hpp>
 #include <kmalloc.h>
+#include "kinplace/inplace_vector.hpp"
 #include <stdio.h>
 #include <algorithm>
+#include "../kfs/kfs.hpp"
 #include "../log/log.hpp"
-
 #include "frame_tty.hpp"
 
+
+
+static kwin::Context *ctxbuf[16];
+static idk::inplace_vector<kwin::Context*> m_contexts;
+
+
+void ctx_draw( kwin::Context &ctx )
+{
+    for (auto *F: ctx.frames)
+    {
+        F->draw(ctx);
+    }
+
+    kvideo::blit(ctx.m_tl, vec2(0, 0), ctx.m_sp, ctx.m_fb);
+    kmemset<vec4>(ctx.m_fb.buf, vec4(0.0f), ctx.m_sp.x * ctx.m_sp.y);
+}
+
+
+void kwin_main( void *fb )
+{
+    kvideo::init((uintptr_t)fb);
+    m_contexts = idk::inplace_vector<kwin::Context*>(ctxbuf, 16);
+
+    auto *stream = (kfstream*)(KFS::findFile("dev/ms0/event")->addr);
+    vec2 mouse(400, 400);
+
+    while (true)
+    {
+        if (stream->read(&mouse, sizeof(vec2)))
+        {
+            // syslog log("kwin");
+            // log("packet: %d %d", packet[0], packet[1]);
+        }
+
+        for (auto *ctx: m_contexts)
+        {
+            ctx_draw(*ctx);
+            ctx->rect(mouse, vec2(45.0f), vec4(1.0f));
+            kthread::yield();
+        }
+
+        kvideo::swapBuffers();
+        kthread::yield();
+    }
+}
+
+
+
+kwin::Context*
+kwin::createContext( int w, int h )
+{
+    m_contexts.push_back(new kwin::Context(w, h));
+    return m_contexts.back();
+}
+
+void
+kwin::destroyContext( Context *ctx )
+{
+    int idx = -1;
+
+    for (int i=0; i<m_contexts.size(); i++)
+    {
+        if (m_contexts[i] == ctx)
+        {
+            idx = i;
+            break;
+        }
+    }
+
+    if (idx != -1)
+    {
+        auto *tmp = m_contexts[idx];
+        m_contexts[idx] = m_contexts.back();
+        m_contexts.back() = tmp;
+        m_contexts.pop_back();
+        delete ctx;
+    }
+}
 
 
 
@@ -14,7 +93,8 @@ kwin::Context::Context( int w, int h )
 :   m_tl(0, 0),
     m_sp(w, h),
     m_fb(w, h, new vec4[w*h]),
-    m_depth(w, h, new uint32_t[w*h])
+    m_depth(w, h, new uint32_t[w*h]),
+    frames(m_fbuf, 16)
 {
     syslog log("kwin::Context::Context");
 
@@ -135,13 +215,9 @@ kwin::Context::blit( vec2 tl0, vec2 tl1, vec2 sp, const kframebuffer<vec4> &buf 
 
             // vec4 src = (src0 + src1 + src2 + src3);
             //      src /= 4.0f;
+            float alpha = buf[sy][sx].a;
 
-            float a = buf[sy][sx].a;
-
-            if (a > 0.1f)
-            {
-                m_fb[y][x] = buf[sy][sx];
-            }
+            m_fb[y][x] = (1.0f - alpha)*m_fb[y][x] + alpha*buf[sy][sx];
         }
     }
 }

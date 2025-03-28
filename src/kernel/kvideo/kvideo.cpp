@@ -7,6 +7,7 @@ extern "C"
 #include "kvideo.hpp"
 #include "../log/log.hpp"
 #include <kmalloc.h>
+#include <kthread.hpp>
 #include <kmemxx.h>
 #include <string.h>
 #include <algorithm>

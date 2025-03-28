@@ -54,12 +54,9 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
 
 
 void
-idk::linear_allocator::free( void *ptr )
+idk::linear_allocator::free( void* )
 {
-    if (ptr)
-    {
-
-    }
+    
 }
 
 

@@ -1,18 +1,26 @@
 #include "kshell.hpp"
 #include <kstring.h>
+#include <string.h>
 using namespace KShell;
+
+
+
+vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
+{
+    vfsDirEntry *dir = nullptr;
+
+    if (strcmp(name, "..") == 0)
+        dir = (cwd->parent) ? cwd->parent : cwd;
+    else
+        dir = KFS::findDirectory(cwd, name);
+
+    return dir;
+}
 
 
 char *kshell_cd( char *dst, int argc, char **argv )
 {
     auto &cwd = kshell_tty->getCWD();
-
-    // auto *dirname = kshell_buf;
-    // auto *A = skip_brk(src, " \n");
-    // auto *B = seek_brk(A, " \n");
-    // strncpy(dirname, A, B-A);
-
-    // vfsDirEntry *dir;
 
     if (argc == 1)
     {
@@ -20,18 +28,12 @@ char *kshell_cd( char *dst, int argc, char **argv )
         return dst;
     }
 
-    char *dirname = argv[1];
-    auto *dir = KFS::findDirectory(cwd, dirname);
+    vfsDirEntry *dir = kshell_getdir(cwd, argv[1]);
 
     if (dir)
-    {
         cwd = dir;
-    }
-
     else
-    {
-        dst = kssprintf(dst, "cd: could not find directory \"%s\"", dirname);
-    }
+        dst = kssprintf(dst, "cd: could not find directory \"%s\"", argv[1]);
 
     return dst;
 }
