@@ -27,7 +27,7 @@
 #include "./ksystem.hpp"
 #include "kvideo/kvideo.hpp"
 #include "kwin/kwin.hpp"
-#include "kshell.hpp"
+#include "kshell/kshell.hpp"
 
 
 
@@ -70,7 +70,6 @@ void run_fini_array()
 
 
 
-
 uint64_t idk::memory::hhdm;
 idk::KSystem *sys;
 uint64_t uptime_ms;
@@ -82,8 +81,8 @@ uint64_t uptime_ms;
 
 void pit_irq( kstackframe *frame )
 {
-    kproc_schedule(frame);
-    // kproc_yield();
+    kthread::schedule(frame);
+    // kthread::yield();
 
     uptime_ms += 10;
 
@@ -111,7 +110,7 @@ void mouse_main( void* )
     while (true)
     {
         ProcessMousePacket();
-        kproc_yield();
+        kthread::yield();
     }
 
 }
@@ -154,7 +153,6 @@ void _start()
 
 
     asm volatile("cli");
-    kproc_init();
     mouse_init();
     idk::PIT_init();
     idk::PIT_set_ms(2);
@@ -163,7 +161,7 @@ void _start()
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
-    idk::onInterrupt(INT_PROCESS_SWITCH, kproc_yield_irq);
+    idk::onInterrupt(INT_PROCESS_SWITCH, kthread::schedule);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
@@ -177,23 +175,14 @@ void _start()
 
 	asm volatile ("sti");
 
-
-    // system.execute("kshell.exec", 0, nullptr);
-
-    // KFS::Trie trie;
-    // auto *E = trie.insert("/home/michael/Desktop/sketchy.exec");
-    // E->print_path();
-
-
     u64vec2 data2(
         (uintptr_t)reqs.fb, (uintptr_t)sys
     );
 
     // kproc_new(tty_main, system.tty0);
-    kproc_new(mouse_main, nullptr);
-    kproc_new(kshell_main, system.tty0);
-    kproc_new(video_main, &data2);
-    kproc_new(kdriver::ps2_kb::driver_main, nullptr);
+    kthread t0(mouse_main, nullptr);
+    kthread t1(video_main, &data2);
+    kthread t2(kdriver::ps2_kb::driver_main, nullptr);
 
     while (true)
     {
@@ -225,7 +214,6 @@ void pagefault_handler( kstackframe *frame )
     log("rbp:   0x%lx", frame->rbp);
     log("vcode: %lu", frame->vcode);
     log("ecode: %lu", frame->ecode);
-
 
 
     uint64_t flags = frame->ecode;

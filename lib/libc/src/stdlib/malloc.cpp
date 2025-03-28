@@ -8,13 +8,16 @@
 #endif
 
 
+static ksysc_request req;
+
+
 void *malloc( size_t nbytes )
 {
     #ifdef __is_kernel
         return kmalloc(nbytes);
 
     #else
-        ksysc_request req = {
+        req = {
             .type = SYSC_MEM_ALLOC,
             .size = nbytes
         };
@@ -31,7 +34,7 @@ void free( void *ptr )
         kfree(ptr);
 
     #else
-        ksysc_request req = {
+        req = {
             .type = SYSC_MEM_FREE,
             .data = ptr
         };

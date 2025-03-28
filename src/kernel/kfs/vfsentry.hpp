@@ -42,10 +42,11 @@ struct vfsDirEntry: public kfsEntry
     kfsEntry *getChild( const char *name );
 
     template <typename T>
-    kfsEntry *giveChild( const char *name )
+    T *giveChild( const char *name )
     {
-        children.push_back(dynamic_cast<kfsEntry*>(new T(this, name)));
-        return children.back();
+        T *entry = new T(this, name);
+        children.push_back(dynamic_cast<kfsEntry*>(entry));
+        return entry;
     }
 
     auto begin() { return children.begin(); };
@@ -57,7 +58,10 @@ struct vfsFileEntry: public kfsEntry
 {
     uint8_t *base;
     uint8_t *top;
+    uint8_t **read;
+    uint8_t **write;
     uint8_t *eof;
+    size_t   size;
 
     vfsFileEntry( vfsDirEntry *P, const char *fname )
     :   kfsEntry(P, fname)

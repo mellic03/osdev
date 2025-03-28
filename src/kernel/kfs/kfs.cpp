@@ -73,30 +73,41 @@ void KFS::init( uintptr_t sys )
     auto &system = *(idk::KSystem*)sys;
     char buf[64];
 
+    KFS::insertDirectory("bin/");
     KFS::insertDirectory("fonts/");
 
-    // for (auto *file: system.getModules())
-    // {
-    //     if (strncmp(file->string, "font", 4) == 0)
-    //     {
-    //         sprintf(buf, "fonts/%s", file->string);
-    //         auto *E = KFS::insertFile(buf);
-    //         log("created file \"%s\"", E->get_path());
-    //     }
-    // }
+    for (auto *F: system.getModules())
+    {
+        size_t len = strlen(F->string);
+
+        if (len == 0)
+            continue;
+
+        else if (strncmp(F->path, "/data/exec", 10) == 0)
+            KFS::insertFile("bin/", F->string, (uintptr_t)(F->address), F->size);
+
+        else if (strncmp(F->string, "font", 4) == 0)
+            KFS::insertFile("fonts/", F->string, (uintptr_t)(F->address), F->size);
+
+    }
 
 }
 
 
-vfsFileEntry *KFS::insertFile( const char *path )
+vfsFileEntry *KFS::insertFile( const char *dir, const char *name, uintptr_t base, size_t size )
 {
-    return fs_trie.insertFile(path);
+    return fs_trie.insertFile(dir, name, base, size);
 }
 
 
-vfsFileEntry *KFS::findFile( const char *path )
+vfsFileEntry *KFS::findFile( const char *fname )
 {
-    return fs_trie.findFile(path);
+    return fs_trie.findFile(fname);
+}
+
+vfsFileEntry *KFS::findFile( vfsDirEntry *cwd, const char *fname )
+{
+    return fs_trie.findFile(cwd, fname);
 }
 
 vfsDirEntry *KFS::insertDirectory( const char *path )
@@ -107,6 +118,11 @@ vfsDirEntry *KFS::insertDirectory( const char *path )
 vfsDirEntry *KFS::findDirectory( const char *path )
 {
     return fs_trie.findDirectory(path);
+}
+
+vfsDirEntry *KFS::findDirectory( vfsDirEntry *cwd, const char *path )
+{
+    return fs_trie.findDirectory(cwd, path);
 }
 
 

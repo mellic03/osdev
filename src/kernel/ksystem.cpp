@@ -72,20 +72,23 @@ KSystem::getModule( const char *label )
 #include "memory/vmm.hpp"
 
 int
-KSystem::execute( const char *filepath, int argc, char **argv )
+KSystem::execute( void *address, size_t size, int argc, char **argv )
 {
     syslog log("KSystem::execute");
 
-    uintptr_t entry = 0xBEBE0000;
-    auto     *file  = getModule(filepath);
+    static uintptr_t entry = 0xBEBE0000;
+    static uintptr_t page = 0;
 
-    uintptr_t page = (uintptr_t)kmalloc(16*PMM::PAGE_SIZE);
-              page = idk::align_up(page, PMM::PAGE_SIZE);
-    VMM::mapRange(page-PMM::hhdm, entry, 15*PMM::PAGE_SIZE);
+    if (page == 0)
+    {
+        page = (uintptr_t)kmalloc(8*PMM::PAGE_SIZE);
+        page = idk::align_up(page, PMM::PAGE_SIZE);
+        VMM::mapRange(page-PMM::hhdm, entry, 7*PMM::PAGE_SIZE);
+    }
 
     log("entry: 0x%lx", entry);
-    memset((void*)entry, 0, 14*PMM::PAGE_SIZE);
-    memcpy((void*)entry, file->address, file->size);
+    memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
+    memcpy((void*)entry, address, size);
 
     using YOLO = int (*)(int, char**);
     int result = ((YOLO)entry)(argc, argv);
@@ -201,6 +204,7 @@ KSystem::_load_modules()
     {
         auto *file = res->modules[i];
         log("file: \"%s\"", file->string);
+        log("path: \"%s\"", file->path);
 
         size_t len = strlen(file->string);
     

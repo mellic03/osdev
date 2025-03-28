@@ -40,7 +40,7 @@ void kwin::Context::flush()
     // kvideo::swapBuffers();
     // kmemset<vec4>(m_fb.buf, vec4(0.0f), m_sp.x * m_sp.y);
 
-    // kproc_yield();
+    // kthread::yield();
 }
 
 
@@ -91,7 +91,7 @@ kwin::Context::rect( vec2 tl, vec2 sp, vec4 color )
         }
     }
 
-    kproc_yield();
+    kthread::yield();
 }
 
 

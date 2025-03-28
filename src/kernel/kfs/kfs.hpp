@@ -9,11 +9,13 @@ namespace KFS
     void   init( uintptr_t sys );
     KFile *KFile_create( size_t size, void (*)(KFile*) );
 
-    vfsFileEntry *insertFile( const char* );
-    vfsFileEntry *findFile( const char* );
+    vfsFileEntry *insertFile( const char*, const char*, uintptr_t base=0, size_t size=0 );
+    vfsFileEntry *findFile( const char *fname );
+    vfsFileEntry *findFile( vfsDirEntry *cwd, const char *fname );
 
     vfsDirEntry *insertDirectory( const char* );
     vfsDirEntry *findDirectory( const char* );
+    vfsDirEntry *findDirectory( vfsDirEntry *cwd, const char* );
 
 }
 
@@ -31,11 +33,13 @@ namespace KFS
     
     public:
         Trie();
-        vfsFileEntry *insertFile( const char* );
-        vfsFileEntry *findFile( const char* );
+        vfsFileEntry *insertFile( const char*, const char*, uintptr_t base=0, size_t size=0 );
+        vfsFileEntry *findFile( const char *fname );
+        vfsFileEntry *findFile( vfsDirEntry *cwd, const char *fname );
 
         vfsDirEntry *insertDirectory( const char* );
         vfsDirEntry *findDirectory( const char* );
+        vfsDirEntry *findDirectory( vfsDirEntry *cwd, const char* );
     
     };
 }

@@ -11,13 +11,13 @@ kwin::Context *context;
 idk::KSystem *system;
 
 
-void terminal_main( void* )
+void ttyframe_main( void *arg )
 {
-    kTTY *tty = system->tty0;
+    kTTY *tty = (kTTY*)arg;
 
     auto *frame = context->createFrame<kwin::TerminalFrame>(
         ivec2(10, 10), ivec2(500, 450),
-        &(system->m_fonts[6]), tty->prompt, tty->history, kwin::Style(vec4(1.0f))
+        &(system->m_fonts[6]), tty, kwin::Style(vec4(1.0f))
     );
 
     bool grabbing = false;
@@ -48,12 +48,13 @@ void terminal_main( void* )
             frame->m_local.y += dy;
         }
 
-        kproc_yield();
+        kthread::yield();
     }
-
 }
 
 
+
+#include "kshell/kshell.hpp"
 
 void video_main( void *ptr )
 {
@@ -65,7 +66,8 @@ void video_main( void *ptr )
     auto ctx = kwin::Context(1280, 720);
     context = &ctx;
 
-    kthread::create(terminal_main, nullptr);
+    kthread t0(kshell_main, system->tty0);
+    kthread t1(ttyframe_main, system->tty0);
 
 
     while (true)
@@ -104,7 +106,7 @@ void video_main( void *ptr )
         //     kmemset<vec4>(ctx.m_fb.buf, vec4(0.0f), ctx.m_sp.x * ctx.m_sp.y);
         // }
 
-        kproc_yield();
+        kthread::yield();
     }
 
 }

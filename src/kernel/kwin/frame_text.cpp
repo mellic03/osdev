@@ -26,12 +26,12 @@ kwin::TextFrame::_reset()
 
 
 void
-kwin::TextFrame::_putchar( kwin::Context &ctx, char ch )
+kwin::TextFrame::_putchar( kwin::Context &ctx, char ch, bool move )
 {
     ivec2 &dst   = text_dst;
     ivec2 &span  = text_spn;
 
-    if (ch == '\n')
+    if (move && ch == '\n')
     {
         dst.x = 0;
         dst.y += span.y;
@@ -49,6 +49,11 @@ kwin::TextFrame::_putchar( kwin::Context &ctx, char ch )
         m_world+dst, corner, span,
         kframebuffer<vec4>(m_font->W, m_font->H, (*m_font)[0])
     );
+
+    if (move == false)
+    {
+        return;
+    }
 
     dst.x += span.x/2;
 
@@ -88,12 +93,10 @@ kwin::TextFrame::draw( kwin::Context &ctx )
 
 
 
-kwin::TerminalFrame::TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer *font,
-                                    const char *prompt, const char *history,
+kwin::TerminalFrame::TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer *font, kTTY *tty,
                                     const Style &style )
-:   TextFrame (tl, sp, font, prompt, style),
-    m_prompt  (prompt),
-    m_history (history)
+:   TextFrame (tl, sp, font, nullptr, style),
+    m_tty     (tty)
 {
 
 
@@ -106,10 +109,21 @@ kwin::TerminalFrame::draw( kwin::Context &ctx )
     Frame::draw(ctx);
 
     _reset();
-    _putstr(ctx, m_history);
-    _putstr(ctx, " >> ");
-    _putstr(ctx, m_prompt);
-    _putstr(ctx, "_");
+    _putstr(ctx, m_tty->history);
+    _putstr(ctx, "[");
+    _putstr(ctx, m_tty->getCWD()->name);
+    _putstr(ctx, "] ");
+
+    char *pbase = m_tty->prompt;
+    char *ptop  = m_tty->ptop;
+
+    for (int i=0; i<ptop-pbase; i++)
+    {
+        _putchar(ctx, pbase[i]);
+    }
+    _putchar(ctx, '_', false);
+
+    _putstr(ctx, ptop);
 
     for (Frame *F: m_children)
     {

@@ -74,7 +74,7 @@ public:
     uint64_t     getHHDM();
     auto        &getModules() { return m_modules; };
     limine_file *getModule( const char *label );
-    int          execute( const char *filepath, int argc, char **argv );
+    int          execute( void *address, size_t size, int argc, char **argv );
     void         lsmem();
 
 };

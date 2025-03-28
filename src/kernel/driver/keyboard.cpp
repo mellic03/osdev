@@ -74,38 +74,50 @@ driver_update( uint8_t scancode )
         switch (scancode)
         {
             default: break;
-            case 0x48: case 0xC8: mask |= KeyEvent_U; break;
-            case 0x4B: case 0xCB: mask |= KeyEvent_L; break;
-            case 0x4D: case 0xCD: mask |= KeyEvent_R; break;
-            case 0x50: case 0xD0: mask |= KeyEvent_D; break;
+
+            case 0x48:  mask |=  KeyEvent_U; break;
+            case 0xC8:  mask &= ~KeyEvent_U; break;
+
+            case 0x4B:  mask |=  KeyEvent_L; break;
+            case 0xCB:  mask &= ~KeyEvent_L; break;
+
+            case 0x4D:  mask |=  KeyEvent_R; break;
+            case 0xCD:  mask &= ~KeyEvent_R; break;
+
+            case 0x50:  mask |=  KeyEvent_D; break;
+            case 0xD0:  mask &= ~KeyEvent_D; break;
         }
  
+        KeyEvent event = {
+            .mask = mask,
+            .key  = 0
+        };
+        KFile_write(KFS::kdevkey, &event, sizeof(KeyEvent));
+    
         state = STATE_NORMAL;
+        return;
     }
 
-    else
+    if (scancode >= UP_ESC) mask |=  KeyEvent_UP;
+    else                    mask &= ~KeyEvent_UP;
+
+    switch (scancode)
     {
-        if (scancode >= UP_ESC) mask |=  KeyEvent_UP;
-        else                    mask &= ~KeyEvent_UP;
+        default: break;
 
-        switch (scancode)
-        {
-            default: break;
+        case DOWN_LSHIFT:   mask |=  KeyEvent_SHIFT; break;
+        case UP_LSHIFT:     mask &= ~KeyEvent_SHIFT; break;
+    
+        case DOWN_LCTRL:    mask |=  KeyEvent_CTRL;  break;
+        case UP_LCTRL:      mask &= ~KeyEvent_CTRL;  break;
+    
+        case DOWN_LALT:     mask |=  KeyEvent_ALT;   break;
+        case UP_LALT:       mask &= ~KeyEvent_ALT;   break;
+    }
 
-            case DOWN_LSHIFT:   mask |=  KeyEvent_SHIFT; break;
-            case UP_LSHIFT:     mask &= ~KeyEvent_SHIFT; break;
-        
-            case DOWN_LCTRL:    mask |=  KeyEvent_CTRL;  break;
-            case UP_LCTRL:      mask &= ~KeyEvent_CTRL;  break;
-        
-            case DOWN_LALT:     mask |=  KeyEvent_ALT;   break;
-            case UP_LALT:       mask &= ~KeyEvent_ALT;   break;
-        }
-
-        if (mask & KeyEvent_SHIFT)
-        {
-            key = isalpha(key) ? toupper(key) : shift_table[key];
-        }
+    if (mask & KeyEvent_SHIFT)
+    {
+        key = isalpha(key) ? toupper(key) : shift_table[key];
     }
 
     KeyEvent event = {
@@ -113,9 +125,7 @@ driver_update( uint8_t scancode )
         .key  = key
     };
 
-    // klock_acquire(&KFS::kdevkey->lock);
     KFile_write(KFS::kdevkey, &event, sizeof(KeyEvent));
-    // klock_release(&KFS::kdevkey->lock);
 }
 
 
@@ -133,7 +143,7 @@ kdriver::ps2_kb::driver_main( void* )
             driver_update(scancode);
         }
 
-        kproc_yield();
+        kthread::yield();
     }
 
 }
@@ -188,8 +198,8 @@ char scode_getchar( uint8_t code )
         case DOWN_BACKSPACE:        return 8;
         case DOWN_TAB:              return '\t';
         case DOWN_ENTER:            return '\n';
-        case DOWN_LEFT_BRACKET:     return '(';
-        case DOWN_RIGHT_BRACKET:    return ')';
+        case DOWN_LEFT_BRACKET:     return '[';
+        case DOWN_RIGHT_BRACKET:    return ']';
         case DOWN_SPACE:            return ' ';
         case DOWN_SEMICOLON:        return ';';
         case DOWN_SINGLE_QUOTE:     return '\'';

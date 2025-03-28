@@ -10,7 +10,7 @@
 #include "kfs/kfs.hpp"
 #include "driver/keyboard.hpp"
 
-#include "kshell.hpp"
+#include "kshell/kshell.hpp"
 #include <kmath/vec.hpp>
 #include <stdio.h>
 
@@ -81,6 +81,44 @@ void kTTY::_puts( char *&top, char *end, const char *str )
     }
 }
 
+
+void kTTY::moveCursor( int dir )
+{
+    if (dir < 0)
+    {
+        ptop = std::clamp(ptop-1, prompt, pend-1);
+
+        return;
+    }
+
+    if (dir > 0)
+    {
+        ptop = std::clamp(ptop+1, prompt, pend-1);
+
+        return;
+    }
+
+}
+
+
+
+vfsDirEntry *&kTTY::getCWD()
+{
+    if (cwd == nullptr)
+    {
+        cwd = KFS::insertDirectory("dev/tty0/");
+        auto *A = KFS::insertFile("dev/tty0/", "kdevraw", (uintptr_t)KFS::kdevraw, 128);
+        auto *B = KFS::insertFile("dev/tty0/", "kdevkey", (uintptr_t)KFS::kdevkey, 128);
+
+        A->read  = &KFS::kdevraw->read;
+        A->write = &KFS::kdevraw->write;
+        B->read  = &KFS::kdevkey->read;
+        B->write = &KFS::kdevkey->write;
+    }
+
+    return cwd;
+}
+
 // void kTTY::hputc( char ch )
 // {
 //     _putc(htop, hend, ch);
@@ -110,57 +148,5 @@ void kTTY::_puts( char *&top, char *end, const char *str )
 
 //     return nullptr;
 // }
-
-
-
-
-void kshell_main( void *arg )
-{
-    using namespace kdriver::ps2_kb;
-
-    kTTY *tty = (kTTY*)arg;
-    KeyEvent event;
-
-    while (true)
-    {
-        size_t nbytes = 0;
-        nbytes = KFile_read(&event, KFS::kdevkey, sizeof(KeyEvent));
-
-        if (nbytes == sizeof(KeyEvent))
-        {
-            uint8_t mask = event.mask;
-            uint8_t ch   = event.key;
-
-            if (ch == '\0')
-            {
-                continue;
-            }
-
-            else if (ch == '\n')
-            {
-                tty->hputs(" >> ");
-
-                if (tty->ptop == tty->prompt)
-                {
-                    tty->hputc('\n');
-                    continue;
-                }
-
-                tty->hputs(tty->prompt);
-                tty->hputc('\n');
-                // tty->hputs("\n    ");
-                kshell_interpret(tty);
-                tty->pclear();
-                // tty->submit();
-            }
-
-            else
-            {
-                tty->pputc(ch);
-            }
-
-        }
-    }
-}
 
 

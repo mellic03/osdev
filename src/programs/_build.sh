@@ -83,7 +83,7 @@ mkdir -p $BINDIR
 # #         # -T ./linker.ld \
 
 
-objcopy -O binary $OBJDIR/$NAME.elf $BINDIR/$NAME.exec
+objcopy -O binary $OBJDIR/$NAME.elf $BINDIR/$NAME
 
 
 # echo ""
@@ -98,7 +98,7 @@ objdump -d $OBJDIR/$NAME.elf
 # echo ""
 # echo "-------------------------------hexdump-------------------------------"
 # echo $BINDIR/$NAME.exec
-hexdump -C ../data/exec/$NAME.exec
+hexdump -C ../data/exec/$NAME
 # echo "---------------------------------------------------------------------"
 # echo ""
 # echo ""

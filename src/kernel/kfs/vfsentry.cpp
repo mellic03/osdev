@@ -74,7 +74,7 @@ vfsDirEntry::get_path()
     {
         E = nodes[idx];
         // log("nodes[%d] = \"%s\"", idx, E->name);
-        top += sprintf(top, "%s/", E->name);
+        top += sprintf(top, "%s", E->name);
         idx--;
     }
 

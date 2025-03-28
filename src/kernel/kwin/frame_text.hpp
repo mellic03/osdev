@@ -2,6 +2,7 @@
 
 #include "frame.hpp"
 #include "../kvideo/font.hpp"
+#include "../tty.hpp"
 
 namespace kwin
 {
@@ -19,7 +20,7 @@ protected:
     ivec2 text_dst;
     ivec2 text_spn;
     void _reset();
-    void _putchar( kwin::Context&, char ch );
+    void _putchar( kwin::Context&, char ch, bool move = true );
     void _putstr( kwin::Context&, const char* );
 
 public:
@@ -34,12 +35,10 @@ public:
 class kwin::TerminalFrame: public kwin::TextFrame
 {
 private:
-    const char *m_prompt;
-    const char *m_history;
+    kTTY *m_tty;
 
 public:
-    TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer*,
-                   const char *prompt, const char *history,
+    TerminalFrame( ivec2 tl, ivec2 sp, idk::FontBuffer*, kTTY *tty,
                    const Style &s=Style() );
 
     virtual void draw( kwin::Context& ) final;

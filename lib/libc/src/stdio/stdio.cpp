@@ -35,7 +35,7 @@ int fflush( FILE *fh )
     fh->fsh(fh);
 
     #ifdef __is_kernel
-        kproc_yield();
+        kthread::yield();
 
     #else
         // ksysc_request req = {

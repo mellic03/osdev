@@ -102,6 +102,18 @@
 // }
 
 
+
+// static void tesfn( void* )
+// {
+//     while (true)
+//     {
+//         printf("[tesfn]\n");
+//         kthread::yield();
+//     }
+    
+// }
+
+
 int main( int argc, char **argv )
 {
     if (argc || argv)
@@ -109,6 +121,7 @@ int main( int argc, char **argv )
         
     }
 
+    // kthread::create(tesfn, nullptr);
     printf("[kshell] >> exit\n");
 
 

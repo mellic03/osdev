@@ -14,35 +14,64 @@ enum kproc_status: uint8_t
 };
 
 
-struct kproc_t
+// struct kproc_t
+// {
+//     size_t tid;
+//     uint8_t status;
+//     uint8_t *stack;
+//     uint64_t rip, rsp, rdi, rsi, rbp, flags;
+//     uint64_t rax, rbx, rcx, rdx;
+//     kproc_t *next;
+// };
+
+
+// void kproc_switch( kstackframe* );
+// void kproc_schedule( kstackframe* );
+// void kproc_yield_irq( kstackframe* );
+
+// void kproc_init();
+// void kthread::yield();
+
+// kproc_t *kproc_new( void (*)(void*), void *arg );
+// void kproc_exit( kproc_t* );
+
+
+
+class kthread
 {
-    size_t tid;
+private:
+    static void add( kthread* );
+    static void wrapper( void (*)(void*), void* );
+    static kthread *m_curr;
+    static bool     m_first;
+
+    size_t  tid;
     uint8_t status;
     uint8_t *stack;
     uint64_t rip, rsp, rdi, rsi, rbp, flags;
     uint64_t rax, rbx, rcx, rdx;
-    kproc_t *next;
+    kthread *next;
+
+public:
+    static void schedule( kstackframe* );
+    
+// public:
+    kthread( void (*)(void*), void *arg );
+    ~kthread();
+
+    static size_t this_tid();
+    static void   yield();
+    static void   exit();
+    
 };
 
-
-void kproc_switch( kstackframe* );
-void kproc_schedule( kstackframe* );
-void kproc_yield_irq( kstackframe* );
-
-void kproc_init();
-void kproc_yield();
-
-kproc_t *kproc_new( void (*)(void*), void *arg );
-// void kproc_exit( kproc_t* );
-
-
-namespace kthread
-{
-    size_t this_tid();
-    void   create( void (*)(void*), void *arg );
-    void   yield();
-    void   exit();
-}
+// namespace kthread
+// {
+//     size_t this_tid();
+//     void   create( void (*)(void*), void *arg );
+//     void   yield();
+//     void   exit();
+// }
 
 
 
