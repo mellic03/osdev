@@ -2,5 +2,4 @@ build
 external/limine
 external/x86_64-elf-tools-linux
 external/x86_64-elf-tools-linux.zip
-iso_root
 output
