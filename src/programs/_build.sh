@@ -98,7 +98,7 @@ objdump -d $OBJDIR/$NAME.elf
 # echo ""
 # echo "-------------------------------hexdump-------------------------------"
 # echo $BINDIR/$NAME.exec
-hexdump -C ../data/exec/$NAME
+hexdump -C ../iso_root/bin/$NAME
 # echo "---------------------------------------------------------------------"
 # echo ""
 # echo ""

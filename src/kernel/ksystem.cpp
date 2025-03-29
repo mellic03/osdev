@@ -4,9 +4,6 @@
     #define __is_kernel
 #endif
 
-#include <libc.h>
-#include <libc++>
-
 #include <kernel/vfs.hpp>
 #include <kernel/bitmanip.hpp>
 #include <kmalloc.h>
@@ -36,7 +33,6 @@ KSystem::KSystem( const Krequests &reqs )
     kmalloc_init(m_mmaps[0]);
     PMM::init(m_mmaps[1], reqs.hhdm);
     VMM::init();
-    libcpp::init();
 
     _load_modules();
     // KFS::init((uintptr_t)this);
@@ -64,35 +60,6 @@ KSystem::getModule( const char *label )
     return nullptr;
 }
 
-
-
-#include "memory/pmm.hpp"
-#include "memory/vmm.hpp"
-
-uint64_t
-KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
-{
-    syslog log("KSystem::execute");
-
-    static uintptr_t entry = 0xBEBE0000;
-    static uintptr_t page = 0;
-
-    if (page == 0)
-    {
-        page = (uintptr_t)kmalloc(8*PMM::PAGE_SIZE);
-        page = idk::align_up(page, PMM::PAGE_SIZE);
-        VMM::mapRange(page-PMM::hhdm, entry, 7*PMM::PAGE_SIZE);
-    }
-
-    log("entry: 0x%lx", entry);
-    memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
-    memcpy((void*)entry, address, size);
-
-    using YOLO = uint64_t (*)(int, uint64_t*);
-    uint64_t result = ((YOLO)entry)(argc, argv);
-
-    return result;
-}
 
 
 
@@ -218,3 +185,59 @@ KSystem::_load_modules()
 
 }
 
+
+
+
+
+
+
+#include "memory/pmm.hpp"
+#include "memory/vmm.hpp"
+
+// static u64vec3 thread_args;
+
+// static void thread_execute( void* )
+// {
+//     uintptr_t entry = thread_args[0];
+//     int       argc  = thread_args[1];
+//     uint64_t *argv  = (uint64_t*)(thread_args[2]);
+
+//     using YOLO = uint64_t (*)(int, uint64_t*);
+//     int64_t result = ((YOLO)entry)(argc, argv);
+//     printf("[%s] returned %ld\n", result);
+// }
+
+
+
+uint64_t
+KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
+{
+    // syslog log("KSystem::execute");
+
+    static uintptr_t entry = 0xBEBE0000;
+    static uintptr_t page  = 0;
+
+    if (page == 0)
+    {
+        page = (uintptr_t)kmalloc(8*PMM::PAGE_SIZE);
+        page = idk::align_up(page, PMM::PAGE_SIZE);
+        VMM::mapRange(page-PMM::hhdm, entry, 7*PMM::PAGE_SIZE);
+    }
+
+    // log("entry: 0x%lx", entry);
+    memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
+    memcpy((void*)entry, address, size);
+
+    using YOLO = uint64_t (*)(int, uint64_t*);
+    uint64_t result = ((YOLO)entry)(argc, argv);
+
+    // thread_args = u64vec3(
+    //     (uint64_t)entry,
+    //     (uint64_t)argc,
+    //     (uint64_t)argv
+    // );
+
+    // new kthread(thread_execute, nullptr);
+
+    return result;
+}

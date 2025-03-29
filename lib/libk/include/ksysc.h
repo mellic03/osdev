@@ -5,13 +5,16 @@
 
 enum SYSC_
 {
-    SYSC_NONE          = 0,
-    SYSC_FILE_CREATE   = 1,
-    SYSC_FILE_DELETE   = 2,
-    SYSC_FILE_RENAME   = 3,
-    SYSC_FILE_WRITE    = 4,
+    SYSC_NONE = 0,
+    SYSC_FILE_CREATE,
+    SYSC_FILE_DELETE,
+    SYSC_FILE_RENAME,
+    SYSC_FILE_WRITE,
     SYSC_FILE_GET,
     SYSC_FILE_FLUSH,
+
+    SYSC_WINDOW_CREATE,
+    SYSC_WINDOW_DELETE,
 
     SYSC_MEM_ALLOC,
     SYSC_MEM_FREE,
@@ -20,7 +23,7 @@ enum SYSC_
 
 enum SYSF_
 {
-    SYSF_FILE_ANY      = 1,
+    SYSF_FILE_ANY = 1,
     SYSF_FILE_KDEVKEY,
     SYSF_FILE_KDEVSCN,
 
@@ -34,32 +37,17 @@ struct ksysc_request
     uint64_t size;
     char     msg[64];
     void    *data;
+    void    *res;
 };
 
 
-struct ksysc_response
+struct ksysc_window_response
 {
-    uint32_t type;
-    uint32_t flags;
-    uint64_t size;
-    void    *data;
+    void *sde_ctx;
+    int *x, *y;
+    float *border;
 };
 
-struct ksysc_file_request
-{
-    uint32_t type;
-    uint64_t size;
-    const void *data;
-};
-
-struct ksysc_stdio_request
-{
-    uint32_t type;
-    uint32_t flags;
-    char    *buf;
-    const char *fmt;
-    va_list *vlist;
-};
 
 
 #include <ZZZ.h>
@@ -67,17 +55,17 @@ struct ksysc_stdio_request
 
 extern "C"
 {
-    // extern void libk_syscall( struct ksysc_request *req );
+    extern void libk_syscall( struct ksysc_request *req );
 
-    inline void libk_syscall( struct ksysc_request *req )
-    {
-        __asm__ volatile (
-            "mov %0, %%rdi\n\t"  // Move the pointer to rax
-            "int $99\n\t"        // Trigger interrupt 99
-            :                    // No output operands
-            : "r" (req)          // Input operand
-            : "rdi"              // Clobbered register
-        );
-    }
+    // inline void libk_syscall( struct ksysc_request *req )
+    // {
+    //     __asm__ volatile (
+    //         "mov %0, %%rdi\n\t"  // Move the pointer to rax
+    //         "int $99\n\t"        // Trigger interrupt 99
+    //         :                    // No output operands
+    //         : "r" (req)          // Input operand
+    //         : "rdi"              // Clobbered register
+    //     );
+    // }
 }
 

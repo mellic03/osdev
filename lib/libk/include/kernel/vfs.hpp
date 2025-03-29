@@ -1,5 +1,9 @@
 #pragma once
-#include "AAA.h"
+
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include "vfsentry.hpp"
 
 
@@ -90,8 +94,3 @@ inline const char *vfsFileTypeStr( uint8_t type )
         case vfsFileType_STREAM:        return "vfsFileType_STREAM";
     }
 };
-
-
-
-
-#include "ZZZ.h"

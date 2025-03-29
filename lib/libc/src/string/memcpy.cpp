@@ -28,7 +28,7 @@ void *memcpy_u8( void *dst, const void *src, size_t n )
     uint8_t *pdst = (uint8_t *)dst;
     const uint8_t *psrc = (const uint8_t *)src;
 
-    for (size_t i = 0; i < n; i++)
+    for (size_t i=0; i<n; i++)
     {
         pdst[i] = psrc[i];
     }

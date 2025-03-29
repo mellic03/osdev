@@ -15,7 +15,6 @@ void *kmalloc( size_t size )
     return kalloc0.alloc(size, alignof(uint64_t));
 }
 
-
 void kfree( void *ptr )
 {
     kalloc0.free(ptr);
@@ -27,8 +26,6 @@ void kmalloc_init( const idk::MemoryMap &mmap )
     kmem0   = linear_allocator((void*)(mmap.addr), mmap.len);
     kalloc0 = buddy_allocator(kmem0);
 }
-
-
 
 
 

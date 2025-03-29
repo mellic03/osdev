@@ -1,5 +1,4 @@
 #include <kfstream.hpp>
-#include <kmalloc.h>
 #include <string.h>
 
 
@@ -13,7 +12,7 @@ kfstream::kfstream()
 }
 
 kfstream::kfstream( size_t size, void (*flsh)(kfstream*) )
-:   kfstream(kmalloc(size), size, flsh)
+:   kfstream((void*)(new uint8_t[size]), size, flsh)
 {
 
 }
@@ -31,9 +30,38 @@ kfstream::kfstream( void *base, size_t size, void (*flsh)(kfstream*) )
 
 
 size_t
+kfstream::read( void *dst, size_t nbytes )
+{
+    // kthread::global_lock();
+    size_t count = 0;
+
+    // if (m_read + nbytes < m_write)
+    // {
+    //     memcpy(dst, m_read, nbytes);
+    //     m_read += nbytes;
+    //     count = nbytes;
+    // }
+
+    // else
+    // {
+        uint8_t *d = (uint8_t*)dst;
+
+        while ((count < nbytes) && (m_read < m_write))
+        {
+            *(d++) = *(m_read++);
+            count += 1;
+        }
+    // }
+
+    // kthread::global_unlock();
+
+    return count;
+}
+
+size_t
 kfstream::write( const void *src, size_t nbytes )
 {
-    klock_acquire(&m_lock);
+    // kthread::global_lock();
 
     const uint8_t *s = (const uint8_t*)src;
     size_t count = 0;
@@ -48,30 +76,43 @@ kfstream::write( const void *src, size_t nbytes )
     {
         flush();
     }
-    klock_release(&m_lock);
+    // kthread::global_unlock();
 
     return count;
 }
 
 
 size_t
-kfstream::read( void *dst, size_t nbytes )
+kfstream::readstr( char *dst )
 {
-    klock_acquire(&m_lock);
+    kthread::global_lock();
+    uint8_t *start = m_read;
 
-    uint8_t *d = (uint8_t*)dst;
-    size_t count = 0;
-
-    while ((count < nbytes) && (m_read < m_write))
+    while (*m_read && (m_read < m_write))
     {
-        *(d++) = (*m_read++);
-        count += 1;
+        *(dst++) = *(m_read++);
+    }
+    kthread::global_unlock();
+
+    return m_read - start;
+}
+
+size_t
+kfstream::writestr( const char *src )
+{
+    kthread::global_lock();
+    auto *start = src;
+
+    while (*src && (m_write < m_eof))
+    {
+        *(m_write++) = *(src++);
     }
 
-    klock_release(&m_lock);
+    kthread::global_unlock();
 
-    return count;
+    return src - start;
 }
+
 
 
 void

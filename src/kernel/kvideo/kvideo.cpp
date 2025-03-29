@@ -26,7 +26,7 @@ void kvideo::init( uintptr_t fbres )
     int H = fb->height;
 
     kvideo::frontbuffer  = kframebuffer<uint32_t>(W, H, (uint32_t*)fb->address);
-    kvideo::backbuffer   = kframebuffer<uint32_t>(W, H, (uint32_t*)kmalloc(W*H * sizeof(uint32_t)));
+    kvideo::backbuffer   = kframebuffer<uint32_t>(W, H, new uint32_t[W*H]);
 }
 
 
@@ -35,8 +35,8 @@ void kvideo::swapBuffers()
     int W = frontbuffer.w;
     int H = frontbuffer.h;
 
-    kmemcpy<uint32_t>(frontbuffer.buf, backbuffer.buf, W*H);
-    kmemset<uint32_t>(backbuffer.buf, 0, W*H);
+    kmemcpy<uint32_t>(frontbuffer[0], backbuffer[0], W*H);
+    kmemset<uint32_t>(backbuffer[0], 0, W*H);
 }
 
 

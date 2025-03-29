@@ -1,3 +1,7 @@
+#ifndef __is_kernel
+    #define __is_kernel
+#endif
+
 #include "keyboard.hpp"
 #include <kernel/ioport.hpp>
 #include "pic.hpp"

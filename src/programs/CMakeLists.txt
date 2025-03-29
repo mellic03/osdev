@@ -3,7 +3,6 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/_start.asm
 )
 
-
 set(
     USERPROGRAM_FLAGS
     -Wl,-m,elf_x86_64
@@ -20,6 +19,11 @@ set(
 add_executable(kshell.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/kshell.cpp)
 target_link_libraries(kshell.elf PUBLIC libk libc libc++)
 target_link_options(kshell.elf PUBLIC ${USERPROGRAM_FLAGS})
+
+
+add_executable(makewin.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/makewin.cpp)
+target_link_libraries(makewin.elf PUBLIC libk libc libc++)
+target_link_options(makewin.elf PUBLIC ${USERPROGRAM_FLAGS})
 
 
 add_executable(sum.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/sum.cpp)

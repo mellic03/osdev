@@ -29,8 +29,10 @@ class kthread
 {
 private:
     static void add( kthread* );
+    static void remove( kthread* );
+    static void ted_bundy( void* );
     static void wrapper( void (*)(void*), void* );
-    inline static klock_t  m_global_lock = { false };
+    inline static bool     m_global_lock = false;
     inline static kthread *m_curr  = nullptr;
     inline static bool     m_first = true;
 

@@ -30,7 +30,7 @@
 #include "./syscall/syscall.hpp"
 #include "./ksystem.hpp"
 #include "kvideo/kvideo.hpp"
-#include "kwin/kwin.hpp"
+#include "sde/sde.hpp"
 #include "kshell/kshell.hpp"
 
 
@@ -41,20 +41,34 @@ void pagefault_handler( kstackframe* );
 
 void genfault_handler( kstackframe* )
 {
-    syslog("Exception GENERAL_PROTECTION_FAULT");
+    syslog::kprintf("Exception GENERAL_PROTECTION_FAULT");
     kernel_hcf();
 }
 
 void oom_handler( kstackframe* )
 {
-    syslog("Exception OUT_OF_MEMORY");
+    syslog::kprintf("Exception OUT_OF_MEMORY");
+    kernel_hcf();
+}
+
+void badfile_handler( kstackframe* )
+{
+    syslog::kprintf("Exception BAD_FILE");
+    kernel_hcf();
+}
+
+void panic_handler( kstackframe *frame )
+{
+    syslog log("KERNEL PANIC");
+    const char *msg = (const char*)(frame->rdi);
+    log("reason: %s", msg);
     kernel_hcf();
 }
 
 
 
 idk::KSystem *sys;
-uint64_t uptime_ms;
+uint64_t uptime_ms = 0;
 
 void pit_irq( kstackframe *frame )
 {
@@ -67,17 +81,8 @@ void pit_irq( kstackframe *frame )
 
 
 
-#include "kwin/frame_tty.hpp"
-#include "kwin/frame_text.hpp"
-
-bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
-{
-    bool x = p.x == std::clamp(p.x, tl.x, tl.x+sp.x);
-    bool y = p.y == std::clamp(p.y, tl.y, tl.y+sp.y);
-    return x && y;
-}
-
-
+#include <libc.h>
+#include <libc++>
 
 
 
@@ -89,8 +94,6 @@ extern "C"
 
     void ctor_init( void )
     {
-        // syslog log("ctor_init");
-
         for (constructor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
         {
             (*ctor)();
@@ -98,6 +101,17 @@ extern "C"
     }
 }
 
+
+void kthread_test( void* )
+{
+    printf("[kthread_test]\n");
+    int n = 0;
+    while (n++ < 10)
+    {
+        printf("[kthread_test]\n");
+        kthread::yield();
+    }
+}
 
 
 extern "C"
@@ -126,7 +140,6 @@ void _start()
     idk::KSystem system(reqs);
     sys = &system;
     ctor_init();
-    uptime_ms = 0;
 
     kfilesystem::vfsInsertFile<char>("dev/kb0/", "raw",   64);
     kfilesystem::vfsInsertFile<char>("dev/kb0/", "event", 64);
@@ -134,6 +147,11 @@ void _start()
     kfilesystem::vfsInsertFile<char>("dev/kb1/", "event", 64);
     kfilesystem::vfsInsertFile<char>("dev/ms0",  "raw",   64);
     kfilesystem::vfsInsertFile<char>("dev/ms0",  "event", 64);
+    kfilesystem::vfsInsertFile<char>("dev/", "stdout", 64);
+
+    libc_init();
+    libcpp::init();
+
 
     mouse_init();
     idk::PIT_init();
@@ -143,9 +161,11 @@ void _start()
     idk::IDT_load();
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
-    idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
-    idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
+    idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
     idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
+    idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
+    idk::onInterrupt(INT_PANIC,   panic_handler);
+    idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
     idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
@@ -173,10 +193,13 @@ void _start()
     kTTY tty0(25*80);
     tty0.font = &system.m_fonts[0];
 
-    kthread t0(kdriver::ps2_mouse::driver_main, nullptr);
-    kthread t1(kdriver::ps2_kb::driver_main, nullptr);
-    kthread t2(kwin_main, (void*)(reqs.fb));
-    kthread t3(kshell_main, (void*)&tty0);
+    kvideo::init((uintptr_t)(reqs.fb));
+
+    new kthread(kthread_test, nullptr);
+    new kthread(kdriver::ps2_mouse::driver_main, nullptr);
+    new kthread(kdriver::ps2_kb::driver_main, nullptr);
+    new kthread(sde_main, nullptr);
+    new kthread(kshell_main, (void*)&tty0);
 
 
     while (true)
@@ -188,11 +211,25 @@ void _start()
 }
 
 
+void stacktrace( kstackframe *frame )
+{
+    syslog log("stacktrace");
+
+    kstackframe *sf = frame;
+
+    while (sf->rbp != 0)
+    {
+        log("rbp:   0x%lx", sf->rbp);
+        sf = (kstackframe*)(sf->rbp);
+    }
+}
 
 
 void pagefault_handler( kstackframe *frame )
 {
     syslog log("Exception PAGE_FAULT");
+
+    // stacktrace(frame);
 
     log("r11:   0x%lx", frame->r11);
     log("r12:   0x%lx", frame->r12);

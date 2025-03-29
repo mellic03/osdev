@@ -4,6 +4,7 @@
 # find build -name '*.cpp' -exec echo {} \;
 
 ./_build.sh kshell
+./_build.sh makewin
 ./_build.sh sum
 
 # for filename in src/*.cpp; do

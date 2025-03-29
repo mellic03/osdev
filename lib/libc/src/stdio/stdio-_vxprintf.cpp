@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <kfstream.hpp>
+#include <kernel/vfs.hpp>
 
 
 
@@ -165,10 +165,14 @@ vprintf( const char *fmt, va_list args )
 int
 vfprintf( FILE *addr, const char *fmt, va_list args )
 {
-    auto *fh = ((kfstream*)addr);
-    int n = vsprintf((char*)fh->m_write, fmt, args);
-    fh->m_write += n;
-    fh->flush();
+    auto *stream = &((vfsFileEntry*)addr)->stream;
+    int n = vsprintf((char*)(stream->m_write), fmt, args);
+    stream->m_write += n;
+    stream->flush();
+
+    #ifndef __is_kernel
+        kthread::yield();
+    #endif
 
     return n;
 }

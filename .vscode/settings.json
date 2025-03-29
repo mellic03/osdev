@@ -160,7 +160,9 @@
         "expected": "cpp",
         "zzz.h": "c",
         "kmalloc.h": "c",
-        "kintcode.h": "c"
+        "kintcode.h": "c",
+        "kvirtio.h": "c",
+        "ksysc.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

@@ -5,6 +5,7 @@ class syslog
 public:
     static void enable();
     static void disable();
+    static void kprintf( const char *fmt, ... );
 
     syslog( const char* );
     ~syslog();

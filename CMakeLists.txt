@@ -30,7 +30,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
-# add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
 
 
 # add_library(
@@ -51,6 +51,10 @@ add_executable(
     ${IDKERNEL_SOURCES}
 )
 
+target_compile_definitions(
+    ${PROJECT_NAME} PUBLIC 
+    -D__is_kernel
+)
 
 target_link_options(
     ${PROJECT_NAME} PRIVATE
@@ -72,10 +76,6 @@ target_link_options(
 #     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
 # )
 
-target_compile_definitions(
-    ${PROJECT_NAME} PUBLIC 
-    -D__is_kernel
-)
 
 target_link_libraries(
     ${PROJECT_NAME}

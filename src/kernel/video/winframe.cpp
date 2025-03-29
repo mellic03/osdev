@@ -6,7 +6,7 @@
 // // ---------------------------------------------------------------------------------------------
 // idk::WinFrameBase::WinFrameBase( const vec2 &tl, const vec2 &sp )
 // :   m_tl(tl),
-//     m_sp(sp),
+//     span(sp),
 //     m_bg(255),
 //     m_depth(0.9999f),
 //     m_parent(nullptr),
@@ -38,7 +38,7 @@
 // idk::WinFrameSolid::render( idk::Video &video )
 // {
 //     ivec2 tl = ivec2(m_tl);
-//     ivec2 sp = ivec2(m_sp);
+//     ivec2 sp = ivec2(span);
 //     ivec2 bd = ivec2(0); // m_style.border;
 
 //     video.rect(tl, sp, m_bg, m_depth);

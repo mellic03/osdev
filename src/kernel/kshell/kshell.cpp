@@ -1,7 +1,7 @@
 #include "kshell.hpp"
 #include <kernel/vfs.hpp>
-#include "../kwin/kwin.hpp"
-#include "../kwin/frame_text.hpp"
+#include "../sde/sde.hpp"
+#include "../sde/frame_text.hpp"
 #include "../driver/keyboard.hpp"
 #include <kstring.h>
 #include <kmalloc.h>
@@ -17,11 +17,12 @@ using argv_type = char[16][32];
 
 extern size_t kshell_argparser( const char*, char** );
 extern char *kshell_cwd    ( char*, int, char** );
-extern char *kshell_ls     ( char*, int, char** );
 extern char *kshell_cd     ( char*, int, char** );
 extern char *kshell_exec   ( char*, int, char** );
 extern char *kshell_font   ( char*, int, char** );
 extern char *kshell_info   ( char*, int, char** );
+extern char *kshell_ls     ( char*, int, char** );
+extern char *kshell_set    ( char*, int, char** );
 extern char *kshell_tid    ( char*, int, char** );
 extern char *kshell_clear  ( char*, int, char** );
 extern char *kshell_exit   ( char*, int, char** );
@@ -37,11 +38,12 @@ static std::vector<command_pair> cmd_table;
 static void registerCommands()
 {
     KSHELL_REGISTER_CMD(cwd)
-    KSHELL_REGISTER_CMD(ls)
     KSHELL_REGISTER_CMD(cd)
     KSHELL_REGISTER_CMD(exec)
     KSHELL_REGISTER_CMD(font)
     KSHELL_REGISTER_CMD(info)
+    KSHELL_REGISTER_CMD(ls)
+    KSHELL_REGISTER_CMD(set)
     KSHELL_REGISTER_CMD(tid)
     KSHELL_REGISTER_CMD(clear)
     KSHELL_REGISTER_CMD(exit)
@@ -118,28 +120,31 @@ char *kshell_exit( char *dst, int, char** )
 }
 
 
+
+
+
+
+
+
+
 using namespace kdriver::ps2_kb;
 
 void kshell_main( void *arg )
 {
     registerCommands();
 
-    kshell_argv = (char**)kmalloc(MAX_ARG_COUNT);
+    kshell_argv = new char*[MAX_ARG_COUNT];
     for (int i=0; i<MAX_ARG_COUNT; i++)
     {
-        kshell_argv[i] = (char*)kmalloc(MAX_ARG_LENGTH);
+        kshell_argv[i] = new char[MAX_ARG_LENGTH];
     }
 
     kTTY *tty    = (kTTY*)arg;
     auto *stream = &(kfilesystem::vfsFindFile("dev/kb0/event")->stream);
 
-    auto *ctx = kwin::createContext(550, 500);
-    auto *root = ctx->createFrame<kwin::Frame>(
-        ivec2(10, 10), ivec2(500, 450), vec4(1.0f), kwin::Style(vec4(1.0f, 1.0, 0.8f, 1.0f))
-    );
-    root->giveChild<kwin::TerminalFrame>(
-        ivec2(25, 25), ivec2(480, 420), tty, vec4(0.0f)
-    );
+    auto *ctx = sde::createContext(ivec2(10, 10), ivec2(500, 500));
+          ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
+
 
     KeyEvent event;
 
@@ -152,12 +157,14 @@ void kshell_main( void *arg )
         
             if ((mask & KeyEvent_L) && (mask & KeyEvent_UP))
             {
-                tty->moveCursor(-1);
+                ctx->m_local.x -= 50;
+                // tty->moveCursor(-1);
             }
 
             else if ((mask & KeyEvent_R) && (mask & KeyEvent_UP))
             {
-                tty->moveCursor(+1);
+                ctx->m_local.x += 50;
+                // tty->moveCursor(+1);
             }
 
             else if (ch == '\n')
@@ -182,10 +189,15 @@ void kshell_main( void *arg )
                 tty->pputc(ch);
             }
         }
+
+        kthread::yield();
     }
 
-    kwin::destroyContext(ctx);
+    sde::destroyContext(ctx);
 
+    for (int i=0; i<MAX_ARG_COUNT; i++)
+        delete[] kshell_argv[i];
+    delete[] kshell_argv;
 }
 
 

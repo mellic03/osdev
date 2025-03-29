@@ -10,10 +10,8 @@ static char m_buf[128];
 vfsEntry::vfsEntry( vfsDirEntry *P, const char *fname )
 :   parent(P)
 {
-    syslog log("vfsEntry::vfsEntry");
     memset(name, 0, sizeof(name));
     strcpy(name, fname);
-    log("name: \"%s\"", name);
 }
 
 
@@ -45,7 +43,6 @@ vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const char *fname,
 const char*
 vfsDirEntry::get_path()
 {
-    syslog log("vfsDirEntry::print_path");
     memset(m_buf, '\0', sizeof(m_buf));
     char *top = m_buf;
 
@@ -55,7 +52,6 @@ vfsDirEntry::get_path()
 
     while (E)
     {
-        log("nodes[%d] = \"%s\"", idx, E->name);
         nodes[idx++] = E;
         E = E->parent;
     }
@@ -67,7 +63,6 @@ vfsDirEntry::get_path()
     while (idx >= 0)
     {
         E = nodes[idx];
-        log("nodes[%d] = \"%s\"", idx, E->name);
         top += sprintf(top, "%s", E->name);
         idx--;
     }

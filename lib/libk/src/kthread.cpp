@@ -1,5 +1,5 @@
 #include <kthread.hpp>
-#include <kmalloc.h>
+#include <kpanic.h>
 #include <kintcode.h>
 #include <kinterrupt.h>
 #include <stdio.h>
@@ -9,13 +9,15 @@
 
 void kthread::global_lock()
 {
-    klock_acquire(&m_global_lock);
+    asm volatile ("cli");
+    m_global_lock = true;
 }
 
 
 void kthread::global_unlock()
 {
-    klock_release(&m_global_lock);
+    m_global_lock = false;
+	asm volatile ("sti");
 }
 
 
@@ -39,9 +41,7 @@ void kthread::yield()
 
 void kthread::exit()
 {
-    kthread::global_lock();
     m_curr->status = KPROC_DEAD;
-    kthread::global_unlock();
 }
 
 
@@ -49,7 +49,7 @@ void kthread::exit()
 
 void kthread::schedule( kstackframe *frame )
 {
-    if (m_global_lock.locked)
+    if (m_global_lock == true)
     {
         return;
     }
@@ -57,19 +57,6 @@ void kthread::schedule( kstackframe *frame )
     if (m_curr == nullptr)
     {
         return;
-    }
-
-    if (m_curr->next == nullptr)
-    {
-        return;
-    }
-
-    if (m_curr->next->status == KPROC_DEAD)
-    {
-        kthread *th = m_curr->next;
-        m_curr->next = m_curr->next->next;
-        // delete th;
-        // kproc_free(P);
     }
 
     if (m_first == false)
@@ -117,6 +104,7 @@ void kthread::wrapper( void (*fn)(void*), void *arg )
 {
     fn(arg);
     m_curr->status = KPROC_DEAD;
+    printf("[kthread::wrapper] finished\n");
     while (true) { asm volatile ("hlt"); }
 }
 
@@ -144,12 +132,73 @@ void kthread::add( kthread *th )
 }
 
 
+void kthread::remove( kthread *th ) 
+{
+    kthread::global_lock();
+
+    if (th->next == nullptr)
+    {
+        kpanic("next == nullptr");
+    }
+
+    kthread *prev = nullptr;
+    kthread *curr = th->next;
+
+    while (curr != th)
+    {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (prev == nullptr)
+    {
+        kpanic("prev == nullptr");
+    }
+
+    prev->next = th->next;
+    delete th;
+
+    kthread::global_unlock();
+}
+
+
+void kthread::ted_bundy( void* )
+{
+    while (true)
+    {
+        kthread *th = m_curr->next;
+
+        while (th != m_curr)
+        {
+            if (th->status == KPROC_DEAD)
+            {
+                printf("[kthread::ted_bundy] removing process %d\n", th->tid);
+                kthread::remove(th);
+                break;
+            }
+            th = th->next;
+        }
+
+        kthread::yield();
+    }
+}
+
+
+
 kthread::kthread( void (*fn)(void*), void *arg )
 {
-    asm volatile ("cli");
+    static bool first = true;
+    if (first)
+    {
+        first = false;
+        new kthread(kthread::ted_bundy, nullptr);
+    }
+
+    kthread::global_lock();
+
     static size_t curr_tid = 0;
 
-    uint8_t *stack = (uint8_t*)kmalloc(4096);
+    uint8_t *stack = new uint8_t[4096];
     uint8_t *top   = stack + 4096;
              top   = (uint8_t *)((uintptr_t)top & ~0xF);
              top  -= sizeof(uint64_t);
@@ -167,13 +216,14 @@ kthread::kthread( void (*fn)(void*), void *arg )
     this->next = nullptr;
 
     kthread::add(this);
-	asm volatile ("sti");
+    kthread::global_unlock();
 }
 
 
 kthread::~kthread()
 {
-    // kfree(this->stack);
+    printf("[kthread::~kthread]\n");
+    delete[] this->stack;
 }
 
 

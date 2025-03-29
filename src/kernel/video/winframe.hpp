@@ -36,7 +36,7 @@
 
 // public:
 //     ivec2 m_tl;
-//     ivec2 m_sp;
+//     ivec2 span;
 //     uvec4 m_bg;
 //     float m_depth;
 

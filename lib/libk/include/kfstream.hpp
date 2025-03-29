@@ -1,7 +1,8 @@
 #pragma once
 #include <AAA.h>
-#include <kthread.hpp>
+#include <ZZZ.h>
 
+#include <kthread.hpp>
 
 
 struct kfstream
@@ -22,13 +23,11 @@ public:
     kfstream( size_t size, void (*flsh)(kfstream*) = nullptr );
     kfstream( void *base, size_t sz, void (*flsh)(kfstream*) = nullptr );
 
-    size_t write( const void *src, size_t nbytes );
     size_t read( void *dst, size_t nbytes );
+    size_t write( const void *src, size_t nbytes );
+    size_t readstr( char *dst );
+    size_t writestr( const char *src );
     void   flush();
 };
 
 
-
-
-
-#include <ZZZ.h>

@@ -18,10 +18,12 @@ enum Kintcode: uint8_t
     INT_BAD_ALLOC 	  	          = 52,
     INT_BAD_FREE  	  	          = 53,
     INT_OUT_OF_MEMORY 	          = 54,
+    INT_BAD_FILE     	          = 55,
 
     INT_KEYBOARD				  = 90,
 
-    INT_KTHREAD_YIELD             = 98,
+    INT_KTHREAD_YIELD             = 97,
+    INT_PANIC                     = 98,
     INT_SYSCALL 	  	          = 99
 };
 

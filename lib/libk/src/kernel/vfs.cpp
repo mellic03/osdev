@@ -33,28 +33,18 @@ kfilesystem::vfsInsertDirectory( const char *pth )
     const char *start = path;
     const char *end   = start;
 
-    syslog log("vfsInsertDirectory( const char* )");
-    log("root: 0x%lx", m_root);
-    log("num_dirs: %lu", num_dirs);
-    log("path: \"%s\"", path);
-
     vfsDirEntry *dir = m_root;
 
     while (count < num_dirs)
     {
         end = seek_brk(start, "/\0");
         strncpy(name, start, end-start+1);
-        log("name: \"%s\"", name);
-        // log("start: \'%c\' 0x%lx", *start, start);
-        // log("end:   \'%c\' 0x%lx", *end, end);
         start = end+1;
         auto *child = dir->getChild(name);
 
         if (!child)
         {
-            log("%s.giveChild<vfsDirEntry>(%s)", dir->name, name);
             child = dir->giveChild<vfsDirEntry>(name);
-            log("child = 0x%lx", child);
         }
     
         else if (child->is_file())
@@ -66,8 +56,6 @@ kfilesystem::vfsInsertDirectory( const char *pth )
 
         count++;
     }
-
-    log("created directory: \"%s\"", dir->get_path());
 
     return dir;
 }
@@ -113,12 +101,6 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *pth )
     char *name  = m_buf1;
     const char *start = path;
     const char *end   = start;
-
-    syslog log("vfsFindDirectory( vfsDirEntry*, const char* )");
-    log("cwd: \"%s\"", cwd->get_path());
-    log("num_dirs: %lu", num_dirs);
-    log("path: \"%s\"", path);
-
     vfsDirEntry *dir = cwd;
 
     while (count < num_dirs)
@@ -127,13 +109,10 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *pth )
         strncpy(name, start, end-start+1);
         start = end+1;
 
-        log("name: \"%s\"", name);
-
         auto *child = dir->getChild(name);
 
         if (!child || child->is_file())
         {
-            log("could not vfsFind directory");
             return nullptr;
         }
 
@@ -141,8 +120,6 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *pth )
 
         count++;
     }
-
-    log("found directory: \"%s\"", dir->get_path());
 
     return dir;
 }
@@ -152,8 +129,6 @@ vfsFileEntry*
 kfilesystem::vfsInsertFile( const char *dr, const char *fname,
                             void *addr, size_t size, uint8_t type )
 {
-    syslog log("vfsInsertFile( const char*, const char*, uintptr_t, size_t )");
-
     auto *dir = vfsFindDirectory(dr);
 
     if (!dir) dir = vfsInsertDirectory(dr);
@@ -165,11 +140,9 @@ kfilesystem::vfsInsertFile( const char *dr, const char *fname,
     {
         if (entry->is_dir())
         {
-            log("path already exists as directory");
             return nullptr;
         }
     
-        log("file already exists");
         return static_cast<vfsFileEntry*>(entry);
     }
 
@@ -180,7 +153,6 @@ kfilesystem::vfsInsertFile( const char *dr, const char *fname,
     // file->type = type;
     // file->addr = (void*)addr;
     // file->size = size;
-    log("created file \"%s\"", file->get_path());
 
     return file;
 }
@@ -195,14 +167,10 @@ kfilesystem::vfsFindFile( const char *fname )
 
 
 
-static klock_t trie_lock = { false };
-
 vfsFileEntry*
 kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *pth )
 {
-    klock_acquire(&trie_lock);
-
-    syslog log("vfsFindFile");
+    kthread::global_lock();
 
     if (pth[0] == '/')
     {
@@ -233,7 +201,6 @@ kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *pth )
         end = seek_brk(start, "/\0");
         strncpy(name, start, end-start+1);
         start = end+1;
-        log("name: \"%s\"", name);
     
         auto *child = dir->getChild(name);
 
@@ -241,7 +208,7 @@ kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *pth )
             dir = static_cast<vfsDirEntry*>(child);
         else
         {
-            klock_release(&trie_lock);
+            kthread::global_unlock();
             return nullptr;
         }
 
@@ -251,18 +218,16 @@ kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *pth )
     end = seek_brk(start, "/\0");
     strncpy(name, start, end-start);
     name[end-start] = '\0';
-    log("name: \"%s\"", name);
-
     auto *child = dir->getChild(name);
 
     if (child && child->is_file())
     {
-        klock_release(&trie_lock);
+        kthread::global_unlock();
         return static_cast<vfsFileEntry*>(child);
     }
     else
     {
-        klock_release(&trie_lock);
+        kthread::global_unlock();
         return nullptr;
     }
 

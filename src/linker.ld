@@ -40,13 +40,13 @@ SECTIONS
         *(.data .data.*)
     } :data
 
-    . += CONSTANT(MAXPAGESIZE);
+    . = ALIGN(16);
     .init_array : {
         PROVIDE_HIDDEN (__init_array_start = .);
         KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
         KEEP (*(.init_array .ctors))
         PROVIDE_HIDDEN (__init_array_end = .);
-    }
+    } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
