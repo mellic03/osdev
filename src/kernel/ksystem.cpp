@@ -1,19 +1,21 @@
 #include "boot/boot.hpp"
 
+#ifndef __is_kernel
+    #define __is_kernel
+#endif
+
 #include <libc.h>
 #include <libc++>
 
-#include <kdef.h>
-#include <kfile.h>
-#include <kmalloc.h>
+#include <kernel/vfs.hpp>
 #include <kernel/bitmanip.hpp>
+#include <kmalloc.h>
 #include <string.h>
 
 // #include "driver/serial.hpp"
-#include "log/log.hpp"
+#include <kernel/log.hpp>
 
 #include "ksystem.hpp"
-#include "kfs/kfs.hpp"
 #include "memory/pmm.hpp"
 #include "memory/vmm.hpp"
 
@@ -28,19 +30,16 @@ KSystem::KSystem( const Krequests &reqs )
 // void KSystem::init( Krequests reqs )
 {
     syslog log("KSystem::KSystem");
-
-    // m_reqs = reqs;
     cpu0.init();
     
     _load_mmaps();
     kmalloc_init(m_mmaps[0]);
     PMM::init(m_mmaps[1], reqs.hhdm);
     VMM::init();
-    libc_init();
-    std::detail::libcpp_init();
+    libcpp::init();
 
     _load_modules();
-    KFS::init((uintptr_t)this);
+    // KFS::init((uintptr_t)this);
 }
 
 
@@ -189,7 +188,6 @@ KSystem::_load_modules()
     syslog log("KSystem::_load_modules");
 
     m_modules = inplace_vector<limine_file*>(new limine_file*[64], 64);
-    m_execs   = inplace_vector<ExecHeader>(new ExecHeader[32], 32);
     m_fonts   = inplace_vector<FontBuffer>(new FontBuffer[32], 32);
 
     auto *res = m_reqs.modules;
@@ -207,29 +205,16 @@ KSystem::_load_modules()
             continue;
         }
 
-        if (strcmp(file->string+len-4, "exec") == 0)
-        {
-            m_execs.push_back({file->address, file->size});
-        }
-
-        else if (strncmp(file->path, "/data/font", 10) == 0)
+        if (strncmp(file->path, "/font", 5) == 0)
         {
             auto *header = (ck_BMP_header*)file->address;
             m_fonts.push_back(FontBuffer(file->string, header));
         }
 
-        // else if (strncmp(file->string, "font", 4) == 0)
-        // {
-        //     auto *header = (ck_BMP_header*)file->address;
-        //     m_fonts.push_back(FontBuffer(file->string, header));
-        // }
-
         m_modules.push_back(file);
     }
 
     log("modules: %d", m_modules.size());
-    log("execs:   %d", m_execs.size());
-    log("fonts:   %d", m_fonts.size());
 
 }
 

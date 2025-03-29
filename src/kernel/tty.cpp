@@ -7,7 +7,7 @@
 
 #include <kscancode.h>
 #include <kthread.hpp>
-#include "kfs/kfs.hpp"
+#include <kernel/vfs.hpp>
 #include "driver/keyboard.hpp"
 
 #include "kshell/kshell.hpp"
@@ -28,7 +28,7 @@ kTTY::kTTY()
 
 
 kTTY::kTTY( size_t size )
-:   cwd     (KFS::insertDirectory("dev/tty0/")),
+:   cwd     (kfilesystem::vfsInsertDirectory("dev/tty0/")),
     history (new char[size]),
     htop    (history),
     hend    (history + size),
@@ -112,7 +112,7 @@ vfsDirEntry *&kTTY::getCWD()
 {
     if (cwd == nullptr)
     {
-        cwd = KFS::insertDirectory("dev/tty0/");
+        cwd = kfilesystem::vfsInsertDirectory("dev/tty0/");
 
     }
 

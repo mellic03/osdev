@@ -3,7 +3,6 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <kfile.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,7 +15,7 @@ extern "C" {
 #define BUFSIZ (512*sizeof(char))
 #define EOF -1
 
-typedef KFile FILE;
+typedef uint64_t FILE;
 extern FILE *stderr;    // Standard error output stream.
 extern FILE *stdin;     // Standard input stream.
 extern FILE *stdout;    // Standard output stream.

@@ -1,5 +1,6 @@
 #include "kshell.hpp"
 #include "../ksystem.hpp"
+#include <kernel/vfs.hpp>
 #include <kstring.h>
 #include <stdlib.h>
 
@@ -29,7 +30,7 @@ char *kshell_font( char *dst, int argc, char **argv )
 
 
     char *fname = argv[1];
-    auto *file  = KFS::findFile(cwd, fname);
+    auto *file  = kfilesystem::vfsFindFile(cwd, fname);
 
     if (file)
     {

@@ -1,12 +1,11 @@
 #include <libc.h>
 #include <stdio.h>
+#include <string.h>
 #include <ksysc.h>
 
 #ifdef __is_kernel
-    #include <kfs.hpp>
+    #include <kernel/vfs.hpp>
 #endif
-
-
 
 int libc_init()
 {
@@ -19,23 +18,16 @@ static ksysc_request req;
 
 int libc_init_stdio()
 {
-    FILE **files;
-
     #ifdef __is_kernel
-        files = KFS::kstdio;
-
+        stdout = (FILE*)(kfilesystem::vfsFindFile("dev/stdio"));
+    
     #else
-        req = {
-            .type = SYSC_FILE_GETSTDIO
-        };
+        req.type = SYSC_FILE_GET;
+        strcpy(req.msg, "dev/stdout");
         libc_syscall(&req);
-        files = (FILE**)(req.data);
+        stdout = (FILE*)(req.data);
 
     #endif
-
-    stderr = files[0];
-    stdin  = files[1];
-    stdout = files[2];
 
     return 1;
 }

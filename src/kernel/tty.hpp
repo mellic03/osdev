@@ -1,7 +1,7 @@
 #pragma once
 #include <kfile.h>
 #include <stdio.h>
-#include "kfs/kfs.hpp"
+#include <kernel/vfs.hpp>
 #include "kvideo/font.hpp"
 
 

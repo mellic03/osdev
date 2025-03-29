@@ -1,8 +1,8 @@
 #include "mouse.hpp"
-#include "serial.hpp"
 #include "pic.hpp"
-#include "../kfs/kfs.hpp"
-#include "../log/log.hpp"
+#include <kernel/vfs.hpp>
+#include <kernel/ioport.hpp>
+#include <kernel/log.hpp>
 
 #include <kscancode.h>
 #include <kmalloc.h>
@@ -215,20 +215,24 @@ ps2_mouse::irq_handler( kstackframe* )
 void
 ps2_mouse::driver_main( void* )
 {
-    // rawstream   = (kfstream*)(KFS::findFile("dev/ms0/raw")->addr);
-    kfstream *stream = (kfstream*)(KFS::findFile("dev/ms0/event")->addr);
+    // auto *fh = kfilesystem::vfsFindFile("dev/ms0/event");
 
-    static uint8_t packet[4];
-    static uint8_t idx = 0;
-    static vec2 mouse(512.0f);
+    // static uint8_t packet[4];
+    // static uint8_t idx = 0;
+    // static vec2 mouse(512.0f);
 
-    while (true)
-    {
-        ProcessMousePacket();
-        mouse = vec2(mouse_x, mouse_y);
-        stream->write(&mouse, sizeof(vec2));
-        kthread::yield();
-    }
+    // while (true)
+    // {
+    //     if (fh)
+    //     {
+    //         kfstream *stream = &(fh->stream);
+
+    //         ProcessMousePacket();
+    //         mouse = vec2(mouse_x, mouse_y);
+    //         stream->write(&mouse, sizeof(vec2));
+    //     }
+    //     kthread::yield();
+    // }
 }
 
 

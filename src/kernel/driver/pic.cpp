@@ -1,5 +1,5 @@
 #include "pic.hpp"
-#include "serial.hpp"
+#include <kernel/ioport.hpp>
 
 // https://wiki.osdev.org/Inline_Assembly/Examples#I/O_access
 

@@ -1,18 +1,13 @@
 #include "serial.hpp"
+#include <kernel/ioport.hpp>
 #include <stdio.h>
 #include <string.h>
-
-// static char __serial_buf[256];
-// static int  __syslog_indent;
 
 
 kret_t
 idk::serial_init()
 {
     using namespace IO;
-
-    // memset(__serial_buf, '\0', 256);
-    // __syslog_indent = 0;
 
     IO::outb(COM1+1, 0x00);    // Disable all interrupts
     IO::outb(COM1+3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -27,7 +22,7 @@ idk::serial_init()
     // // Check if serial is faulty (i.e: not same byte as sent)
     if (IO::inb(COM1 + 0) != 0xAE)
     {
-        return KRET_FAILURE;
+        // return KRET_FAILURE;
     }
  
     // If serial is not faulty set it in normal operation mode
@@ -36,127 +31,5 @@ idk::serial_init()
 
     return KRET_SUCCESS;
 }
-
-
-
-// extern "C"
-// {
-//     extern void    serial_outb( uint16_t port, uint8_t b );
-//     extern uint8_t serial_inb( uint16_t port );
-// }
-
-uint8_t idk::IO::inb( uint16_t port )
-{
-    // return serial_inb(port);
-    uint8_t ret;
-    __asm__ volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
-}
-
-uint16_t idk::IO::inw( uint16_t port )
-{
-    uint16_t ret;
-    __asm__ volatile("inw %1, %0" : "=a"(ret) : "Nd"(port));
-    return ret;
-}
-
-uint32_t idk::IO::inl( uint16_t port )
-{
-    uint32_t ret;
-    __asm__ volatile ("inl %w1,%0":"=a" (ret):"Nd" (port));
-    return ret;
-}
-
-
-void idk::IO::outb( uint16_t port, uint8_t value )
-{
-    // serial_outb(port, value);
-    __asm__ volatile("outb %0, %1" : : "a"(value), "Nd"(port));
-}
-
-
-void idk::IO::outw( uint16_t port, uint16_t value )
-{
-    __asm__ volatile("outw %0, %1" : : "a"(value), "Nd"(port));
-}
-
-
-void idk::IO::outl( uint16_t port, uint32_t value )
-{
-    __asm__ volatile("outl %0, %w1" : : "a"(value), "Nd"(port));
-}
-
-
-void idk::IO::wait()
-{
-    IO::outb(0x80, 0x00);
-}
-
-
-
-
-
-// void idk::__serialf( const char *fmt, va_list args )
-// {
-//     int n = vsprintf(__serial_buf, fmt, args);
-
-//     for (int i=0; i<__syslog_indent; i++)
-//     {
-//         idk::IO::outb(idk::IO::COM1, ' ');
-//     }
-
-//     for (int i=0; i<n; i++)
-//     {
-//         idk::IO::outb(idk::IO::COM1, __serial_buf[i]);
-//     }
-// }
-
-
-
-
-// void idk::serialf( const char *fmt, ... )
-// {
-//     va_list args;
-//     va_start (args, fmt);
-//     __serialf(fmt, args);
-//     va_end(args);
-// }
-
-
-
-
-
-
-
-
-// void __popIndent( int n )
-// {
-//     __syslog_indent -= n;
-//     __syslog_indent = (__syslog_indent < 0) ? 0 : __syslog_indent;
-// }
-
-// void SYSLOG_BEGIN( const char *title )
-// {
-//     SYSLOG("[%s]", title);
-//     SYSLOG("{");
-//     __pushIndent(4);
-// }
-
-
-// void SYSLOG( const char *fmt, ... )
-// {
-//     va_list args;
-//     va_start (args, fmt);
-//     idk::__serialf(fmt, args);
-//     idk::serialf("\n");
-//     va_end(args);
-// }
-
-
-// void SYSLOG_END()
-// {
-//     __popIndent(4);
-//     SYSLOG("}");
-// }
 
 

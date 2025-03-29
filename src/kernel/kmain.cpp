@@ -7,6 +7,8 @@
 #include "boot/requests.cpp"
 
 #include <kernel.h>
+#include <kernel/vfs.hpp>
+#include <kernel/log.hpp>
 #include <kinterrupt.h>
 #include <kthread.hpp>
 
@@ -17,7 +19,6 @@
 #include "driver/pit.hpp"
 #include "driver/keyboard.hpp"
 #include "driver/serial.hpp"
-#include "log/log.hpp"
 
 #include <kinplace/inplace_vector.hpp>
 
@@ -52,7 +53,6 @@ void oom_handler( kstackframe* )
 
 
 
-uint64_t idk::memory::hhdm;
 idk::KSystem *sys;
 uint64_t uptime_ms;
 
@@ -89,11 +89,10 @@ extern "C"
 
     void ctor_init( void )
     {
-        syslog log("ctor_init");
+        // syslog log("ctor_init");
 
         for (constructor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
         {
-            log("ctor: 0x%lx", ctor);
             (*ctor)();
         }
     }
@@ -129,15 +128,12 @@ void _start()
     ctor_init();
     uptime_ms = 0;
 
-    KFS::insertFile("dev/kb0/", "raw",   new kfstream(64));
-    KFS::insertFile("dev/kb0/", "event", new kfstream(64));
-    KFS::insertFile("dev/kb1/", "raw",   new kfstream(64));
-    KFS::insertFile("dev/kb1/", "event", new kfstream(64));
-
-    KFS::insertFile("dev/ms0", "raw",   new kfstream(64));
-    KFS::insertFile("dev/ms0", "event", new kfstream(64));
-    KFS::insertFile("dev/ms1", "raw",   new kfstream(64));
-    KFS::insertFile("dev/ms1", "event", new kfstream(64));
+    kfilesystem::vfsInsertFile<char>("dev/kb0/", "raw",   64);
+    kfilesystem::vfsInsertFile<char>("dev/kb0/", "event", 64);
+    kfilesystem::vfsInsertFile<char>("dev/kb1/", "raw",   64);
+    kfilesystem::vfsInsertFile<char>("dev/kb1/", "event", 64);
+    kfilesystem::vfsInsertFile<char>("dev/ms0",  "raw",   64);
+    kfilesystem::vfsInsertFile<char>("dev/ms0",  "event", 64);
 
     mouse_init();
     idk::PIT_init();
@@ -167,11 +163,11 @@ void _start()
         if (len == 0)
             continue;
 
-        else if (strncmp(F->path, "/data/exec", 10) == 0)
-            KFS::insertFile("bin/", F->string, F->address, F->size);
+        else if (strncmp(F->path, "/bin", 4) == 0)
+            kfilesystem::vfsInsertFile("bin/", F->string, F->address, F->size);
 
-        else if (strncmp(F->path, "/data/font", 10) == 0)
-            KFS::insertFile("font/", F->string, F->address, F->size);
+        else if (strncmp(F->path, "/font", 5) == 0)
+            kfilesystem::vfsInsertFile("font/", F->string, F->address, F->size);
     }
 
     kTTY tty0(25*80);

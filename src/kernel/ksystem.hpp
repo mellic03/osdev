@@ -56,7 +56,6 @@ private:
     MemoryMap m_mmap_buf[32];
     inplace_vector<MemoryMap>    m_mmaps;
     inplace_vector<limine_file*> m_modules;
-    inplace_vector<ExecHeader>   m_execs;
 
     void _load_mmaps();
     void _load_modules();

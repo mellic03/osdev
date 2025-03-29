@@ -1,5 +1,5 @@
 #include "kshell.hpp"
-#include "kfs/kfs.hpp"
+#include <kernel/vfs.hpp>
 #include "../kwin/kwin.hpp"
 #include "../kwin/frame_text.hpp"
 #include "../driver/keyboard.hpp"
@@ -7,11 +7,10 @@
 #include <kmalloc.h>
 #include <stdio.h>
 #include <string.h>
-#include <idk_vector.hpp>
+#include <vector>
 #include <algorithm>
 
 using namespace idk;
-using namespace KFS;
 
 using namespace KShell;
 using argv_type = char[16][32];
@@ -29,34 +28,26 @@ extern char *kshell_exit   ( char*, int, char** );
 
 
 using fn_type = char *(*)( char*, int, char** );
+struct command_pair { const char *name; fn_type fn; };
 
-const char *cmd_names[] = {
-    "cwd",
-    "ls",
-    "cd",
-    "exec",
-    "font",
-    "info",
-    "tid",
-    "clear",
-    "exit"
-};
+static std::vector<command_pair> cmd_table;
+// static idk::static_vector<char[MAX_ARG_LENGTH], MAX_ARG_COUNT> kshell_argv;
+#define KSHELL_REGISTER_CMD(name) cmd_table.push_back({#name, kshell_##name});
 
-const fn_type cmd_methods[] = {
-    kshell_cwd,
-    kshell_ls,
-    kshell_cd,
-    kshell_exec,
-    kshell_font,
-    kshell_info,
-    kshell_tid,
-    kshell_clear,
-    kshell_exit
-};
-
+static void registerCommands()
+{
+    KSHELL_REGISTER_CMD(cwd)
+    KSHELL_REGISTER_CMD(ls)
+    KSHELL_REGISTER_CMD(cd)
+    KSHELL_REGISTER_CMD(exec)
+    KSHELL_REGISTER_CMD(font)
+    KSHELL_REGISTER_CMD(info)
+    KSHELL_REGISTER_CMD(tid)
+    KSHELL_REGISTER_CMD(clear)
+    KSHELL_REGISTER_CMD(exit)
+}
 
 kTTY *KShell::kshell_tty;
-char  KShell::kshell_buf[128];
 char  **kshell_argv;
 
 
@@ -72,22 +63,21 @@ kshell_parse( kTTY *tty )
         return;
     }
 
-
     char *&dst  = tty->htop;
     char *name  = kshell_argv[0];
-    int   count = sizeof(cmd_names) / sizeof(char*);
 
-    for (int i=0; i<count; i++)
+    for (auto &[name, fn]: cmd_table)
     {
-        if (strcmp(name, cmd_names[i]) == 0)
+        if (strcmp(kshell_argv[0], name) == 0)
         {
-            dst = cmd_methods[i](dst, argc, kshell_argv);
+            dst = fn(dst, argc, kshell_argv);
             return;
         }
     }
 
     dst = kssprintf(dst, "unrecognised command \"%s\"", kshell_argv[0]);
 }
+
 
 
 
@@ -128,11 +118,12 @@ char *kshell_exit( char *dst, int, char** )
 }
 
 
-
+using namespace kdriver::ps2_kb;
 
 void kshell_main( void *arg )
 {
-    using namespace kdriver::ps2_kb;
+    registerCommands();
+
     kshell_argv = (char**)kmalloc(MAX_ARG_COUNT);
     for (int i=0; i<MAX_ARG_COUNT; i++)
     {
@@ -140,7 +131,7 @@ void kshell_main( void *arg )
     }
 
     kTTY *tty    = (kTTY*)arg;
-    auto *stream = (kfstream*)(KFS::findFile("dev/kb0/event")->addr);
+    auto *stream = &(kfilesystem::vfsFindFile("dev/kb0/event")->stream);
 
     auto *ctx = kwin::createContext(550, 500);
     auto *root = ctx->createFrame<kwin::Frame>(

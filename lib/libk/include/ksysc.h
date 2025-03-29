@@ -12,7 +12,6 @@ enum SYSC_
     SYSC_FILE_WRITE    = 4,
     SYSC_FILE_GET,
     SYSC_FILE_FLUSH,
-    SYSC_FILE_GETSTDIO,
 
     SYSC_MEM_ALLOC,
     SYSC_MEM_FREE,
@@ -33,6 +32,7 @@ struct ksysc_request
     uint32_t type;
     uint32_t flags;
     uint64_t size;
+    char     msg[64];
     void    *data;
 };
 

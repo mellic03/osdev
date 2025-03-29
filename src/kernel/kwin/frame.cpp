@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <kernel/memory.hpp>
 #include <algorithm>
-#include "../log/log.hpp"
+#include <kernel/log.hpp>
 
 kwin::Frame::Frame( ivec2 tl, ivec2 sp, vec4 c, const Style &style )
 :   m_local(tl), m_world(tl), m_tl(m_world), m_sp(sp), m_col(c), m_style(style),

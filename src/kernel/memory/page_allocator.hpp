@@ -1,6 +1,5 @@
 #pragma once
 
-#include "memory.hpp"
 #include <stdint.h>
 #include <stddef.h>
 #include <kinplace/inplace_array.hpp>

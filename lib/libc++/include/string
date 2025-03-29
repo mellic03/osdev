@@ -1,0 +1,29 @@
+#pragma once
+
+#include <vector>
+
+
+namespace std
+{
+    class string;
+}
+
+
+class std::string: public std::vector<char>
+{
+public:
+    string(): vector(16)
+    {
+        resize(0);
+    }
+
+    string( const char* );
+    // string( const string & );
+    // string &operator=( const string & );
+
+    size_t size() const { return vector::size() - 1; }
+ 
+
+};
+
+

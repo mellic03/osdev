@@ -1,11 +1,6 @@
-extern "C"
-{
-    #define LIMINE_API_REVISION 3
-    #include <limine/limine.h>
-}
-
 #include "kvideo.hpp"
-#include "../log/log.hpp"
+#include "../boot/boot.hpp"
+#include <kernel/log.hpp>
 #include <kmalloc.h>
 #include <kthread.hpp>
 #include <kmemxx.h>

@@ -30,7 +30,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
-add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
+# add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
 
 
 # add_library(
@@ -84,7 +84,7 @@ target_link_libraries(
     # "${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/no-red-zone/crtbegin.o"
 
     libc_k
-    libc++
+    libc++_k
     ${IDKERNEL_LIBRARIES}
 
     # "${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/no-red-zone/crtend.o"

@@ -12,7 +12,7 @@ vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
     if (strcmp(name, "..") == 0)
         dir = (cwd->parent) ? cwd->parent : cwd;
     else
-        dir = KFS::findDirectory(cwd, name);
+        dir = kfilesystem::vfsFindDirectory(cwd, name);
 
     return dir;
 }

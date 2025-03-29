@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <kfstream.hpp>
 
 
 
@@ -162,11 +163,12 @@ vprintf( const char *fmt, va_list args )
 
 
 int
-vfprintf( FILE *fh, const char *fmt, va_list args )
+vfprintf( FILE *addr, const char *fmt, va_list args )
 {
-    int n = vsprintf((char*)fh->write, fmt, args);
-    fh->write += n;
-    fflush(fh);
+    auto *fh = ((kfstream*)addr);
+    int n = vsprintf((char*)fh->m_write, fmt, args);
+    fh->m_write += n;
+    fh->flush();
 
     return n;
 }

@@ -2,8 +2,7 @@
 #include "pmm.hpp"
 #include <stdio.h>
 #include <string.h>
-#include "../log/log.hpp"
-#include "memory.hpp"
+#include <kernel/log.hpp>
 #include <kernel/memory.hpp>
 #include <kernel/bitmanip.hpp>
 

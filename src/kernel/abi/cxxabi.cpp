@@ -1,10 +1,9 @@
 #include "cxxabi.hpp"
-#include <kthread.hpp>
-// #include <lib/panic.hpp>
-// #include <lib/lock.hpp>
-#include <stdint.h>
 
-extern "C" {
+
+extern "C"
+{
+
 
 atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
 uarch_t __atexit_func_count = 0;
@@ -67,8 +66,11 @@ namespace __cxxabiv1
     }
 }
 
-    void __cxa_pure_virtual()
-    {
-        // panic("Pure virtual function called!");
-    }
+void __cxa_pure_virtual()
+{
+    // panic("Pure virtual function called!");
+}
+
+
+
 }

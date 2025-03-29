@@ -35,6 +35,9 @@ public:
          Context( int w, int h );
         ~Context();
     void flush();
+
+    void hline( int x0, int x1, int y,  const vec4& );
+    void vline( int x,  int y0, int y1, const vec4& );
     void rectOutline( vec2 tl, vec2 sp, vec4 color );
     void rect( vec2 tl, vec2 sp, vec4 color );
     void blit( vec2 tl0, vec2 tl1, vec2 sp, const kframebuffer<vec4>& );

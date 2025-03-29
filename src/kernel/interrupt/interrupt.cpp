@@ -1,5 +1,5 @@
 #include "interrupt.hpp"
-#include "../log/log.hpp"
+#include <kernel/log.hpp>
 #include "../driver/pic.hpp"
 #include "../cpu/gdt.hpp"
 

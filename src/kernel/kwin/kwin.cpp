@@ -4,8 +4,8 @@
 #include "kinplace/inplace_vector.hpp"
 #include <stdio.h>
 #include <algorithm>
-#include "../kfs/kfs.hpp"
-#include "../log/log.hpp"
+#include <kernel/vfs.hpp>
+#include <kernel/log.hpp>
 #include "frame_tty.hpp"
 
 
@@ -31,7 +31,7 @@ void kwin_main( void *fb )
     kvideo::init((uintptr_t)fb);
     m_contexts = idk::inplace_vector<kwin::Context*>(ctxbuf, 16);
 
-    auto *stream = (kfstream*)(KFS::findFile("dev/ms0/event")->addr);
+    auto *stream = (kfstream*)(kfilesystem::vfsFindFile("dev/ms0/event")->addr);
     vec2 mouse(400, 400);
 
     while (true)
@@ -45,7 +45,7 @@ void kwin_main( void *fb )
         for (auto *ctx: m_contexts)
         {
             ctx_draw(*ctx);
-            ctx->rect(mouse, vec2(45.0f), vec4(1.0f));
+            ctx->rect(mouse, vec2(16.0f), vec4(1.0f));
             kthread::yield();
         }
 
@@ -126,30 +126,36 @@ void kwin::Context::flush()
 
 
 void
+kwin::Context::hline( int x0, int x1, int y, const vec4 &color )
+{
+    for (int x=x0; x<=x1; x++)
+    {
+        m_fb[y][x] = color;
+    }
+}
+
+void
+kwin::Context::vline( int x, int y0, int y1, const vec4 &color )
+{
+    for (int y=y0; y<=y1; y++)
+    {
+        m_fb[y][x] = color;
+    }
+}
+
+
+void
 kwin::Context::rectOutline( vec2 tl, vec2 sp, vec4 color )
 {
-    // uint32_t color = (C.r << 16) + (C.g << 8) + C.b;
-
     int x0 = std::max(tl.x, 0.0f);
     int x1 = std::min(tl.x+sp.x, m_sp.x-1);
     int y0 = std::max(tl.y, 0.0f);
     int y1 = std::min(tl.y+sp.y, m_sp.y-1);
 
-    for (int x=x0; x<x1; x++)
-    {
-        m_fb[y0][x] = color;
-        m_fb[y0+1][x] = color;
-        m_fb[y1][x] = color;
-        m_fb[y1-1][x] = color;
-    }
-
-    for (int y=y0; y<y1; y++)
-    {
-        m_fb[y][x0] = color;
-        m_fb[y][x0+1] = color;
-        m_fb[y][x1] = color;
-        m_fb[y][x1-1] = color;
-    }
+    hline(x0, x1, y0, color);
+    hline(x0, x1, y1, color);
+    vline(x0, y0, y1, color);
+    vline(x1, y0, y1, color);
 }
 
 

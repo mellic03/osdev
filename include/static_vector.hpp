@@ -74,7 +74,7 @@ public:
     const T* data()  const { return m_base; }
 
     size_t   size()     const { return static_cast<size_t>(m_top - m_base); }
-    size_t   capacity() const { return m_cap; }
+    size_t   capacity() const { return cap; }
     bool     empty()    const { return m_top == m_base; }
     void     clear()          { this->resize(0); }
 

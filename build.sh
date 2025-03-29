@@ -7,27 +7,24 @@ make -j8
 cd ../
 
 
-cp sysroot/bin/*.elf src/programs/build/
-cd src/programs
-./build.sh >> /dev/null 2>&1
-cd ../../
-cp src/programs/bin/* src/data/exec
+# cp sysroot/bin/*.elf src/programs/build/
+# cd src/programs
+# ./build.sh >> /dev/null 2>&1
+# cd ../../
+# cp src/programs/bin/* src/data/exec
 
 
-# # git clone https://github.com/limine-bootloader/limine.git \
-# #       --branch=v9.x-binary --depth=8 \
-# #       external/limine
+# git clone https://github.com/limine-bootloader/limine.git \
+#       --branch=v9.x-binary --depth=8 \
+#       external/limine
 
 # cd external
 # make -C limine
 # cd ../
 
 rm -rf output
-mkdir -p output/iso_root/data
-mkdir -p output/iso_root/boot/limine
-
-cp -R src/data/* output/iso_root/data/
-mv output/iso_root/data/limine.conf output/iso_root/boot/limine/limine.conf
+mkdir -p output
+cp -R src/iso_root output/iso_root
 
 cp -v sysroot/bin/idkernel output/iso_root/boot/
 cp -v external/limine/limine-bios.sys \
@@ -51,5 +48,4 @@ xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
 
 # Install Limine stage 1 and 2 for legacy BIOS boot.
 limine bios-install output/idkernel.iso
-
 

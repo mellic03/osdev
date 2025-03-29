@@ -67,6 +67,7 @@ set(CMAKE_C_FLAGS
 set(CMAKE_CXX_FLAGS
     "-std=c++23 \
     ${IDKERNEL_C_CXX_FLAGS} \
+    -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/libc++ \
     -fno-rtti \
     -MMD \
     -MP"

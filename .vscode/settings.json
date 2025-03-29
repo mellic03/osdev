@@ -159,7 +159,8 @@
         "kstackframe.h": "c",
         "expected": "cpp",
         "zzz.h": "c",
-        "kmalloc.h": "c"
+        "kmalloc.h": "c",
+        "kintcode.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

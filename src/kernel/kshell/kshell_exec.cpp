@@ -21,7 +21,7 @@ char *kshell_exec( char *dst, int argc, char **argv )
     }
 
     char *fname = argv[1];
-    auto *file  = KFS::findFile(cwd, fname);
+    auto *file  = kfilesystem::vfsFindFile(cwd, fname);
 
     if (!file)
     {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdio.h>
-#include "../log/log.hpp"
+#include <kernel/log.hpp>
 #include "../tty.hpp"
 
 

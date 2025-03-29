@@ -1,9 +1,42 @@
 #include <libc++>
+#include <cstdlib>
 
 
-int std::detail::libcpp_init()
+#ifdef __is_kernel
+void libcpp::init()
 {
+    return;
+}
+#endif
 
-    return 1;
+
+void *operator new( size_t nbytes )
+{
+    return malloc(nbytes);
+}
+
+void *operator new[]( size_t nbytes )
+{
+    return malloc(nbytes);
+}
+
+void operator delete( void *p )
+{
+    free(p);
+}
+
+void operator delete( void *p, size_t )
+{
+    free(p);
+}
+
+void operator delete[]( void *p )
+{
+    free(p);
+}
+
+void operator delete[]( void *p, size_t )
+{
+    free(p);
 }
 

@@ -1,8 +1,8 @@
 #include "keyboard.hpp"
-#include "serial.hpp"
+#include <kernel/ioport.hpp>
 #include "pic.hpp"
-#include "../kfs/kfs.hpp"
-#include "../log/log.hpp"
+#include <kernel/vfs.hpp>
+#include <kernel/log.hpp>
 
 #include <kscancode.h>
 #include <kmalloc.h>
@@ -150,10 +150,10 @@ kdriver::ps2_kb::driver_main( void* )
 {
     create_shift_table();
 
-    rawstreams[0] = (kfstream*)(KFS::findFile("dev/kb0/raw")->addr);
-    rawstreams[1] = (kfstream*)(KFS::findFile("dev/kb1/raw")->addr);
-    keystreams[0] = (kfstream*)(KFS::findFile("dev/kb0/event")->addr);
-    keystreams[1] = (kfstream*)(KFS::findFile("dev/kb1/event")->addr);
+    rawstreams[0] = &(kfilesystem::vfsFindFile("dev/kb0/raw")->stream);
+    rawstreams[1] = &(kfilesystem::vfsFindFile("dev/kb1/raw")->stream);
+    keystreams[0] = &(kfilesystem::vfsFindFile("dev/kb0/event")->stream);
+    keystreams[1] = &(kfilesystem::vfsFindFile("dev/kb1/event")->stream);
 
     static uint8_t states[2] = {0, 0};
     static uint8_t masks[2]  = {0, 0};

@@ -2,10 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../log/log.hpp"
+#include <kernel/log.hpp>
 #include "./syscall.hpp"
 #include "../interrupt/interrupt.hpp"
-#include "../kfs/kfs.hpp"
+#include <kernel/vfs.hpp>
 
 using namespace idk;
 
@@ -27,16 +27,7 @@ sysc_file_create( ksysc_request* )
 static void
 file_get( ksysc_request *req )
 {
-    KFile *fh = nullptr;
-
-    switch (req->flags)
-    {
-        default: break;
-        // case SYSF_FILE_KDEVKEY: fh = KFS::kdevkey;   break;
-        // case SYSF_FILE_KDEVSCN: fh = KFS::kdevscn;   break;
-    }
-
-    req->data = reinterpret_cast<void*>(fh);
+    req->data = kfilesystem::vfsFindFile(req->msg);
 }
 
 
@@ -48,14 +39,6 @@ file_flush( ksysc_request *req )
     KFile *fh = reinterpret_cast<KFile*>(req->data);
     fh->fsh(fh);
     log("fh: 0x%lx", fh);
-}
-
-
-
-static void
-stdio_get( ksysc_request *req )
-{
-    req->data = (void*)(&KFS::kstdio);
 }
 
 
@@ -74,7 +57,6 @@ idk::syscall_handler( kstackframe *frame )
         case SYSC_FILE_CREATE:   sysc_file_create(req); break;
         case SYSC_FILE_GET:      file_get(req);         break;
         case SYSC_FILE_FLUSH:    file_flush(req);       break;
-        case SYSC_FILE_GETSTDIO: stdio_get(req);        break;
         case SYSC_MEM_ALLOC:     req->data = kmalloc(req->size); break;
         case SYSC_MEM_FREE:      kfree(req->data);
     }

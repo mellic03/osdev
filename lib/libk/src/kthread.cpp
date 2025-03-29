@@ -4,7 +4,7 @@
 #include <kinterrupt.h>
 #include <stdio.h>
 #include <string.h>
-// #include "../log/log.hpp"
+// #include <kernel/log.hpp>
 
 
 void kthread::global_lock()

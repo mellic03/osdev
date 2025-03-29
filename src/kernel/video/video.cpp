@@ -5,7 +5,7 @@
 // }
 
 // #include "video.hpp"
-// #include "../log/log.hpp"
+// #include <kernel/log.hpp>
 // #include <kmalloc.h>
 // #include <kmemxx.h>
 // #include <string.h>

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <stdint.h>
 
 static constexpr uint64_t ATEXIT_MAX_FUNCS = 128;

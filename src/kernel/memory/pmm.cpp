@@ -1,5 +1,4 @@
-#define LIMINE_API_REVISION 3
-#include <limine/limine.h>
+#include "../boot/boot.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +8,7 @@
 #include <kinplace/inplace_stack.hpp>
 
 #include "pmm.hpp"
-#include "../log/log.hpp"
+#include <kernel/log.hpp>
 #include "../ksystem.hpp"
 
 

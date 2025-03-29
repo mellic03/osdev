@@ -1,0 +1,87 @@
+#pragma once
+
+#include <stdint.h>
+#include <stddef.h>
+
+
+namespace std
+{
+    template <typename T, size_t capacity>
+    class array;
+}
+
+
+
+template <typename T, size_t __capacity>
+class std::array
+{
+private:
+    size_t m_cap = __capacity;
+    T  m_data[__capacity];
+    T *m_begin;
+    T *m_end;
+
+public:
+    array()
+    {
+        m_begin = m_data;
+        m_end   = m_data + m_cap;
+    }
+
+    array( const T &value )
+    :   array()
+    {
+        fill(value);
+    }
+
+    void fill( const T &value )
+    {
+        for (size_t i=0; i<m_cap; i++)
+        {
+            m_data[i] = value;
+        }
+    }
+
+    size_t size() { return m_cap; }
+    size_t capacity() { return m_cap; }
+    void *data() { return m_data; }
+
+    T& back () { return m_data[m_cap-1]; }
+    const T& back () const { return m_data[m_cap-1]; }
+
+    T& operator[] ( int i ) { return m_data[i]; }
+    const T& operator[] ( int i ) const { return m_data[i]; }
+
+
+    struct iterator;
+    iterator begin() { return iterator(m_data); };
+    iterator end()   { return iterator(m_end);  };
+
+};
+
+
+template <typename T, size_t N>
+struct std::array<T, N>::iterator
+{
+    T *ptr;
+
+    iterator( T *p )                 : ptr(p)         {  };
+    iterator( const iterator &other ): ptr(other.ptr) {  };
+
+    iterator &operator++()
+    {
+        ptr++;
+        return *this;
+    };
+
+    iterator operator++(int)
+    {
+        return iterator(ptr++);
+    };
+
+    bool operator == ( const iterator &rhs ) { return ptr == rhs.ptr; };
+    bool operator != ( const iterator &rhs ) { return ptr != rhs.ptr; };
+    T &operator * () { return *ptr; };
+
+};
+

@@ -3,8 +3,8 @@
 #include <kinterrupt.h>
 #include <algorithm>
 #include "heap_allocator.hpp"
-#include "../log/log.hpp"
-// #include "../driver/serial.hpp"
+#include <kernel/log.hpp>
+// #include <kernel/ioport.hpp>
 
 
 // // idk::heap_allocator::FreeNode::FreeNode( uint64_t *bs, uint64_t sz )

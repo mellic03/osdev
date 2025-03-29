@@ -3,9 +3,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-KFile *stderr = NULL;
-KFile *stdin  = NULL;
-KFile *stdout = NULL;
+
+FILE *stderr = nullptr;
+FILE *stdin  = nullptr;
+FILE *stdout = nullptr;
 
 
 
@@ -26,13 +27,15 @@ KFile *stdout = NULL;
 // }
 
 #ifdef __is_kernel
+    #include <kernel/vfs.hpp>
     #include <kthread.hpp>
 #endif
+#include <kfstream.hpp>
 
 
-int fflush( FILE *fh )
+int fflush( FILE *addr )
 {
-    fh->fsh(fh);
+    ((kfstream*)addr)->flush();
 
     #ifdef __is_kernel
         kthread::yield();
@@ -56,16 +59,16 @@ char *fgets( char *str, int n, FILE *fh )
 {
     int i=0;
 
-    while (i<n && (fh->read < fh->write))
-    {
-        i++;
-        *(str++) = *(fh->read++);
-    }
+    // while (i<n && (fh->read < fh->write))
+    // {
+    //     i++;
+    //     *(str++) = *(fh->read++);
+    // }
 
-    if (i==0)
-    {
-        return nullptr;
-    }
+    // if (i==0)
+    // {
+    //     return nullptr;
+    // }
 
     return str;
 }

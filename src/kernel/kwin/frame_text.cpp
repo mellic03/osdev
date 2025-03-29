@@ -1,7 +1,7 @@
 #include "frame_text.hpp"
 #include "../driver/keyboard.hpp"
-#include "../kfs/kfs.hpp"
-#include "../log/log.hpp"
+#include <kernel/vfs.hpp>
+#include <kernel/log.hpp>
 #include <kmalloc.h>
 #include <stdio.h>
 

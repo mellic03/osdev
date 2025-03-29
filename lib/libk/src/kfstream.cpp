@@ -12,17 +12,21 @@ kfstream::kfstream()
 
 }
 
-
-
-kfstream::kfstream( size_t nbytes, void (*fsh)(kfstream*) )
+kfstream::kfstream( size_t size, void (*flsh)(kfstream*) )
+:   kfstream(kmalloc(size), size, flsh)
 {
-    m_base  = (uint8_t*)kmalloc(nbytes);
-    m_eof   = m_base + nbytes;
-    m_size  = nbytes;
+
+}
+
+kfstream::kfstream( void *base, size_t size, void (*flsh)(kfstream*) )
+{
+    m_base  = (uint8_t*)base;
+    m_eof   = m_base + size;
+    m_size  = size;
     m_read  = m_base;
     m_write = m_base;
     m_lock  = { false };
-    m_flush = fsh;
+    m_flush = flsh;
 }
 
 

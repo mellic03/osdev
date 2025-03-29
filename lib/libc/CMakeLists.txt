@@ -16,7 +16,6 @@ target_link_libraries(libc_k libk)
 target_compile_definitions(libc_k PUBLIC -D__is_kernel)
 
 
-
 file(
     COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
     DESTINATION ${KERNEL_SYSROOT_DIRECTORY}

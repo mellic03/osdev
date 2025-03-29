@@ -19,7 +19,8 @@ public:
     fshtype   m_flush;
 
     kfstream();
-    kfstream( size_t sz, void (*flush)(kfstream*) = nullptr );
+    kfstream( size_t size, void (*flsh)(kfstream*) = nullptr );
+    kfstream( void *base, size_t sz, void (*flsh)(kfstream*) = nullptr );
 
     size_t write( const void *src, size_t nbytes );
     size_t read( void *dst, size_t nbytes );
