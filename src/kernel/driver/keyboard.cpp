@@ -28,18 +28,12 @@ static vfsFileEntry *keyfh = nullptr;
 void
 kdriver::ps2_kb::irq_handler( kstackframe* )
 {
-    uint8_t status = IO::inb(0x64);
-    uint8_t code   = IO::inb(0x60);
+    uint8_t code = IO::inb(0x60);
 
     if (rawfh)
-    {
         rawfh->stream.write(&code, 1);
-    }
-
     else
-    {
         syslog::kprintf("[ps2_kb::irq_handler] REEEEEE\n");
-    }
 
     PIC::sendEOI(1);
 }

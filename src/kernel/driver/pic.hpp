@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 
-namespace idk::PIC
+namespace PIC
 {
     static constexpr uint16_t PIC1_CMD  = 0x0020;
     static constexpr uint16_t PIC1_DATA = 0x0021;

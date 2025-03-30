@@ -17,7 +17,7 @@ static std::vector<VPair> vars;
 
 int find_pair( const char *name )
 {
-    for (int i=0; i<vars.size(); i++)
+    for (size_t i=0; i<vars.size(); i++)
     {
         if (strcmp(name, vars[i].name) == 0)
         {
@@ -32,11 +32,11 @@ int find_pair( const char *name )
 
 char *kshell_set( char *dst, int argc, char **argv )
 {
-    auto &cwd = kshell_tty->getCWD();
+    // auto *cwd = kshell_tty->getCWD();
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, "set: arguments required");
+        dst = kssprintln(dst, "set: arguments required");
         return dst;
     }
 
@@ -44,7 +44,7 @@ char *kshell_set( char *dst, int argc, char **argv )
     {
         if (count_ch(argv[i], ',') != 1)
         {
-            return kssprintf(dst, "set: parse error at argument %d", i);
+            return kssprintln(dst, "set: parse error at argument %d", i);
         }
 
         const char *A = argv[i];
@@ -64,7 +64,7 @@ char *kshell_set( char *dst, int argc, char **argv )
         else
             vars[idx].value = value;
 
-        dst = kssprintf(dst, "set: \"%s\",\"%s\"", name, value);
+        dst = kssprintln(dst, "set: \"%s\",\"%s\"", name, value);
 
         if (strcmp(name, "sde::blend-mode") == 0)
         {

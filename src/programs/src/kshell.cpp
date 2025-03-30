@@ -1,7 +1,7 @@
-#include <libc.h>
+// #include <libc.h>
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+// #include <string.h>
+// #include <ctype.h>
 // #include <algorithm>
 
 // #include <kscancode.h>
@@ -114,7 +114,7 @@
 // }
 
 
-int main( int argc, int *argv )
+int main( int argc, int64_t *argv )
 {
     if (argc || argv)
     {

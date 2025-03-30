@@ -16,7 +16,7 @@ char *kshell_exec( char *dst, int argc, char **argv )
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, "exec: argument required");
+        dst = kssprintln(dst, "exec: argument required");
         return dst;
     }
 
@@ -25,7 +25,7 @@ char *kshell_exec( char *dst, int argc, char **argv )
 
     if (!file)
     {
-        return kssprintf(dst, "exec: could not find file \"%s\"", fname);
+        return kssprintln(dst, "exec: could not find file \"%s\"", fname);
     }
 
     for (int i=2; i<argc; i++)
@@ -35,6 +35,6 @@ char *kshell_exec( char *dst, int argc, char **argv )
 
     int res = sys->execute(file->addr, file->size, 2, exec_args);
 
-    return kssprintf(dst, "result: %d", res);
+    return kssprintln(dst, "result: %d", res);
 }
 

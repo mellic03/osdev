@@ -17,13 +17,9 @@ using namespace idk;
 
 
 static void
-sysc_file_create( ksysc_request* )
+sysc_file_create( ksysc_request *req )
 {
-    // syslog log("sysc_file_create");
-
-    // const char *path = (const char*)req->data;
-    // KFile *fh = KFS::KFile_create(1024, nullptr);
-
+    req->res = kfilesystem::vfsInsertFile<uint8_t>(req->msg, req->size, 0);
 }
 
 

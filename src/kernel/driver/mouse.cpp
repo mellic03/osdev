@@ -25,9 +25,9 @@ using namespace idk;
 
 bool mouseleft = false;
 bool mouseright = false;
-vec2 mousexy = vec2(0.0, 0.0);
-vec2 mouseprev = vec2(0.0, 0.0);
-vec2 mousedelta = vec2(0.0, 0.0);
+ivec2 mousexy    = ivec2(0, 0);
+ivec2 mouseprev  = ivec2(0, 0);
+ivec2 mousedelta = ivec2(0, 0);
 
 
 uint8_t MousePointer[] = {
@@ -137,7 +137,7 @@ void ProcessMousePacket()
         }
     }
 
-    mousexy = vec2(mouse_x, mouse_y);
+    mousexy = ivec2(mouse_x, mouse_y);
     mousedelta = mousexy - mouseprev;
 
     MousePacketReady = false;
@@ -217,9 +217,9 @@ ps2_mouse::driver_main( void* )
 {
     // auto *stream = &(kfilesystem::vfsFindFile("dev/ms0/event")->stream);
 
-    static uint8_t packet[4];
-    static uint8_t idx = 0;
-    static vec2 mouse(512.0f);
+    // static uint8_t packet[4];
+    // static uint8_t idx = 0;
+    // static vec2 mouse(512.0f);
 
     while (true)
     {

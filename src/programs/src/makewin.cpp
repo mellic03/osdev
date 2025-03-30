@@ -4,6 +4,9 @@
 #include <ctype.h>
 
 
+static ksysc_request req;
+static ksysc_window_response res;
+
 int main( int argc, int64_t *argv )
 {
     if (argc || argv)
@@ -11,26 +14,14 @@ int main( int argc, int64_t *argv )
 
     }
 
-    ksysc_request req = {
-        .type = SYSC_WINDOW_CREATE
-    };
-
+    req.type = SYSC_WINDOW_CREATE;
     libk_syscall(&req);
-
-    ksysc_window_response res;
     memcpy(&res, req.res, sizeof(ksysc_window_response));
 
-    while (*(res.x) < 250)
-    {
-        printf("res.x: %d\n", *(res.x));
-        *(res.x) += 1;
-    }
+    req.type = SYSC_FILE_CREATE;
+    req.size = 1024;
+    strcpy(req.msg, "/env/sde.txt");
+    libk_syscall(&req);
 
-    // req = {
-    //     .type = SYSC_WINDOW_DELETE,
-    //     .data = res.sde_ctx
-    // };
-    // libk_syscall(&req);
-
-    return 1234;
+    return 0;
 }

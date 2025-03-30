@@ -3,7 +3,6 @@
 #include <kernel/bitmanip.hpp>
 #include <kintcode.h>
 #include <kinterrupt.h>
-#include <string.h>
 #include <algorithm>
 
 // size_t size_table[3][10] = {
@@ -47,11 +46,11 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
     //  1     2     4    8    16   32   64    128   256   512
         0,    0,    0,   0,   0,   0,   256,  256,  256,  256, // B
         256,  256,  64,  32,  32,  16,  16,   16,   32,   32, // KB
-        16,   16,   16,  16,  4,   4,   2,    2,    1,    0  // MB
+        16,   16,   16,  16,  4,   4,   3,    3,    2,    0  // MB
     }; 
 
     size_t m_size = 0;
-    for (size_t i=0; i<30; i++)
+    for (size_t i=0; i<max_idx; i++)
     {
         m_size += (1<<i) * size_table[i];
         // m_size += size_table[0*10 + i] * (1<<i);
@@ -66,7 +65,7 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
 
     uintptr_t tail = (uintptr_t)m_data;
 
-    for (size_t i=min_idx; i<=max_idx; i++)
+    for (size_t i=min_idx; i<max_idx; i++)
     {
         size_t block_nbytes = (1<<i);
         size_t block_count  = size_table[i];
@@ -114,7 +113,7 @@ idk::buddy_allocator::_getidx( size_t nbytes )
 }
 
 
-uintptr_t
+void*
 idk::buddy_allocator::_getptr( size_t idx )
 {
     auto &stack = (*m_freelist)[idx];
@@ -122,12 +121,12 @@ idk::buddy_allocator::_getptr( size_t idx )
     uintptr_t ptr = stack.top();
                     stack.pop();
 
-    return ptr;
+    return (void*)ptr;
 }
 
 
 void*
-idk::buddy_allocator::alloc( size_t nbytes )
+idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
 {
     int idx = _getidx(nbytes);
 
@@ -137,9 +136,10 @@ idk::buddy_allocator::alloc( size_t nbytes )
         return nullptr;
     }
 
-    uintptr_t baseptr = _getptr(idx);
-    uintptr_t aligned = align_up(baseptr + sizeof(AllocHeader), alignof(max_align_t));
-    auto     *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    void    *baseptr   = _getptr(idx);
+    uint8_t *unaligned = (uint8_t*)baseptr;
+    uint8_t *aligned   = ptr_align(unaligned + sizeof(AllocHeader), alignment);
+    auto    *header    = (AllocHeader*)(aligned - sizeof(AllocHeader));
 
     *header = {
         .baseptr = (uintptr_t)baseptr,
@@ -149,26 +149,13 @@ idk::buddy_allocator::alloc( size_t nbytes )
     return (void*)aligned;
 }
 
-void*
-idk::buddy_allocator::realloc( void *ptr, size_t newsize )
-{
-    uintptr_t aligned  = (uintptr_t)ptr;
-    auto     *header   = (AllocHeader*)(aligned - sizeof(AllocHeader));
-    size_t    prevsize = (size_t(1) << header->idx);
-
-    void *bigga = this->alloc(newsize);
-    memcpy(bigga, ptr, prevsize);
-    this->free(ptr);
-
-    return bigga;
-}
-
 
 void
-idk::buddy_allocator::free( void *ptr )
+idk::buddy_allocator::free( void *usrptr )
 {
-    uintptr_t aligned = (uintptr_t)ptr;
-    auto     *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    uint8_t *aligned = (uint8_t*)usrptr;
+    auto    *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
+
 
     // Sanity checks
     // -----------------------------------------------------------------------------------------
@@ -208,5 +195,3 @@ idk::buddy_allocator::clear()
 {
     
 }
-
-

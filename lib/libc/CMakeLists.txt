@@ -17,7 +17,6 @@ set(
     -static
     -zmax-page-size=0x1000
     -Wl,--no-relax
-    -Wl,--gc-sections
 )
 
 add_library(libc OBJECT ${SOURCES})

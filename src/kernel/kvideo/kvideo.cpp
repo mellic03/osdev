@@ -22,8 +22,8 @@ void kvideo::init( uintptr_t fbres )
     int W = fb->width;
     int H = fb->height;
 
-    kvideo::frontbuffer  = kframebuffer<uint32_t>(W, H, (uint32_t*)fb->address);
-    kvideo::backbuffer   = kframebuffer<uint32_t>(W, H, new uint32_t[W*H]);
+    kvideo::frontbuffer = kframebuffer<uint32_t>(W, H, (uint32_t*)fb->address);
+    kvideo::backbuffer  = kframebuffer<uint32_t>(W, H, new uint32_t[W*H]);
 }
 
 

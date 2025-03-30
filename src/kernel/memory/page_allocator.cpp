@@ -14,9 +14,8 @@ idk::page_allocator::page_allocator( uint64_t *base, size_t size, size_t page_si
     size_t mapsize    = page_count * sizeof(uint8_t);
 
     uint8_t *A = (uint8_t*)base;
-    uint8_t *B = (uint8_t*)base + mapsize;
+    // uint8_t *B = (uint8_t*)base + mapsize;
     m_bitmap = inplace_array<uint8_t>(A, mapsize-1);
-
     m_pages  = base + page_size;
     m_psize  = page_size;
 
@@ -29,7 +28,7 @@ idk::page_allocator::page_allocator( uint64_t *base, size_t size, size_t page_si
 
 
 void*
-idk::page_allocator::alloc( size_t nbytes )
+idk::page_allocator::alloc( size_t )
 {
     for (size_t i=0; i<m_bitmap.size(); i++)
     {

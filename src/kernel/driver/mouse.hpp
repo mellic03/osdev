@@ -3,7 +3,7 @@
 #include <kdef.h>
 #include <kstackframe.h>
 #include <kmath/vec.hpp>
-
+#include "interface.hpp"
 
 
 namespace kdriver::ps2_mouse
@@ -23,9 +23,11 @@ namespace kdriver::ps2_mouse
         float y;
     };
 
-
     void irq_handler( kstackframe* );
     void driver_main( void* );
+
+    // extern vec2 position;
+    // extern vec2 delta;
 
 }
 
@@ -40,8 +42,8 @@ void ProcessMousePacket();
 
 extern bool mouseleft;
 extern bool mouseright;
-extern vec2 mousexy;
-extern vec2 mousedelta;
+extern ivec2 mousexy;
+extern ivec2 mousedelta;
 
 void mouse_irq( kstackframe* );
 void mouse_init();

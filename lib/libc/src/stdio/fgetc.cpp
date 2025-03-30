@@ -3,7 +3,7 @@
 
 
 
-int fgetc( FILE *addr )
+int fgetc( FILE* )
 {
     // while (true)
     // {

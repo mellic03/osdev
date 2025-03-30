@@ -12,13 +12,19 @@ vfsEntry::vfsEntry( vfsDirEntry *P, const std::string &fname )
     name(fname)
 {
 
+
 }
 
 
 
 
 vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const std::string &fname )
-:   vfsEntry(P, fname)
+:   vfsEntry (P, fname),
+    type     (0),
+    addr     (nullptr),
+    other    (nullptr),
+    size     (0),
+    stream   (nullptr, 0)
 {
     m_is_dir = false;
 }
@@ -29,6 +35,7 @@ vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const std::string &fname,
 :   vfsEntry (P, fname),
     type     (tp),
     addr     (ad),
+    other    (nullptr),
     size     (sz),
     stream   (ad, sz)
 {
@@ -36,6 +43,47 @@ vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const std::string &fname,
 
 }
 
+
+
+// vfsEntry *fpath_match( vfsEntry *entry, const char *path )
+// {
+//     if (entry->is_file()) // base case
+//     {
+//         if (strcmp(entry->get_path(), path) == 0)
+//             return entry;
+//         return nullptr;
+//     }
+
+//     for (vfsEntry *child: *((vfsDirEntry*)entry))
+//     {
+//         auto *fh = fpath_match(child, path);
+
+//         if (fh != nullptr)
+//         {
+//             return fh;
+//         }
+//     }
+
+//     return nullptr;
+// }
+
+
+// vfsEntry *filepath_match( const char *path )
+// {
+//     auto *entry = vfsDirEntry::rootdir;
+
+//     for (vfsEntry *child: *entry)
+//     {
+//         auto *fh = fpath_match(child, path);
+
+//         if (fh != nullptr)
+//         {
+//             return fh;
+//         }
+//     }
+
+//     return nullptr;
+// }
 
 
 

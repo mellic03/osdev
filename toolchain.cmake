@@ -39,12 +39,11 @@ add_definitions(-D__libk_sse=true)
 
 
 set(IDKERNEL_C_CXX_FLAGS
-    "-O0 \
+    "-O0 -g \
+    -fno-inline -fno-tree-vectorize \
+    -Wall -Wextra -Werror -pedantic \
+    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
     -ffreestanding \
-    -Wall \
-    -Wextra \
-    -Werror=return-type \
-    -mgeneral-regs-only \
     -fno-asynchronous-unwind-tables \
     -fno-exceptions \
     -fno-stack-protector \
@@ -56,10 +55,12 @@ set(IDKERNEL_C_CXX_FLAGS
     -m64 -mcmodel=large -march=x86-64 \
     --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
     -nostartfiles \
+    -static \
     -Wl,--no-relax -Wl,--gc-sections \
     ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )
+
 
 set(CMAKE_C_FLAGS
     "-std=c11 \
@@ -80,6 +81,21 @@ set(CMAKE_ASM_NASM_FLAGS
     "-Wall \
     -f elf64"
 )
+
+
+set(
+    CMAKE_EXE_LINKER_FLAGS
+    "-Wl,-m,elf_x86_64 \
+    -Wl,--build-id=none \
+    -static \
+    -nostdlib \
+    -nodefaultlibs \
+    -nostartfiles \
+    -zmax-page-size=0x1000 \
+    -mno-red-zone \
+    -T${CMAKE_SOURCE_DIR}/src/linker.ld"
+)
+
 
 # set(
 #     CMAKE_EXE_LINKER_FLAGS

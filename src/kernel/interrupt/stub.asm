@@ -1,60 +1,13 @@
 [bits 64]
 
 
-; global __cpu_saved_state
-; __cpu_saved_state:
-;     __cpu_rax dq 0
-;     __cpu_rbx dq 0
-;     __cpu_rcx dq 0
-;     __cpu_rdx dq 0
-;     __cpu_rdi dq 0
-;     __cpu_rsi dq 0
-;     __cpu_rbp dq 0
-;     __cpu_cr0 dq 0
-;     __cpu_cr1 dq 0
-;     __cpu_cr2 dq 0
-;     __cpu_cr3 dq 0
-;     __cpu_vcode dq 0
-;     __cpu_ecode dq 0
-
-
-; %macro cpu_pushall 0
-;     mov [__cpu_rax], rax
-;     mov [__cpu_rbx], rbx
-;     mov [__cpu_rcx], rcx
-;     mov [__cpu_rdx], rdx
-;     mov [__cpu_rdi], rdi
-;     mov [__cpu_rsi], rsi
-;     mov [__cpu_rbp], rbp
-;     mov rax, cr0
-;     mov [__cpu_cr0], rax
-;     mov rax, cr1
-;     mov [__cpu_cr1], rax
-;     mov rax, cr2
-;     mov [__cpu_cr2], rax
-;     mov rax, cr3
-;     mov [__cpu_cr3], rax
-
-;     mov rax, $1
-;     mov [__cpu_vcode], rax
-;     mov rax, 1234
-;     mov [__cpu_ecode], rax
-
-;     mov rax, [__cpu_rax]
-
-; %endmacro
-
-
-
-
 section .text
 extern __isr_dispatch
 
 
-
-get_rip:
-    mov rax, [rsp]
-    ret
+; get_rip:
+;     mov rax, [rsp]
+;     ret
 
 
 %macro ctx_push 0

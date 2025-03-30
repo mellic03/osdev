@@ -166,8 +166,8 @@ int
 vfprintf( FILE *addr, const char *fmt, va_list args )
 {
     auto *stream = &((vfsFileEntry*)addr)->stream;
-    int n = vsprintf((char*)(stream->m_write), fmt, args);
-    stream->m_write += n;
+    int n = vsprintf((char*)(&stream->m_base[stream->m_write]), fmt, args);
+    stream->m_write = (stream->m_write + n) % stream->m_size;
     stream->flush();
 
     #ifndef __is_kernel

@@ -1,53 +1,79 @@
 #include "kshell.hpp"
 #include <kstring.h>
 using namespace KShell;
+using namespace kfilesystem;
 
 
 extern vfsDirEntry *kshell_getdir( vfsDirEntry*, char* );
 
+
+
+// static char *internal_ls( char *dst, vfsDirEntry *dir, int max_depth )
+// {
+//     for (auto *E: dir->children)
+//     {
+//         if (E->is_dir())
+//             dst = kssprintln(dst, "%s", E->name);
+//     }
+
+//     for (auto *E: dir->children)
+//     {
+//         if (E->is_file())
+//             dst = kssprintln(dst, "%s", E->name);
+//     }
+
+//     return dst;
+// }
+
+
+char*
+internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth )
+{
+    if (depth >= max_depth)
+        return dst;
+    KShell::pushIndent();
+
+    for (auto *E: dir->children)
+    {
+        if (E->is_dir())
+        {
+            dst = kssprintln(dst, log, "%s/", E->name.c_str());
+            dst = internal_ls(dst, log, (vfsDirEntry*)E, depth+1, max_depth);
+        }
+    }
+
+    for (auto *E: dir->children)
+    {
+        if (E->is_file())
+        {
+           dst = kssprintln(dst, "%s", E->name.c_str());
+        }
+    }
+
+    KShell::popIndent();
+    return dst;
+}
+
+
+
+
 char *kshell_ls( char *dst, int argc, char **argv )
 {
     syslog log("kshell_ls");
-
     auto &cwd = kshell_tty->getCWD();
-    vfsDirEntry *dir = nullptr;
 
-    if (argc == 1)
-        dir = cwd;
-    else
-        // dir = kshell_getdir(cwd, argv[1]);
-        dir = kfilesystem::vfsFindDirectory(cwd, argv[1]);
+    auto *dir = (argc==1) ? cwd : vfsFindDirectory(cwd, argv[1]);
 
-    if (dir)
-    {
-        for (auto *E: dir->children)
-        {
-            if (E->is_dir())
-            {
-                // dst = kssprintf(dst, "%s", E->name);
-                dst = kssprintf(dst, log, "%s", E->name.c_str());
-                // log("\"%s\"", E->name);
-            }
-        }
+    if (argc==2 && strcmp(argv[1], "--R")==0)
+        return internal_ls(dst, log, cwd, 0, 16);
 
-        for (auto *E: dir->children)
-        {
-            if (E->is_file())
-            {
-                // dst = kssprintf(dst, "%s", E->name);
-                dst = kssprintf(dst, log, "%s", E->name.c_str());
-                // log("\"%s\"", E->name);
-            }
-        }
-    }
+    if (dir && argc==3 && strcmp(argv[2], "--R")==0)
+        return internal_ls(dst, log, dir, 0, 16);
 
-    else
-    {
-        // dst = kssprintf(dst, "ls: could not find directory \"%s\"", argv[1]);
-        dst = kssprintf(dst, log, "ls: could not find directory \"%s\"", argv[1]);
-        // log("ls: could not find directory \"%s\"", argv[1]);
-    }
+    if (dir) dst = internal_ls(dst, log, dir, 0, 1);
+    else     dst = kssprintln(dst, "ls: could not find directory \"%s\"", argv[1]);
 
     return dst;
 }
+
 

@@ -1,8 +1,8 @@
-#ifdef __is_kernel
-    #undef __is_kernel
-#endif
+// #ifdef __is_kernel
+//     #undef __is_kernel
+// #endif
 
-#include <libc.h>
+// #include <libc.h>
 
 // extern "C"
 // {
@@ -20,17 +20,17 @@
 
 // }
 
-extern int main( int argc, int64_t *argv );
+// extern int main( int argc, int64_t *argv );
 
-extern "C"
-int _start( int argc, int64_t *argv )
-{
-    // ctor_init();
-    libc_init();
+// extern "C"
+// int _start( int argc, int64_t *argv )
+// {
+//     ctor_init();
+//     libc_init();
 
-    int result = main(argc, argv);
-    return result;
-}
+//     int result = main(argc, argv);
+//     return result;
+// }
 
 
 

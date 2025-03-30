@@ -40,12 +40,13 @@ SECTIONS
         *(.data .data.*)
     } :data
 
-    . = ALIGN(16);
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
     .init_array : {
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
-        KEEP (*(.init_array .ctors))
-        PROVIDE_HIDDEN (__init_array_end = .);
+        PROVIDE_HIDDEN(__init_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))
+        KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.init_array .ctors))
+        PROVIDE_HIDDEN(__init_array_end = .);
     } :data
 
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */

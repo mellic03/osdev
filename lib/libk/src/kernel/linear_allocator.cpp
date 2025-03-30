@@ -39,6 +39,29 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
         return nullptr;
     }
 
+    // syslog log("linear_allocator::alloc(%lu, %u)", nbytes/idk::KILO, alignment);
+
+    // // log("capacity:  %luB",    m_capacity);
+    // // log("           %luKB",   m_capacity/idk::KILO);
+    // log("capacity:  %luMB",   m_capacity/idk::MEGA);
+
+    // // log("used:      %luB",    (m_tail-m_base));
+    // log("used:      %luKB",   (m_tail-m_base)/idk::KILO);
+    // log("           %luMB",   (m_tail-m_base)/idk::MEGA);
+
+    // // log("remaining: %luB",      m_capacity - m_tail);
+    // log("remaining: %luKB",    (m_end - m_tail) / idk::KILO);
+    // log("           %luMB",    (m_end - m_tail) / idk::MEGA);
+
+    // log("base:      0x%lx",   m_base);
+    // log("end:       0x%lx",   m_end);
+    // log("sz:        %lu",     m_end-m_tail);
+    // log("tail:      0x%lx",   m_tail);
+
+    if (m_tail >= m_end)
+    {
+        KInterrupt<INT_OUT_OF_MEMORY>();
+    }
     // LOG_ASSERT(
     //     m_tail < m_end,
     //     "Out of memory ({} / {} bytes)",

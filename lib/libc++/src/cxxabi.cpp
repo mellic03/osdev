@@ -1,4 +1,4 @@
-#include "cxxabi.hpp"
+#include <cxxabi>
 
 
 extern "C"
@@ -39,7 +39,7 @@ void __cxa_finalize(void *func)
 
     while (i--)
     {
-        if (__atexit_funcs[i].destructor_func == func)
+        if (__atexit_funcs[i].destructor_func == (void(*)(void*))(func))
         {
             (*__atexit_funcs[i].destructor_func)(__atexit_funcs[i].obj_ptr);
             __atexit_funcs[i].destructor_func = 0;

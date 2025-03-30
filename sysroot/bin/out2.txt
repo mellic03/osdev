@@ -1,0 +1,2 @@
+ffffffff80018090 d __init_array_start
+ffffffff800180c8 d __init_array_end

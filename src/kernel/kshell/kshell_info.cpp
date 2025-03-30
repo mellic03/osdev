@@ -11,7 +11,7 @@ char *kshell_info( char *dst, int argc, char **argv )
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, "info: argument required");
+        dst = kssprintln(dst, "info: argument required");
         return dst;
     }
 
@@ -20,17 +20,30 @@ char *kshell_info( char *dst, int argc, char **argv )
 
     if (file)
     {
-        dst = kssprintf(dst, log, "name:  %s",    file->name.c_str());
-        dst = kssprintf(dst, log, "type:  %s",    vfsFileTypeStr(file->type));
-        // dst = kssprintf(dst, "end:   0x%lx", file->eof);
-        // dst = kssprintf(dst, "read   0x%lx", *(file->read));
-        // dst = kssprintf(dst, "write: 0x%lx", *(file->write));
-        dst = kssprintf(dst, log, "size:  0x%lx", file->size);
+        dst = kssprintln(dst, log, "name:  %s",    file->name.c_str());
+        dst = kssprintln(dst, log, "size:  0x%lx", file->size);
+        // dst = kssprint  (dst, log, "flags: %s",    vfsFileTypeStr(file->flags));
+        dst = kssprintln(dst, log, "flags:");
+        kshell_indent += 4;
+
+        for (int i=1; i<=vfsFileFlag_MaxBit; i++)
+        {
+            if (file->flags & (1<<i))
+            {
+                dst = kssprint(dst, log, "--%s\n", vfsFileFlagStr((1<<i)));
+            }
+        }
+
+        kshell_indent -= 4;
+
+        // dst = kssprintln(dst, "end:   0x%lx", file->eof);
+        // dst = kssprintln(dst, "read   0x%lx", *(file->read));
+        // dst = kssprintln(dst, "write: 0x%lx", *(file->write));
     }
 
     else
     {
-        dst = kssprintf(dst, log, "info: could not find file \"%s\"", fname);
+        dst = kssprintln(dst, log, "info: could not find file \"%s\"", fname);
     }
 
     return dst;

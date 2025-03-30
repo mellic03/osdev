@@ -47,11 +47,10 @@ struct tss_entry_t
 }  __attribute__((packed));
 
 
-
-namespace idk
+namespace GDT
 {
-	void GDT_load();
-	void GDT_flush();
+    void load();
+    void flush();
 }
 
 

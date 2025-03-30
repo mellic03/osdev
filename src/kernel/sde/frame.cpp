@@ -32,17 +32,9 @@ sde::Frame::draw()
 {
     m_global = m_local;
 
-    if (m_parent)
-    {
-        m_global += m_parent->m_global;
-    }
-
-    if (m_style.border)
-    {
-        sde::rectOutline(
-            m_global, m_span-ivec2(1, 1), m_style.border_color
-        );
-    }
+    if (m_parent)       m_global += m_parent->m_global;
+    if (m_style.fill)   sde::rect(m_global, m_span, m_style.fill_color);
+    if (m_style.border) sde::rectOutline(m_global, m_span, m_style.border_color);
 
     for (Frame *F: m_children)
     {

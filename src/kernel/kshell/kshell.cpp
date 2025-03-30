@@ -16,6 +16,13 @@ using namespace idk;
 using namespace KShell;
 using argv_type = char[16][32];
 
+
+int KShell::kshell_indent = 2;
+void KShell::pushIndent() { kshell_indent += 2; }
+void KShell::popIndent()  { kshell_indent -= 2; }
+
+
+
 extern size_t kshell_argparser( const char*, char** );
 extern char *kshell_cwd    ( char*, int, char** );
 extern char *kshell_cd     ( char*, int, char** );
@@ -67,8 +74,7 @@ kshell_parse( kTTY *tty )
         return;
     }
 
-    char *&dst  = tty->htop;
-    char *name  = kshell_argv[0];
+    char *&dst = tty->htop;
 
     for (auto &[name, fn]: cmd_table)
     {
@@ -79,7 +85,7 @@ kshell_parse( kTTY *tty )
         }
     }
 
-    dst = kssprintf(dst, "unrecognised command \"%s\"", kshell_argv[0]);
+    dst = kssprintln(dst, "unrecognised command \"%s\"", kshell_argv[0]);
 }
 
 
@@ -94,7 +100,7 @@ char *kshell_unknown( char *dst, int, char** )
 char *kshell_cwd( char *dst, int, char** )
 {
     auto &cwd = kshell_tty->getCWD();
-    dst = kssprintf(dst, "%s", cwd->get_path());
+    dst = kssprintln(dst, "%s", cwd->get_path());
     return dst;
 }
 
@@ -103,12 +109,12 @@ char *kshell_cwd( char *dst, int, char** )
 char *kshell_tid( char *dst, int, char** )
 {
     size_t tid = kthread::this_tid();
-    dst = kssprintf(dst, "tid: %lu", tid);
+    dst = kssprintln(dst, "tid: %lu", tid);
     return dst;
 }
 
 
-char *kshell_clear( char *dst, int, char** )
+char *kshell_clear( char*, int, char** )
 {
     kshell_tty->clear();
     return kshell_tty->history;
@@ -145,8 +151,9 @@ void kshell_main( void *arg )
     auto *file   = kfilesystem::vfsFindFile("dev/kb0/event");
     auto *stream = &(file->stream);
 
-    auto *ctx = sde::createContext(ivec2(10, 10), ivec2(500, 500));
-    auto *frame = ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
+    auto *ctx = sde::createContext(ivec2(10, 10), ivec2(1200, 700));
+    // auto *frame = 
+    ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
 
     ctx->m_style = {
         .fill = false,
@@ -201,11 +208,17 @@ void kshell_main( void *arg )
         kthread::yield();
     }
 
+    syslog log("kshell_main");
+    log("A");
     sde::destroyContext(ctx);
+    log("B");
 
     for (int i=0; i<MAX_ARG_COUNT; i++)
         delete[] kshell_argv[i];
+    log("C");
+    
     delete[] kshell_argv;
+    log("D");
 }
 
 

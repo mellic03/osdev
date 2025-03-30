@@ -21,7 +21,7 @@ struct sde::Style
     bool fill         = false;
     bool border       = true;
     vec4 fill_color   = vec4(1, 1, 1, 0.8);
-    vec4 border_color = vec4(0.85, 0.85, 0.85, 1.0);
+    vec4 border_color = vec4(0.75, 0.85, 0.75, 1.0);
 };
 
 
@@ -34,6 +34,7 @@ public:
     int &m_gx, &m_gy;
     int &m_lx, &m_ly;
     int &m_w,  &m_h;
+    float z = 0.99f;
 
     sde::Style m_style;
     sde::Frame *m_parent;

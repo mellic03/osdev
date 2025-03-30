@@ -18,7 +18,7 @@
 #define ICW4_SFNM	0x10		/* Special fully nested (not) */
 
 void
-idk::PIC::remap( int offset1, int offset2 )
+PIC::remap( int offset1, int offset2 )
 {
 	IO::outb(PIC1_CMD, ICW1_INIT | ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
 	IO::wait();
@@ -49,7 +49,7 @@ idk::PIC::remap( int offset1, int offset2 )
 
 
 
-void idk::PIC::setmask(uint8_t IRQline)
+void PIC::setmask(uint8_t IRQline)
 {
 	uint16_t port;
 	uint8_t value;
@@ -63,7 +63,7 @@ void idk::PIC::setmask(uint8_t IRQline)
 
 
 
-void idk::PIC::unmask( uint8_t IRQline )
+void PIC::unmask( uint8_t IRQline )
 {
 	uint16_t port;
 	uint8_t value;
@@ -75,13 +75,13 @@ void idk::PIC::unmask( uint8_t IRQline )
 	IO::outb(port, value);        
 }
 
-void idk::PIC::disable()
+void PIC::disable()
 {
     IO::outb(PIC1_DATA, 0xFF);
     IO::outb(PIC2_DATA, 0xFF);
 }
 
-void idk::PIC::sendEOI( uint8_t irq )
+void PIC::sendEOI( uint8_t irq )
 {
 	if (irq >= 8)
 	{

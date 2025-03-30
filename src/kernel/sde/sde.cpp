@@ -6,12 +6,23 @@
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
 #include "frame_tty.hpp"
+#include "../driver/mouse.hpp"
+
 
 static sde::WindowContext *m_current = nullptr;
 static std::vector<sde::WindowContext*> m_contexts;
 
 void sde_main( void* )
 {
+    // auto *root = new sde::WindowContext(
+    //     ivec2(0), ivec2(kvideo::backbuffer.w, kvideo::backbuffer.h)
+    // );
+
+    // root->m_style = {
+    //     .fill       = true,
+    //     .fill_color = vec4(0.8, 0.5, 0.5, 0.5)
+    // };
+
     while (true)
     {
         for (auto *ctx: m_contexts)
@@ -23,6 +34,14 @@ void sde_main( void* )
             sde::flushContext(ctx);
             kthread::yield();
         }
+    
+        // sde::makeCurrent(root);
+        // root->draw();
+        // kthread::yield();
+
+        // sde::rect(mousexy, ivec2(16), vec4(1.0f));
+        // sde::flushContext(root);
+        // kthread::yield();
 
         kvideo::swapBuffers();
         kthread::yield();
@@ -34,8 +53,9 @@ void sde_main( void* )
 sde::WindowContext*
 sde::createContext( ivec2 corner, ivec2 span )
 {
-    m_contexts.push_back(new sde::WindowContext(corner, span));
-    return m_contexts.back();
+    auto *ctx = new sde::WindowContext(corner, span);
+    m_contexts.push_back(ctx);
+    return ctx;
 }
 
 
@@ -46,7 +66,12 @@ sde::flushContext( sde::WindowContext *ctx )
     auto &tl  = ctx->m_global;
     auto &sp  = ctx->m_span;
     kvideo::blit(tl, ivec2(0, 0), sp, src);
-    kmemset<vec4>(src.buf, 0, ctx->W*ctx->H);
+
+    for (int i=0; i<ctx->H; i++)
+    {
+        kmemset<vec4>(src[i], 0, ctx->W);
+        kthread::yield();
+    }
 }
 
 
@@ -151,7 +176,7 @@ sde::vline( int x, int y0, int y1, const vec4 &color )
 void
 sde::rectOutline( ivec2 tl, ivec2 sp, const vec4 &color )
 {
-    auto *ctx = sde::getCurrent();
+    // auto *ctx = sde::getCurrent();
     // auto &dst = ctx->rgba;
 
     int x0 = tl.x;
@@ -183,6 +208,7 @@ sde::rect( ivec2 tl, ivec2 sp, const vec4 &color )
         {
             dst[y][x] = color;
         }
+        kthread::yield();
     }
 
     kthread::yield();

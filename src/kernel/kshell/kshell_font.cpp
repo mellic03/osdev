@@ -13,7 +13,7 @@ char *kshell_font( char *dst, int argc, char **argv )
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, "font: argument required");
+        dst = kssprintln(dst, "font: argument required");
         return dst;
     }
 
@@ -23,7 +23,7 @@ char *kshell_font( char *dst, int argc, char **argv )
         {
             float scale = 1.0f / float(atoi(argv[2]));
             kshell_tty->font->glyph_scale = vec2(scale, 1.0f);
-            dst = kssprintf(dst, "font: scale set to \"%f\"", scale);
+            dst = kssprintln(dst, "font: scale set to \"%f\"", scale);
             return dst;
         }
     }
@@ -34,12 +34,14 @@ char *kshell_font( char *dst, int argc, char **argv )
 
     if (file)
     {
-        kshell_tty->font = (idk::FontBuffer*)(file->addr);
+        if (file->other == nullptr)
+            file->other = new idk::FontBuffer((ck_BMP_header*)file->addr);
+        kshell_tty->font = (idk::FontBuffer*)(file->other);
     }
 
     else
     {
-        dst = kssprintf(dst, "font: could not find file \"%s\"", fname);
+        dst = kssprintln(dst, "font: could not find file \"%s\"", fname);
     }
 
     return dst;

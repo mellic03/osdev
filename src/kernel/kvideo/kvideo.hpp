@@ -18,6 +18,9 @@ struct kframebuffer
     kframebuffer( int _w, int _h, T *b )
     :    w(_w), h(_h), buf(b) {  };
 
+    kframebuffer( int _w, int _h, T *b, bool )
+    :    w(_w), h(_h), buf(b) {  };
+
     inline constexpr
     T *operator[](int i)
     {

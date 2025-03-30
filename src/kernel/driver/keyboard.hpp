@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <kstackframe.h>
 #include <kfstream.hpp>
-
+#include "interface.hpp"
 
 
 namespace kdriver::ps2_kb

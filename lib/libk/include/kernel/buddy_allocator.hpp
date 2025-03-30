@@ -15,7 +15,7 @@ namespace idk
     {
     private:
         static constexpr size_t min_idx  = 7;
-        static constexpr size_t max_idx  = 28;
+        static constexpr size_t max_idx  = 29;
         // static constexpr uint64_t BUDDY_MAGIC = 0xA110C;
 
         using list_type = idk::array<inplace_stack<uintptr_t>, max_idx>;
@@ -31,22 +31,21 @@ namespace idk
         };
         
         int    _getidx( size_t );
-        uintptr_t _getptr( size_t );
+        void  *_getptr( size_t );
 
 
     public:
         buddy_allocator();
         buddy_allocator( linear_allocator& );
 
-        void *alloc( size_t );
-        void *realloc( void*, size_t );
+        void *alloc( size_t nbytes, size_t alignment );
         void  free( void* );
         void  clear();
 
         template <typename T>
         T *alloc( size_t count = 1 )
         {
-            return (T*)(alloc(count*sizeof(T)));
+            return (T*)(alloc(count*sizeof(T), alignof(T)));
         }
 
     };

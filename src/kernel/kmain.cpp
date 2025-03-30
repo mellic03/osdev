@@ -2,8 +2,6 @@
     #define __is_kernel
 #endif
 
-#include "abi/cxxabi.hpp"
-
 #include "boot/requests.cpp"
 
 #include <kernel.h>
@@ -22,7 +20,6 @@
 #include "driver/serial.hpp"
 
 #include <kinplace/inplace_vector.hpp>
-
 #include <kscancode.h>
 
 #include "./cpu/smp.hpp"
@@ -59,38 +56,53 @@ void badfile_handler( kstackframe* )
 
 
 idk::KSystem *sys;
-uint64_t uptime_ms = 0;
+
+namespace kclock
+{
+    uint64_t uptime_msecs = 0;
+    double   uptime_secs  = 0.0;
+
+};
+
 
 void pit_irq( kstackframe *frame )
 {
+    kclock::uptime_msecs += 2;
+    kclock::uptime_secs  += 1000.0 / double(PIT_HERTZ);
     kthread::schedule(frame);
-    uptime_ms += 10;
 
-    idk::PIT_reload();
-    idk::PIC::sendEOI(0);
+    PIT::reload();
+    PIC::sendEOI(0);
 }
 
+
+extern "C"
+{
+    extern void __kthread_test( void );
+}
 
 
 #include <libc.h>
 #include <libc++>
 
-
-
 extern "C"
 {
-    using constructor_t = void (*)();
-    extern constructor_t __init_array_start[];
-    extern constructor_t __init_array_end[];
+    using ctor_t = void (*)();
+    extern ctor_t __init_array_start[];
+    extern ctor_t __init_array_end[];
+}
 
-    void ctor_init( void )
+void call_ctors()
+{
+    syslog log("call_ctors");
+    int i = 0;
+    for (ctor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
     {
-        for (constructor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
-        {
-            (*ctor)();
-        }
+        log("ctor[%d]: 0x%lx %lu", i++, ctor, ctor);
+        (*ctor)();
     }
 }
+
 
 
 
@@ -98,13 +110,10 @@ extern "C"
 void _start()
 {
     using namespace idk;    
-
-    if (!idk::serial_init())
-    {
-        return;
-    }
+    asm volatile("cli");
 
     // syslog::disable();
+    idk::serial_init();
     syslog log("_start");
     log("serial initialized");
 
@@ -116,30 +125,21 @@ void _start()
         .mmaps   = lim_mmap_req.response,
         .mp      = lim_mp_req.response
     };
-    asm volatile("cli");
 
     idk::KSystem system(reqs);
     sys = &system;
-    ctor_init();
-
-    kfilesystem::vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
-    kfilesystem::vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
-    kfilesystem::vfsInsertFile<char>("/dev/ms0/raw",   64, vfsFileFlag_Stream);
-    kfilesystem::vfsInsertFile<char>("/dev/ms0/event", 64, vfsFileFlag_Stream);
-    kfilesystem::vfsInsertFile<char>("/dev/stdout",    64, vfsFileFlag_Stream);
-
+    call_ctors();
     SMP::init(reqs.mp);
-    kvideo::init((uintptr_t)(reqs.fb));
-    libc_init();
-    libcpp::init();
+ 
 
-
-    // mouse_init();
-    idk::PIT_init();
-    idk::PIT_set_ms(5);
-    idk::GDT_load();
-    idk::GDT_flush();
+    mouse_init();
+    PIT::init();
+    PIT::set_ms(2);
+    GDT::load();
+    GDT::flush();
     idk::IDT_load();
+
+
     idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
     idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
@@ -150,16 +150,26 @@ void _start()
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
-    // idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
+    idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
     PIC::remap(32, 40);
     PIC::disable();
     PIC::unmask(0);
     PIC::unmask(1);
     PIC::unmask(2);
-    // PIC::unmask(12);
+    PIC::unmask(12);
 	asm volatile ("sti");
 
-    for (int i=0; i<reqs.modules->module_count; i++)
+
+    kfilesystem::vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/ms0/raw",   64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/ms0/event", 64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/stdout",    1024, vfsFileFlag_Stream);
+    kvideo::init((uintptr_t)(reqs.fb));
+    libc_init();
+    libcpp::init();
+
+    for (size_t i=0; i<reqs.modules->module_count; i++)
     {
         auto *F = reqs.modules->modules[i];
         kfilesystem::vfsInsertFile(F->path, F->address, F->size);
@@ -167,14 +177,15 @@ void _start()
 
     kTTY tty0(25*80);
     auto *file = kfilesystem::vfsFindFile("/font/cutive-w12hf18.bmp");
+          file->flags |= vfsFileFlag_Stream;
+          file->flags |= vfsFileFlag_Virtual;
     tty0.font = new idk::FontBuffer((ck_BMP_header*)(file->addr));
 
-    // new kthread(kdriver::ps2_mouse::driver_main, nullptr);
-    kthread t0(kdriver::ps2_kb::driver_main, nullptr);
-    kthread t1(sde_main, nullptr);
-    kthread t2(kshell_main, (void*)&tty0);
+    kthread t0(kdriver::ps2_mouse::driver_main, nullptr);
+    kthread t1(kdriver::ps2_kb::driver_main, nullptr);
+    kthread t2(sde_main, nullptr);
+    kthread t3(kshell_main, (void*)&tty0);
     kthread::start();
-
 
     while (true)
     {
@@ -202,7 +213,6 @@ void stacktrace( kstackframe *frame )
 void pagefault_handler( kstackframe *frame )
 {
     syslog log("Exception PAGE_FAULT");
-
     // stacktrace(frame);
 
     log("r11:   0x%lx", frame->r11);

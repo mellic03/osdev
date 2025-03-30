@@ -1,3 +1,7 @@
+#ifndef __is_kernel
+    #define __is_kernel
+#endif
+
 #include "context.hpp"
 #include "frame.hpp"
 #include "sde.hpp"
@@ -6,14 +10,16 @@
 #include <algorithm>
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
+// #include <kmalloc.h>
 
 
 
 sde::WindowContext::WindowContext( ivec2 tl, ivec2 sp )
 :   Frame(tl, sp),
     W(sp.x), H(sp.y),
-    rgba  (W, H, new vec4[W*H]),
-    depth (W, H, new uint32_t[W*H])
+    // rgba  (W, H, (vec4*)kmallocAligned(W*H*sizeof(vec4), 16)),
+    rgba  (W, H, (vec4*)kmalloc(W*H*sizeof(vec4))),
+    depth (W, H, (uint32_t*)kmalloc(W*H*sizeof(vec4)))
 {
 
 }
@@ -21,8 +27,8 @@ sde::WindowContext::WindowContext( ivec2 tl, ivec2 sp )
 
 sde::WindowContext::~WindowContext()
 {
-    delete[] rgba.buf;
-    delete[] depth.buf;
+    kfree(rgba.buf);
+    kfree(depth.buf);
 }
 
 

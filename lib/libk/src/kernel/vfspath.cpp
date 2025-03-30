@@ -50,7 +50,7 @@ fs::path::~path()
 fs::directorypath::directorypath( const char *str )
 :   fs::path(str)
 {
-    for (int i=0; i<m_sep.size(); i++)
+    for (size_t i=0; i<m_sep.size(); i++)
     {
         m_dirname += m_sep[i] + "/";
     }
@@ -69,7 +69,7 @@ fs::filepath::filepath( const char *str )
     else
     {
         m_dirname = m_sep[0] + "/";
-        for (int i=1; i<m_sep.size()-1; i++)
+        for (size_t i=1; i<m_sep.size()-1; i++)
             m_dirname += m_sep[i] + "/";
         
         m_filename = m_sep.back();

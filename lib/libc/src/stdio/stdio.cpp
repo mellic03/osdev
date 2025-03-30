@@ -57,7 +57,11 @@ int fflush( FILE *addr )
 
 char *fgets( char *str, int n, FILE *fh )
 {
-    int i=0;
+    if (str || n || fh)
+    {
+        
+    }
+    // int i=0;
 
     // while (i<n && (fh->read < fh->write))
     // {

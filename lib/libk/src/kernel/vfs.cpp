@@ -17,8 +17,7 @@ static std::mutex vfs_mutex;
 vfsDirEntry*
 kfilesystem::vfsInsertDirectory( const char *dpath )
 {
-    // std::lock_guard lock(vfs_mutex);
-    kthread::lock_guard();
+    kthread::refc();
 
     // syslog log("vfsInsertDirectory");
     // log("dpath:  \"%s\"", dpath);
@@ -61,7 +60,7 @@ kfilesystem::vfsFindDirectory( const char *pth )
 vfsDirEntry*
 kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 {
-    kthread::lock_guard();
+    kthread::refc();
     syslog log("vfsFindDirectory(%s)", dpath);
 
     if ((strlen(dpath) == 1) && (dpath[0] == '/'))
@@ -116,7 +115,7 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 vfsFileEntry*
 kfilesystem::vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 {
-    kthread::lock_guard();
+    kthread::refc();
     // syslog log("vfsInsertFile");
     // log("fpath:  \"%s\"", fpath);
 
@@ -147,7 +146,7 @@ kfilesystem::vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t
 vfsFileEntry*
 kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 {
-    kthread::lock_guard();
+    kthread::refc();
     syslog log("vfsFindFile(%s)", fpath);
 
     if (fpath[0] == '/')

@@ -30,24 +30,12 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
-add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
-
-
-# add_library(
-#     crti_o OBJECT
-#     ${CMAKE_SOURCE_DIR}/src/kernel/abi/crti.asm
-# )
-
-
-# add_library(
-#     crtn_o OBJECT
-#     ${CMAKE_SOURCE_DIR}/src/kernel/abi/crtn.asm
-# )
+# add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
 
 
 add_executable(
     ${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/src/kernel/abi/cxxabi.cpp
+    ${CMAKE_SOURCE_DIR}/src/tinyubsan.cpp
     ${IDKERNEL_SOURCES}
 )
 
@@ -56,39 +44,26 @@ target_compile_definitions(
     -D__is_kernel
 )
 
-target_link_options(
-    ${PROJECT_NAME} PRIVATE
-    -Wl,-m,elf_x86_64
-    -Wl,--build-id=none
-    -nostdlib
-    -nostartfiles
-    -static
-    -mgeneral-regs-only
-    -zmax-page-size=0x1000
-    -mno-red-zone
-    -T${CMAKE_SOURCE_DIR}/src/linker.ld
-)
-
-# target_compile_options(
+# target_link_options(
 #     ${PROJECT_NAME} PRIVATE
-#     $<$<COMPILE_LANGUAGE:CXX>:-mcmodel=large>
-#     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-#     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+#     -Wl,-m,elf_x86_64
+#     -Wl,--build-id=none
+#     -static
+#     -nostdlib
+#     -nodefaultlibs
+#     -nostartfiles
+#     -zmax-page-size=0x1000
+#     -mno-red-zone
+#     -T${CMAKE_SOURCE_DIR}/src/linker.ld
 # )
 
 
 target_link_libraries(
     ${PROJECT_NAME}
-
-    # crti_o
-    # "${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/no-red-zone/crtbegin.o"
-
     libc_k
     libc++_k
-    ${IDKERNEL_LIBRARIES}
+    ${IDKERNEL_LIBRARIES} 
 
-    # "${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/no-red-zone/crtend.o"
-    # crtn_o
 )
 
 

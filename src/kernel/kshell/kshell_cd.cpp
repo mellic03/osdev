@@ -26,7 +26,7 @@ char *kshell_cd( char *dst, int argc, char **argv )
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, log, "cd: no arguments");
+        dst = kssprintln(dst, log, "cd: no arguments");
         return dst;
     }
 
@@ -35,7 +35,7 @@ char *kshell_cd( char *dst, int argc, char **argv )
     if (dir)
         cwd = dir;
     else
-        dst = kssprintf(dst, log, "cd: could not find directory \"%s\"", argv[1]);
+        dst = kssprintln(dst, log, "cd: could not find directory \"%s\"", argv[1]);
 
     return dst;
 }

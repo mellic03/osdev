@@ -32,20 +32,17 @@
 #define CMD_READBACK                    0xc0
 
 
+uint16_t PIT_HERTZ = 500;
 
-uint16_t idk::PIT_HERTZ = 500;
-
-void
-idk::PIT_init()
+void PIT::init()
 {
-    PIT_set_ms(10);
+    PIT::set_ms(10);
     IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
-    PIT_reload();
+    PIT::reload();
 }
 
 
-void
-idk::PIT_reload()
+void PIT::reload()
 {
     uint16_t reload_value = PIT_FREQUENCY / PIT_HERTZ;
     IO::outb(PIT_COUNTER0, reload_value & 0xFF);
@@ -55,17 +52,15 @@ idk::PIT_reload()
 
 
 
-void
-idk::PIT_set_hz( uint16_t hz )
+void PIT::set_hz( uint16_t hz )
 {
     PIT_HERTZ = hz;
 }
 
 
-void
-idk::PIT_set_ms( uint16_t ms )
+void PIT::set_ms( uint16_t ms )
 {
-    PIT_set_hz(1000000 / (1000 * ms));
+    PIT::set_hz(1000000 / (1000 * ms));
 }
 
 
@@ -73,8 +68,7 @@ idk::PIT_set_ms( uint16_t ms )
 
 
 
-uint16_t
-idk::PIT_read()
+uint16_t PIT::read()
 {
     IO::outb(PIT_CMD, CMD_LATCH | CMD_COUNTER0); // Latch the current counter value
     uint8_t low = IO::inb(PIT_COUNTER0);        // Read the low byte
@@ -82,11 +76,10 @@ idk::PIT_read()
     return (uint16_t(high) << 8) | low;         // Combine high and low bytes
 }
 
-bool
-idk::PIT_edge()
+bool PIT::edge()
 {
     static uint16_t prev = 0;
-    uint16_t curr = PIT_read();
+    uint16_t curr = PIT::read();
 
     bool edge = (curr > prev);
     prev = curr;

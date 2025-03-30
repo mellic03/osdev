@@ -13,34 +13,65 @@ enum kproc_status: uint8_t
 };
 
 
+
+// class ksched_refc
+// {
+// private:
+//     std::atomic_int &m_ct;
+
+// public:
+//     ksched_refc( std::atomic_int &ct )
+//      : m_ct(ct) { m_ct++; };
+
+//     ~ksched_refc() { m_ct--; };
+
+//     void wait()
+//     {
+//         while (m_ct.load() != 0)
+//         {
+//             kthread::sleep(10);
+//         }
+//     }
+
+//     bool try_wait()
+//     {
+//         return (m_ct.load() == 0);
+//     }
+// };
+
+struct kthread_frame
+{
+    uint64_t rip, rsp, r11, r12, r13, r14, r15, rax, rbx, rcx, rdx, rdi, rsi, rbp;
+};
+
+
+
 class kthread
 {
 private:
-    inline static std::atomic_int global_lock = 0;
-    inline static kthread *m_curr    = nullptr;
-    inline static bool     m_started = false;
-    // inline static bool     m_first = true;
 
-    // static kthread *TedBundy;
+    static void idlemain(void*);
     static void ted_bundy( void* );
     static void add( kthread* );
     static void remove( kthread* );
     static void wrapper( void (*)(void*), void* );
 
+public:
+    static bool     running;
+    static kthread *m_curr;
     size_t  tid;
     uint8_t status;
     uint8_t *stack;
     uint64_t rip, rsp, rdi, rsi, rbp, flags;
     uint64_t rax, rbx, rcx, rdx;
     kthread *next;
+    uint64_t lastTimeAwake;
 
-public:
-    
-// public:
     kthread( void (*)(void*), void *arg );
     ~kthread();
 
     static void start();
+    static void sleep( uint64_t ms );
     static void yield();
     static void exit();    
 
@@ -50,17 +81,18 @@ public:
 
     
 public:
-    struct lock_guard
+    class refc
     {
     private:
-        // std::mutex  m_mutex;
-        // std::lock_guard m_lock;
+        // static std::atomic_int m_ct;
 
     public:
-         lock_guard() { global_lock++; };
-        ~lock_guard() { global_lock--; };
-    };
+         refc() {}; // { m_ct++; };
+        ~refc() {}; // { m_ct--; };
 
+        static bool try_wait() { return true; }
+        // { return (m_ct.load() == 0); }
+    };
 };
 
 

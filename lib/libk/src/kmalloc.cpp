@@ -1,4 +1,5 @@
 #include <kmalloc.h>
+#include <kernel/bitmanip.hpp>
 
 #include <kinplace/inplace_stack.hpp>
 #include <kinplace/inplace_vector.hpp>
@@ -12,17 +13,28 @@ static buddy_allocator  kalloc0;
 
 void *kmalloc( size_t size )
 {
-    return kalloc0.alloc(size);
+    void *ptr = kalloc0.alloc(size, alignof(max_align_t));
+    uintptr_t aligned = ((uintptr_t)ptr + sizeof(void*) + 15) & ~(uintptr_t)15;
+    ((void**)aligned)[-1] = ptr;
+    return (void*)aligned;
 }
 
-void *krealloc( void *ptr, size_t size )
+// void *kmallocAligned( size_t size, size_t align )
+// {
+//     uintptr_t p = (uintptr_t)kmalloc(size + 2*align);
+//     return (void*)idk::align_up(p, align);
+// }
+
+
+void *krealloc( void*, size_t )
 {
-    return kalloc0.alloc(size);
+    return nullptr;
+    // return kalloc0.realloc(ptr, size);
 }
 
 void kfree( void *ptr )
 {
-    kalloc0.free(ptr);
+    kalloc0.free(((void**)ptr)[-1]);
 }
 
 

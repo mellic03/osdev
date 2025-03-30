@@ -19,7 +19,6 @@ void libc_init()
 
     static void stdout_flush( kfstream *fh )
     {
-        uint8_t *base  = fh->m_base;
         size_t  &read  = fh->m_read;
         size_t  &write = fh->m_write;
 

@@ -72,7 +72,7 @@ void idk::IDT_load()
 {
     syslog log("idk::IDT_load");
     
-    for (int i=0; i<NUM_INTERRUPTS; i++)
+    for (size_t i=0; i<NUM_INTERRUPTS; i++)
     {
         __usr_table[i] = nullptr;
     }
@@ -83,7 +83,7 @@ void idk::IDT_load()
     log("idtr.base:  0x%x", idtr.base);
     log("idtr.limit: %u", idtr.limit);
 
-    for (uint8_t i=0; i<NUM_INTERRUPTS; i++)
+    for (size_t i=0; i<NUM_INTERRUPTS; i++)
     {
         idt_set_descriptor(i, __isr_table[i], INTERRUPT_GATE);
     }

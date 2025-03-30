@@ -1,4 +1,5 @@
 #include "font.hpp"
+#include <string.h>
 
 
 idk::FontBuffer::FontBuffer()
@@ -29,7 +30,9 @@ idk::FontBuffer::FontBuffer( ck_BMP_header *header )
 {
     auto &info = header->infoheader;
 
-    uint32_t *data = (uint32_t*)((uint8_t*)header + header->offset);
+
+    uint32_t *aligned = new uint32_t[info.width * info.height];
+    memcpy(aligned, (uint8_t*)header + header->offset, info.width*info.height*sizeof(uint32_t));
     m_data = new vec4[info.width*info.height];
 
     this->W  = info.width;
@@ -38,7 +41,7 @@ idk::FontBuffer::FontBuffer( ck_BMP_header *header )
 
     for (int i=0; i<W*H; i++)
     {
-        m_data[i] = ree_vec4(data[i]);
+        m_data[i] = ree_vec4(aligned[i]);
     }
 
     for (int i=0; i<H/2; i++)

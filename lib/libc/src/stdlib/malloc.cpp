@@ -9,7 +9,6 @@
 #endif
 
 
-static ksysc_request req;
 
 
 void *malloc( size_t size )
@@ -18,6 +17,7 @@ void *malloc( size_t size )
         return kmalloc(size);
 
     #else
+        static ksysc_request req;
         req = {
             .type = SYSC_MEM_ALLOC,
             .size = size
@@ -35,6 +35,7 @@ void *realloc( void *ptr, size_t size )
         return krealloc(ptr, size);
 
     #else
+        static ksysc_request req;
         req = {
             .type = SYSC_MEM_REALLOC,
             .size = size,
@@ -54,6 +55,7 @@ void free( void *ptr )
         kfree(ptr);
 
     #else
+        static ksysc_request req;
         req = {
             .type = SYSC_MEM_FREE,
             .data = ptr

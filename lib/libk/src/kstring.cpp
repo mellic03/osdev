@@ -42,7 +42,7 @@ size_t count_ch( const char *s, char ch )
 
 const char *skip_brk( const char *s, const char *brk )
 {
-    size_t slen = strlen(s);
+    // size_t slen = strlen(s);
     size_t blen = strlen(brk);
 
     while (*s)

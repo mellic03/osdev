@@ -108,8 +108,7 @@ extern "C"
  
 constexpr uint16_t __gdt_count = 5;
 
-void
-idk::GDT_load()
+void GDT::load()
 {
     syslog log("GDT_load");
 
@@ -136,11 +135,7 @@ idk::GDT_load()
 
 
 
-
-#include <kernel/memory.hpp>
-
-void
-idk::GDT_flush()
+void GDT::flush()
 {
 	syslog log("GDT_flush");
     __GDT_flush();

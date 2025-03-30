@@ -8,6 +8,26 @@ struct vfsDirEntry;
 struct vfsFileEntry;
 
 
+enum vfsFileStatus_
+{
+    vfsFileStatus_Invalid = 0,
+    vfsFileStatus_Good,
+    vfsFileStatus_Dirty,
+};
+
+
+enum vfsFileFlag_
+{
+    vfsFileFlag_None       = 1<<0,
+    vfsFileFlag_Virtual    = 1<<1,
+    vfsFileFlag_Stream     = 1<<2,
+    vfsFileFlag_Executable = 1<<3,
+    vfsFileFlag_MaxBit     = 3
+};
+
+
+
+
 struct vfsEntry
 {
 protected:
@@ -17,8 +37,8 @@ public:
     static vfsDirEntry *rootdir;
 
     // char name[128];
-    std::string  name;
     vfsDirEntry *parent;
+    std::string  name;
 
     vfsEntry( vfsDirEntry *P, const std::string &fname );
     virtual const char *get_path() = 0;
