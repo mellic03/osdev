@@ -3,6 +3,7 @@
 #include <kernel/bitmanip.hpp>
 #include <kintcode.h>
 #include <kinterrupt.h>
+#include <string.h>
 #include <algorithm>
 
 // size_t size_table[3][10] = {
@@ -113,7 +114,7 @@ idk::buddy_allocator::_getidx( size_t nbytes )
 }
 
 
-void*
+uintptr_t
 idk::buddy_allocator::_getptr( size_t idx )
 {
     auto &stack = (*m_freelist)[idx];
@@ -121,12 +122,12 @@ idk::buddy_allocator::_getptr( size_t idx )
     uintptr_t ptr = stack.top();
                     stack.pop();
 
-    return (void*)ptr;
+    return ptr;
 }
 
 
 void*
-idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
+idk::buddy_allocator::alloc( size_t nbytes )
 {
     int idx = _getidx(nbytes);
 
@@ -136,10 +137,9 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
         return nullptr;
     }
 
-    void    *baseptr   = _getptr(idx);
-    uint8_t *unaligned = (uint8_t*)baseptr;
-    uint8_t *aligned   = ptr_align(unaligned + sizeof(AllocHeader), alignment);
-    auto    *header    = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    uintptr_t baseptr = _getptr(idx);
+    uintptr_t aligned = align_up(baseptr + sizeof(AllocHeader), alignof(max_align_t));
+    auto     *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
 
     *header = {
         .baseptr = (uintptr_t)baseptr,
@@ -149,13 +149,26 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
     return (void*)aligned;
 }
 
+void*
+idk::buddy_allocator::realloc( void *ptr, size_t newsize )
+{
+    uintptr_t aligned  = (uintptr_t)ptr;
+    auto     *header   = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    size_t    prevsize = (size_t(1) << header->idx);
+
+    void *bigga = this->alloc(newsize);
+    memcpy(bigga, ptr, prevsize);
+    this->free(ptr);
+
+    return bigga;
+}
+
 
 void
-idk::buddy_allocator::free( void *usrptr )
+idk::buddy_allocator::free( void *ptr )
 {
-    uint8_t *aligned = (uint8_t*)usrptr;
-    auto    *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
-
+    uintptr_t aligned = (uintptr_t)ptr;
+    auto     *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
 
     // Sanity checks
     // -----------------------------------------------------------------------------------------

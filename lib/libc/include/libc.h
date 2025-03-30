@@ -8,8 +8,8 @@
 
 extern "C"
 {
-    int libc_init();
-    int libc_init_stdio();
+    void libc_init();
+    void libc_init_stdio();
     extern void libc_syscall( struct ksysc_request *req );
 }
 

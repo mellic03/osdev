@@ -1,7 +1,6 @@
 #include "sde.hpp"
 #include <kthread.hpp>
 #include <kmalloc.h>
-#include "kinplace/inplace_vector.hpp"
 #include <stdio.h>
 #include <algorithm>
 #include <kernel/vfs.hpp>
@@ -56,7 +55,7 @@ sde::destroyContext( sde::WindowContext *ctx )
 {
     int idx = -1;
 
-    for (int i=0; i<m_contexts.size(); i++)
+    for (int i=0; i<int(m_contexts.size()); i++)
     {
         if (m_contexts[i] == ctx)
         {
@@ -153,7 +152,7 @@ void
 sde::rectOutline( ivec2 tl, ivec2 sp, const vec4 &color )
 {
     auto *ctx = sde::getCurrent();
-    auto &dst = ctx->rgba;
+    // auto &dst = ctx->rgba;
 
     int x0 = tl.x;
     int x1 = tl.x + sp.x;

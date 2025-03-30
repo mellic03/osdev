@@ -4,7 +4,6 @@
 idk::FontBuffer::FontBuffer()
 {
     m_data = nullptr;
-    name = nullptr;
     W = 0;
     H = 0;
     SZ = 0;
@@ -25,15 +24,14 @@ vec4 ree_vec4( uint32_t src )
 
 #include <kmalloc.h>
 
-idk::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
+idk::FontBuffer::FontBuffer( ck_BMP_header *header )
 :   glyph_scale(1.0f)
 {
     auto &info = header->infoheader;
 
     uint32_t *data = (uint32_t*)((uint8_t*)header + header->offset);
-    m_data = (vec4*)kmalloc(info.width*info.height * sizeof(vec4));
+    m_data = new vec4[info.width*info.height];
 
-    this->name = filename;
     this->W  = info.width;
     this->H  = info.height;
     this->SZ = W*H;

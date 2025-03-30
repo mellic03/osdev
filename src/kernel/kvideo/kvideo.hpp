@@ -42,6 +42,9 @@ namespace kvideo
     void init( uintptr_t fb_res );
     void swapBuffers();
 
+    void fill( uint32_t );
+    void fill( const vec3& );
+    void fill( const vec4& );
 
     void blit( ivec2 dst, ivec2 src, ivec2 sp, kframebuffer<vec4> &dstbuf,
                const kframebuffer<vec4> &srcbuf );

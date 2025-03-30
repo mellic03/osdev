@@ -17,6 +17,7 @@ enum SYSC_
     SYSC_WINDOW_DELETE,
 
     SYSC_MEM_ALLOC,
+    SYSC_MEM_REALLOC,
     SYSC_MEM_FREE,
 };
 
@@ -48,24 +49,12 @@ struct ksysc_window_response
     float *border;
 };
 
+KERNEL_EXTERN_ASM void libk_syscall( struct ksysc_request *req );
 
 
 #include <ZZZ.h>
 
 
-extern "C"
-{
-    extern void libk_syscall( struct ksysc_request *req );
 
-    // inline void libk_syscall( struct ksysc_request *req )
-    // {
-    //     __asm__ volatile (
-    //         "mov %0, %%rdi\n\t"  // Move the pointer to rax
-    //         "int $99\n\t"        // Trigger interrupt 99
-    //         :                    // No output operands
-    //         : "r" (req)          // Input operand
-    //         : "rdi"              // Clobbered register
-    //     );
-    // }
-}
+
 

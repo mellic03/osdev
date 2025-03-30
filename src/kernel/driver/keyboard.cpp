@@ -8,6 +8,7 @@
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
 
+#include <kpanic.h>
 #include <kscancode.h>
 #include <kmalloc.h>
 #include <stdio.h>
@@ -20,8 +21,8 @@ using namespace idk;
 #define STATE_PREFIX 1
 
 
-static kfstream *rawstreams[2] = { nullptr, nullptr };
-static kfstream *keystreams[2] = { nullptr, nullptr };
+static vfsFileEntry *rawfh = nullptr;
+static vfsFileEntry *keyfh = nullptr;
 
 
 void
@@ -30,10 +31,15 @@ kdriver::ps2_kb::irq_handler( kstackframe* )
     uint8_t status = IO::inb(0x64);
     uint8_t code   = IO::inb(0x60);
 
-    kfstream *rawstream = nullptr;
+    if (rawfh)
+    {
+        rawfh->stream.write(&code, 1);
+    }
 
-    if (status & 0x20)  rawstreams[1]->write(&code, 1);
-    else                rawstreams[0]->write(&code, 1);
+    else
+    {
+        syslog::kprintf("[ps2_kb::irq_handler] REEEEEE\n");
+    }
 
     PIC::sendEOI(1);
 }
@@ -74,11 +80,11 @@ static void create_shift_table()
 
 
 static void
-driver_update( uint8_t &state, uint8_t &mask, uint8_t scancode, kfstream *keystream )
+driver_update( uint8_t scancode )
 {
     using namespace kdriver::ps2_kb;
-    // static uint8_t state = STATE_NORMAL;
-    // static uint8_t mask = 0;
+    static uint8_t state = STATE_NORMAL;
+    static uint8_t mask = 0;
 
     uint8_t key  = scode_getchar(scancode);
 
@@ -112,7 +118,7 @@ driver_update( uint8_t &state, uint8_t &mask, uint8_t scancode, kfstream *keystr
             .key  = 0
         };
 
-        keystream->write(&event, sizeof(KeyEvent));
+        keyfh->stream.write(&event, sizeof(KeyEvent));
     
         state = STATE_NORMAL;
         return;
@@ -145,7 +151,7 @@ driver_update( uint8_t &state, uint8_t &mask, uint8_t scancode, kfstream *keystr
         .key  = key
     };
 
-    keystream->write(&event, sizeof(KeyEvent));
+    keyfh->stream.write(&event, sizeof(KeyEvent));
 }
 
 
@@ -154,23 +160,20 @@ kdriver::ps2_kb::driver_main( void* )
 {
     create_shift_table();
 
-    rawstreams[0] = &(kfilesystem::vfsFindFile("dev/kb0/raw")->stream);
-    rawstreams[1] = &(kfilesystem::vfsFindFile("dev/kb1/raw")->stream);
-    keystreams[0] = &(kfilesystem::vfsFindFile("dev/kb0/event")->stream);
-    keystreams[1] = &(kfilesystem::vfsFindFile("dev/kb1/event")->stream);
-
-    static uint8_t states[2] = {0, 0};
-    static uint8_t masks[2]  = {0, 0};
+    rawfh = kfilesystem::vfsFindFile("/dev/kb0/raw");
+    keyfh = kfilesystem::vfsFindFile("/dev/kb0/event");
     uint8_t scancode;
 
     while (true)
     {
-        for (int i=0; i<2; i++)
+        if (rawfh == nullptr)
         {
-            if (rawstreams[i]->read(&scancode, 1))
-            {
-                driver_update(states[i], masks[i], scancode, keystreams[i]);
-            }
+            kpanic("BitchAss");
+        }
+
+        if (rawfh->stream.read(&scancode, 1))
+        {
+            driver_update(scancode);
         }
 
         kthread::yield();

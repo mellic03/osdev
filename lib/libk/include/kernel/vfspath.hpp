@@ -1,26 +1,48 @@
 #pragma once
 
-#include <vector>
 #include <kernel/memory.hpp>
+#include <vector>
+#include <string>
 
 
-namespace filesystem
+namespace fs
 {
     class path;
+    class directorypath;
+    class filepath;
 }
 
 
-class filesystem::path
+class fs::path
 {
 private:
-    std::vector<char*> m_data;
-    std::vector<char*> m_data2;
-    char *m_name;
-    char *m_ext;
-
 public:
-    path( const char *str );
-    
+    std::vector<std::string> m_sep;
+    std::string m_dirname;
+    std::string m_filename;
+
+     path( const char *str );
+    ~path();
+
+};
+
+
+class fs::directorypath: public fs::path
+{
+private:
+public:
+    directorypath( const char *str );
+    // ~directorypath();
+
+};
+
+
+class fs::filepath: public fs::path
+{
+private:
+public:
+    filepath( const char *str );
+    // ~filepath();
 
 };
 

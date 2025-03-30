@@ -1,7 +1,6 @@
 #include <stdint.h>
 
-
-int64_t main( int argc, int64_t *argv )
+int main( int argc, int64_t *argv )
 {
     if (argc == 2)
     {

@@ -9,6 +9,8 @@ set(CMAKE_SYSTEM_PROCESSOR x86_64)
 # which compilers to use for C and C++
 set(CMAKE_C_COMPILER   ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/bin/x86_64-elf-gcc)
 set(CMAKE_CXX_COMPILER ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/bin/x86_64-elf-g++)
+# set(CMAKE_C_COMPILER   x86_64-elf-gcc)
+# set(CMAKE_CXX_COMPILER x86_64-elf-g++)
 set(CMAKE_ASM_COMPILER nasm)
 set(CMAKE_ASM_NASM_COMPILER nasm)
 
@@ -54,6 +56,7 @@ set(IDKERNEL_C_CXX_FLAGS
     -m64 -mcmodel=large -march=x86-64 \
     --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
     -nostartfiles \
+    -Wl,--no-relax -Wl,--gc-sections \
     ${SSE_FLAGS} \
     -Wno-missing-field-initializers"
 )
@@ -89,9 +92,9 @@ set(CMAKE_ASM_NASM_FLAGS
 # )
 
 
-include_directories(
-    ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/include
-)
+# include_directories(
+#     ${CMAKE_SOURCE_DIR}/external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/include
+# )
 
 
 

@@ -3,48 +3,50 @@
 #include <string.h>
 #include <ksysc.h>
 
-int libc_init()
+void libc_init()
 {
     libc_init_stdio();
-    return 1;
 }
 
 
 
-
-
-
-
-
-
-
+// #define __is_kernel
 #ifdef __is_kernel
+    #include <kpanic.h>
+    #include <kernel/log.hpp>
     #include <kernel/ioport.hpp>
     #include <kernel/vfs.hpp>
 
     static void stdout_flush( kfstream *fh )
     {
-        uint8_t *base   = fh->m_base;
-        uint8_t *&read  = fh->m_read;
-        uint8_t *&write = fh->m_write;
+        uint8_t *base  = fh->m_base;
+        size_t  &read  = fh->m_read;
+        size_t  &write = fh->m_write;
 
-        while (read < write)
+        while (read != write)
         {
-            IO::outb(IO::COM1, *(read++));
+            IO::outb(IO::COM1, read);
+            read = (read + 1) % fh->m_size;
         }
 
-        read  = base;
-        write = base;
+        read  = 0;
+        write = 0;
     }
 #endif
 
 
-int libc_init_stdio()
+void libc_init_stdio()
 {
     #ifdef __is_kernel
+        syslog log("libc_init_stdio");
         auto *fh = kfilesystem::vfsFindFile("/dev/stdout");
+        log("fh: 0x%lx", fh);
+        if (!fh) kpanic("Could not retrieve /dev/stdout");
+        log("B");
         fh->stream.m_flush = stdout_flush;
+        log("C");
         stdout = (FILE*)(fh);
+        log("D");
     
     #else
         ksysc_request req;
@@ -54,7 +56,5 @@ int libc_init_stdio()
         stdout = (FILE*)(req.data);
 
     #endif
-
-    return 1;
 }
 

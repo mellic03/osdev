@@ -8,7 +8,8 @@ extern "C" {
 #endif
 
 
-void *malloc( size_t nbytes );
+void *malloc( size_t size );
+void *realloc( void*, size_t size );
 void  free( void* );
 
 int   atoi( const char *str );

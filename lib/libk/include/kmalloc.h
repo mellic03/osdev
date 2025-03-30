@@ -6,6 +6,7 @@
 
     void  kmalloc_init( const idk::MemoryMap& );
     void *kmalloc( size_t size );
+    void *krealloc( void*, size_t size );
     void  kfree( void* );
 #endif
 

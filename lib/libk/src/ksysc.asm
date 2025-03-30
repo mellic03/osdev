@@ -1,8 +1,8 @@
 [bits 64]
 
 section .text
-    global libk_syscall
-    libk_syscall:
+    global __libk_syscall
+    __libk_syscall:
         int 99
         ret
 

@@ -55,14 +55,14 @@ private:
 
     MemoryMap m_mmap_buf[32];
     inplace_vector<MemoryMap>    m_mmaps;
-    inplace_vector<limine_file*> m_modules;
+    // inplace_vector<limine_file*> m_modules;
 
     void _load_mmaps();
     void _load_modules();
 
 public:
     Krequests m_reqs;
-    inplace_vector<FontBuffer>   m_fonts;
+    // inplace_vector<FontBuffer>   m_fonts;
     idk::CPU cpu0, cpu1, cpu2, cpu4;
 
     KSystem( const Krequests& );
@@ -70,9 +70,9 @@ public:
 
     auto        &getMmaps() { return m_mmaps; }
     uint64_t     getHHDM();
-    auto        &getModules() { return m_modules; };
-    limine_file *getModule( const char *label );
-    uint64_t     execute( void *address, size_t size, int argc, uint64_t *argv );
+    // auto        &getModules() { return m_modules; };
+    // limine_file *getModule( const char *label );
+    int          execute( void *address, size_t size, int argc, uint64_t *argv );
     void         lsmem();
 
 };

@@ -3,6 +3,7 @@
 #include "../sde/sde.hpp"
 #include "../sde/frame_text.hpp"
 #include "../driver/keyboard.hpp"
+#include <kpanic.h>
 #include <kstring.h>
 #include <kmalloc.h>
 #include <stdio.h>
@@ -23,10 +24,10 @@ extern char *kshell_font   ( char*, int, char** );
 extern char *kshell_info   ( char*, int, char** );
 extern char *kshell_ls     ( char*, int, char** );
 extern char *kshell_set    ( char*, int, char** );
+extern char *kshell_panic  ( char*, int, char** );
 extern char *kshell_tid    ( char*, int, char** );
 extern char *kshell_clear  ( char*, int, char** );
 extern char *kshell_exit   ( char*, int, char** );
-
 
 using fn_type = char *(*)( char*, int, char** );
 struct command_pair { const char *name; fn_type fn; };
@@ -44,6 +45,7 @@ static void registerCommands()
     KSHELL_REGISTER_CMD(info)
     KSHELL_REGISTER_CMD(ls)
     KSHELL_REGISTER_CMD(set)
+    KSHELL_REGISTER_CMD(panic)
     KSHELL_REGISTER_CMD(tid)
     KSHELL_REGISTER_CMD(clear)
     KSHELL_REGISTER_CMD(exit)
@@ -140,11 +142,17 @@ void kshell_main( void *arg )
     }
 
     kTTY *tty    = (kTTY*)arg;
-    auto *stream = &(kfilesystem::vfsFindFile("dev/kb0/event")->stream);
+    auto *file   = kfilesystem::vfsFindFile("dev/kb0/event");
+    auto *stream = &(file->stream);
 
     auto *ctx = sde::createContext(ivec2(10, 10), ivec2(500, 500));
-          ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
+    auto *frame = ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
 
+    ctx->m_style = {
+        .fill = false,
+        .border = false,
+        .border_color = vec4(1.0, 0.8, 0.8, 1.0)
+    };
 
     KeyEvent event;
 
@@ -170,7 +178,7 @@ void kshell_main( void *arg )
             else if (ch == '\n')
             {
                 auto *&cwd = tty->getCWD();
-                tty->hsprintf("[%s] ", cwd->name);
+                tty->hsprintf("[%s] ", cwd->name.c_str());
 
                 if (tty->ptop == tty->prompt)
                 {

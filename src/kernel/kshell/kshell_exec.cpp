@@ -33,7 +33,7 @@ char *kshell_exec( char *dst, int argc, char **argv )
         exec_args[i-2] = atoi(argv[i]);
     }
 
-    uint64_t res = sys->execute(file->addr, file->size, 2, exec_args);
+    int res = sys->execute(file->addr, file->size, 2, exec_args);
 
     return kssprintf(dst, "result: %d", res);
 }

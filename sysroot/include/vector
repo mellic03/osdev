@@ -115,7 +115,10 @@ public:
 
     void reserve( size_t sz )
     {
-        _realloc(sz);
+        if (sz > m_cap)
+        {
+            _realloc(sz);
+        }
     }
 
 

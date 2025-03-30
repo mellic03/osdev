@@ -1,7 +1,7 @@
 #pragma once
 #include "kfstream.hpp"
+#include <string>
 #include <static_vector.hpp>
-#include <string.h>
 
 struct vfsEntry;
 struct vfsDirEntry;
@@ -14,10 +14,13 @@ protected:
     bool m_is_dir;
 
 public:
-    char name[128];
+    static vfsDirEntry *rootdir;
+
+    // char name[128];
+    std::string  name;
     vfsDirEntry *parent;
 
-    vfsEntry( vfsDirEntry *P, const char *fname );
+    vfsEntry( vfsDirEntry *P, const std::string &fname );
     virtual const char *get_path() = 0;
 
     bool is_dir()  { return  m_is_dir; };
@@ -28,9 +31,9 @@ public:
 
 struct vfsDirEntry: public vfsEntry
 {
-    idk::static_vector<vfsEntry*, 16> children;
+    idk::static_vector<vfsEntry*, 32> children;
 
-    vfsDirEntry( vfsDirEntry *P, const char *fname )
+    vfsDirEntry( vfsDirEntry *P, const std::string &fname )
     :   vfsEntry(P, fname),
         children(0, nullptr)
     {
@@ -38,19 +41,21 @@ struct vfsDirEntry: public vfsEntry
     }
 
     const char *get_path() override;
-    bool hasChild( const char *name ) { return getChild(name) != nullptr; }
+
+    bool hasChild( const std::string &fname )
+    { return getChild(fname) != nullptr; }
 
     template <typename T = vfsEntry>
-    T *getChild( const char *fname )
+    T *getChild( const std::string &fname )
     {
         for (vfsEntry *E: children)
-            if (strcmp(E->name, fname) == 0)
+            if (E->name == fname)
                 return static_cast<T*>(E);
         return nullptr;
     }
 
     template <typename T, typename... Args>
-    T *giveChild( const char *fname, Args... args )
+    T *giveChild( const std::string &fname, Args... args )
     {
         T *entry = new T(this, fname, args...);
         children.push_back(static_cast<vfsEntry*>(entry));
@@ -67,11 +72,12 @@ struct vfsFileEntry: public vfsEntry
     uint8_t   type;
     uint32_t  flags = 0;
     void     *addr;
+    void     *other;
     size_t    size;
     kfstream  stream;
 
-    vfsFileEntry( vfsDirEntry *P, const char *fname );
-    vfsFileEntry( vfsDirEntry *P, const char *fname, uint8_t type, void *addr, size_t size );
+    vfsFileEntry( vfsDirEntry *P, const std::string &fname );
+    vfsFileEntry( vfsDirEntry *P, const std::string &fname, uint8_t type, void *addr, size_t size );
 
     const char *get_path() override;
 

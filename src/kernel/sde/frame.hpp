@@ -12,13 +12,16 @@ namespace sde
     struct Style;
     class Frame;
     // class BorderFrame;
+    // class SolidFrame;
 }
 
 
 struct sde::Style
 {
-    vec4 color  = vec4(1, 1, 1, 0.8);
-    vec4 border = vec4(0.85, 0.85, 0.85, 1.0);
+    bool fill         = false;
+    bool border       = true;
+    vec4 fill_color   = vec4(1, 1, 1, 0.8);
+    vec4 border_color = vec4(0.85, 0.85, 0.85, 1.0);
 };
 
 
@@ -67,5 +70,29 @@ public:
 
     virtual void draw();
 };
+
+
+// class sde::BorderFrame: public sde::Frame
+// {
+//     BorderFrame( ivec2 tl, ivec2 sp )
+//     :   Frame(tl, sp)
+//     {
+        
+//     }
+
+// };
+
+
+// class sde::SolidFrame: public sde::Frame
+// {
+//     SolidFrame( ivec2 tl, ivec2 sp )
+//     :   Frame(tl, sp)
+//     {
+        
+//     }
+
+// };
+
+
 
 

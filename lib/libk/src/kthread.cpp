@@ -1,36 +1,17 @@
 #include <kthread.hpp>
+#include <kernel/log.hpp>
 #include <kpanic.h>
 #include <kintcode.h>
 #include <kinterrupt.h>
 #include <stdio.h>
 #include <string.h>
-// #include <kernel/log.hpp>
-
-
-void kthread::global_lock()
-{
-    asm volatile ("cli");
-    m_global_lock = true;
-}
-
-
-void kthread::global_unlock()
-{
-    m_global_lock = false;
-	asm volatile ("sti");
-}
 
 
 
 size_t kthread::this_tid()
 {
-    size_t tid = 0;
-
-    kthread::global_lock();
-    tid = m_curr->tid;
-    kthread::global_unlock();
-
-    return tid;
+    // kthread::lock_guard();
+    return m_curr->tid;
 }
 
 void kthread::yield()
@@ -49,10 +30,11 @@ void kthread::exit()
 
 void kthread::schedule( kstackframe *frame )
 {
-    if (m_global_lock == true)
-    {
-        return;
-    }
+    // kthread::lock_guard();
+    // if (kthread::global_lock == true)
+    // {
+    //     return;
+    // }
 
     if (m_curr == nullptr)
     {
@@ -134,7 +116,7 @@ void kthread::add( kthread *th )
 
 void kthread::remove( kthread *th ) 
 {
-    kthread::global_lock();
+    kthread::lock_guard();
 
     if (th->next == nullptr)
     {
@@ -157,8 +139,6 @@ void kthread::remove( kthread *th )
 
     prev->next = th->next;
     delete th;
-
-    kthread::global_unlock();
 }
 
 
@@ -194,8 +174,6 @@ kthread::kthread( void (*fn)(void*), void *arg )
         new kthread(kthread::ted_bundy, nullptr);
     }
 
-    kthread::global_lock();
-
     static size_t curr_tid = 0;
 
     uint8_t *stack = new uint8_t[4096];
@@ -215,8 +193,10 @@ kthread::kthread( void (*fn)(void*), void *arg )
     this->flags = 0x202;
     this->next = nullptr;
 
+    syslog log("kthread::kthread");
+    log("tid: %lu", this->tid);
+
     kthread::add(this);
-    kthread::global_unlock();
 }
 
 
@@ -225,26 +205,4 @@ kthread::~kthread()
     printf("[kthread::~kthread]\n");
     delete[] this->stack;
 }
-
-
-
-void klock_acquire( klock_t *lock )
-{
-    while (true)
-    {
-        if (lock->locked == false)
-        {
-            lock->locked = true;
-            return;
-        }
-    }
-}
-
-
-void klock_release( klock_t *lock )
-{
-    lock->locked = false;
-}
-
-
 

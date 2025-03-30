@@ -108,10 +108,10 @@ static char *__vsprintf( char *buf, const char *&fmt, va_list args )
         case 'l': lng = 1; break;
 
         case 'c': *(buf++) = va_arg(args, int);                  break;
-        case 's': buf = strcpy(buf, va_arg(args, const char *)); break;
-        case 'd': buf = itoa(va_arg(args,      int), buf, 10);   break;
-        case 'u': buf = utoa(va_arg(args, uint32_t), buf, 10);   break;
-        case 'x': buf = ultoa(va_arg(args, uint32_t), buf, 16);  break;
+        case 's': buf += strlen(strcpy(buf, va_arg(args, const char *))); break;
+        case 'd': buf  = itoa(va_arg(args,      int), buf, 10);   break;
+        case 'u': buf  = utoa(va_arg(args, uint32_t), buf, 10);   break;
+        case 'x': buf  = ultoa(va_arg(args, uint32_t), buf, 16);  break;
 
         #ifdef __libk_sse
             case '0': buf = __vsprintf_sse(buf, fmt, args); break;

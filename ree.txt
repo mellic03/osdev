@@ -1,0 +1,30 @@
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/michael/Desktop/code/C++/osdev/build
+[  2%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kernel/vfs.cpp.o
+[  2%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kernel/vfsentry.cpp.o
+[  2%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kfile.cpp.o
+[  3%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kfstream.cpp.o
+[  4%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/ksysc.cpp.o
+[  5%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kthread.cpp.o
+'sysroot/bin/idkernel' -> 'output/iso_root/boot/idkernel'
+'external/limine/limine-bios.sys' -> 'output/iso_root/boot/limine/limine-bios.sys'
+'external/limine/limine-bios-cd.bin' -> 'output/iso_root/boot/limine/limine-bios-cd.bin'
+'external/limine/limine-uefi-cd.bin' -> 'output/iso_root/boot/limine/limine-uefi-cd.bin'
+'external/limine/BOOTX64.EFI' -> 'output/iso_root/EFI/BOOT/BOOTX64.EFI'
+'external/limine/BOOTIA32.EFI' -> 'output/iso_root/EFI/BOOT/BOOTIA32.EFI'
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/michael/Desktop/code/C++/osdev/build
+[  1%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kernel/vfs.cpp.o
+[  2%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kernel/vfsentry.cpp.o
+[  3%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kfile.cpp.o
+[  3%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kfstream.cpp.o
+[  4%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/ksysc.cpp.o
+[  5%] Building CXX object lib/libk/CMakeFiles/libk.dir/src/kthread.cpp.o
+'sysroot/bin/idkernel' -> 'output/iso_root/boot/idkernel'
+'external/limine/limine-bios.sys' -> 'output/iso_root/boot/limine/limine-bios.sys'
+'external/limine/limine-bios-cd.bin' -> 'output/iso_root/boot/limine/limine-bios-cd.bin'
+'external/limine/limine-uefi-cd.bin' -> 'output/iso_root/boot/limine/limine-uefi-cd.bin'
+'external/limine/BOOTX64.EFI' -> 'output/iso_root/EFI/BOOT/BOOTX64.EFI'
+'external/limine/BOOTIA32.EFI' -> 'output/iso_root/EFI/BOOT/BOOTIA32.EFI'

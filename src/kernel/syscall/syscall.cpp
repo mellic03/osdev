@@ -39,9 +39,8 @@ static void
 file_flush( ksysc_request *req )
 {
     syslog log("file_flush");
-    KFile *fh = reinterpret_cast<KFile*>(req->data);
-    fh->fsh(fh);
-    log("fh: 0x%lx", fh);
+    auto *fh = (vfsFileEntry*)(req->data);
+    fh->stream.flush();
 }
 
 
@@ -53,13 +52,12 @@ sysc_window_create( ksysc_request *req )
 {
     static ksysc_window_response res;
     auto *ctx = sde::createContext(ivec2(50), ivec2(200));
-    ctx->m_style.border = vec4(0.5, 1.0, 0.5, 0.85);
 
     res = {
         .sde_ctx = ctx,
         .x       = &ctx->m_lx,
-        .y       = &ctx->m_ly,
-        .border  = &ctx->m_style.color[0]
+        .y       = &ctx->m_ly
+        // .border  = &ctx->m_style.color[0]
     };
 
     req->res = &res;
@@ -89,7 +87,8 @@ idk::syscall_handler( kstackframe *frame )
         case SYSC_FILE_FLUSH:    file_flush(req);         break;
         case SYSC_WINDOW_CREATE: sysc_window_create(req); break;
         case SYSC_WINDOW_DELETE: sysc_window_delete(req); break;
-        case SYSC_MEM_ALLOC:     req->data = kmalloc(req->size); break;
+        case SYSC_MEM_ALLOC:     req->res = kmalloc(req->size); break;
+        case SYSC_MEM_REALLOC:   req->res = krealloc(req->data, req->size); break;
         case SYSC_MEM_FREE:      kfree(req->data);
     }
 

@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "driver/mouse.hpp"
 #include "driver/pic.hpp"
 #include "driver/pit.hpp"
 #include "driver/keyboard.hpp"
@@ -24,6 +25,7 @@
 
 #include <kscancode.h>
 
+#include "./cpu/smp.hpp"
 #include "./cpu/gdt.hpp"
 #include "./interrupt/interrupt.hpp"
 #include "./kfs/kfs.hpp"
@@ -32,9 +34,7 @@
 #include "kvideo/kvideo.hpp"
 #include "sde/sde.hpp"
 #include "kshell/kshell.hpp"
-
-
-#include "driver/mouse.hpp"
+#include "panic.hpp"
 
 
 void pagefault_handler( kstackframe* );
@@ -56,15 +56,6 @@ void badfile_handler( kstackframe* )
     syslog::kprintf("Exception BAD_FILE");
     kernel_hcf();
 }
-
-void panic_handler( kstackframe *frame )
-{
-    syslog log("KERNEL PANIC");
-    const char *msg = (const char*)(frame->rdi);
-    log("reason: %s", msg);
-    kernel_hcf();
-}
-
 
 
 idk::KSystem *sys;
@@ -102,17 +93,6 @@ extern "C"
 }
 
 
-void kthread_test( void* )
-{
-    printf("[kthread_test]\n");
-    int n = 0;
-    while (n++ < 10)
-    {
-        printf("[kthread_test]\n");
-        kthread::yield();
-    }
-}
-
 
 extern "C"
 void _start()
@@ -124,6 +104,7 @@ void _start()
         return;
     }
 
+    // syslog::disable();
     syslog log("_start");
     log("serial initialized");
 
@@ -141,21 +122,21 @@ void _start()
     sys = &system;
     ctor_init();
 
-    kfilesystem::vfsInsertFile<char>("dev/kb0/", "raw",   64);
-    kfilesystem::vfsInsertFile<char>("dev/kb0/", "event", 64);
-    kfilesystem::vfsInsertFile<char>("dev/kb1/", "raw",   64);
-    kfilesystem::vfsInsertFile<char>("dev/kb1/", "event", 64);
-    kfilesystem::vfsInsertFile<char>("dev/ms0",  "raw",   64);
-    kfilesystem::vfsInsertFile<char>("dev/ms0",  "event", 64);
-    kfilesystem::vfsInsertFile<char>("dev/", "stdout", 64);
+    kfilesystem::vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/ms0/raw",   64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/ms0/event", 64, vfsFileFlag_Stream);
+    kfilesystem::vfsInsertFile<char>("/dev/stdout",    64, vfsFileFlag_Stream);
 
+    SMP::init(reqs.mp);
+    kvideo::init((uintptr_t)(reqs.fb));
     libc_init();
     libcpp::init();
 
 
-    mouse_init();
+    // mouse_init();
     idk::PIT_init();
-    idk::PIT_set_ms(2);
+    idk::PIT_set_ms(5);
     idk::GDT_load();
     idk::GDT_flush();
     idk::IDT_load();
@@ -164,43 +145,33 @@ void _start()
     idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
     idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
     idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
-    idk::onInterrupt(INT_PANIC,   panic_handler);
+    idk::onInterrupt(INT_PANIC,   kpanic_handler);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
-    idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
+    // idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
     PIC::remap(32, 40);
     PIC::disable();
     PIC::unmask(0);
     PIC::unmask(1);
     PIC::unmask(2);
-    PIC::unmask(12);
+    // PIC::unmask(12);
 	asm volatile ("sti");
 
-    for (auto *F: system.getModules())
+    for (int i=0; i<reqs.modules->module_count; i++)
     {
-        size_t len = strlen(F->string);
-        if (len == 0)
-            continue;
-
-        else if (strncmp(F->path, "/bin", 4) == 0)
-            kfilesystem::vfsInsertFile("bin/", F->string, F->address, F->size);
-
-        else if (strncmp(F->path, "/font", 5) == 0)
-            kfilesystem::vfsInsertFile("font/", F->string, F->address, F->size);
+        auto *F = reqs.modules->modules[i];
+        kfilesystem::vfsInsertFile(F->path, F->address, F->size);
     }
 
     kTTY tty0(25*80);
-    tty0.font = &system.m_fonts[0];
+    auto *file = kfilesystem::vfsFindFile("/font/cutive-w12hf18.bmp");
+    tty0.font = new idk::FontBuffer((ck_BMP_header*)(file->addr));
 
-    kvideo::init((uintptr_t)(reqs.fb));
-
-    new kthread(kthread_test, nullptr);
-    new kthread(kdriver::ps2_mouse::driver_main, nullptr);
+    // new kthread(kdriver::ps2_mouse::driver_main, nullptr);
     new kthread(kdriver::ps2_kb::driver_main, nullptr);
     new kthread(sde_main, nullptr);
     new kthread(kshell_main, (void*)&tty0);
-
 
     while (true)
     {

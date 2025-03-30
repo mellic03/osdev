@@ -215,24 +215,19 @@ ps2_mouse::irq_handler( kstackframe* )
 void
 ps2_mouse::driver_main( void* )
 {
-    // auto *fh = kfilesystem::vfsFindFile("dev/ms0/event");
+    // auto *stream = &(kfilesystem::vfsFindFile("dev/ms0/event")->stream);
 
-    // static uint8_t packet[4];
-    // static uint8_t idx = 0;
-    // static vec2 mouse(512.0f);
+    static uint8_t packet[4];
+    static uint8_t idx = 0;
+    static vec2 mouse(512.0f);
 
-    // while (true)
-    // {
-    //     if (fh)
-    //     {
-    //         kfstream *stream = &(fh->stream);
-
-    //         ProcessMousePacket();
-    //         mouse = vec2(mouse_x, mouse_y);
-    //         stream->write(&mouse, sizeof(vec2));
-    //     }
-    //     kthread::yield();
-    // }
+    while (true)
+    {
+        ProcessMousePacket();
+        // mouse = vec2(mouse_x, mouse_y);
+        // stream->write(&mouse, sizeof(vec2));
+        kthread::yield();
+    }
 }
 
 

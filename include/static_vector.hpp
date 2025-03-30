@@ -64,6 +64,13 @@ public:
         m_top->~T();
     }
 
+    // T *find( const T &value )
+    // {
+    //     for (size_t i=0; i<size(); i++)
+    //         if (m_base[i] == value)
+    //             return m_base+i;;
+    //     return nullptr;
+    // }
 
     T&       front()       { return m_base[0];  }
     const T& front() const { return m_base[0];  }

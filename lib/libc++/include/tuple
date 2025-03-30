@@ -1,0 +1,23 @@
+#pragma once
+#include <libc++>
+
+namespace std
+{
+    template <typename T, typename U>
+    struct pair
+    {
+        T first;
+        U second;
+    
+        pair( const T &t, const U &u )
+        :   first(t), second(u) {  }
+    };
+
+    template <typename T, typename U>
+    std::pair<T, U> make_pair( const T &t, const U &u )
+    {
+        return std::pair<T, U>(t, u);
+    }
+}
+
+

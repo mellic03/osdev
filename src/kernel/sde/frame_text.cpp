@@ -9,8 +9,8 @@
 
 sde::TextFrame::TextFrame( const char *text, idk::FontBuffer *font, ivec2 tl, ivec2 sp )
 :   Frame(tl, sp),
-    m_font (font),
-    m_text (text)
+    m_text(text),
+    m_font(font)
 {
 
 }
@@ -90,7 +90,6 @@ sde::TextFrame::draw()
 
 
 
-
 sde::TerminalFrame::TerminalFrame( kTTY *tty, ivec2 tl, ivec2 sp )
 :   TextFrame (nullptr, tty->font, tl, sp),
     m_tty     (tty)
@@ -108,7 +107,7 @@ sde::TerminalFrame::draw()
     _reset();
     _putstr(m_tty->history);
     _putstr("[");
-    _putstr(m_tty->getCWD()->name);
+    _putstr(m_tty->getCWD()->name.c_str());
     _putstr("] ");
 
     char *pbase = m_tty->prompt;

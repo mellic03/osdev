@@ -34,7 +34,7 @@ KSystem::KSystem( const Krequests &reqs )
     PMM::init(m_mmaps[1], reqs.hhdm);
     VMM::init();
 
-    _load_modules();
+    // _load_modules();
     // KFS::init((uintptr_t)this);
 }
 
@@ -46,19 +46,19 @@ KSystem::getHHDM()
 }
 
 
-limine_file*
-KSystem::getModule( const char *label )
-{
-    for (auto *file: m_modules)
-    {
-        if (strcmp(file->string, label) == 0)
-        {
-            return file;
-        }
-    }
+// limine_file*
+// KSystem::getModule( const char *label )
+// {
+//     for (auto *file: m_modules)
+//     {
+//         if (strcmp(file->string, label) == 0)
+//         {
+//             return file;
+//         }
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
 
 
@@ -149,41 +149,41 @@ KSystem::lsmem()
 
 
 
-void
-KSystem::_load_modules()
-{
-    syslog log("KSystem::_load_modules");
+// void
+// KSystem::_load_modules()
+// {
+//     syslog log("KSystem::_load_modules");
 
-    m_modules = inplace_vector<limine_file*>(new limine_file*[64], 64);
-    m_fonts   = inplace_vector<FontBuffer>(new FontBuffer[32], 32);
+//     m_modules = inplace_vector<limine_file*>(new limine_file*[64], 64);
+//     m_fonts   = inplace_vector<FontBuffer>(new FontBuffer[32], 32);
 
-    auto *res = m_reqs.modules;
+//     auto *res = m_reqs.modules;
 
-    for (uint64_t i=0; i<res->module_count; i++)
-    {
-        auto *file = res->modules[i];
-        log("file: \"%s\"", file->string);
-        log("path: \"%s\"", file->path);
+//     for (uint64_t i=0; i<res->module_count; i++)
+//     {
+//         auto *file = res->modules[i];
+//         log("file: \"%s\"", file->string);
+//         log("path: \"%s\"", file->path);
 
-        size_t len = strlen(file->string);
+//         size_t len = strlen(file->string);
     
-        if (len == 0)
-        {
-            continue;
-        }
+//         if (len == 0)
+//         {
+//             continue;
+//         }
 
-        if (strncmp(file->path, "/font", 5) == 0)
-        {
-            auto *header = (ck_BMP_header*)file->address;
-            m_fonts.push_back(FontBuffer(file->string, header));
-        }
+//         if (strncmp(file->path, "/font", 5) == 0)
+//         {
+//             auto *header = (ck_BMP_header*)file->address;
+//             m_fonts.push_back(FontBuffer(file->string, header));
+//         }
 
-        m_modules.push_back(file);
-    }
+//         m_modules.push_back(file);
+//     }
 
-    log("modules: %d", m_modules.size());
+//     log("modules: %d", m_modules.size());
 
-}
+// }
 
 
 
@@ -209,7 +209,7 @@ KSystem::_load_modules()
 
 
 
-uint64_t
+int
 KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
 {
     // syslog log("KSystem::execute");
@@ -228,8 +228,8 @@ KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
     memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
     memcpy((void*)entry, address, size);
 
-    using YOLO = uint64_t (*)(int, uint64_t*);
-    uint64_t result = ((YOLO)entry)(argc, argv);
+    using YOLO = int (*)(int, uint64_t*);
+    int result = ((YOLO)entry)(argc, argv);
 
     // thread_args = u64vec3(
     //     (uint64_t)entry,

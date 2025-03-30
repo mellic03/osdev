@@ -1,6 +1,6 @@
 #include <kstring.h>
+#include <kstring.hpp>
 #include <string.h>
-
 
 // skip past leading occurences of ch
 const char *skip_ch( const char *s, char ch )
@@ -91,3 +91,27 @@ const char *seek_brk( const char *s, const char *brk )
 }
 
 
+
+
+std::vector<char*>&
+kstring::tokenize( const char *str, char delim )
+{
+    static std::vector<char*> out;
+    for (char *sep: out)
+        delete[] sep;
+    out.clear();
+
+    int len = strlen(str);
+    auto *A = str;
+    auto *B = A;
+
+    while (A < str+len)
+    {
+        B = seek_ch(A+1, delim);
+        out.push_back(new char[B-A+1]);
+        strncpy(out.back(), A, B-A);
+        A = B+1;
+    }
+
+    return out;
+}

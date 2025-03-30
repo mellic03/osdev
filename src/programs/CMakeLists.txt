@@ -1,6 +1,7 @@
 file(
     GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/_start.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/_start.cpp
+    ${CMAKE_SOURCE_DIR}/src/kernel/abi/cxxabi.cpp
 )
 
 set(
@@ -10,8 +11,6 @@ set(
     -nostdlib
     -static
     -zmax-page-size=0x1000
-    -Wl,--no-relax
-    -Wl,--gc-sections
     -T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
 )
 

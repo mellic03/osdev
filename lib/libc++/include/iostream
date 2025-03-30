@@ -1,0 +1,35 @@
+#pragma once
+#include <libc++>
+
+
+namespace std
+{
+    class ios_base;
+    class istream;
+    class ostream;
+}
+
+
+class std::ios_base
+{
+
+};
+
+
+class std::istream: public std::ios_base
+{
+
+};
+
+
+class std::ostream: public std::ios_base
+{
+
+};
+
+
+
+namespace std
+{
+    extern std::ostream cout;
+}

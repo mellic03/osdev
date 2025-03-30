@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
-
+#include <libc++>
+#include <string.h>
+#include <algorithm>
 
 namespace std
 {
@@ -9,21 +10,77 @@ namespace std
 }
 
 
-class std::string: public std::vector<char>
+class std::string
 {
+protected:
+    size_t m_cap;
+    char  *m_base;
+    char  *m_top;
+    char  *m_end;
+
+    void _realloc( size_t cap );
+
 public:
-    string(): vector(16)
-    {
-        resize(0);
-    }
-
+    string();
+    ~string();
     string( const char* );
-    // string( const string & );
-    // string &operator=( const string & );
+    string( const char*, size_t );
 
-    size_t size() const { return vector::size() - 1; }
- 
+    string( const std::string& );
+    string( std::string&& ) noexcept;
 
+    std::string &operator=( const std::string& );
+    std::string &operator=( std::string&& );
+    std::string &operator=( const char* );
+
+    std::string &operator+=( const std::string& );
+    std::string operator+( const std::string& );
+    bool        operator==( const std::string& );
+
+    const char *c_str()       { return m_base; }
+    const char *c_str() const { return m_base; }
+
+    void        push_back( char );
+
+    char&       front()       { return m_base[0];  }
+    const char& front() const { return m_base[0];  }
+    char&       back()        { return *(m_top); }
+    const char& back()  const { return *(m_top); }
+
+    size_t   size()     const { return m_top - m_base; }
+    size_t   capacity() const { return m_cap; }
+    bool     empty()    const { return m_top == m_base; }
+
+
+    char& operator[]( size_t i ) { return *(m_base+i); }
+    const char& operator[]( size_t i ) const { return *(m_base+i); }
+
+    struct iterator
+    {
+        char *ptr;
+    
+        iterator( char *p )              : ptr(p)         {  };
+        iterator( const iterator &other ): ptr(other.ptr) {  };
+    
+        iterator &operator++()
+        {
+            ptr++;
+            return *this;
+        };
+    
+        iterator operator++(int)
+        {
+            return iterator(ptr++);
+        };
+    
+        bool  operator==( const iterator &rhs ) { return ptr == rhs.ptr; };
+        bool  operator!=( const iterator &rhs ) { return ptr != rhs.ptr; };
+        char& operator*() { return *ptr; };
+    
+    };
+
+    iterator begin() { return iterator(m_base); };
+    iterator end()   { return iterator(m_top);  };
 };
 
 

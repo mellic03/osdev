@@ -38,8 +38,7 @@ static volatile struct limine_memmap_request lim_mmap_req = {
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
-    .revision = 0,
-    .flags = 1
+    .revision = 0
 };
 
 

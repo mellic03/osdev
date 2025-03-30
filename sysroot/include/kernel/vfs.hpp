@@ -19,24 +19,25 @@ enum vfsFileType_
     vfsFileType_DUMMY = 0,
     vfsFileType_RAW,
     vfsFileType_FONT,
-    vfsFileType_EXECUTABLE,
-    vfsFileType_STREAM,
 };
 
 enum vfsFileFlag_
 {
-    vfsFileFlag_PHYSICAL  = 1<<0,
-    vfsFileFlag_VIRTUAL   = 1<<1,
+    vfsFileFlag_None       = 1<<0,
+    vfsFileFlag_Virtual    = 1<<1,
+    vfsFileFlag_Stream     = 1<<2,
+    vfsFileFlag_Executable = 1<<3,
+    vfsFileFlag_MaxBit     = 1<<3
 };
 
 
 namespace kfilesystem
 {
-    vfsFileEntry *vfsInsertFile( const char*, const char*, void *addr=0,
-                                size_t size=0, uint8_t type=vfsFileType_RAW );
+    vfsFileEntry *vfsInsertFile( const char*, void *addr=0, size_t size=0,
+                                 uint32_t flags=vfsFileFlag_None );
 
-    vfsFileEntry *vfsFindFile( const char *fname );
-    vfsFileEntry *vfsFindFile( vfsDirEntry *cwd, const char *fname );
+    vfsFileEntry *vfsFindFile( const char *path );
+    vfsFileEntry *vfsFindFile( vfsDirEntry *cwd, const char *path );
 
     vfsDirEntry  *vfsInsertDirectory( const char* );
     vfsDirEntry  *vfsFindDirectory( const char* );
@@ -44,10 +45,23 @@ namespace kfilesystem
 
 
     template <typename T>
-    vfsFileEntry *vfsInsertFile( const char *dname, const char *fname, size_t count,
-                                 uint8_t type=vfsFileType_RAW )
+    vfsFileEntry *vfsInsertFile( const char *path, size_t count,
+                                 uint32_t flags=vfsFileFlag_None )
     {
-        return vfsInsertFile(dname, fname, new T[count], count*sizeof(T), type);
+        return vfsInsertFile(path, new T[count], count*sizeof(T), flags);
+    }
+
+
+    template <typename T>
+    T vfsFindFile( const char *path )
+    {
+        return static_cast<T>( vfsFindFile(path)->addr );
+    }
+
+    template <typename T>
+    T vfsFindFile( vfsDirEntry *cwd, const char *path )
+    {
+        return static_cast<T>( vfsFindFile(cwd, path)->addr );
     }
 
 }
@@ -75,9 +89,11 @@ inline const char *vfsFileFlagStr( uint32_t bit )
 {
     switch (bit)
     {
-        default:                        return "INVALID";
-        case vfsFileFlag_PHYSICAL:      return "vfsFileFlag_PHYSICAL";
-        case vfsFileFlag_VIRTUAL:       return "vfsFileFlag_VIRTUAL";
+        default:                     return "INVALID";
+        case vfsFileFlag_None:       return "vfsFileFlag_None";
+        case vfsFileFlag_Virtual:    return "vfsFileFlag_Virtual";
+        case vfsFileFlag_Stream:     return "vfsFileFlag_Stream";
+        case vfsFileFlag_Executable: return "vfsFileFlag_Executable";
     }
 };
 
@@ -90,7 +106,5 @@ inline const char *vfsFileTypeStr( uint8_t type )
         case vfsFileType_DUMMY:         return "vfsFileType_DUMMY";
         case vfsFileType_RAW:           return "vfsFileType_RAW";
         case vfsFileType_FONT:          return "vfsFileType_FONT";
-        case vfsFileType_EXECUTABLE:    return "vfsFileType_EXECUTABLE";
-        case vfsFileType_STREAM:        return "vfsFileType_STREAM";
     }
 };

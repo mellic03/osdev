@@ -7,24 +7,24 @@
 
 static char m_buf[128];
 
-vfsEntry::vfsEntry( vfsDirEntry *P, const char *fname )
-:   parent(P)
+vfsEntry::vfsEntry( vfsDirEntry *P, const std::string &fname )
+:   parent(P),
+    name(fname)
 {
-    memset(name, 0, sizeof(name));
-    strcpy(name, fname);
+
 }
 
 
 
 
-vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const char *fname )
+vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const std::string &fname )
 :   vfsEntry(P, fname)
 {
     m_is_dir = false;
 }
 
 
-vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const char *fname,
+vfsFileEntry::vfsFileEntry( vfsDirEntry *P, const std::string &fname,
                             uint8_t tp, void *ad, size_t sz )
 :   vfsEntry (P, fname),
     type     (tp),
@@ -50,7 +50,7 @@ vfsDirEntry::get_path()
     vfsDirEntry *nodes[32];
     vfsDirEntry *E = this;
 
-    while (E)
+    while (E) // != vfsEntry::rootdir)
     {
         nodes[idx++] = E;
         E = E->parent;
@@ -58,12 +58,12 @@ vfsDirEntry::get_path()
     idx--;
     
     E = nodes[idx--];
-    top += sprintf(top, "%s/", E->name);
+    top += sprintf(top, "%s/", E->name.c_str());
 
     while (idx >= 0)
     {
         E = nodes[idx];
-        top += sprintf(top, "%s", E->name);
+        top += sprintf(top, "%s/", E->name.c_str());
         idx--;
     }
 
@@ -78,7 +78,7 @@ vfsFileEntry::get_path()
     char *top = m_buf;
 
     top += sprintf(top, "%s", parent->get_path());
-    top += sprintf(top, "%s", this->name);
+    top += sprintf(top, "%s", this->name.c_str());
 
     return m_buf;
 }

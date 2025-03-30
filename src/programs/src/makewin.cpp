@@ -4,8 +4,7 @@
 #include <ctype.h>
 
 
-
-int64_t main( int argc, int64_t *argv )
+int main( int argc, int64_t *argv )
 {
     if (argc || argv)
     {
@@ -33,5 +32,5 @@ int64_t main( int argc, int64_t *argv )
     // };
     // libk_syscall(&req);
 
-    return 0;
+    return 1234;
 }

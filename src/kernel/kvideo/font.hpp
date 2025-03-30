@@ -30,13 +30,11 @@ private:
     vec4 *m_data;
 
 public:
-    const char *name;
     int W, H, SZ;
     vec2 glyph_scale;
 
     FontBuffer();
-    FontBuffer( const char *filename, ck_BMP_header* );
-    // void init( const char *filename, ck_BMP_header* );
+    FontBuffer( ck_BMP_header* );
 
     ivec2 getGlyphExtents();
     ivec2 getGlyphCorner( char c );

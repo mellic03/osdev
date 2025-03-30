@@ -12,7 +12,12 @@ static buddy_allocator  kalloc0;
 
 void *kmalloc( size_t size )
 {
-    return kalloc0.alloc(size, alignof(uint64_t));
+    return kalloc0.alloc(size);
+}
+
+void *krealloc( void *ptr, size_t size )
+{
+    return kalloc0.alloc(size);
 }
 
 void kfree( void *ptr )

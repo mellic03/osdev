@@ -1,0 +1,54 @@
+#pragma once
+
+namespace std
+{
+    class mutex;
+
+    template <typename lock_type = std::mutex>
+    class lock_guard;
+}
+
+
+
+class std::mutex
+{
+private:
+    bool m_locked = false;
+
+public:
+    void lock()
+    {
+        while (__atomic_test_and_set(&m_locked, __ATOMIC_ACQUIRE));
+    }
+
+    bool try_lock()
+    {
+        return !__atomic_test_and_set(&m_locked, __ATOMIC_ACQUIRE);
+    }
+
+    void unlock()
+    {
+        __atomic_clear(&m_locked, __ATOMIC_RELEASE);
+    }
+};
+
+
+
+
+template <typename lock_type>
+class std::lock_guard
+{
+private:
+    lock_type &m_lock;
+
+public:
+    lock_guard( lock_type &lck )
+    : m_lock(lck) { m_lock.lock(); }
+
+    ~lock_guard() { m_lock.unlock(); }
+
+    lock_guard (const lock_guard& ) = delete;
+    lock_guard &operator=( const lock_guard& ) = delete;
+
+};
+

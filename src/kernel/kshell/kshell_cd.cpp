@@ -20,11 +20,13 @@ vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
 
 char *kshell_cd( char *dst, int argc, char **argv )
 {
+    syslog log("kshell_cd");
+
     auto &cwd = kshell_tty->getCWD();
 
     if (argc == 1)
     {
-        dst = kssprintf(dst, "cd: no arguments");
+        dst = kssprintf(dst, log, "cd: no arguments");
         return dst;
     }
 
@@ -33,7 +35,7 @@ char *kshell_cd( char *dst, int argc, char **argv )
     if (dir)
         cwd = dir;
     else
-        dst = kssprintf(dst, "cd: could not find directory \"%s\"", argv[1]);
+        dst = kssprintf(dst, log, "cd: could not find directory \"%s\"", argv[1]);
 
     return dst;
 }

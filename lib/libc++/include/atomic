@@ -1,0 +1,87 @@
+#pragma once
+
+namespace std
+{
+    template <typename T>
+    class atomic;
+
+    using atomic_bool     = std::atomic<bool>;
+    using atomic_int      = std::atomic<int>;
+    using atomic_int8_t   = std::atomic<int8_t>;
+    using atomic_int16_t  = std::atomic<int16_t>;
+    using atomic_int32_t  = std::atomic<int32_t>;
+    using atomic_int64_t  = std::atomic<int64_t>;
+    using atomic_uint8_t  = std::atomic<uint8_t>;
+    using atomic_uint16_t = std::atomic<uint16_t>;
+    using atomic_uint32_t = std::atomic<uint32_t>;
+    using atomic_uint64_t = std::atomic<uint64_t>;
+
+}
+
+
+// void ttete()
+// {
+//     // void __atomic_store_n (type *ptr, type val, int memorder)
+//     // This built-in function implements an atomic store operation.
+//     // It writes val into *ptr.
+
+//     // The valid memory order variants are __ATOMIC_RELAXED,
+//     // __ATOMIC_SEQ_CST, and __ATOMIC_RELEASE.
+
+//     // void __atomic_store (type *ptr, type *val, int memorder)
+//     // This is the generic version of an atomic store.
+//     // It stores the value of *val into *ptr.
+
+//     static int idx = 0;
+//     static int val = 1234;
+
+//     __atomic_store_n(&idx, 1, __ATOMIC_RELAXED);
+//     __atomic_store(&idx, &val, __ATOMIC_RELAXED);
+// }
+
+
+
+template <typename T>
+class std::atomic
+{
+private:
+    T m_value;
+
+public:
+    using value_type = T;
+
+    atomic() noexcept = default;
+    ~atomic() noexcept = default;
+    atomic(const atomic&) = delete;
+    atomic& operator=(const atomic&) = delete;
+    atomic& operator=(const atomic&) volatile = delete;
+
+    constexpr atomic(T  desired ) noexcept
+    : m_value(desired) { }
+
+    void store( T desired, int mem_order=__ATOMIC_SEQ_CST )
+    { __atomic_store_n(&m_value, desired, mem_order); }
+
+    T load( int mem_order=__ATOMIC_SEQ_CST )
+    { return __atomic_load_n(&m_value, mem_order); }
+
+    T fetch_add( T value, int mem_order=__ATOMIC_SEQ_CST ) noexcept
+    { return __atomic_fetch_add(&m_value, value, mem_order); }
+
+    T add_fetch( T value, int mem_order=__ATOMIC_SEQ_CST ) noexcept
+    { return __atomic_add_fetch(&m_value, value, mem_order); }
+
+    T fetch_sub( T value, int mem_order=__ATOMIC_SEQ_CST ) noexcept
+    { return __atomic_fetch_sub(&m_value, value, mem_order); }
+
+    T sub_fetch( T value, int mem_order=__ATOMIC_SEQ_CST ) noexcept
+    { return __atomic_sub_fetch(&m_value, value, mem_order); }
+
+    T operator++(int) { return fetch_add(1, __ATOMIC_SEQ_CST); }
+    T operator--(int) { return fetch_sub(1, __ATOMIC_SEQ_CST); }
+    T operator++()    { return add_fetch(1, __ATOMIC_SEQ_CST); }
+    T operator--()    { return sub_fetch(1, __ATOMIC_SEQ_CST); }
+};
+
+
+

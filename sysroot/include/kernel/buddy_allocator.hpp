@@ -31,21 +31,22 @@ namespace idk
         };
         
         int    _getidx( size_t );
-        void  *_getptr( size_t );
+        uintptr_t _getptr( size_t );
 
 
     public:
         buddy_allocator();
         buddy_allocator( linear_allocator& );
 
-        void *alloc( size_t nbytes, size_t alignment );
+        void *alloc( size_t );
+        void *realloc( void*, size_t );
         void  free( void* );
         void  clear();
 
         template <typename T>
         T *alloc( size_t count = 1 )
         {
-            return (T*)(alloc(count*sizeof(T), alignof(T)));
+            return (T*)(alloc(count*sizeof(T)));
         }
 
     };

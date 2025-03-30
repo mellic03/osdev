@@ -8,9 +8,6 @@
 #include <algorithm>
 
 
-using namespace idk;
-
-
 kframebuffer<uint32_t> kvideo::frontbuffer;
 kframebuffer<uint32_t> kvideo::backbuffer;
 
@@ -39,6 +36,34 @@ void kvideo::swapBuffers()
     kmemset<uint32_t>(backbuffer[0], 0, W*H);
 }
 
+
+void kvideo::fill( uint32_t color )
+{
+    auto &dst = kvideo::backbuffer;
+
+    for (int i=0; i<dst.h; i++)
+    {
+        for (int j=0; j<dst.w; j++)
+        {
+            dst[i][j] = color;
+        }
+    }
+}
+
+
+void kvideo::fill( const vec4 &rgba )
+{
+    uint32_t r = uint32_t(255.0f * rgba.r);
+    uint32_t g = uint32_t(255.0f * rgba.g);
+    uint32_t b = uint32_t(255.0f * rgba.b);
+
+    fill(255 + (r<<16) + (g<<8) + (b<<0));
+}
+
+void kvideo::fill( const vec3 &rgb )
+{
+    fill(vec4(rgb, 1.0));
+}
 
 
 void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
@@ -74,11 +99,11 @@ void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
     {
         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
         {
-            vec4 argb = buf[sy][sx];
+            vec4 rgba = buf[sy][sx];
 
-            uint32_t r = uint32_t(255.0f * argb.r);
-            uint32_t g = uint32_t(255.0f * argb.g);
-            uint32_t b = uint32_t(255.0f * argb.b);
+            uint32_t r = uint32_t(255.0f * rgba.r);
+            uint32_t g = uint32_t(255.0f * rgba.g);
+            uint32_t b = uint32_t(255.0f * rgba.b);
 
             backbuffer[y][x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
         }

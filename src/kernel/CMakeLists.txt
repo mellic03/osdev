@@ -5,6 +5,7 @@ file(
 
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/cpu/smp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/gdt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/gdt.asm
 
@@ -15,6 +16,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/stub.asm
 
     ${CMAKE_CURRENT_SOURCE_DIR}/kshell/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/kpanic/*.*
     ${CMAKE_CURRENT_SOURCE_DIR}/kvideo/*.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/memory/*.cpp
