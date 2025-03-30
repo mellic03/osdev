@@ -95,17 +95,20 @@ void
 std::string::push_back( char ch )
 {
     if (m_cap == 0)
-    {
         _realloc(64);
-    }
-
     else if (m_top+2 >= m_end)
-    {
         _realloc(2*m_cap);
-    }
 
     *(m_top++) = ch;
     *m_top = '\0';
+}
+
+
+void
+std::string::pop_back()
+{
+    *m_top = '\0';
+    m_top -= 1;
 }
 
 
@@ -188,6 +191,14 @@ std::string::operator==( const std::string &rhs )
 {
     return strcmp(c_str(), rhs.c_str()) == 0;
 }
+
+bool
+std::string::operator==( const std::string &rhs ) const
+{
+    return strcmp(c_str(), rhs.c_str()) == 0;
+}
+
+
 
 
 

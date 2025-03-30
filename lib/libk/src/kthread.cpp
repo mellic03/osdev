@@ -14,6 +14,14 @@ size_t kthread::this_tid()
     return m_curr->tid;
 }
 
+
+void kthread::start()
+{
+    KInterrupt<INT_KTHREAD_START>();
+
+}
+
+
 void kthread::yield()
 {
     KInterrupt<INT_KTHREAD_YIELD>();
@@ -26,37 +34,17 @@ void kthread::exit()
 }
 
 
-
-
-void kthread::schedule( kstackframe *frame )
+void kthread::start_handler( kstackframe *frame )
 {
-    // kthread::lock_guard();
-    // if (kthread::global_lock == true)
-    // {
-    //     return;
-    // }
+    kthread::lock_guard();
+
+    // syslog log("start_handler");
+    // log("global_lock: %d", global_lock);
 
     if (m_curr == nullptr)
-    {
-        return;
-    }
-
-    if (m_first == false)
-    {
-        m_curr->rax = frame->rax;
-        m_curr->rbx = frame->rbx;
-        m_curr->rcx = frame->rcx;
-        m_curr->rdx = frame->rdx;
-        m_curr->rsp = frame->iret_rsp;
-        m_curr->rip = frame->iret_rip;
-        m_curr->rdi = frame->rdi;
-        m_curr->rsi = frame->rsi;
-        m_curr->rbp = frame->rbp;
-        m_curr->flags = frame->iret_flags;
-    }
-
-    m_first = false;
-    m_curr = m_curr->next;
+        kpanic("Cannot call kthread::start before creating any threads!");
+    if (m_started != false)
+        kpanic("Cannot call kthread::start more than once!");
 
     frame->rax      = m_curr->rax;
     frame->rbx      = m_curr->rbx;
@@ -68,6 +56,50 @@ void kthread::schedule( kstackframe *frame )
     frame->rdi      = m_curr->rdi;
     frame->rsi      = m_curr->rsi;
     frame->rbp      = m_curr->rbp;
+
+    m_started = true;
+}
+
+
+void kthread::schedule( kstackframe *frame )
+{
+    // syslog log("kthread::schedule");
+    // log("global_lock: %d", global_lock);
+
+    if (kthread::global_lock.load() != 0)
+        return;
+    if (m_started == false)
+        return;
+    if (m_curr == nullptr)
+        return;
+
+    kthread *curr = m_curr;
+    kthread *next = m_curr->next;
+
+    curr->rax   = frame->rax;
+    curr->rbx   = frame->rbx;
+    curr->rcx   = frame->rcx;
+    curr->rdx   = frame->rdx;
+    curr->rsp   = frame->iret_rsp;
+    curr->rip   = frame->iret_rip;
+    curr->rdi   = frame->rdi;
+    curr->rsi   = frame->rsi;
+    curr->rbp   = frame->rbp;
+    curr->flags = frame->iret_flags;
+
+    frame->rax        = next->rax;
+    frame->rbx        = next->rbx;
+    frame->rcx        = next->rcx;
+    frame->rdx        = next->rdx;
+    frame->iret_rsp   = next->rsp;
+    frame->iret_rip   = next->rip;
+    frame->iret_flags = next->flags;
+    frame->rdi        = next->rdi;
+    frame->rsi        = next->rsi;
+    frame->rbp        = next->rbp;
+
+    m_curr = m_curr->next;
+
 }
 
 
@@ -167,12 +199,13 @@ void kthread::ted_bundy( void* )
 
 kthread::kthread( void (*fn)(void*), void *arg )
 {
-    static bool first = true;
-    if (first)
-    {
-        first = false;
-        new kthread(kthread::ted_bundy, nullptr);
-    }
+    kthread::lock_guard();
+    // static bool first = true;
+    // if (first)
+    // {
+    //     first = false;
+    //     new kthread(kthread::ted_bundy, nullptr);
+    // }
 
     static size_t curr_tid = 0;
 

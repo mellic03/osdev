@@ -15,7 +15,8 @@ char *kshell_ls( char *dst, int argc, char **argv )
     if (argc == 1)
         dir = cwd;
     else
-        dir = kshell_getdir(cwd, argv[1]);
+        // dir = kshell_getdir(cwd, argv[1]);
+        dir = kfilesystem::vfsFindDirectory(cwd, argv[1]);
 
     if (dir)
     {

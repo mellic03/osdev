@@ -5,17 +5,17 @@ using namespace KShell;
 
 
 
-vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
-{
-    vfsDirEntry *dir = nullptr;
+// vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
+// {
+//     vfsDirEntry *dir = nullptr;
 
-    if (strcmp(name, "..") == 0)
-        dir = (cwd->parent) ? cwd->parent : cwd;
-    else
-        dir = kfilesystem::vfsFindDirectory(cwd, name);
+//     if (strcmp(name, "..") == 0)
+//         dir = (cwd->parent) ? cwd->parent : cwd;
+//     else
+//         dir = kfilesystem::vfsFindDirectory(cwd, name);
 
-    return dir;
-}
+//     return dir;
+// }
 
 
 char *kshell_cd( char *dst, int argc, char **argv )
@@ -30,7 +30,7 @@ char *kshell_cd( char *dst, int argc, char **argv )
         return dst;
     }
 
-    vfsDirEntry *dir = kshell_getdir(cwd, argv[1]);
+    vfsDirEntry *dir = kfilesystem::vfsFindDirectory(cwd, argv[1]);
 
     if (dir)
         cwd = dir;

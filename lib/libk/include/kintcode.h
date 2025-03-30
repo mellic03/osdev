@@ -22,6 +22,7 @@ enum Kintcode: uint8_t
 
     INT_KEYBOARD				  = 90,
 
+    INT_KTHREAD_START             = 96,
     INT_KTHREAD_YIELD             = 97,
     INT_PANIC                     = 98,
     INT_SYSCALL 	  	          = 99

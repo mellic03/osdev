@@ -144,6 +144,7 @@ void _start()
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
     idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
     idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
+    idk::onInterrupt(INT_KTHREAD_START, kthread::start_handler);
     idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
     idk::onInterrupt(INT_PANIC,   kpanic_handler);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
@@ -169,9 +170,11 @@ void _start()
     tty0.font = new idk::FontBuffer((ck_BMP_header*)(file->addr));
 
     // new kthread(kdriver::ps2_mouse::driver_main, nullptr);
-    new kthread(kdriver::ps2_kb::driver_main, nullptr);
-    new kthread(sde_main, nullptr);
-    new kthread(kshell_main, (void*)&tty0);
+    kthread t0(kdriver::ps2_kb::driver_main, nullptr);
+    kthread t1(sde_main, nullptr);
+    kthread t2(kshell_main, (void*)&tty0);
+    kthread::start();
+
 
     while (true)
     {

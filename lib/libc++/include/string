@@ -36,11 +36,13 @@ public:
     std::string &operator+=( const std::string& );
     std::string operator+( const std::string& );
     bool        operator==( const std::string& );
+    bool        operator==( const std::string& ) const;
 
     const char *c_str()       { return m_base; }
     const char *c_str() const { return m_base; }
 
     void        push_back( char );
+    void        pop_back();
 
     char&       front()       { return m_base[0];  }
     const char& front() const { return m_base[0];  }

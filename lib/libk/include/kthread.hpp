@@ -16,9 +16,10 @@ enum kproc_status: uint8_t
 class kthread
 {
 private:
-    inline static bool global_lock = false;
-    inline static kthread *m_curr  = nullptr;
-    inline static bool     m_first = true;
+    inline static std::atomic_int global_lock = 0;
+    inline static kthread *m_curr    = nullptr;
+    inline static bool     m_started = false;
+    // inline static bool     m_first = true;
 
     // static kthread *TedBundy;
     static void ted_bundy( void* );
@@ -34,17 +35,20 @@ private:
     kthread *next;
 
 public:
-
-    static void schedule( kstackframe* );
     
 // public:
     kthread( void (*)(void*), void *arg );
     ~kthread();
 
-    static size_t this_tid();
-    static void   yield();
-    static void   exit();    
+    static void start();
+    static void yield();
+    static void exit();    
 
+    static void start_handler( kstackframe* );
+    static void schedule( kstackframe* );
+    static size_t this_tid();
+
+    
 public:
     struct lock_guard
     {
@@ -53,8 +57,8 @@ public:
         // std::lock_guard m_lock;
 
     public:
-         lock_guard() { global_lock = true;  };
-        ~lock_guard() { global_lock = false; };
+         lock_guard() { global_lock++; };
+        ~lock_guard() { global_lock--; };
     };
 
 };
