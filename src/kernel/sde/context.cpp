@@ -16,6 +16,7 @@
 
 sde::WindowContext::WindowContext( ivec2 tl, ivec2 sp )
 :   Frame(tl, sp),
+    ID(ctx_id++),
     W(sp.x), H(sp.y),
     // rgba  (W, H, (vec4*)kmallocAligned(W*H*sizeof(vec4), 16)),
     rgba  (W, H, (vec4*)kmalloc(W*H*sizeof(vec4))),

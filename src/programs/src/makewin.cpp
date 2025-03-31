@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <ksimd.h>
+
 
 static ksysc_request req;
 static ksysc_window_response res;

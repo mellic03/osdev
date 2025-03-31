@@ -38,8 +38,12 @@ struct kframebuffer
 
 namespace kvideo
 {
-    extern kframebuffer<uint32_t> frontbuffer;
-    extern kframebuffer<uint32_t> backbuffer;
+    extern int W;
+    extern int H;
+    // extern kframebuffer<uint32_t> frontbuffer;
+    // extern kframebuffer<uint32_t> backbuffer;
+    extern uint32_t *frontbuffer;
+    extern uint32_t *backbuffer;
 
 
     void init( uintptr_t fb_res );

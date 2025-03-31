@@ -4,6 +4,7 @@ class syslog
 {
 private:
     // void _print( const char *fmt, ... );
+    static bool enabled;
 
 public:
     static void enable();
@@ -15,6 +16,8 @@ public:
     template <typename... Args>
     syslog( const char *fmt, Args... args )
     {
+        if (!enabled)
+            return;
         print("[");
         kprintf(fmt, args...);
         kprintf("]\n");
@@ -24,6 +27,8 @@ public:
 
     ~syslog()
     {
+        if (!enabled)
+            return;
         popIndent();
         print("}\n");
     }

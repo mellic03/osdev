@@ -28,7 +28,7 @@ kTTY::kTTY()
 
 
 kTTY::kTTY( size_t size )
-:   cwd     (kfilesystem::vfsInsertDirectory("dev/tty0/")),
+:   cwd     (vfsInsertDirectory("dev/tty0/")),
     history (new char[size]),
     htop    (history),
     hend    (history + size),
@@ -112,7 +112,7 @@ vfsDirEntry *&kTTY::getCWD()
 {
     if (cwd == nullptr)
     {
-        cwd = kfilesystem::vfsInsertDirectory("dev/tty0/");
+        cwd = vfsInsertDirectory("dev/tty0/");
 
     }
 

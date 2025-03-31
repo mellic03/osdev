@@ -1,81 +1,73 @@
-#pragma once
+// #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+// #include <stddef.h>
+// #include <stdint.h>
 
-#include "cpu/cpu.hpp"
-#include "tty.hpp"
-#include "kvideo/font.hpp"
-#include <kernel/memory.hpp>
-#include <kinplace/inplace_vector.hpp>
-
-
-struct limine_framebuffer_response;
-struct limine_executable_address_response;
-struct limine_module_response;
-struct limine_memmap_response;
-struct limine_mp_response;
-struct limine_file;
+// #include "cpu/cpu.hpp"
+// #include "tty.hpp"
+// #include "kvideo/font.hpp"
+// #include <kernel/memory.hpp>
+// #include <kinplace/inplace_vector.hpp>
 
 
-namespace kernel
-{
-    // extern uint64_t uptime_ms;
-}
+// struct limine_framebuffer_response;
+// struct limine_executable_address_response;
+// struct limine_module_response;
+// struct limine_memmap_response;
+// struct limine_mp_response;
+// struct limine_file;
 
 
-namespace idk
-{
-    struct ExecHeader
-    {
-        void *addr;
-        uint64_t size;
-    };
+// namespace kernel
+// {
+//     // extern uint64_t uptime_ms;
+// }
+
+
+// namespace idk
+// {
+//     struct ExecHeader
+//     {
+//         void *addr;
+//         uint64_t size;
+//     };
         
-    struct Krequests
-    {
-        uint64_t                      hhdm;
-        limine_framebuffer_response  *fb;
-        limine_executable_address_response *addr;
-        limine_module_response       *modules;
-        limine_memmap_response       *mmaps;
-        limine_mp_response           *mp;
-    };
 
 
-    class KSystem;
-}
+
+//     class KSystem;
+// }
 
 
-class idk::KSystem
-{
-private:
-    // uint64_t m_uptime_ticks;
-    // uint64_t m_uptime_msec;
+// class idk::KSystem
+// {
+// private:
+//     // uint64_t m_uptime_ticks;
+//     // uint64_t m_uptime_msec;
 
-    MemoryMap m_mmap_buf[32];
-    inplace_vector<MemoryMap>    m_mmaps;
-    // inplace_vector<limine_file*> m_modules;
+//     MemoryMap m_mmap_buf[32];
+//     inplace_vector<MemoryMap>    m_mmaps;
+//     // inplace_vector<limine_file*> m_modules;
 
-    void _load_mmaps();
-    void _load_modules();
+//     void _load_mmaps();
+//     void _load_modules();
 
-public:
-    Krequests m_reqs;
-    // inplace_vector<FontBuffer>   m_fonts;
-    idk::CPU cpu0, cpu1, cpu2, cpu4;
+// public:
+//     Krequests m_reqs;
+//     // inplace_vector<FontBuffer>   m_fonts;
+//     idk::CPU cpu0, cpu1, cpu2, cpu4;
 
-    KSystem( const Krequests& );
-    // void init( Krequests );
+//     KSystem( const Krequests& );
+//     // void init( Krequests );
 
-    auto        &getMmaps() { return m_mmaps; }
-    uint64_t     getHHDM();
-    // auto        &getModules() { return m_modules; };
-    // limine_file *getModule( const char *label );
-    int          execute( void *address, size_t size, int argc, uint64_t *argv );
-    void         lsmem();
+//     auto        &getMmaps() { return m_mmaps; }
+//     uint64_t     getHHDM();
+//     // auto        &getModules() { return m_modules; };
+//     // limine_file *getModule( const char *label );
+//     int          execute( void *address, size_t size, int argc, uint64_t *argv );
+//     void         lsmem();
 
-};
+// };
 
 
 

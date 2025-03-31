@@ -49,8 +49,7 @@ void *memcpy( void *dst, const void *src, size_t n )
 
     // size_t offset = count * sizeof(uint32_t);
     // memcpy_u8(pdst+offset, psrc+offset, 4*rem);
-
-    dst = memcpy_u8(dst, src, n);
+    memcpy_u8(dst, src, n);
 
     return dst;
 }

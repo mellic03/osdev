@@ -80,20 +80,22 @@ PMM::free( uintptr_t phys )
 
 
 void
-PMM::init( const idk::MemoryMap &mmap, size_t hhdm_offset )
+PMM::init( MemMap *mmaps, size_t num_mmaps, size_t hhdm_offset )
 {
-    syslog log("PMM::init");
     PMM::hhdm = hhdm_offset;
+    syslog log("PMM::init");
 
-    m_npages = (mmap.len / PAGE_SIZE) - 2;
+    if (num_mmaps) {  }
+    auto &mmap = mmaps[1];
 
-    m_bitmap     = (uint64_t*)(mmap.addr);
+    m_npages     = (mmap.size / PAGE_SIZE) - 2;
+    m_bitmap     = (uint64_t*)(mmap.base + hhdm);
     m_bitmap_end = (uintptr_t)m_bitmap + m_npages * (sizeof(uint64_t)/8);
     m_pbase      = align_up(m_bitmap_end, PAGE_SIZE);
     m_pend       = m_pbase + m_npages;
 
-    log("base:       0x%lx", mmap.addr);
-    log("size:       0x%lx", mmap.len);
+    log("base:       0x%lx", mmap.base + hhdm);
+    log("size:       0x%lx", mmap.size);
     log("bitmap:     0x%lx", m_bitmap);
     log("bitmap_end: 0x%lx", m_bitmap_end);
 

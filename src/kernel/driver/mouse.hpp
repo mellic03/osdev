@@ -8,6 +8,8 @@
 
 namespace kdriver::ps2_mouse
 {
+    hwDriverInterface getInterface();
+
     enum MouseEvent_: uint32_t
     {
         MouseEvent_DOWN   = 1<<0,
@@ -26,11 +28,11 @@ namespace kdriver::ps2_mouse
     void irq_handler( kstackframe* );
     void driver_main( void* );
 
+
+
     // extern vec2 position;
     // extern vec2 delta;
-
 }
-
 
 
 extern uint8_t MousePointer[];

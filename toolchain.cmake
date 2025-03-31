@@ -42,7 +42,8 @@ set(IDKERNEL_C_CXX_FLAGS
     "-O0 -g \
     -fno-inline -fno-tree-vectorize \
     -Wall -Wextra -Werror -pedantic \
-    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+    -fstack-protector-strong -fno-strict-aliasing \
+    -ggdb -Wno-builtin-declaration-mismatch \
     -ffreestanding \
     -fno-asynchronous-unwind-tables \
     -fno-exceptions \
@@ -83,18 +84,18 @@ set(CMAKE_ASM_NASM_FLAGS
 )
 
 
-set(
-    CMAKE_EXE_LINKER_FLAGS
-    "-Wl,-m,elf_x86_64 \
-    -Wl,--build-id=none \
-    -static \
-    -nostdlib \
-    -nodefaultlibs \
-    -nostartfiles \
-    -zmax-page-size=0x1000 \
-    -mno-red-zone \
-    -T${CMAKE_SOURCE_DIR}/src/linker.ld"
-)
+# set(
+#     CMAKE_EXE_LINKER_FLAGS
+#     "-Wl,-m,elf_x86_64 \
+#     -Wl,--build-id=none \
+#     -static \
+#     -nostdlib \
+#     -nodefaultlibs \
+#     -nostartfiles \
+#     -zmax-page-size=0x1000 \
+#     -mno-red-zone \
+#     -T${CMAKE_SOURCE_DIR}/src/linker.ld"
+# )
 
 
 # set(

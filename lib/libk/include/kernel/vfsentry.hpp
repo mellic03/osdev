@@ -27,7 +27,6 @@ enum vfsFileFlag_
 
 
 
-
 struct vfsEntry
 {
 protected:
@@ -36,11 +35,10 @@ protected:
 public:
     static vfsDirEntry *rootdir;
 
-    // char name[128];
     vfsDirEntry *parent;
-    std::string  name;
+    char         name[256];
 
-    vfsEntry( vfsDirEntry *P, const std::string &fname );
+    vfsEntry( vfsDirEntry *P, const char *fname );
     virtual const char *get_path() = 0;
 
     bool is_dir()  { return  m_is_dir; };
@@ -53,7 +51,7 @@ struct vfsDirEntry: public vfsEntry
 {
     idk::static_vector<vfsEntry*, 32> children;
 
-    vfsDirEntry( vfsDirEntry *P, const std::string &fname )
+    vfsDirEntry( vfsDirEntry *P, const char *fname )
     :   vfsEntry(P, fname),
         children(0, nullptr)
     {
@@ -61,21 +59,20 @@ struct vfsDirEntry: public vfsEntry
     }
 
     const char *get_path() override;
-
-    bool hasChild( const std::string &fname )
+    bool hasChild( const char *fname )
     { return getChild(fname) != nullptr; }
 
     template <typename T = vfsEntry>
-    T *getChild( const std::string &fname )
+    T *getChild( const char *fname )
     {
         for (vfsEntry *E: children)
-            if (E->name == fname)
+            if (strcmp(E->name, fname) == 0)
                 return static_cast<T*>(E);
         return nullptr;
     }
 
     template <typename T, typename... Args>
-    T *giveChild( const std::string &fname, Args... args )
+    T *giveChild( const char *fname, Args... args )
     {
         T *entry = new T(this, fname, args...);
         children.push_back(static_cast<vfsEntry*>(entry));
@@ -96,8 +93,8 @@ struct vfsFileEntry: public vfsEntry
     size_t    size;
     kfstream  stream;
 
-    vfsFileEntry( vfsDirEntry *P, const std::string &fname );
-    vfsFileEntry( vfsDirEntry *P, const std::string &fname, uint8_t type, void *addr, size_t size );
+    vfsFileEntry( vfsDirEntry *P, const char *fname );
+    vfsFileEntry( vfsDirEntry *P, const char *fname, uint8_t type, void *addr, size_t size );
 
     const char *get_path() override;
 

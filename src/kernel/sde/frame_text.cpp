@@ -107,7 +107,7 @@ sde::TerminalFrame::draw()
     _reset();
     _putstr(m_tty->history);
     _putstr("[");
-    _putstr(m_tty->getCWD()->name.c_str());
+    _putstr(m_tty->getCWD()->name);
     _putstr("] ");
 
     char *pbase = m_tty->prompt;

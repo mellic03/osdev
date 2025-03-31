@@ -154,8 +154,8 @@ kdriver::ps2_kb::driver_main( void* )
 {
     create_shift_table();
 
-    rawfh = kfilesystem::vfsFindFile("/dev/kb0/raw");
-    keyfh = kfilesystem::vfsFindFile("/dev/kb0/event");
+    rawfh = vfsFindFile("/dev/kb0/raw");
+    keyfh = vfsFindFile("/dev/kb0/event");
     uint8_t scancode;
 
     while (true)

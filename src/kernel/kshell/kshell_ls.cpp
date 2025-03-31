@@ -1,7 +1,6 @@
 #include "kshell.hpp"
 #include <kstring.h>
 using namespace KShell;
-using namespace kfilesystem;
 
 
 extern vfsDirEntry *kshell_getdir( vfsDirEntry*, char* );
@@ -37,7 +36,7 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
     {
         if (E->is_dir())
         {
-            dst = kssprintln(dst, log, "%s/", E->name.c_str());
+            dst = kssprintln(dst, log, "%s/", E->name);
             dst = internal_ls(dst, log, (vfsDirEntry*)E, depth+1, max_depth);
         }
     }
@@ -46,7 +45,7 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
     {
         if (E->is_file())
         {
-           dst = kssprintln(dst, "%s", E->name.c_str());
+           dst = kssprintln(dst, "%s", E->name);
         }
     }
 

@@ -12,7 +12,7 @@ using namespace KShell;
 //     if (strcmp(name, "..") == 0)
 //         dir = (cwd->parent) ? cwd->parent : cwd;
 //     else
-//         dir = kfilesystem::vfsFindDirectory(cwd, name);
+//         dir = vfsFindDirectory(cwd, name);
 
 //     return dir;
 // }
@@ -30,7 +30,7 @@ char *kshell_cd( char *dst, int argc, char **argv )
         return dst;
     }
 
-    vfsDirEntry *dir = kfilesystem::vfsFindDirectory(cwd, argv[1]);
+    vfsDirEntry *dir = vfsFindDirectory(cwd, argv[1]);
 
     if (dir)
         cwd = dir;

@@ -15,9 +15,9 @@ static std::mutex vfs_mutex;
 
 
 vfsDirEntry*
-kfilesystem::vfsInsertDirectory( const char *dpath )
+vfsInsertDirectory( const char *dpath )
 {
-    kthread::refc();
+    kthread::yield_lock();
 
     // syslog log("vfsInsertDirectory");
     // log("dpath:  \"%s\"", dpath);
@@ -27,11 +27,11 @@ kfilesystem::vfsInsertDirectory( const char *dpath )
 
     for (auto &name: path.m_sep)
     {
-        auto *child = dir->getChild<vfsEntry>(name);
+        auto *child = dir->getChild<vfsEntry>(name.c_str());
 
         if (!child)
         {
-            child = dir->giveChild<vfsDirEntry>(name);
+            child = dir->giveChild<vfsDirEntry>(name.c_str());
         }
 
         else if (child->is_file())
@@ -51,16 +51,16 @@ kfilesystem::vfsInsertDirectory( const char *dpath )
 
 
 vfsDirEntry*
-kfilesystem::vfsFindDirectory( const char *pth )
+vfsFindDirectory( const char *pth )
 {
     return vfsFindDirectory(vfsEntry::rootdir, pth);
 }
 
 
 vfsDirEntry*
-kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
+vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 {
-    kthread::refc();
+    kthread::yield_lock();
     syslog log("vfsFindDirectory(%s)", dpath);
 
     if ((strlen(dpath) == 1) && (dpath[0] == '/'))
@@ -70,13 +70,13 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 
     fs::directorypath path(dpath);
     auto dirname = path.m_dirname;
-    log("dirname: %s", dirname.c_str());
+    // log("dirname: %s", dirname.c_str());
 
     vfsDirEntry *dir = cwd;
 
     for (auto &name: path.m_sep)
     {
-        log("name: %s", name.c_str());
+        // log("name: %s", name.c_str());
         
         if (name == ".")
         {
@@ -89,7 +89,7 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
             continue;
         }
 
-        vfsEntry *child = dir->getChild(name);
+        vfsEntry *child = dir->getChild(name.c_str());
 
         if (!child)
         {
@@ -113,9 +113,9 @@ kfilesystem::vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 
 
 vfsFileEntry*
-kfilesystem::vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
+vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 {
-    kthread::refc();
+    kthread::yield_lock();
     // syslog log("vfsInsertFile");
     // log("fpath:  \"%s\"", fpath);
 
@@ -127,11 +127,11 @@ kfilesystem::vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t
         dir = vfsInsertDirectory(path.m_dirname.c_str());
     }
 
-    vfsEntry *child = dir->getChild(path.m_filename);
+    vfsEntry *child = dir->getChild(path.m_filename.c_str());
 
     if (!child)
     {
-        auto *file = dir->giveChild<vfsFileEntry>(path.m_filename, flags, addr, size);
+        auto *file = dir->giveChild<vfsFileEntry>(path.m_filename.c_str(), flags, addr, size);
         // log("created file \"%s\"", file->get_path());
         return file;
     }
@@ -144,9 +144,9 @@ kfilesystem::vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t
 
 
 vfsFileEntry*
-kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *fpath )
+vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 {
-    kthread::refc();
+    kthread::yield_lock();
     syslog log("vfsFindFile(%s)", fpath);
 
     if (fpath[0] == '/')
@@ -158,7 +158,7 @@ kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *fpath )
     log("dirname, filename: \"%s\", \"%s\"", dirname.c_str(), filename.c_str());
 
     vfsDirEntry  *dir = vfsFindDirectory(cwd, dirname.c_str());
-    vfsFileEntry *fh  = dir->getChild<vfsFileEntry>(filename);
+    vfsFileEntry *fh  = dir->getChild<vfsFileEntry>(filename.c_str());
 
     if (fh && fh->is_file())
     {
@@ -172,7 +172,7 @@ kfilesystem::vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 
 
 vfsFileEntry*
-kfilesystem::vfsFindFile( const char *fname )
+vfsFindFile( const char *fname )
 {
     return vfsFindFile(vfsEntry::rootdir, fname);
 }

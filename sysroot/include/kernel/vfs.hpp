@@ -7,40 +7,37 @@
 #include "vfsentry.hpp"
 
 
-namespace kfilesystem
+vfsFileEntry *vfsInsertFile( const char*, void *addr=0, size_t size=0,
+                                uint32_t flags=vfsFileFlag_None );
+
+vfsFileEntry *vfsFindFile( const char *path );
+vfsFileEntry *vfsFindFile( vfsDirEntry *cwd, const char *path );
+
+vfsDirEntry  *vfsInsertDirectory( const char* );
+vfsDirEntry  *vfsFindDirectory( const char* );
+vfsDirEntry  *vfsFindDirectory( vfsDirEntry *cwd, const char* );
+
+
+template <typename T>
+vfsFileEntry *vfsInsertFile( const char *path, size_t count,
+                                uint32_t flags=vfsFileFlag_None )
 {
-    vfsFileEntry *vfsInsertFile( const char*, void *addr=0, size_t size=0,
-                                 uint32_t flags=vfsFileFlag_None );
-
-    vfsFileEntry *vfsFindFile( const char *path );
-    vfsFileEntry *vfsFindFile( vfsDirEntry *cwd, const char *path );
-
-    vfsDirEntry  *vfsInsertDirectory( const char* );
-    vfsDirEntry  *vfsFindDirectory( const char* );
-    vfsDirEntry  *vfsFindDirectory( vfsDirEntry *cwd, const char* );
-
-
-    template <typename T>
-    vfsFileEntry *vfsInsertFile( const char *path, size_t count,
-                                 uint32_t flags=vfsFileFlag_None )
-    {
-        return vfsInsertFile(path, new T[count], count*sizeof(T), flags);
-    }
-
-
-    template <typename T>
-    T vfsFindFile( const char *path )
-    {
-        return static_cast<T>( vfsFindFile(path)->addr );
-    }
-
-    template <typename T>
-    T vfsFindFile( vfsDirEntry *cwd, const char *path )
-    {
-        return static_cast<T>( vfsFindFile(cwd, path)->addr );
-    }
-
+    return vfsInsertFile(path, new T[count], count*sizeof(T), flags);
 }
+
+
+template <typename T>
+T vfsFindFile( const char *path )
+{
+    return static_cast<T>( vfsFindFile(path)->addr );
+}
+
+template <typename T>
+T vfsFindFile( vfsDirEntry *cwd, const char *path )
+{
+    return static_cast<T>( vfsFindFile(cwd, path)->addr );
+}
+
 
 
 

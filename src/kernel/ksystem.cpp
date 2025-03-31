@@ -1,49 +1,49 @@
-#include "boot/boot.hpp"
+// #include "boot/boot.hpp"
 
-#ifndef __is_kernel
-    #define __is_kernel
-#endif
+// #ifndef __is_kernel
+//     #define __is_kernel
+// #endif
 
-#include <kernel/vfs.hpp>
-#include <kernel/bitmanip.hpp>
-#include <kmalloc.h>
-#include <string.h>
+// #include <kernel/vfs.hpp>
+// #include <kernel/bitmanip.hpp>
+// #include <kmalloc.h>
+// #include <string.h>
 
-// #include "driver/serial.hpp"
-#include <kernel/log.hpp>
+// // #include "driver/serial.hpp"
+// #include <kernel/log.hpp>
 
-#include "ksystem.hpp"
-#include "memory/pmm.hpp"
-#include "memory/vmm.hpp"
-
-
-using namespace idk;
+// #include "ksystem.hpp"
+// #include "memory/pmm.hpp"
+// #include "memory/vmm.hpp"
 
 
+// using namespace idk;
 
 
-KSystem::KSystem( const Krequests &reqs )
-:   m_reqs(reqs)
-// void KSystem::init( Krequests reqs )
-{
-    syslog log("KSystem::KSystem");
-    cpu0.init();
+
+
+// KSystem::KSystem( const Krequests &reqs )
+// :   m_reqs(reqs)
+// // void KSystem::init( Krequests reqs )
+// {
+//     // syslog log("KSystem::KSystem");
+//     // cpu0.init();
     
-    _load_mmaps();
-    kmalloc_init(m_mmaps[0]);
-    PMM::init(m_mmaps[1], reqs.hhdm);
-    VMM::init();
+//     // _load_mmaps();
+//     // kmalloc_init(m_mmaps[0]);
+//     // PMM::init(m_mmaps[1], reqs.hhdm);
+//     // VMM::init();
 
-    // _load_modules();
-    // KFS::init((uintptr_t)this);
-}
+//     // _load_modules();
+//     // KFS::init((uintptr_t)this);
+// }
 
 
-uint64_t
-KSystem::getHHDM()
-{
-    return m_reqs.hhdm;
-}
+// uint64_t
+// KSystem::getHHDM()
+// {
+//     return m_reqs.hhdm;
+// }
 
 
 // limine_file*
@@ -62,88 +62,28 @@ KSystem::getHHDM()
 
 
 
+// void
+// KSystem::lsmem()
+// {
+//     syslog log("KSystem::lsmem");
 
+//     auto *res = m_reqs.mmaps;
+//     auto hhdm = getHHDM();
 
-const char *mmap_str( uint32_t type )
-{
-    switch (type)
-    {
-        default: return "UNKNOWN_TYPE";
-        case LIMINE_MEMMAP_USABLE:  return "LIMINE_MEMMAP_USABLE";
-        case LIMINE_MEMMAP_RESERVED:    return "LIMINE_MEMMAP_RESERVED";
-        case LIMINE_MEMMAP_ACPI_RECLAIMABLE:    return "LIMINE_MEMMAP_ACPI_RECLAIMABLE";
-        case LIMINE_MEMMAP_ACPI_NVS:    return "LIMINE_MEMMAP_ACPI_NVS";
-        case LIMINE_MEMMAP_BAD_MEMORY:  return "LIMINE_MEMMAP_BAD_MEMORY";
-        case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:  return "LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE";
-        case LIMINE_MEMMAP_EXECUTABLE_AND_MODULES:  return "LIMINE_MEMMAP_EXECUTABLE_AND_MODULES";
-        case LIMINE_MEMMAP_FRAMEBUFFER: return "LIMINE_MEMMAP_FRAMEBUFFER";
-    }
-}
+//     // Load usable memmaps
+//     for (uint64_t i=0; i<res->entry_count; i++)
+//     {
+//         auto *e = res->entries[i];
 
-
-
-void
-KSystem::_load_mmaps()
-{
-    syslog log("KSystem::_load_mmaps");
-
-    auto *res = m_reqs.mmaps;
-    auto hhdm = getHHDM();
-
-    m_mmaps = inplace_vector<MemoryMap>(m_mmap_buf, res->entry_count);
-
-    // Load usable memmaps
-    for (uint64_t i=0; i<res->entry_count; i++)
-    {
-        auto *e = res->entries[i];
-
-        if (e->type == LIMINE_MEMMAP_USABLE)
-        {
-            m_mmaps.push_back(
-                MemoryMap(e->base, e->length, hhdm)
-            );
-        }
-    }
-
-    // Sort memmaps
-    for (size_t i=0; i<m_mmaps.size(); i++)
-    {
-        for (size_t j=i+1; j<m_mmaps.size(); j++)
-        {
-            if (m_mmaps[i].len < m_mmaps[j].len)
-            {
-                auto tmp = m_mmaps[i];
-                m_mmaps[i] = m_mmaps[j];
-                m_mmaps[j] = tmp;
-            }
-        }
-    }
-}
-
-
-
-void
-KSystem::lsmem()
-{
-    syslog log("KSystem::lsmem");
-
-    auto *res = m_reqs.mmaps;
-    auto hhdm = getHHDM();
-
-    // Load usable memmaps
-    for (uint64_t i=0; i<res->entry_count; i++)
-    {
-        auto *e = res->entries[i];
-
-        log("%s", mmap_str(e->type));
-        log("phys:\t\t0x%lx", e->base);
-        log("base:\t\t0x%lx", hhdm + e->base);
-        log("end: \t\t0x%lx", hhdm + e->base + e->length);
-        log("size:\t\t%luB",  e->length);
-        log("     \t\t%luKB", e->length/idk::KILO);
-        log("     \t\t%luMB", e->length/idk::MEGA);
-    }
-}
+//         log("%s", mmap_str(e->type));
+//         log("phys:\t\t0x%lx", e->base);
+//         log("base:\t\t0x%lx", hhdm + e->base);
+//         log("end: \t\t0x%lx", hhdm + e->base + e->length);
+//         log("size:\t\t%luB",  e->length);
+//         log("     \t\t%luKB", e->length/idk::KILO);
+//         log("     \t\t%luMB", e->length/idk::MEGA);
+//     }
+// }
 
 
 
@@ -209,35 +149,35 @@ KSystem::lsmem()
 
 
 
-int
-KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
-{
-    // syslog log("KSystem::execute");
+// int
+// KSystem::execute( void *address, size_t size, int argc, uint64_t *argv )
+// {
+//     // syslog log("KSystem::execute");
 
-    static uintptr_t entry = 0xBEBE0000;
-    static uintptr_t page  = 0;
+//     static uintptr_t entry = 0xBEBE0000;
+//     static uintptr_t page  = 0;
 
-    if (page == 0)
-    {
-        page = (uintptr_t)kmalloc(8*PMM::PAGE_SIZE);
-        page = idk::align_up(page, PMM::PAGE_SIZE);
-        VMM::mapRange(page-PMM::hhdm, entry, 7*PMM::PAGE_SIZE);
-    }
+//     if (page == 0)
+//     {
+//         page = (uintptr_t)kmalloc(8*PMM::PAGE_SIZE);
+//         page = idk::align_up(page, PMM::PAGE_SIZE);
+//         VMM::mapRange(page-PMM::hhdm, entry, 7*PMM::PAGE_SIZE);
+//     }
 
-    // log("entry: 0x%lx", entry);
-    memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
-    memcpy((void*)entry, address, size);
+//     // log("entry: 0x%lx", entry);
+//     memset((void*)entry, 0, 6*PMM::PAGE_SIZE);
+//     memcpy((void*)entry, address, size);
 
-    using YOLO = int (*)(int, uint64_t*);
-    int result = ((YOLO)entry)(argc, argv);
+//     using YOLO = int (*)(int, uint64_t*);
+//     int result = ((YOLO)entry)(argc, argv);
 
-    // thread_args = u64vec3(
-    //     (uint64_t)entry,
-    //     (uint64_t)argc,
-    //     (uint64_t)argv
-    // );
+//     // thread_args = u64vec3(
+//     //     (uint64_t)entry,
+//     //     (uint64_t)argc,
+//     //     (uint64_t)argv
+//     // );
 
-    // new kthread(thread_execute, nullptr);
+//     // new kthread(thread_execute, nullptr);
 
-    return result;
-}
+//     return result;
+// }

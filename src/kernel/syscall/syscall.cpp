@@ -19,14 +19,14 @@ using namespace idk;
 static void
 sysc_file_create( ksysc_request *req )
 {
-    req->res = kfilesystem::vfsInsertFile<uint8_t>(req->msg, req->size, 0);
+    req->res = vfsInsertFile<uint8_t>(req->msg, req->size, 0);
 }
 
 
 static void
 file_get( ksysc_request *req )
 {
-    req->data = kfilesystem::vfsFindFile(req->msg);
+    req->data = vfsFindFile(req->msg);
 }
 
 

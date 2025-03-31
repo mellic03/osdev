@@ -26,10 +26,11 @@ void KShell::popIndent()  { kshell_indent -= 2; }
 extern size_t kshell_argparser( const char*, char** );
 extern char *kshell_cwd    ( char*, int, char** );
 extern char *kshell_cd     ( char*, int, char** );
-extern char *kshell_exec   ( char*, int, char** );
+// extern char *kshell_exec   ( char*, int, char** );
 extern char *kshell_font   ( char*, int, char** );
 extern char *kshell_info   ( char*, int, char** );
 extern char *kshell_ls     ( char*, int, char** );
+extern char *kshell_mkdir  ( char*, int, char** );
 extern char *kshell_set    ( char*, int, char** );
 extern char *kshell_panic  ( char*, int, char** );
 extern char *kshell_tid    ( char*, int, char** );
@@ -47,10 +48,11 @@ static void registerCommands()
 {
     KSHELL_REGISTER_CMD(cwd)
     KSHELL_REGISTER_CMD(cd)
-    KSHELL_REGISTER_CMD(exec)
+    // KSHELL_REGISTER_CMD(exec)
     KSHELL_REGISTER_CMD(font)
     KSHELL_REGISTER_CMD(info)
     KSHELL_REGISTER_CMD(ls)
+    KSHELL_REGISTER_CMD(mkdir)
     KSHELL_REGISTER_CMD(set)
     KSHELL_REGISTER_CMD(panic)
     KSHELL_REGISTER_CMD(tid)
@@ -137,7 +139,7 @@ char *kshell_exit( char *dst, int, char** )
 
 using namespace kdriver::ps2_kb;
 
-void kshell_main( void *arg )
+void kshell_main( void* )
 {
     registerCommands();
 
@@ -147,13 +149,17 @@ void kshell_main( void *arg )
         kshell_argv[i] = new char[MAX_ARG_LENGTH];
     }
 
-    kTTY *tty    = (kTTY*)arg;
-    auto *file   = kfilesystem::vfsFindFile("dev/kb0/event");
-    auto *stream = &(file->stream);
+    kTTY tty(25*80);
+    auto *file = vfsFindFile("/font/cutive-w12hf18.bmp");
+          file->flags |= vfsFileFlag_Stream;
+          file->flags |= vfsFileFlag_Virtual;
+    tty.font = new idk::FontBuffer((ck_BMP_header*)(file->addr));
+
+    auto *stream = &(vfsFindFile("dev/kb0/event")->stream);
 
     auto *ctx = sde::createContext(ivec2(10, 10), ivec2(1200, 700));
     // auto *frame = 
-    ctx->giveChild(ivec2(10), new sde::TerminalFrame(tty));
+    ctx->giveChild(ivec2(10), new sde::TerminalFrame(&tty));
 
     ctx->m_style = {
         .fill = false,
@@ -163,7 +169,7 @@ void kshell_main( void *arg )
 
     KeyEvent event;
 
-    while (tty->running)
+    while (tty.running)
     {
         if (stream->read(&event, sizeof(KeyEvent)))
         {
@@ -184,24 +190,24 @@ void kshell_main( void *arg )
 
             else if (ch == '\n')
             {
-                auto *&cwd = tty->getCWD();
-                tty->hsprintf("[%s] ", cwd->name.c_str());
+                auto *&cwd = tty.getCWD();
+                tty.hsprintf("[%s] ", cwd->name);
 
-                if (tty->ptop == tty->prompt)
+                if (tty.ptop == tty.prompt)
                 {
-                    tty->hputc('\n');
+                    tty.hputc('\n');
                     continue;
                 }
 
-                tty->hputs(tty->prompt);
-                tty->hputc('\n');
-                kshell_parse(tty);
-                tty->pclear();
+                tty.hputs(tty.prompt);
+                tty.hputc('\n');
+                kshell_parse(&tty);
+                tty.pclear();
             }
 
             else if (ch != '\0')
             {
-                tty->pputc(ch);
+                tty.pputc(ch);
             }
         }
 

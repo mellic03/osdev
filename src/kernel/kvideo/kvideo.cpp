@@ -1,3 +1,7 @@
+#ifndef __is_kernel
+    #define __is_kernel
+#endif
+
 #include "kvideo.hpp"
 #include "../boot/boot.hpp"
 #include <kernel/log.hpp>
@@ -8,8 +12,10 @@
 #include <algorithm>
 
 
-kframebuffer<uint32_t> kvideo::frontbuffer;
-kframebuffer<uint32_t> kvideo::backbuffer;
+int kvideo::W;
+int kvideo::H;
+uint32_t *kvideo::frontbuffer;
+uint32_t *kvideo::backbuffer;
 
 
 void kvideo::init( uintptr_t fbres )
@@ -19,35 +25,33 @@ void kvideo::init( uintptr_t fbres )
     syslog log("idk::Video::init");
     auto *fb = res->framebuffers[0];
 
-    int W = fb->width;
-    int H = fb->height;
+    kvideo::W = fb->width;
+    kvideo::H = fb->height;
 
-    kvideo::frontbuffer = kframebuffer<uint32_t>(W, H, (uint32_t*)fb->address);
-    kvideo::backbuffer  = kframebuffer<uint32_t>(W, H, new uint32_t[W*H]);
+    kvideo::frontbuffer = (uint32_t*)fb->address;
+    kvideo::backbuffer  = (uint32_t*)kmalloc(W*H*sizeof(uint32_t));
 }
 
 
 void kvideo::swapBuffers()
 {
-    int W = frontbuffer.w;
-    int H = frontbuffer.h;
-
-    kmemcpy<uint32_t>(frontbuffer[0], backbuffer[0], W*H);
-    kmemset<uint32_t>(backbuffer[0], 0, W*H);
+    kmemcpy<uint128_t>(frontbuffer, backbuffer, W*H*sizeof(uint32_t));
+    kmemset<uint128_t>(backbuffer, 0, W*H*sizeof(uint32_t));
 }
 
 
-void kvideo::fill( uint32_t color )
-{
-    auto &dst = kvideo::backbuffer;
 
-    for (int i=0; i<dst.h; i++)
-    {
-        for (int j=0; j<dst.w; j++)
-        {
-            dst[i][j] = color;
-        }
-    }
+void kvideo::fill( uint32_t C )
+{
+    __uint128_t color = (__uint128_t(C)<<96) + (__uint128_t(C)<<64)
+                      + (__uint128_t(C)<<32) +  __uint128_t(C);
+
+    kmemset<uint128_t>(backbuffer, color, W*H*sizeof(uint32_t));
+
+    // for (int i=0; i<(W*H)/4; i++)
+    // {
+    //     *(buf++) = color;
+    // }
 }
 
 
@@ -79,8 +83,8 @@ void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
     {
         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
         {
-            if (srcbuf[sy][sx].a > 0.1f)
-                dstbuf[y][x] = srcbuf[sy][sx];
+            // if (srcbuf[sy][sx].a > 0.1f)
+            dstbuf[y][x] = srcbuf[sy][sx];
         }
     }
 }
@@ -89,11 +93,10 @@ void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
 void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
                    const kframebuffer<vec4> &buf )
 {
-
     int xmin = std::max(dst.x, 0);
-    int xmax = std::min(dst.x+sp.x, backbuffer.w-1);
+    int xmax = std::min(dst.x+sp.x, W-1);
     int ymin = std::max(dst.y, 0);
-    int ymax = std::min(dst.y+sp.y, backbuffer.h-1);
+    int ymax = std::min(dst.y+sp.y, H-1);
 
     for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
     {
@@ -105,7 +108,7 @@ void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
             uint32_t g = uint32_t(255.0f * rgba.g);
             uint32_t b = uint32_t(255.0f * rgba.b);
 
-            backbuffer[y][x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
+            backbuffer[W*y + x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
         }
     }
 }

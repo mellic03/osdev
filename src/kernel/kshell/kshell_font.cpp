@@ -30,7 +30,7 @@ char *kshell_font( char *dst, int argc, char **argv )
 
 
     char *fname = argv[1];
-    auto *file  = kfilesystem::vfsFindFile(cwd, fname);
+    auto *file  = vfsFindFile(cwd, fname);
 
     if (file)
     {

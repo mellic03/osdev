@@ -65,3 +65,13 @@ static volatile LIMINE_REQUESTS_END_MARKER;
 //     }
 // }
 
+
+struct LimineRes
+{
+    uint64_t                      hhdm;
+    limine_framebuffer_response  *fb;
+    limine_executable_address_response *addr;
+    limine_module_response       *modules;
+    limine_memmap_response       *mmaps;
+    limine_mp_response           *mp;
+};

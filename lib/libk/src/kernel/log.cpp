@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <mutex>
 
-static bool enabled = true;
+bool syslog::enabled = true;
 static int  indent  = 0;
 static char buf[256];
 static std::mutex m_mutex;

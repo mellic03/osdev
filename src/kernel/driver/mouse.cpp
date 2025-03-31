@@ -215,7 +215,7 @@ ps2_mouse::irq_handler( kstackframe* )
 void
 ps2_mouse::driver_main( void* )
 {
-    // auto *stream = &(kfilesystem::vfsFindFile("dev/ms0/event")->stream);
+    // auto *stream = &(vfsFindFile("dev/ms0/event")->stream);
 
     // static uint8_t packet[4];
     // static uint8_t idx = 0;
@@ -230,4 +230,16 @@ ps2_mouse::driver_main( void* )
     }
 }
 
+
+hwDriverInterface
+kdriver::ps2_mouse::getInterface()
+{
+    static hwDriverInterface hwdi = {
+        .irqno       = 0x12,
+        .irq_handler = ps2_mouse::irq_handler,
+        .driver_entry = ps2_mouse::driver_main
+    };
+
+    return hwdi;
+}
 

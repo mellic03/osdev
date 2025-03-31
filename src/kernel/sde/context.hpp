@@ -14,7 +14,10 @@ namespace sde
 
 class sde::WindowContext: public sde::Frame
 {
+private:
+    inline static int ctx_id = 0;
 public:
+    const int ID;
     const int W;
     const int H;
 

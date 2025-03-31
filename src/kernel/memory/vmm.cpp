@@ -168,7 +168,7 @@ VMM::unmapPage( uintptr_t virt )
 
 void VMM::init() 
 {
-    // syslog log("VMM::init");
+    syslog log("VMM::init");
 
     // VMM::mapPage(0x0010'0000, 0xDEADBEBE);
 

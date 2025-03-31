@@ -16,11 +16,11 @@ char *kshell_info( char *dst, int argc, char **argv )
     }
 
     char *fname = argv[1];
-    auto *file  = kfilesystem::vfsFindFile(cwd, fname);
+    auto *file  = vfsFindFile(cwd, fname);
 
     if (file)
     {
-        dst = kssprintln(dst, log, "name:  %s",    file->name.c_str());
+        dst = kssprintln(dst, log, "name:  %s",    file->name);
         dst = kssprintln(dst, log, "size:  0x%lx", file->size);
         // dst = kssprint  (dst, log, "flags: %s",    vfsFileTypeStr(file->flags));
         dst = kssprintln(dst, log, "flags:");

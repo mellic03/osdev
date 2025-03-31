@@ -38,7 +38,7 @@ void libc_init_stdio()
 {
     #ifdef __is_kernel
         syslog log("libc_init_stdio");
-        auto *fh = kfilesystem::vfsFindFile("/dev/stdout");
+        auto *fh = vfsFindFile("/dev/stdout");
         log("fh: 0x%lx", fh);
         if (!fh) kpanic("Could not retrieve /dev/stdout");
         log("B");

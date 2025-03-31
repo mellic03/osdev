@@ -9,14 +9,14 @@
 #include <string>
 
 
-// static std::atomic_uint64_t counter;
+static std::atomic_uint64_t counter;
 
-// static void test( uint64_t *id )
+// static void hell( uint64_t *id )
 // {
-//     for (int i=0; i<100; i++)
+//     while (true)
 //     {
 //         counter++;
-//         syslog::kprintf("[test] id=%u, counter=%u\n", *id, counter.load());
+//         syslog::kprintf("[hell] cpu%u, counter=%u\n", *id, counter.load());
 //     }
 //     while (true) { asm volatile ("cli; hlt"); }
 // }
@@ -27,7 +27,7 @@ void SMP::init( limine_mp_response *res )
     syslog log0("SMP::init");
 
     // static uint64_t ids[4] = {0, 1, 2, 3};
-    // counter.store(0);
+    counter.store(0);
 
     for (size_t i=0; i<res->cpu_count; i++)
     {
@@ -40,8 +40,11 @@ void SMP::init( limine_mp_response *res )
 
         // mpinfo->extra_argument = (uint64_t)(&ids[i]);
         // mpinfo->goto_address = (limine_goto_address)&test;
-
     }
+
+    // res->cpus[3]->extra_argument = (uint64_t)(&ids[3]);
+    // __atomic_store_n(&(res->cpus[3]->goto_address), (limine_goto_address)&hell, __ATOMIC_SEQ_CST);
+
 }
 
 

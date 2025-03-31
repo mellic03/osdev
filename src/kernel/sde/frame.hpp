@@ -8,7 +8,6 @@
 namespace sde
 {
     class Context;
-
     struct Style;
     class Frame;
     // class BorderFrame;

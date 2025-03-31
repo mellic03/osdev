@@ -55,6 +55,13 @@ sde::createContext( ivec2 corner, ivec2 span )
 {
     auto *ctx = new sde::WindowContext(corner, span);
     m_contexts.push_back(ctx);
+
+    char buf[64];
+    memset(buf, 0, sizeof(buf));
+    sprintf(buf, "/conf/sde/ctx-%d", ctx->ID);
+
+    vfsInsertFile<uint8_t>(buf, 4096, vfsFileFlag_None);
+
     return ctx;
 }
 
@@ -67,11 +74,13 @@ sde::flushContext( sde::WindowContext *ctx )
     auto &sp  = ctx->m_span;
     kvideo::blit(tl, ivec2(0, 0), sp, src);
 
-    for (int i=0; i<ctx->H; i++)
-    {
-        kmemset<vec4>(src[i], 0, ctx->W);
-        kthread::yield();
-    }
+    kmemset<vec4>(ctx->rgba.buf, 0, ctx->W*ctx->H*sizeof(vec4));
+
+    // for (int i=0; i<ctx->H; i++)
+    // {
+        // kmemset<vec4>(src[i], 0, ctx->W);
+        // kthread::yield();
+    // }
 }
 
 

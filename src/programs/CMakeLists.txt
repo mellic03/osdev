@@ -1,21 +1,8 @@
 file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/_start.asm
+    # ${CMAKE_SOURCE_DIR}/src/tinyubsan.cpp
     # ${CMAKE_SOURCE_DIR}/src/kernel/abi/cxxabi.cpp
-)
-
-set(
-    USERPROGRAM_FLAGS
-    -Wl,-m,elf_x86_64
-    -Wl,--build-id=none
-    -static
-    -nostdlib
-    -nodefaultlibs
-    -nostartfiles
-    -zmax-page-size=0x1000
-    -mcmodel=large
-    -mno-red-zone
-    -T${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
 )
 
 
@@ -27,6 +14,20 @@ set(
 add_executable(makewin.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/makewin.cpp)
 target_link_libraries(makewin.elf PUBLIC libk libc libc++)
 target_link_options(makewin.elf PUBLIC ${USERPROGRAM_FLAGS})
+
+target_link_options(
+    makewin.elf PUBLIC
+    -Wl,-m,elf_x86_64
+    -Wl,--build-id=none
+    -static
+    -nostdlib
+    -nodefaultlibs
+    -nostartfiles
+    -zmax-page-size=0x1000
+    -mno-red-zone
+    -mcmodel=large
+    -T${CMAKE_SOURCE_DIR}/src/linker.ld
+)
 
 
 # add_executable(sum.elf ${SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/sum.cpp)

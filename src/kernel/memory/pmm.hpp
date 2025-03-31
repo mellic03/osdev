@@ -16,8 +16,9 @@ namespace PMM
     #endif
 
     extern uint64_t hhdm;
+    struct MemMap { uintptr_t base; size_t size; };
 
-    void init( const idk::MemoryMap &mmap, size_t hhdm_offset );
+    void init( MemMap *mmaps, size_t num_mmaps, size_t hhdm_offset );
     uintptr_t alloc();
     void free( uintptr_t phys );
 
