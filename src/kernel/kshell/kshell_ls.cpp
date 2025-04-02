@@ -1,10 +1,10 @@
 #include "kshell.hpp"
 #include <kstring.h>
 using namespace KShell;
+extern kTTY *kshell_tty;
 
 
 extern vfsDirEntry *kshell_getdir( vfsDirEntry*, char* );
-
 
 
 // static char *internal_ls( char *dst, vfsDirEntry *dir, int max_depth )
@@ -54,13 +54,13 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
 }
 
 
+#include <ipc.hpp>
 
 
 char *kshell_ls( char *dst, int argc, char **argv )
 {
     syslog log("kshell_ls");
     auto &cwd = kshell_tty->getCWD();
-
     auto *dir = (argc==1) ? cwd : vfsFindDirectory(cwd, argv[1]);
 
     if (argc==2 && strcmp(argv[1], "--R")==0)

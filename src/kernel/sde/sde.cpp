@@ -1,12 +1,16 @@
 #include "sde.hpp"
+#include "frame_tty.hpp"
+#include "../driver/mouse.hpp"
+
 #include <kthread.hpp>
 #include <kmalloc.h>
+#include <kpanic.h>
 #include <stdio.h>
 #include <algorithm>
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
-#include "frame_tty.hpp"
-#include "../driver/mouse.hpp"
+#include <ipc.hpp>
+
 
 
 static sde::WindowContext *m_current = nullptr;
@@ -14,14 +18,16 @@ static std::vector<sde::WindowContext*> m_contexts;
 
 void sde_main( void* )
 {
-    // auto *root = new sde::WindowContext(
-    //     ivec2(0), ivec2(kvideo::backbuffer.w, kvideo::backbuffer.h)
-    // );
+    ipcport_open(0x5DEA); // 24042;
 
-    // root->m_style = {
-    //     .fill       = true,
-    //     .fill_color = vec4(0.8, 0.5, 0.5, 0.5)
-    // };
+    // if (res != PORT_OPEN)
+    // {
+    //     kpanic("Ruh roh");
+    // }
+
+    bool    msg = false;
+    uint8_t pkt = 0xFE;
+    uint64_t qword = 0;
 
     while (true)
     {
@@ -34,17 +40,48 @@ void sde_main( void* )
             sde::flushContext(ctx);
             kthread::yield();
         }
-    
-        // sde::makeCurrent(root);
-        // root->draw();
-        // kthread::yield();
-
-        // sde::rect(mousexy, ivec2(16), vec4(1.0f));
-        // sde::flushContext(root);
-        // kthread::yield();
 
         kvideo::swapBuffers();
         kthread::yield();
+
+        if (!msg && ipcport_recv(0x5DEA, &qword, 1, 8))
+        {
+            if (qword == 0xDEADBEBE)
+            {
+                syslog::kprintf("[SDE] recieving message: ");
+                msg = true;
+            }
+
+            else if (qword == 0xB00B5) // 721077
+            {
+                auto *ctx = sde::createContext(ivec2(450, 450), ivec2(200, 200));
+                ctx->m_style.fill = true;
+                ctx->m_style.fill_color = vec4(0.85, 0.85, 0.5, 0.9);
+            }
+
+            else
+            {
+                syslog::kprintf("[SDE] recieved packet %u\n", qword);
+            }
+
+        }
+
+        else if (msg && ipcport_recv(0x5DEA, &pkt, 1, 1))
+        {
+            if (pkt == '\0')
+            {
+                syslog::kprintf("\n");
+                msg = false;
+                continue;
+            }
+
+            else
+            {
+                syslog::kprintf("%c", pkt);
+            }
+
+        }
+
     }
 }
 
@@ -100,11 +137,10 @@ sde::destroyContext( sde::WindowContext *ctx )
 
     if (idx != -1)
     {
-        auto *tmp = m_contexts[idx];
         m_contexts[idx] = m_contexts.back();
-        m_contexts.back() = tmp;
-        m_contexts.pop_back();
+        m_contexts.back() = ctx;
         delete ctx;
+        m_contexts.pop_back();
     }
 }
 
@@ -185,9 +221,6 @@ sde::vline( int x, int y0, int y1, const vec4 &color )
 void
 sde::rectOutline( ivec2 tl, ivec2 sp, const vec4 &color )
 {
-    // auto *ctx = sde::getCurrent();
-    // auto &dst = ctx->rgba;
-
     int x0 = tl.x;
     int x1 = tl.x + sp.x;
     int y0 = tl.y;

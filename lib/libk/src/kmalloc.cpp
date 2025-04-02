@@ -1,4 +1,5 @@
 
+#include <new>
 #include <kmalloc.h>
 
 #include <kernel/bitmanip.hpp>
@@ -6,25 +7,26 @@
 #include <kinplace/inplace_stack.hpp>
 #include <kinplace/inplace_vector.hpp>
 #include <kernel/memory.hpp>
+#include <kthread.hpp>
 
 using namespace idk;
-linear_allocator kmem0;
-buddy_allocator  kalloc0;
+static std::mutex kmalloc_mutex;
+static buddy_allocator *kalloc0;
 
 void kmalloc_init( uintptr_t base, size_t size )
 {
     syslog log("kmalloc_init");
-    kmem0   = linear_allocator((void*)base, size);
-    kalloc0 = buddy_allocator(kmem0);
+    linear_allocator kmem0((void*)base, size);
+
+    kalloc0 = (buddy_allocator*)(kmem0.alloc(sizeof(buddy_allocator), 16));
+    kalloc0 = new (kalloc0) buddy_allocator(kmem0);
 }
 
 
 void *kmalloc( size_t size )
 {
-    void *ptr = kalloc0.alloc(size, alignof(max_align_t));
-    uintptr_t aligned = ((uintptr_t)ptr + sizeof(void*) + 15) & ~(uintptr_t)15;
-    ((void**)aligned)[-1] = ptr;
-    return (void*)aligned;
+    kthread::yield_guard lock(kthread::lock_count);
+    return kalloc0->alloc(size, alignof(max_align_t));
 }
 
 // void *kmallocAligned( size_t size, size_t align )
@@ -41,7 +43,8 @@ void *krealloc( void*, size_t )
 
 void kfree( void *ptr )
 {
-    kalloc0.free(((void**)ptr)[-1]);
+    kalloc0->free(ptr);
+    // kalloc0.free(((void**)ptr)[-1]);
 }
 
 

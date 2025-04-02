@@ -61,11 +61,11 @@ namespace kclock
 };
 
 
-void pit_irq( kstackframe* )
+void pit_irq( kstackframe *frame )
 {
-    kclock::uptime_msecs += 2;
+    kclock::uptime_msecs += 5;
     kclock::uptime_secs  += 1000.0 / double(PIT_HERTZ);
-    // kthread::schedule(frame);
+    kthread::schedule(frame);
 
     PIT::reload();
     PIC::sendEOI(0);
@@ -86,7 +86,7 @@ void call_ctors()
 {
     syslog log("call_ctors");
     int i = 0;
-    for (ctor_t *ctor = __init_array_start; ctor < __init_array_end-1; ctor++)
+    for (ctor_t *ctor = __init_array_start; ctor < __init_array_end; ctor++)
     {
         log("ctor[%d]: 0x%lx", i++, ctor);
         (*ctor)();
@@ -96,8 +96,7 @@ void call_ctors()
 
 
 extern void early_init();
-extern void system_init();
-
+extern void late_init();
 
 
 extern "C"
@@ -108,16 +107,14 @@ void _start()
 
     idk::serial_init();
     syslog log("_start");
-    // log("serial initialized");
 
-    // log("kmalloc: 0x%lx", kmalloc);
     early_init();
     call_ctors(); 
-    system_init();
+    late_init();
 
     mouse_init();
     PIT::init();
-    PIT::set_ms(2);
+    PIT::set_ms(5);
     GDT::load();
     GDT::flush();
     idk::IDT_load();
@@ -125,31 +122,43 @@ void _start()
     idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
     idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
     idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
-    // idk::onInterrupt(INT_KTHREAD_START, kthread::start_handler);
-    // idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
+    idk::onInterrupt(INT_KTHREAD_START, kthread::start_handler);
+    idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
     idk::onInterrupt(INT_PANIC,   kpanic_handler);
     idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
     idk::onInterrupt(32+0,  pit_irq);
     idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
     idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
-    PIC::remap(32, 40);
-    PIC::disable();
+
     PIC::unmask(0);
     PIC::unmask(1);
     PIC::unmask(2);
     PIC::unmask(12);
+
+    vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
+    vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
+    vfsInsertFile<char>("/dev/ms0/raw",   64, vfsFileFlag_Stream);
+    vfsInsertFile<char>("/dev/ms0/event", 64, vfsFileFlag_Stream);
+    vfsInsertFile<char>("/dev/stdout",    1024, vfsFileFlag_Stream);
+    vfsInsertDirectory("/dev/tty0/");
+
 	asm volatile ("sti");
 
     libc_init();
     libcpp::init();
 
-    kthread t0(kdriver::ps2_mouse::driver_main, nullptr);
-    kthread t1(kdriver::ps2_kb::driver_main, nullptr);
-    kthread t2(sde_main, nullptr);
-    kthread t3(kshell_main, nullptr);
-    kthread_start();
-    int boyo;
-    log("&boyo: 0x%lx", &boyo);
+    // for (size_t i=0; i<req.modules->module_count; i++)
+    // {
+    //     auto *F = reqs.modules->modules[i];
+    //     vfsInsertFile(F->path, F->address, F->size);
+    // }
+
+    kthread t0("ps2_mouse", kdriver::ps2_mouse::driver_main, nullptr);
+    kthread t1("ps2_kb", kdriver::ps2_kb::driver_main, nullptr);
+    // kthread t2("kvideo", kvideo_blit_main, nullptr);
+    kthread t3("SDE", sde_main, nullptr);
+    kthread t4("KShell", kshell_main, nullptr);
+    kthread::start();
 
     while (true)
     {
@@ -163,13 +172,13 @@ void _start()
 void stacktrace( kstackframe *frame )
 {
     syslog log("stacktrace");
-
     kstackframe *sf = frame;
 
-    while (sf->rbp != 0)
+    for (int i=0; i<16; i++)
     {
-        log("rbp:   0x%lx", sf->rbp);
-        sf = (kstackframe*)(sf->rbp);
+        log("rip: 0x%lx", sf->iret_rip);
+        log("rbp: 0x%lx\n", sf->rbp);
+        sf = (kstackframe*)(&sf->rbp);
     }
 }
 
@@ -177,8 +186,10 @@ void stacktrace( kstackframe *frame )
 void pagefault_handler( kstackframe *frame )
 {
     syslog log("Exception PAGE_FAULT");
-    // stacktrace(frame);
+    log("thread %d (%s)", kthread::m_curr->tid, kthread::m_curr->name);
 
+    log("rip:   0x%lx", frame->iret_rip);
+    log("rsp:   0x%lx", frame->iret_rsp);
     log("r11:   0x%lx", frame->r11);
     log("r12:   0x%lx", frame->r12);
     log("r13:   0x%lx", frame->r13);
@@ -193,7 +204,6 @@ void pagefault_handler( kstackframe *frame )
     log("rbp:   0x%lx", frame->rbp);
     log("vcode: %lu", frame->vcode);
     log("ecode: %lu", frame->ecode);
-
 
     uint64_t flags = frame->ecode;
     // printBits(flags);

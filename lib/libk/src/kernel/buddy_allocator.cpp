@@ -3,6 +3,7 @@
 #include <kernel/bitmanip.hpp>
 #include <kintcode.h>
 #include <kinterrupt.h>
+#include <kpanic.h>
 #include <algorithm>
 
 // size_t size_table[3][10] = {
@@ -80,7 +81,7 @@ idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
         }
     }
 
-    log("m_size: %luB",  m_size);
+    log("size:   %luB",  m_size);
     log("        %luKB", m_size/idk::KILO);
     log("        %luMB", m_size/idk::MEGA);
     log("base:   0x%lx", m_data);
@@ -136,27 +137,31 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
         return nullptr;
     }
 
-    void    *baseptr   = _getptr(idx);
-    uint8_t *unaligned = (uint8_t*)baseptr;
-    uint8_t *aligned   = ptr_align(unaligned + sizeof(AllocHeader), alignment);
-    auto    *header    = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    void *baseptr  = _getptr(idx);
+    auto  aligned = align_up((uintptr_t)baseptr, alignment);
+    auto *header = (AllocHeader*)aligned;
+    void *usrptr  = (void*)align_up(aligned + sizeof(AllocHeader), alignment);
 
     *header = {
         .baseptr = (uintptr_t)baseptr,
         .idx     = uint64_t(idx)
     };
 
-    return (void*)aligned;
+    return usrptr;
 }
 
 
 void
 idk::buddy_allocator::free( void *usrptr )
 {
-    uint8_t *aligned = (uint8_t*)usrptr;
-    auto    *header  = (AllocHeader*)(aligned - sizeof(AllocHeader));
+    auto aligned = (uintptr_t)usrptr;
+    auto *header = (AllocHeader*)(aligned - sizeof(AllocHeader));
 
-
+    int idx = header->idx;
+    if (idx < int(min_idx) || idx >= int(max_idx))
+    {
+        kpanic("[idk::buddy_allocator::free] bad index!");
+    }
     // Sanity checks
     // -----------------------------------------------------------------------------------------
     // if (header->magic != BUDDY_MAGIC)
@@ -177,6 +182,8 @@ idk::buddy_allocator::free( void *usrptr )
     // }
     // -----------------------------------------------------------------------------------------
 
+
+    // log("idx: %d", idx);
 
     auto &stack = (*m_freelist)[header->idx];
     stack.push(header->baseptr);

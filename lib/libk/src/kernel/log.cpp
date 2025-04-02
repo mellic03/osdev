@@ -17,26 +17,24 @@ void syslog::popIndent ( int n ) { indent -= n; }
 void
 syslog::kprintf( const char *fmt, ... )
 {
-    std::lock_guard lock(m_mutex);
-
+    m_mutex.lock();
     va_list args;
     va_start(args, fmt);
     int n = vsprintf(buf, fmt, args);
     va_end(args);
 
     for (int i=0; i<n; i++)
-    {
         IO::outb(IO::COM1, buf[i]);
-    }
+    
+    m_mutex.unlock();
 }
 
 void
 syslog::print( const char *fmt, ... )
 {
     if (!enabled)
-    {
         return;
-    }
+    m_mutex.lock();
 
     va_list args;
     va_start(args, fmt);
@@ -52,6 +50,7 @@ syslog::print( const char *fmt, ... )
     {
         IO::outb(IO::COM1, buf[i]);
     }
+    m_mutex.unlock();
 
     // IO::outb(IO::COM1, '\0');
 }
@@ -61,9 +60,9 @@ void
 syslog::operator()( const char *fmt, ... )
 {
     if (!enabled)
-    {
         return;
-    }
+
+    m_mutex.lock();
 
     va_list args;
     va_start(args, fmt);
@@ -82,4 +81,5 @@ syslog::operator()( const char *fmt, ... )
 
     IO::outb(IO::COM1, '\n');
     // IO::outb(IO::COM1, '\0');
+    m_mutex.unlock();
 }

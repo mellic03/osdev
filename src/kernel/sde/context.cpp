@@ -35,9 +35,13 @@ sde::WindowContext::~WindowContext()
 
 void sde::WindowContext::draw()
 {
-    m_global = ivec2(0, 0);
-    Frame::draw();
     m_global = m_local;
+
+    if (m_parent)       m_global += m_parent->m_global;
+    if (m_style.fill)   sde::rect(m_local, m_span-1, m_style.fill_color);
+    if (m_style.border) sde::rectOutline(m_local, m_span-1, m_style.border_color);
+
+    Frame::draw();
     // sde::hline(0, W, 0, vec4(1.0, 1.0, 1.0, 0.85));
     // sde::hline(0, W, H-1, vec4(1.0, 1.0, 1.0, 0.85));
     // sde::vline(0, 0, H, vec4(1.0, 1.0, 1.0, 0.85));

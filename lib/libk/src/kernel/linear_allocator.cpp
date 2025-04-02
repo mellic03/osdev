@@ -6,6 +6,7 @@
 #include <algorithm>
 
 
+
 idk::linear_allocator::linear_allocator( void *baseptr, size_t nbytes )
 {
     // IDK_ASSERT("Capacity must be > 0", nbytes > 0);

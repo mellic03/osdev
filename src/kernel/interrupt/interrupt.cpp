@@ -9,7 +9,11 @@ using isr_type = void (*)(kstackframe*);
 
 idt_entry_t  idt[256] __attribute__((aligned(0x10))) ; 
 idtr_t       idtr;
-isr_type     __usr_table[NUM_INTERRUPTS];
+isr_type     usr_table[NUM_INTERRUPTS];
+
+static constexpr uint8_t IRQ_MASTER_IDX = 32;
+static constexpr uint8_t IRQ_SLAVE_IDX  = 40;
+
 
 
 extern "C"
@@ -18,10 +22,8 @@ extern "C"
 }
 
 
-
 extern "C"
 void __isr_dispatch( kstackframe *frame )
-// void __isr_dispatch( uint64_t vcode, uint64_t ecode )
 {
     // syslog log("__interrupt_dispatch");
     // log("vcode: %u", frame->vcode);
@@ -30,20 +32,22 @@ void __isr_dispatch( kstackframe *frame )
 
     if (vcode > NUM_INTERRUPTS)
     {
-        // SYSLOG("vcode > NUM_INTERRUPTS");
+        // log("vcode > NUM_INTERRUPTS");
     }
 
-    if (__usr_table[vcode])
+    if (usr_table[vcode])
     {
-        __usr_table[vcode](frame);
+        usr_table[vcode](frame);
     }
 
-    else
+    if (IRQ_MASTER_IDX <= vcode && vcode <= IRQ_SLAVE_IDX+12)
     {
-        // SYSLOG("No handler");
+        if (usr_table[vcode] == nullptr)
+        {
+            PIC::sendEOI(vcode);
+        }
     }
 
-    // SYSLOG_END();
 }
 
 
@@ -71,10 +75,13 @@ void idt_set_descriptor( uint8_t idx, void *isr, uint8_t flags )
 void idk::IDT_load()
 {
     syslog log("idk::IDT_load");
-    
+
+    PIC::remap(IRQ_MASTER_IDX, IRQ_SLAVE_IDX);
+    PIC::disable();
+
     for (size_t i=0; i<NUM_INTERRUPTS; i++)
     {
-        __usr_table[i] = nullptr;
+        usr_table[i] = nullptr;
     }
 
     idtr.base = (uint64_t)(&idt[0]);
@@ -101,7 +108,7 @@ void idk::onInterrupt( uint8_t vcode, void (*callback)(kstackframe*) )
 
     else
     {
-        __usr_table[vcode] = callback;
+        usr_table[vcode] = callback;
     }
 }
 

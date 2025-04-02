@@ -5,203 +5,26 @@
 #include <kinterrupt.h>
 #include <stdio.h>
 #include <string.h>
+#include <kernel/log.hpp>
 
 
-std::atomic_int kthread::lock_count = 0;
-kthread *kthread::m_curr  = nullptr;
-bool     kthread::running = false;
-
-
-extern "C"
-{
-    extern kstackframe context_arg;
-    extern kstackframe context_arg2;
-    extern void kthread_start( void );
-    extern void kthread_yield( void );
-}
-
-extern "C"
-void kthread_switch( uint64_t *rsp )
-{
-    kthread::yield_lock();
-
-    syslog log("kthread_switch");
-
-    // kthread *curr = kthread::m_curr;
-    // kthread *next = kthread::m_curr->next;
-    auto *frame = (kthread_frame*)rsp;
-
-    for (int i=0; i<15; i++)
-    {
-        log("rsp[%d]: 0x%lx", i, rsp[i]);
-    }
-
-    log("rbp:        0x%lx",  frame->rbp);
-    log("rsi:        0x%lx",  frame->rsi);
-    log("rdi:        0x%lx",  frame->rdi);
-    log("rdx:        0x%lx",  frame->rdx);
-    log("rcx:        0x%lx",  frame->rcx);
-    log("rbx:        0x%lx",  frame->rbx);
-    log("rax:        0x%lx",  frame->rax);
-    log("r15:        0x%lx",  frame->r15);
-    log("r14:        0x%lx",  frame->r14);
-    log("r13:        0x%lx",  frame->r13);
-    log("r12:        0x%lx",  frame->r12);
-    log("r11:        0x%lx",  frame->r11);
-    log("ret_rsp:    0x%lx",  frame->rsp);
-    log("ret_rip:    0x%lx",  frame->rip);
-
-    // log("ret_rsp:    0x%lx",  frame->rsp);
-    // log("ret_rip:    0x%lx",  frame->rip);
-    // log("r11:        0x%lx",  frame->r11);
-    // log("r12:        0x%lx",  frame->r12);
-    // log("r13:        0x%lx",  frame->r13);
-    // log("r14:        0x%lx",  frame->r14);
-    // log("r15:        0x%lx",  frame->r15);
-    // log("rax:        0x%lx",  frame->rax);
-    // log("rbx:        0x%lx",  frame->rbx);
-    // log("rcx:        0x%lx",  frame->rcx);
-    // log("rdx:        0x%lx",  frame->rdx);
-    // log("rdi:        0x%lx",  frame->rdi);
-    // log("rsi:        0x%lx",  frame->rsi);
-    // log("rbp:        0x%lx",  frame->rbp);
-
-
-    // frame->r11 = curr->r11;
-    // frame->r12 = curr->r12;
-    // frame->r13 = curr->r13;
-    // frame->r14 = curr->r14;
-    // frame->r15 = curr->r15;
-    // frame->rax = curr->rax;
-    // frame->rbx = curr->rbx;
-    // frame->rcx = curr->rcx;
-    // frame->rdx = curr->rdx;
-    // frame->rdi = curr->rdi;
-    // frame->rsi = curr->rsi;
-    // frame->rbp = curr->rbp;
-    // frame->rip = curr->rip;
-    // frame->rsp = curr->rsp;
-
-    kthread::m_curr = kthread::m_curr->next;
-}
+std::mutex kthread::global_lock;
+kthread *kthread::m_curr    = nullptr;
+bool     kthread::running   = false;
 
 
 
-extern "C"
-void __kthread_start( uint64_t *rsp )
-{
-    syslog log("__kthread_start");
+// kthread::yield_guard::yield_guard()
+// {
+//     // kthread::lock_count++;
+//     syslog::kprintf("[yield_guard] %d\n", kthread::lock_count.add_fetch(1));
+// };
 
-    for (int i=0; i<15; i++)
-    {
-        log("rsp[%d]: 0x%lx", i, rsp[i]);
-    }
-
-    kthread *curr = kthread::m_curr;
-    // kthread *next = kthread::m_curr->next;
-    auto *frame = (kthread_frame*)rsp;
-
-    log("r11:        0x%lx",  frame->r11);
-    log("r12:        0x%lx",  frame->r12);
-    log("r13:        0x%lx",  frame->r13);
-    log("r14:        0x%lx",  frame->r14);
-    log("r15:        0x%lx",  frame->r15);
-    log("rax:        0x%lx",  frame->rax);
-    log("rbx:        0x%lx",  frame->rbx);
-    log("rcx:        0x%lx",  frame->rcx);
-    log("rdx:        0x%lx",  frame->rdx);
-    log("rdi:        0x%lx",  frame->rdi);
-    log("rsi:        0x%lx",  frame->rsi);
-    log("rbp:        0x%lx",  frame->rbp);
-    log("ret_rip:    0x%lx",  frame->rip);
-    log("ret_rsp:    0x%lx",  frame->rsp);
-
-    frame->r11 = curr->r11;
-    frame->r12 = curr->r12;
-    frame->r13 = curr->r13;
-    frame->r14 = curr->r14;
-    frame->r15 = curr->r15;
-    frame->rax = curr->rax;
-    frame->rbx = curr->rbx;
-    frame->rcx = curr->rcx;
-    frame->rdx = curr->rdx;
-    frame->rdi = curr->rdi;
-    frame->rsi = curr->rsi;
-    frame->rbp = curr->rbp;
-    frame->rip = curr->rip;
-    frame->rsp = curr->rsp;
-
-    kthread::running = true;
-}
-
-
-
-extern "C"
-void __kthread_yield( uint64_t *rsp )
-{
-    kthread::yield_lock();
-    syslog log("__kthread_yield");
-
-    for (int i=0; i<15; i++)
-    {
-        log("rsp[%d]: 0x%lx", i, rsp[i]);
-    }
-
-    kthread *curr = kthread::m_curr;
-    kthread *next = kthread::m_curr->next;
-    auto *frame = (kthread_frame*)rsp;
-
-    log("r11:        0x%lx",  frame->r11);
-    log("r12:        0x%lx",  frame->r12);
-    log("r13:        0x%lx",  frame->r13);
-    log("r14:        0x%lx",  frame->r14);
-    log("r15:        0x%lx",  frame->r15);
-    log("rax:        0x%lx",  frame->rax);
-    log("rbx:        0x%lx",  frame->rbx);
-    log("rcx:        0x%lx",  frame->rcx);
-    log("rdx:        0x%lx",  frame->rdx);
-    log("rdi:        0x%lx",  frame->rdi);
-    log("rsi:        0x%lx",  frame->rsi);
-    log("rbp:        0x%lx",  frame->rbp);
-    log("ret_rip:    0x%lx",  frame->rip);
-    log("ret_rsp:    0x%lx",  frame->rsp);
-
-    curr->r11 = frame->r11;
-    curr->r12 = frame->r12;
-    curr->r13 = frame->r13;
-    curr->r14 = frame->r14;
-    curr->r15 = frame->r15;
-    curr->rax = frame->rax;
-    curr->rbx = frame->rbx;
-    curr->rcx = frame->rcx;
-    curr->rdx = frame->rdx;
-    curr->rdi = frame->rdi;
-    curr->rsi = frame->rsi;
-    curr->rbp = frame->rbp;
-    curr->rip = frame->rip;
-    curr->rsp = frame->rsp;
-
-    frame->r11 = next->r11;
-    frame->r12 = next->r12;
-    frame->r13 = next->r13;
-    frame->r14 = next->r14;
-    frame->r15 = next->r15;
-    frame->rax = next->rax;
-    frame->rbx = next->rbx;
-    frame->rcx = next->rcx;
-    frame->rdx = next->rdx;
-    frame->rdi = next->rdi;
-    frame->rsi = next->rsi;
-    frame->rbp = next->rbp;
-    frame->rip = next->rip;
-    frame->rsp = next->rsp;
-
-    kthread::m_curr = kthread::m_curr->next;
-
-    kpanic("Boye");
-    // kthread::m_curr = kthread::m_curr->next;
-}
-
+// kthread::yield_guard::~yield_guard()
+// {
+//     // kthread::lock_count--;
+//     syslog::kprintf("[yield_guard] %d\n", kthread::lock_count.sub_fetch(1));
+// };
 
 
 
@@ -213,7 +36,6 @@ void kthread::idlemain( void* )
     }
 }
 
-
 size_t kthread::this_tid()
 {
     return m_curr->tid;
@@ -222,22 +44,18 @@ size_t kthread::this_tid()
 
 void kthread::start()
 {
-    kthread_start();
+    KInterrupt<INT_KTHREAD_START>();
 }
 
 void kthread::sleep( uint64_t )
 {
-    kthread::yield_lock();
-    // ct.wait();
-    // m_curr->lastTimeAwake = now
+    // std::lock_guard lock(kthread::global_lock);
 }
-
 
 void kthread::yield()
 {
-    kthread_yield();
+    KInterrupt<INT_KTHREAD_YIELD>();
 }
-
 
 void kthread::exit()
 {
@@ -245,19 +63,126 @@ void kthread::exit()
 }
 
 
-// void kthread::schedule( kstackframe *frame )
+void kthread::start_handler( kstackframe *frame )
+{
+    syslog log("start_handler");
+
+    if (m_curr == nullptr)
+        kpanic("Cannot call kthread::start before creating any threads!");
+    if (kthread::running)
+        kpanic("Cannot call kthread::start more than once!");
+
+    auto *curr = kthread::m_curr;
+
+    frame->rax        = curr->frame.rax;
+    frame->rbx        = curr->frame.rbx;
+    frame->rcx        = curr->frame.rcx;
+    frame->rdx        = curr->frame.rdx;
+    frame->iret_rsp   = curr->frame.iret_rsp;
+    frame->iret_rip   = curr->frame.iret_rip;
+    frame->iret_flags = curr->frame.iret_flags;
+    frame->rdi        = curr->frame.rdi;
+    frame->rsi        = curr->frame.rsi;
+    frame->rbp        = curr->frame.rbp;
+
+    kthread::running = true;
+}
+
+
+
+
+// extern "C"
+// void kthread_switch( kstackframe *frame )
 // {
-//     if (kthread::lock_count.load() > 0)
-//         return;
-//     if (kthread::running == false)
-//         return;
-//     if (m_curr == nullptr)
-//         return;
+//     // syslog log("kthread_switch");
 
+//     kthread *&curr = kthread::m_curr;
+//     kthread *next = curr->next;
 
+//     curr->rax = frame->rax;
+//     curr->rbx = frame->rbx;
+//     curr->rcx = frame->rcx;
+//     curr->rdx = frame->rdx;
+//     curr->rsp = frame->iret_rsp;
+//     curr->rip = frame->iret_rip;
+//     curr->rdi = frame->rdi;
+//     curr->rsi = frame->rsi;
+//     curr->rbp = frame->rbp;
+//     curr->flags = frame->iret_flags;
+
+//     frame->rax = next->rax;
+//     frame->rbx = next->rbx;
+//     frame->rcx = next->rcx;
+//     frame->rdx = next->rdx;
+//     frame->iret_rsp = next->rsp;
+//     frame->iret_rip = next->rip;
+//     frame->iret_flags = next->flags;
+//     frame->rdi = next->rdi;
+//     frame->rsi = next->rsi;
+//     frame->rbp = next->rbp;
+
+//     curr = curr->next;
 // }
 
 
+void kthread::schedule( kstackframe *frame )
+{
+    // if (global_lock.try_lock() == false)
+    // {
+    //     return;
+    // }
+
+    if (kthread::lock_count.load() != 0)
+    {
+    //     // printf("\n\n---------------------------lmao\n\n");
+        return;
+    }
+    if (kthread::running == false)
+        return;
+    if (m_curr == nullptr)
+        return;
+
+    kthread *curr = m_curr;
+    kthread *next = m_curr->next;
+
+    curr->frame.rax   = frame->rax;
+    curr->frame.rbx   = frame->rbx;
+    curr->frame.rcx   = frame->rcx;
+    curr->frame.rdx   = frame->rdx;
+    curr->frame.iret_rsp   = frame->iret_rsp;
+    curr->frame.iret_rip   = frame->iret_rip;
+    curr->frame.rdi   = frame->rdi;
+    curr->frame.rsi   = frame->rsi;
+    curr->frame.rbp   = frame->rbp;
+    curr->frame.iret_flags = frame->iret_flags;
+
+    frame->rax        = next->frame.rax;
+    frame->rbx        = next->frame.rbx;
+    frame->rcx        = next->frame.rcx;
+    frame->rdx        = next->frame.rdx;
+    frame->iret_rsp   = next->frame.iret_rsp;
+    frame->iret_rip   = next->frame.iret_rip;
+    frame->iret_flags = next->frame.iret_flags;
+    frame->rdi        = next->frame.rdi;
+    frame->rsi        = next->frame.rsi;
+    frame->rbp        = next->frame.rbp;
+
+    m_curr = m_curr->next;
+
+    // global_lock.unlock();
+    
+}
+
+
+
+// static void kproc_idle( void* )
+// {
+//     while (true)
+//     {
+//         printf("idle\n");
+//         asm volatile ("nop");
+//     }
+// }
 
 
 void kthread::wrapper( void (*fn)(void*), void *arg )
@@ -318,39 +243,41 @@ void kthread::remove( kthread *th )
 }
 
 
-// void kthread::ted_bundy( void* )
-// {
-//     printf("void [kthread::ted_bundy](void*)\n");
-
-//     while (true)
-//     {
-//         kthread::yield_lock();
-//         kthread *th = m_curr->next;
-
-//         while (th != m_curr)
-//         {
-//             if (th->status == KPROC_DEAD)
-//             {
-//                 printf("[kthread::ted_bundy] removing process %d\n", th->tid);
-//                 kthread::remove(th);
-//                 break;
-//             }
-//             th = th->next;
-//         }
-
-//         kthread::yield();
-//     }
-// }
-
-
-
-kthread::kthread( void (*fn)(void*), void *arg )
+void kthread::ted_bundy( void* )
 {
-    kthread::yield_lock();
+    printf("void [kthread::ted_bundy](void*)\n");
+
+    while (true)
+    {
+        // std::lock_guard lock(kthread::global_lock);
+        kthread *th = m_curr->next;
+
+        while (th != m_curr)
+        {
+            if (th->status == KPROC_DEAD)
+            {
+                printf("[kthread::ted_bundy] removing process %d\n", th->tid);
+                kthread::remove(th);
+                break;
+            }
+            th = th->next;
+        }
+
+        kthread::yield();
+    }
+}
+
+
+
+kthread::kthread( const char thread_name[], void (*fn)(void*), void *arg )
+{
+    // std::lock_guard lock(kthread::global_lock);
     static size_t curr_tid = 0;
+    memset(this->name, '\0', sizeof(this->name));
+    strcpy(this->name, thread_name);
 
     uint8_t *stack = new uint8_t[4096];
-    uint8_t *top   = stack + 4096;
+    uint8_t *top   = stack + 4096 - 16;
              top   = (uint8_t *)((uintptr_t)top & ~0xF);
              top  -= sizeof(uint64_t);
     memset(stack, 0, 4096);
@@ -358,11 +285,12 @@ kthread::kthread( void (*fn)(void*), void *arg )
     this->tid    = curr_tid++;
     this->status = KPROC_READY;
     this->stack  = stack;
-    this->rsp = (uint64_t)top;
-    this->rip = (uint64_t)kthread::wrapper;
-    this->rdi = (uint64_t)fn;
-    this->rsi = (uint64_t)arg;
-    this->rbp = 0;
+    this->frame.iret_rsp = (uint64_t)top;
+    this->frame.iret_rip = (uint64_t)kthread::wrapper;
+    this->frame.rdi = (uint64_t)fn;
+    this->frame.rsi = (uint64_t)arg;
+    this->frame.rbp = 0;
+    this->frame.iret_flags = 0x202;
     this->next = nullptr;
 
     syslog log("kthread::kthread");

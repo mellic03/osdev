@@ -22,6 +22,7 @@ namespace idk
         list_type *m_freelist;
         uint8_t   *m_data;
         uint8_t   *m_end;
+        std::mutex m_mutex;
 
         struct AllocHeader
         {

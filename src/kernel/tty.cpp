@@ -29,10 +29,10 @@ kTTY::kTTY()
 
 kTTY::kTTY( size_t size )
 :   cwd     (vfsInsertDirectory("dev/tty0/")),
-    history (new char[size]),
+    history ((char*)kmalloc(size*sizeof(char))),
     htop    (history),
     hend    (history + size),
-    prompt  (new char[80]),
+    prompt  ((char*)kmalloc(80*sizeof(char))),
     ptop    (prompt),
     pend    (prompt + size),
     font    (nullptr),

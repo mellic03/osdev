@@ -10,7 +10,7 @@ struct hwDriverInterface
     uint8_t irqno;
 
     void (*irq_handler)(kstackframe*);
-    void (*driver_entry)(void*);
+    void (*entry)(void*);
 };
 
 

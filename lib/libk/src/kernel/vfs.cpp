@@ -9,18 +9,23 @@
 
 // static char m_buf0[128];
 // static char m_buf1[128];
-vfsDirEntry *vfsEntry::rootdir = new vfsDirEntry(vfsEntry::rootdir, "R:");
+vfsDirEntry *vfsEntry::rootdir = new vfsDirEntry(nullptr, "R:");
 // static vfsDirEntry *m_root = new vfsDirEntry(m_root, "R");
 static std::mutex vfs_mutex;
+
+
+
+#define VFS_SYSLOG syslog syslogvfs
+#define VFS_LOG syslogvfs
+
 
 
 vfsDirEntry*
 vfsInsertDirectory( const char *dpath )
 {
-    kthread::yield_lock();
-
-    // syslog log("vfsInsertDirectory");
-    // log("dpath:  \"%s\"", dpath);
+    auto lock = kthread::yield_guard(kthread::lock_count);
+    VFS_SYSLOG("vfsInsertDirectory");
+    VFS_LOG("dpath:  \"%s\"", dpath);
 
     vfsDirEntry *dir = vfsEntry::rootdir;
     fs::directorypath path(dpath);
@@ -36,15 +41,15 @@ vfsInsertDirectory( const char *dpath )
 
         else if (child->is_file())
         {
-            // log("Cannot create directory \"%s\". File with same name exists");
+            VFS_LOG("Cannot create directory \"%s\". File with same name exists");
             return nullptr;
         }
 
-        // log("\"%s\" --> \"%s\"", dir->name, name.c_str());
+        VFS_LOG("\"%s\" --> \"%s\"", dir->name, name.c_str());
         dir = static_cast<vfsDirEntry*>(child);
     }
 
-    // log("created directory \"%s\"", dir->get_path());
+    VFS_LOG("created directory \"%s\"", dir->get_path());
 
     return dir;
 }
@@ -60,8 +65,8 @@ vfsFindDirectory( const char *pth )
 vfsDirEntry*
 vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 {
-    kthread::yield_lock();
-    syslog log("vfsFindDirectory(%s)", dpath);
+    auto lock = kthread::yield_guard(kthread::lock_count);
+    VFS_SYSLOG("vfsFindDirectory(%s)", dpath);
 
     if ((strlen(dpath) == 1) && (dpath[0] == '/'))
         return vfsEntry::rootdir;
@@ -70,13 +75,13 @@ vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 
     fs::directorypath path(dpath);
     auto dirname = path.m_dirname;
-    // log("dirname: %s", dirname.c_str());
+    VFS_LOG("dirname: %s", dirname.c_str());
 
     vfsDirEntry *dir = cwd;
 
     for (auto &name: path.m_sep)
     {
-        // log("name: %s", name.c_str());
+        VFS_LOG("name: %s", name.c_str());
         
         if (name == ".")
         {
@@ -93,7 +98,7 @@ vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 
         if (!child)
         {
-            log("no such directory \"%s%s\"", dir->get_path(), name.c_str());
+            VFS_LOG("no such directory \"%s%s\"", dir->get_path(), name.c_str());
             return nullptr;
         }
     
@@ -115,9 +120,9 @@ vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 vfsFileEntry*
 vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 {
-    kthread::yield_lock();
-    // syslog log("vfsInsertFile");
-    // log("fpath:  \"%s\"", fpath);
+    auto lock = kthread::yield_guard(kthread::lock_count);
+    VFS_SYSLOG("vfsInsertFile");
+    VFS_LOG("fpath:  \"%s\"", fpath);
 
     fs::filepath path(fpath);
     vfsDirEntry *dir = vfsFindDirectory(path.m_dirname.c_str());
@@ -132,11 +137,12 @@ vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
     if (!child)
     {
         auto *file = dir->giveChild<vfsFileEntry>(path.m_filename.c_str(), flags, addr, size);
-        // log("created file \"%s\"", file->get_path());
+        VFS_LOG("created file \"%s\"", file->get_path());
         return file;
     }
 
-    // log("file or directory already exists");
+    VFS_LOG("cannot create file, directory exists here");
+
     return nullptr;
 }
 
@@ -146,8 +152,8 @@ vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 vfsFileEntry*
 vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 {
-    kthread::yield_lock();
-    syslog log("vfsFindFile(%s)", fpath);
+    kthread::yield_guard lock(kthread::lock_count);
+    VFS_SYSLOG("vfsFindFile(%s)", fpath);
 
     if (fpath[0] == '/')
         cwd = vfsEntry::rootdir;
@@ -155,18 +161,18 @@ vfsFindFile( vfsDirEntry *cwd, const char *fpath )
     fs::filepath path(fpath);
     auto &dirname  = path.m_dirname;
     auto &filename = path.m_filename;
-    log("dirname, filename: \"%s\", \"%s\"", dirname.c_str(), filename.c_str());
+    VFS_LOG("dirname, filename: \"%s\", \"%s\"", dirname.c_str(), filename.c_str());
 
     vfsDirEntry  *dir = vfsFindDirectory(cwd, dirname.c_str());
     vfsFileEntry *fh  = dir->getChild<vfsFileEntry>(filename.c_str());
 
     if (fh && fh->is_file())
     {
-        log("found file: \"%s\"", fh->get_path());
+        VFS_LOG("found file: \"%s\"", fh->get_path());
         return fh;
     }
 
-    log("no such directory \"%s%s\"", dir->get_path(), filename.c_str());
+    VFS_LOG("no such directory \"%s%s\"", dir->get_path(), filename.c_str());
     return nullptr;
 }
 
@@ -174,6 +180,8 @@ vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 vfsFileEntry*
 vfsFindFile( const char *fname )
 {
+    kthread::yield_guard lock(kthread::lock_count);
+    VFS_SYSLOG("vfsFindFile(%s)", fname);
     return vfsFindFile(vfsEntry::rootdir, fname);
 }
 

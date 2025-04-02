@@ -1,5 +1,6 @@
 #include "../boot/boot.hpp"
 #include "smp.hpp"
+#include "ipc.hpp"
 #include <mutex>
 #include <atomic>
 
@@ -21,6 +22,21 @@ static std::atomic_uint64_t counter;
 //     while (true) { asm volatile ("cli; hlt"); }
 // }
 
+// void server_main( void* )
+// {
+//     static uint8_t pkt;
+
+//     ipcport_open(0x0008);
+
+//     while (true)
+//     {
+//         if (ipcport_recv(0x0008, &pkt, 1, 1))
+//         {
+//             syslog::kprintf("[server_main] recieved %u\n", pkt);
+//         }
+//     }
+
+// }
 
 void SMP::init( limine_mp_response *res )
 {
@@ -43,7 +59,7 @@ void SMP::init( limine_mp_response *res )
     }
 
     // res->cpus[3]->extra_argument = (uint64_t)(&ids[3]);
-    // __atomic_store_n(&(res->cpus[3]->goto_address), (limine_goto_address)&hell, __ATOMIC_SEQ_CST);
+    // __atomic_store_n(&(res->cpus[3]->goto_address), (limine_goto_address)&server_main, __ATOMIC_SEQ_CST);
 
 }
 

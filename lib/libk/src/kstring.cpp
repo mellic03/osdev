@@ -91,25 +91,26 @@ const char *seek_brk( const char *s, const char *brk )
 }
 
 
+#include <kernel/log.hpp>
 
-
-std::vector<char*>&
+std::vector<std::string>&
 kstring::tokenize( const char *str, char delim )
 {
-    static std::vector<char*> out;
-    for (char *sep: out)
-        delete[] sep;
+    static std::vector<std::string> out;
+    // for (char *sep: out)
+        // delete[] sep;
     out.clear();
 
     int len = strlen(str);
     auto *A = str;
     auto *B = A;
 
-    while (A < str+len)
+    syslog log("kstring::tokenize");
+    while (B < str+len)
     {
         B = seek_ch(A+1, delim);
-        out.push_back(new char[B-A+1]);
-        strncpy(out.back(), A, B-A);
+        out.push_back(std::string(A, B-A));
+        log("A, B, len: \'%c\', \'%c\', %d", *A, *B, B-A);
         A = B+1;
     }
 

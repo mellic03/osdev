@@ -17,9 +17,6 @@ namespace KShell
     void pushIndent();
     void popIndent();
 
-    extern kTTY *kshell_tty;
-    extern char  kshell_buf[128];
-
     template <typename... Args>
     char *kssprintln( char *dst, const char *fmt, Args... args )
     {

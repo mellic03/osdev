@@ -25,6 +25,7 @@ idk::CPU    processor_states[32];
 
 static void load_mmaps();
 
+
 void early_init()
 {
     syslog log("early_init");
@@ -55,16 +56,11 @@ void early_init()
 
 
 
-void system_init()
+void late_init()
 {
+    syslog log("late_init");
     SMP::init(reqs.mp);
     kvideo::init((uintptr_t)(reqs.fb));
-
-    vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
-    vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
-    vfsInsertFile<char>("/dev/ms0/raw",   64, vfsFileFlag_Stream);
-    vfsInsertFile<char>("/dev/ms0/event", 64, vfsFileFlag_Stream);
-    vfsInsertFile<char>("/dev/stdout",    1024, vfsFileFlag_Stream);
 
     for (size_t i=0; i<reqs.modules->module_count; i++)
     {

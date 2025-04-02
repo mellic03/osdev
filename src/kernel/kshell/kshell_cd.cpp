@@ -2,6 +2,7 @@
 #include <kstring.h>
 #include <string.h>
 using namespace KShell;
+extern kTTY *kshell_tty;
 
 
 

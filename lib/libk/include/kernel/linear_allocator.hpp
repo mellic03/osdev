@@ -12,6 +12,7 @@ namespace idk
         uintptr_t m_base;
         uintptr_t m_tail;
         uintptr_t m_end;
+        std::mutex m_mutex;
 
     public:
         linear_allocator() {  };

@@ -42,6 +42,8 @@ set(IDKERNEL_C_CXX_FLAGS
     "-O0 -g \
     -fno-inline -fno-tree-vectorize \
     -Wall -Wextra -Werror -pedantic \
+    -Wno-vexing-parse \
+    -fno-omit-frame-pointer \
     -fstack-protector-strong -fno-strict-aliasing \
     -ggdb -Wno-builtin-declaration-mismatch \
     -ffreestanding \
@@ -72,6 +74,7 @@ set(CMAKE_C_FLAGS
 set(CMAKE_CXX_FLAGS
     "-std=c++23 \
     ${IDKERNEL_C_CXX_FLAGS} \
+    -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/new \
     -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/libc++ \
     -fno-rtti \
     -MMD \

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 using namespace KShell;
+extern kTTY *kshell_tty;
 
 
 char *kshell_font( char *dst, int argc, char **argv )

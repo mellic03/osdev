@@ -1,6 +1,7 @@
 #include "kshell.hpp"
 #include <kstring.h>
 using namespace KShell;
+extern kTTY *kshell_tty;
 
 
 char *kshell_info( char *dst, int argc, char **argv )

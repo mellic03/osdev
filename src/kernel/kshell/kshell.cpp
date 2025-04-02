@@ -33,6 +33,8 @@ extern char *kshell_ls     ( char*, int, char** );
 extern char *kshell_mkdir  ( char*, int, char** );
 extern char *kshell_set    ( char*, int, char** );
 extern char *kshell_panic  ( char*, int, char** );
+extern char *kshell_send   ( char*, int, char** );
+extern char *kshell_sendmsg( char*, int, char** );
 extern char *kshell_tid    ( char*, int, char** );
 extern char *kshell_clear  ( char*, int, char** );
 extern char *kshell_exit   ( char*, int, char** );
@@ -41,7 +43,6 @@ using fn_type = char *(*)( char*, int, char** );
 struct command_pair { const char *name; fn_type fn; };
 
 static std::vector<command_pair> cmd_table;
-// static idk::static_vector<char[MAX_ARG_LENGTH], MAX_ARG_COUNT> kshell_argv;
 #define KSHELL_REGISTER_CMD(name) cmd_table.push_back({#name, kshell_##name});
 
 static void registerCommands()
@@ -55,32 +56,56 @@ static void registerCommands()
     KSHELL_REGISTER_CMD(mkdir)
     KSHELL_REGISTER_CMD(set)
     KSHELL_REGISTER_CMD(panic)
+    KSHELL_REGISTER_CMD(send)
+    KSHELL_REGISTER_CMD(sendmsg)
     KSHELL_REGISTER_CMD(tid)
     KSHELL_REGISTER_CMD(clear)
     KSHELL_REGISTER_CMD(exit)
 }
 
-kTTY *KShell::kshell_tty;
-char  **kshell_argv;
+kTTY *kshell_tty;
+static char *kshell_argv[MAX_ARG_COUNT];
+
+// __attribute__((constructor))
+// static void kshell_init()
+// {
+//     for (int i=0; i<MAX_ARG_COUNT; i++)
+//     {
+//         kshell_argv[i] = (char*)kmalloc(MAX_ARG_LENGTH*sizeof(char));
+//     }
+// }
 
 
-static void
-kshell_parse( kTTY *tty )
+
+
+void kshell_parse()
 {
-    kshell_tty = tty;
+    syslog log("kshell_parse");
 
-    size_t argc = kshell_argparser(tty->prompt, kshell_argv);
+    // if (*kshell_argv == nullptr)
+    // {
+    //     kthread::yield_guard lock();
+    //     kshell_argv = (char**)kmalloc(MAX_ARG_COUNT*sizeof(char*));
+        
+    //     for (int i=0; i<MAX_ARG_COUNT; i++)
+    //     {
+    //         *(kshell_argv + i) = (char*)kmalloc(MAX_ARG_LENGTH*sizeof(char));
+    //     }
+    // }
+
+
+    size_t argc = kshell_argparser(kshell_tty->prompt, kshell_argv);
 
     if (argc == 0)
     {
         return;
     }
 
-    char *&dst = tty->htop;
+    char *&dst = kshell_tty->htop;
 
     for (auto &[name, fn]: cmd_table)
     {
-        if (strcmp(kshell_argv[0], name) == 0)
+        if (strcmp(name, kshell_argv[0]) == 0)
         {
             dst = fn(dst, argc, kshell_argv);
             return;
@@ -138,18 +163,39 @@ char *kshell_exit( char *dst, int, char** )
 
 
 using namespace kdriver::ps2_kb;
+#include <new>
+#include <ipc.hpp>
+
+
 
 void kshell_main( void* )
 {
+    syslog log("kshell_main");
     registerCommands();
 
-    kshell_argv = new char*[MAX_ARG_COUNT];
-    for (int i=0; i<MAX_ARG_COUNT; i++)
+
+    for (int i=255; i>=0; i--)
     {
-        kshell_argv[i] = new char[MAX_ARG_LENGTH];
+        auto res = ipcport_open(0x05ED);
+        if (res == PORT_ACCEPTED)
+            break;
+        else if (i==0)
+            kthread::yield();
     }
 
+    {
+        kthread::yield_guard lock(kthread::lock_count);
+
+        for (int i=0; i<MAX_ARG_COUNT; i++)
+        {
+            kshell_argv[i] = (char*)kmalloc(MAX_ARG_LENGTH*sizeof(char));
+        }
+    }
+
+
     kTTY tty(25*80);
+    kshell_tty = &tty;
+
     auto *file = vfsFindFile("/font/cutive-w12hf18.bmp");
           file->flags |= vfsFileFlag_Stream;
           file->flags |= vfsFileFlag_Virtual;
@@ -157,8 +203,7 @@ void kshell_main( void* )
 
     auto *stream = &(vfsFindFile("dev/kb0/event")->stream);
 
-    auto *ctx = sde::createContext(ivec2(10, 10), ivec2(1200, 700));
-    // auto *frame = 
+    auto *ctx = sde::createContext(ivec2(10, 10), ivec2(600, 600));
     ctx->giveChild(ivec2(10), new sde::TerminalFrame(&tty));
 
     ctx->m_style = {
@@ -168,9 +213,11 @@ void kshell_main( void* )
     };
 
     KeyEvent event;
+    syslog::kprintf("[syslog] count: %d\n", kthread::lock_count.load());
 
     while (tty.running)
     {
+
         if (stream->read(&event, sizeof(KeyEvent)))
         {
             uint8_t  mask  = event.mask;
@@ -190,6 +237,9 @@ void kshell_main( void* )
 
             else if (ch == '\n')
             {
+                log("kshell_argv:  0x%lx", kshell_argv);
+                log("*kshell_argv: 0x%lx", *kshell_argv);
+
                 auto *&cwd = tty.getCWD();
                 tty.hsprintf("[%s] ", cwd->name);
 
@@ -201,7 +251,7 @@ void kshell_main( void* )
 
                 tty.hputs(tty.prompt);
                 tty.hputc('\n');
-                kshell_parse(&tty);
+                kshell_parse();
                 tty.pclear();
             }
 
@@ -214,17 +264,11 @@ void kshell_main( void* )
         kthread::yield();
     }
 
-    syslog log("kshell_main");
-    log("A");
     sde::destroyContext(ctx);
-    log("B");
 
     for (int i=0; i<MAX_ARG_COUNT; i++)
-        delete[] kshell_argv[i];
-    log("C");
-    
-    delete[] kshell_argv;
-    log("D");
+        kfree(kshell_argv[i]);
+
 }
 
 

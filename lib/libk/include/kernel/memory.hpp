@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <mutex>
 #include "linear_allocator.hpp"
 #include "buddy_allocator.hpp"
 
