@@ -50,7 +50,7 @@ void gx_main()
 
     gx_renderColor = gxCreateTextureExplicit(
         gxResourceFlag_ExplicitAlloc | gxResourceFlag_ExplicitFree,
-        GX_RGBA8, kvideo::backbuffer, kvideo::W, kvideo::H
+        GX_UNSIGNED_BYTE+kvideo::stride, kvideo::backbuffer, kvideo::W, kvideo::H
     );
 
     gx_renderDepth = gxCreateTexture(GX_R32F, nullptr, kvideo::W, kvideo::H);

@@ -41,6 +41,13 @@ T const& vec<2, T>::operator[]( size_t i ) const
     }
 }
 
+template <typename T> vec<2, T>::vec( const vec<3,T> &xy )
+: vec(xy[0], xy[1]) { }
+
+template <typename T> vec<2, T>::vec( const vec<4,T> &xy )
+: vec(xy[0], xy[1]) { }
+
+
 
 
 
@@ -76,6 +83,9 @@ template <typename T> vec<3, T>::vec( const vec<2,T> &xy, T z )
 
 template <typename T> vec<3, T>::vec( T x, const vec<2,T> &yz )
 : vec(x, yz[0], yz[1]) { }
+
+template <typename T> vec<3, T>::vec( const vec<4,T> &xyz )
+: vec(xyz[0], xyz[1], xyz[2]) { }
 
 
 

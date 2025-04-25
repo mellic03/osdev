@@ -109,6 +109,21 @@ static void blit_xx_yy( const gxDrawCmd &cmd )
 }
 
 
+static void blit_u8vec3_xx( const gxDrawCmd &cmd )
+{
+    auto &bcmd = cmd.data.blit;
+    auto *src = gxGetTexture(bcmd.src);
+
+    switch (src->format)
+    {
+        default: kpanic("[blit_u8vec4_xx] invalid src->format"); break;
+        case GX_R8:      blit_xx_yy<u8vec3, uint8_t>(cmd); break;
+        case GX_RGB8:    blit_xx_yy<u8vec3, u8vec3>(cmd);  break;
+        case GX_RGBA8:   blit_xx_yy<u8vec3, u8vec4>(cmd);  break;
+        case GX_RGBA32F: blit_xx_yy<u8vec3, vec4>(cmd);    break;
+    }
+}
+
 static void blit_u8vec4_xx( const gxDrawCmd &cmd )
 {
     auto &bcmd = cmd.data.blit;
@@ -149,7 +164,8 @@ void gx_ExecCommand_Blit( const gxDrawCmd &cmd )
     switch (dst->format)
     {
         default: kpanic("[gx_ExecCommand_Blit] invalid dst->format"); break;
-        case GX_RGBA8: blit_u8vec4_xx(cmd); break;
+        case GX_RGB8:    blit_u8vec3_xx(cmd); break;
+        case GX_RGBA8:   blit_u8vec4_xx(cmd); break;
         case GX_RGBA32F: blit_vec4_xx(cmd);   break;
     }
 

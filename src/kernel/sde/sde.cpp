@@ -30,8 +30,8 @@ static bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p );
 
 static void onLMousePress()
 {
-    syslog::kprintf("[onLMousePress]\n");
-    auto *&focus  = sde::focus;
+    // syslog::kprintf("[onLMousePress]\n");
+    auto *&focus = sde::focus;
 
     if (focus)
     {
@@ -51,7 +51,7 @@ static void onLMousePress()
 
 static void onLMouseRelease()
 {
-    syslog::kprintf("[onLMouseRelease]\n");
+    // syslog::kprintf("[onLMouseRelease]\n");
     sde::mouse.ldown = false;
     sde::mouse.lup   = true;
 }

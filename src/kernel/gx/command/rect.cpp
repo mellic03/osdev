@@ -88,8 +88,9 @@ void gx_ExecCommand_Rect( const gxDrawCmd &cmd )
     switch (idx)
     {
         default: kpanic("[gx_ExecCommand_Rect] Invalid format"); break;
-        case GX_R8:    rect_xx<uint8_t>(cmd); break;
-        case GX_RGBA8: rect_xx<u8vec4>(cmd);  break;
+        case GX_R8:      rect_xx<uint8_t>(cmd); break;
+        case GX_RGB8:    rect_xx<u8vec3>(cmd);  break;
+        case GX_RGBA8:   rect_xx<u8vec4>(cmd);  break;
         case GX_R32F:    rect_xx<float>(cmd);   break;
         case GX_RGBA32F: rect_xx<vec4>(cmd);    break;
         // case GX_RGBA8: gx_rect_loop<u8vec4>(cmd); break;

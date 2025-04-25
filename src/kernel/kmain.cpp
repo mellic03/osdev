@@ -165,7 +165,7 @@ static void cpu0_main()
 
     kthread t0("ps2_mouse", kdriver::ps2_mouse::driver_main, nullptr);
     kthread t1("ps2_kb", kdriver::ps2_kb::driver_main, nullptr);
-    kthread t3("SDE", sde_main, nullptr);
+    kthread t3("SDE",    sde_main, nullptr);
     kthread t4("KShell", kshell_main, nullptr);
     kthread::start();
 
@@ -177,13 +177,11 @@ static void cpu0_main()
 
 
 
-
 static void SMP_processor_init( limine_mp_info *limineInfo )
 {
     uint32_t idx = limineInfo->lapic_id;
     kernel::CPU::enableSSE(idx);
     syslog::kprintf("[SMP_processor_init] lapic_id=%u\n", idx);
-    // smp_info[idx].start();
 
     switch (idx)
     {
@@ -216,9 +214,11 @@ void _start()
     syslog log("_start");
     log("boot_lapic:  %u\n", boot_lapic);
 
-    for (size_t i=0; i<limine_res.mp->cpu_count; i++)
+    auto *mpres = limine_res.mp;
+
+    for (size_t i=0; i<mpres->cpu_count; i++)
     {
-        auto *info = limine_res.mp->cpus[i];
+        auto *info = mpres->cpus[i];
 
         syslog lg("CPU %d", i);
         lg("processor_id: %u", info->processor_id);

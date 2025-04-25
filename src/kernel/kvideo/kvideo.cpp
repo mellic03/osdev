@@ -13,11 +13,15 @@
 #include <algorithm>
 
 
-int kvideo::W = 512;
-int kvideo::H = 512;
+int    kvideo::W = 0;
+int    kvideo::H = 0;
+int    kvideo::pitch = 0;
+size_t kvideo::BPP = 0;
+size_t kvideo::stride = 0;
+size_t kvideo::nbytes = 0;
 
-uint32_t *kvideo::frontbuffer;
-uint32_t *kvideo::backbuffer;
+uint8_t *kvideo::frontbuffer;
+uint8_t *kvideo::backbuffer;
 
 
 void kvideo::init( uintptr_t fbres )
@@ -37,191 +41,64 @@ void kvideo::init( uintptr_t fbres )
     syslog log("kvideo::init");
     auto *fb = res->framebuffers[0];
 
-    kvideo::W = fb->width;
-    kvideo::H = fb->height;
+    log("fb count:    %u", res->framebuffer_count);
+    log("width:       %u", fb->width);
+    log("height:      %u", fb->height);
+    log("pitch:       %u", fb->pitch);
+    log("bpp:         %u", fb->bpp);
+    log("pitch/w:     %u", fb->pitch / fb->width);
+    log("bpp/8:       %u", fb->bpp / 8);
+    log("mem model:   %u", fb->memory_model);
+    log("edid:        0x%lx", fb->edid);
+    log("rmask_size:  %u", fb->red_mask_size);
+    log("rmask_shift: %u", fb->red_mask_shift);
+    log("gmask_size:  %u", fb->green_mask_size);
+    log("gmask_shift: %u", fb->green_mask_shift);
+    log("bmask_size:  %u", fb->blue_mask_size);
+    log("bmask_shift: %u", fb->blue_mask_shift);
 
-    kvideo::frontbuffer = (uint32_t*)fb->address;
-    kvideo::backbuffer  = (uint32_t*)kmalloc(W*H*sizeof(uint32_t));
+    kvideo::W      = fb->width;
+    kvideo::H      = fb->height;
+    kvideo::pitch  = fb->pitch;
+    kvideo::BPP    = fb->bpp;
+    kvideo::stride = pitch/W;
+    kvideo::nbytes = pitch*H;
+
+    kvideo::frontbuffer = (uint8_t*)fb->address;
+    kvideo::backbuffer  = (uint8_t*)kmalloc(nbytes);
 }
 
 void kvideo::swapBuffers()
 {
-    kmemcpy<uint32_t>(frontbuffer, backbuffer, W*H*sizeof(uint32_t));
+    kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
 }
 
 
 
-void kvideo::fill( uint32_t C )
+void kvideo::fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
 {
-    __uint128_t color = (__uint128_t(C)<<96) + (__uint128_t(C)<<64)
-                      + (__uint128_t(C)<<32) +  __uint128_t(C);
+    uint8_t rgba[4] = {r, g, b, a};
 
-    kmemset<uint128_t>(backbuffer, color, W*H);
-}
-
-void kvideo::fill( const vec4 &rgba )
-{
-    uint32_t r = uint32_t(255.0f * rgba.r);
-    uint32_t g = uint32_t(255.0f * rgba.g);
-    uint32_t b = uint32_t(255.0f * rgba.b);
-
-    fill(255 + (r<<16) + (g<<8) + (b<<0));
-}
-
-void kvideo::fill( const vec3 &rgb )
-{
-    fill(vec4(rgb, 1.0));
-}
-
-
-// void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp,
-//                    kframebuffer<vec4> &dstbuf,
-//                    const kframebuffer<vec4> &srcbuf )
-// {
-//     int xmin = std::max(dst.x, 0);
-//     int xmax = std::min(dst.x+sp.x, dstbuf.w-1);
-//     int ymin = std::max(dst.y, 0);
-//     int ymax = std::min(dst.y+sp.y, dstbuf.h-1);
-
-//     for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
-//     {
-//         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
-//         {
-//             dstbuf[y][x] = srcbuf[sy][sx];
-//         }
-//     }
-
-//     // int dx = std::min(xmax-xmin, sp.x);
-
-//     // for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
-//     // {
-//     //     kmemcpy<uint128_t>(dstbuf[y], srcbuf[sy], dx*sizeof(vec4));
-//     // }
-// }
-
-
-struct kvideo_blit_cmd
-{
-    ivec2 dst, src, span;
-    const vec4 *buf;
-    int bufw, bufh;
-};
-
-// static kvideo_blit_cmd blit_buffer[32];
-// static std::mutex      blit_mutex;
-// static int blit_idx = 0;
-
-void kvideo_blit( ivec2 dst, ivec2 src, ivec2 sp, const vec4 *buf, int bufw, int )
-{
-    using namespace kvideo;
-
-    int xmin = std::max(dst.x, 0);
-    int xmax = std::min(dst.x+sp.x, W-1);
-    int ymin = std::max(dst.y, 0);
-    int ymax = std::min(dst.y+sp.y, H-1);
-
-    for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
+    for (int i=0; i<W*H; i++)
     {
-        for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
+        for (size_t j=0; j<stride; j++)
         {
-            vec4 rgba = buf[bufw*sy + sx];
-
-            uint32_t r = uint32_t(255.0f * rgba.r);
-            uint32_t g = uint32_t(255.0f * rgba.g);
-            uint32_t b = uint32_t(255.0f * rgba.b);
-
-            backbuffer[W*y + x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
+            backbuffer[stride*i + j] = rgba[j];
         }
     }
 }
 
-
-void kvideo_blit_main( void* )
+void kvideo::fill( const vec4 &rgba )
 {
-    // asm volatile ("cli");
-
-    // while (true)
-    // {
-    //     // blit_mutex.lock();
-
-    //     if (0 <= blit_idx && blit_idx <= 31)
-    //     {
-    //         auto cmd = blit_buffer[blit_idx--];
-    //         kvideo_blit(cmd.dst, cmd.src, cmd.span, cmd.buf, cmd.bufw, cmd.bufh);
-    //     }
-
-    //     kthread::yield();
-    //     // blit_mutex.unlock();
-    // }
-    // while (true) { asm volatile ("cli; hlt"); }
+    uint8_t r = uint8_t(255.0f * rgba.r);
+    uint8_t g = uint8_t(255.0f * rgba.g);
+    uint8_t b = uint8_t(255.0f * rgba.b);
+    uint8_t a = uint8_t(255.0f * rgba.a);
+    fill(r, g, b, a);
 }
 
-// void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp, const vec4 *buf, int bufw )
-// {
-//     using namespace kvideo;
+void kvideo::fill( const vec3 &rgb )
+{
+    fill(vec4(rgb, 1.0f));
+}
 
-//     int xmin = std::max(dst.x, 0);
-//     int xmax = std::min(dst.x+sp.x, W-1);
-//     int ymin = std::max(dst.y, 0);
-//     int ymax = std::min(dst.y+sp.y, H-1);
-
-//     for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
-//     {
-//         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
-//         {
-//             vec4 rgba = buf[bufw*sy + sx];
-
-//             uint32_t r = uint32_t(255.0f * rgba.r);
-//             uint32_t g = uint32_t(255.0f * rgba.g);
-//             uint32_t b = uint32_t(255.0f * rgba.b);
-
-//             backbuffer[W*y + x] = (255<<24) + (r<<16) + (g<<8) + (b<<0);
-//         }
-//     }
-// }
-
-// void kvideo::blit( ivec2 dst, ivec2 src, ivec2 sp, const uint32_t *buf, int bufw )
-// {
-//     using namespace kvideo;
-
-//     int xmin = std::max(dst.x, 0);
-//     int xmax = std::min(dst.x+sp.x, W-1);
-//     int ymin = std::max(dst.y, 0);
-//     int ymax = std::min(dst.y+sp.y, H-1);
-
-//     // int dx = std::min(xmax-xmin, sp.x);
-//     src.x = std::clamp(src.x, 0, W-1);
-//     src.y = std::clamp(src.y, 0, H-1);
-
-//     for (int y=ymin, sy=src.y; y<ymax; y++, sy++)
-//     {
-//         // int offset1 = W*y + xmin;
-//         // int offset2 = bufw*sy + src.x;
-//         // kmemcpy<uint128_t>(backbuffer+offset1, buf+offset2, (xmax-xmin) * sizeof(uint32_t));
-
-//         for (int x=xmin, sx=src.x; x<xmax; x++, sx++)
-//         {
-//             uint32_t s = buf[bufw*sy + sx];
-//             uint32_t d = backbuffer[W*y + x];
-
-//             uint8_t  a = uint8_t(s >> 24);
-//             uint8_t sr = uint8_t(s >> 16);
-//             uint8_t sg = uint8_t(s >> 8);
-//             uint8_t sb = uint8_t(s >> 0);
-
-//             uint8_t da = uint8_t(s >> 24);
-//             uint8_t dr = uint8_t(d >> 16);
-//             uint8_t dg = uint8_t(d >> 8);
-//             uint8_t db = uint8_t(d >> 0);
-
-//             da = (sr*a + da * (255-a)) / 255;
-//             dr = (sr*a + dr * (255-a)) / 255;
-//             dg = (sg*a + dg * (255-a)) / 255;
-//             db = (sb*a + db * (255-a)) / 255;
-
-//             backbuffer[W*y + x] = (da<<24) + (dr<<16) + (dg<<8) + (db);
-
-//             // backbuffer[W*y + x] = buf[bufw*sy + sx];
-//         }
-//     }
-// }

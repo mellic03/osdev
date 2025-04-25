@@ -111,7 +111,7 @@ struct vec<1, T>
     vec_OPERATOR_CONSTRUCT(1)
     vec_OPERATOR_ASSIGN(1)
 
-} __attribute__((aligned(1*sizeof(T))));
+} __attribute__((aligned(sizeof(T))));
 
 
 
@@ -124,6 +124,8 @@ struct vec<2, T>
     vec(): vec(0) {  };
     vec( T xy ): vec(xy, xy) {  };
     vec( T _x, T _y ): x(_x), y(_y) {  };
+    vec( const vec<3,T>& );
+    vec( const vec<4,T>& );
 
     T& operator[]( size_t );
     T const& operator[]( size_t ) const;
@@ -136,7 +138,7 @@ struct vec<2, T>
     vec_OPERATOR_CONSTRUCT(2)
     vec_OPERATOR_ASSIGN(2)
 
-} __attribute__((aligned(2*sizeof(T))));
+} __attribute__((aligned(sizeof(T))));
 
 
 
@@ -154,6 +156,7 @@ struct vec<3, T>
 
     vec( const vec<2,T>&, T );
     vec( T, const vec<2,T>& );
+    vec( const vec<4,T>& );
 
     T& operator[]( size_t );
     T const& operator[]( size_t ) const;
@@ -166,7 +169,7 @@ struct vec<3, T>
     vec_OPERATOR_CONSTRUCT(3)
     vec_OPERATOR_ASSIGN(3)
 
-} __attribute__((aligned(4*sizeof(T))));
+} __attribute__((aligned(sizeof(T))));
 
 
 template <typename T>
@@ -198,7 +201,7 @@ struct vec<4, T>
     vec_OPERATOR_CONSTRUCT(4)
     vec_OPERATOR_ASSIGN(4)
 
-} __attribute__((aligned(4*sizeof(T))));
+} __attribute__((aligned(sizeof(T))));
 
 
 

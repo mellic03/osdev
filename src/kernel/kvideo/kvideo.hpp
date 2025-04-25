@@ -42,21 +42,20 @@ extern "C" { void kvideo_main( limine_mp_info* ); }
 
 namespace kvideo
 {
-    // inline static int W = 1280;
-    // inline static int H = 720;
-    extern int W;
-    extern int H;
-    // extern kframebuffer<uint32_t> frontbuffer;
-    // extern kframebuffer<uint32_t> backbuffer;
-    extern uint32_t *frontbuffer;
-    extern uint32_t *backbuffer;
+    extern int    W;
+    extern int    H;
+    extern int    pitch;
+    extern size_t BPP;
+    extern size_t stride;
+    extern size_t nbytes;
+
+    extern uint8_t *frontbuffer;
+    extern uint8_t *backbuffer;
 
     void init( uintptr_t fb_res );
-    // int  getWidth();
-    // int  getHeight();
     void swapBuffers();
 
-    void fill( uint32_t );
+    void fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
     void fill( const vec3& );
     void fill( const vec4& );
 
