@@ -33,7 +33,7 @@ kfstream::kfstream( void *base, size_t size, void (*flsh)(kfstream*) )
 size_t
 kfstream::read( void *dstptr, size_t nbytes )
 {
-    std::lock_guard lock(m_mutex);
+    // m_mutex.lock();
 
     auto *dst = static_cast<uint8_t*>(dstptr);
     size_t count = 0;
@@ -45,6 +45,7 @@ kfstream::read( void *dstptr, size_t nbytes )
         count++;
     }
 
+    // m_mutex.unlock();
     return count;
 }
 
@@ -52,7 +53,7 @@ kfstream::read( void *dstptr, size_t nbytes )
 size_t
 kfstream::write( const void *srcptr, size_t nbytes )
 {
-    std::lock_guard lock(m_mutex);
+    // m_mutex.lock();
 
     auto *src = static_cast<const uint8_t*>(srcptr);
     size_t count = 0;
@@ -72,6 +73,7 @@ kfstream::write( const void *srcptr, size_t nbytes )
         count++;
     }
 
+    // m_mutex.unlock();
     return count;
 }
 

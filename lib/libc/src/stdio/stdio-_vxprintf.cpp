@@ -197,7 +197,8 @@ vsprintf( char *buf, const char *fmt, va_list args )
 
         fmt += 1;
     }
+    *(buf++) = '\0';
 
-    return buf - start;
+    return buf - start - 1;
 }
 

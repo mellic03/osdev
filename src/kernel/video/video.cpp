@@ -142,7 +142,7 @@
 //         if (strncmp(file->string, "font", 4) == 0)
 //         {
 //             log("font: \"%s\"\n", file->string);
-//             auto *header = (ck_BMP_header*)file->address;
+//             auto *header = (BMP_header*)file->address;
 //             m_fonts.push_back(FontBuffer(file->string, header));
 //         }
 //     }

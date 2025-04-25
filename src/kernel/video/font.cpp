@@ -12,7 +12,7 @@
 
 
 
-// idk::FontBuffer::FontBuffer( const char *filename, ck_BMP_header *header )
+// idk::FontBuffer::FontBuffer( const char *filename, BMP_header *header )
 // {
 //     auto &info = header->infoheader;
 //     m_data = (uint32_t*)((uint8_t*)header + header->offset);

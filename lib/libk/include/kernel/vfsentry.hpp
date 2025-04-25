@@ -21,8 +21,9 @@ enum vfsFileFlag_
     vfsFileFlag_None       = 1<<0,
     vfsFileFlag_Virtual    = 1<<1,
     vfsFileFlag_Stream     = 1<<2,
-    vfsFileFlag_Executable = 1<<3,
-    vfsFileFlag_MaxBit     = 3
+    vfsFileFlag_Text       = 1<<3,
+    vfsFileFlag_Executable = 1<<4,
+    vfsFileFlag_MaxBit     = 4
 };
 
 

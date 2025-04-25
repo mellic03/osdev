@@ -38,16 +38,37 @@ set(SSE_FLAGS "-mmmx -msse -msse2")
 add_definitions(-D__libk_sse=true)
 
 
+# set(IDKERNEL_C_CXX_FLAGS
+#     "-O0 -g \
+#     -fno-inline -fno-tree-vectorize \
+#     -Wall -Wextra -Werror -pedantic \
+#     -Wno-vexing-parse \
+#     -fno-omit-frame-pointer \
+#     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+#     -ggdb -Wno-builtin-declaration-mismatch \
+#     -ffreestanding \
+#     -fno-asynchronous-unwind-tables \
+#     -fno-exceptions \
+#     -fno-stack-protector \
+#     -fno-stack-check \
+#     -fno-PIC \
+#     -fno-PIE \
+#     -mno-80387 \
+#     -z max-page-size=0x1000 -mno-red-zone \
+#     -m64 -mcmodel=large -march=x86-64 \
+#     --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
+#     -nostartfiles \
+#     -static \
+#     -Wl,--no-relax -Wl,--gc-sections \
+#     ${SSE_FLAGS} \
+#     -Wno-missing-field-initializers"
+# )
+
 set(IDKERNEL_C_CXX_FLAGS
-    "-O0 -g \
-    -fno-inline -fno-tree-vectorize \
+    "-O2 \
     -Wall -Wextra -Werror -pedantic \
-    -Wno-vexing-parse \
     -fno-omit-frame-pointer \
-    -fstack-protector-strong -fno-strict-aliasing \
-    -ggdb -Wno-builtin-declaration-mismatch \
     -ffreestanding \
-    -fno-asynchronous-unwind-tables \
     -fno-exceptions \
     -fno-stack-protector \
     -fno-stack-check \
@@ -60,10 +81,9 @@ set(IDKERNEL_C_CXX_FLAGS
     -nostartfiles \
     -static \
     -Wl,--no-relax -Wl,--gc-sections \
-    ${SSE_FLAGS} \
+    -mmmx -msse -msse2 \
     -Wno-missing-field-initializers"
 )
-
 
 set(CMAKE_C_FLAGS
     "-std=c11 \

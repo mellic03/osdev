@@ -1,5 +1,6 @@
 #include "mouse.hpp"
 #include "pic.hpp"
+#include "../interrupt/interrupt.hpp"
 #include <kernel/vfs.hpp>
 #include <kernel/ioport.hpp>
 #include <kernel/log.hpp>
@@ -11,8 +12,47 @@
 #include <ctype.h>
 
 
-using namespace idk;
+// static void mouse_init();
+// static void irq_handler( kstackframe* );
+// static void driver_main( void* );
 
+
+ivec2 hwdi_PS2Mouse::position   = ivec2(100);
+bool  hwdi_PS2Mouse::left       = false;
+bool  hwdi_PS2Mouse::right      = false;
+bool  hwdi_PS2Mouse::prev_left  = false;
+bool  hwdi_PS2Mouse::prev_right = false;
+
+bool &currLeft  = hwdi_PS2Mouse::left;
+bool &currRight = hwdi_PS2Mouse::right;
+bool &prevLeft  = hwdi_PS2Mouse::prev_left;
+bool &prevRight = hwdi_PS2Mouse::prev_right;
+
+
+// hwdi_PS2Mouse::hwdi_PS2Mouse()
+// :   hwDriverInterface("PS2 Mouse")
+// {
+//     this->irqno   = 12;
+//     this->handler = kdriver::ps2_mouse::irq_handler;
+//     this->entry   = kdriver::ps2_mouse::driver_main;
+// }
+
+
+// void
+// hwdi_PS2Mouse::loadIrqHandler()
+// {
+//     mouse_init();
+//     kernel::registerIRQ(this->irqno, this->handler);
+//     PIC::unmask(this->irqno);
+// }
+
+
+
+
+
+
+
+using namespace idk;
 
 #define PS2Leftbutton 0b00000001
 #define PS2Middlebutton 0b00000100
@@ -21,33 +61,6 @@ using namespace idk;
 #define PS2YSign 0b00100000
 #define PS2XOverflow 0b01000000
 #define PS2YOverflow 0b10000000
-
-
-bool mouseleft = false;
-bool mouseright = false;
-ivec2 mousexy    = ivec2(0, 0);
-ivec2 mouseprev  = ivec2(0, 0);
-ivec2 mousedelta = ivec2(0, 0);
-
-
-uint8_t MousePointer[] = {
-    0b11111111, 0b11100000, 
-    0b11111111, 0b10000000, 
-    0b11111110, 0b00000000, 
-    0b11111100, 0b00000000, 
-    0b11111000, 0b00000000, 
-    0b11110000, 0b00000000, 
-    0b11100000, 0b00000000, 
-    0b11000000, 0b00000000, 
-    0b11000000, 0b00000000, 
-    0b10000000, 0b00000000, 
-    0b10000000, 0b00000000, 
-    0b00000000, 0b00000000, 
-    0b00000000, 0b00000000, 
-    0b00000000, 0b00000000, 
-    0b00000000, 0b00000000, 
-    0b00000000, 0b00000000, 
-};
 
 void MouseWait(){
     uint64_t timeout = 100000;
@@ -97,12 +110,29 @@ void ProcessMousePacket()
         return;
     }
 
-    mouseprev = mousexy;
-
     bool xNegative, yNegative, xOverflow, yOverflow;
 
-    mouseleft  = (MousePacket[0] & 0b01);
-    mouseright = (MousePacket[0] & 0b10);
+    prevLeft  = currLeft;
+    prevRight = currRight;
+
+    currLeft  = (MousePacket[0] & 0b01);
+    currRight = (MousePacket[0] & 0b10);
+
+    if (currLeft != prevLeft)
+    {
+        if (currLeft && hwdi_PS2Mouse::onLeftDown)
+            hwdi_PS2Mouse::onLeftDown();
+        else if (hwdi_PS2Mouse::onLeftUp)
+            hwdi_PS2Mouse::onLeftUp();
+    }
+
+    if (currRight != prevRight)
+    {
+        if (currRight && hwdi_PS2Mouse::onRightDown)
+            hwdi_PS2Mouse::onRightDown();
+        else if (hwdi_PS2Mouse::onRightUp)
+            hwdi_PS2Mouse::onRightUp();
+    }
 
     xNegative = (MousePacket[0] & PS2XSign);
     yNegative = (MousePacket[0] & PS2YSign);
@@ -137,9 +167,7 @@ void ProcessMousePacket()
         }
     }
 
-    mousexy = ivec2(mouse_x, mouse_y);
-    mousedelta = mousexy - mouseprev;
-
+    hwdi_PS2Mouse::position = ivec2(mouse_x, mouse_y);
     MousePacketReady = false;
 }
 
@@ -165,10 +193,8 @@ void mouse_init()
 }
 
 
-using namespace kdriver;
 
-void
-ps2_mouse::irq_handler( kstackframe* )
+void kdriver::ps2_mouse::irq_handler( kstackframe* )
 {
     uint8_t data = IO::inb(0x60);
     switch(MouseCycle){
@@ -190,56 +216,17 @@ ps2_mouse::irq_handler( kstackframe* )
             MouseCycle = 0;
             break;
     }
-
-    PIC::sendEOI(12);
 }
 
 
-// static kfstream *rawstream   = nullptr;
-// static kfstream *eventstream = nullptr;
-
-// void
-// ps2_mouse::irq_handler( kstackframe* )
-// {
-//     uint8_t byte = IO::inb(0x60);
-
-//     if (rawstream)
-//     {
-//         rawstream->write(&byte, 1);
-//     }
-
-//     PIC::sendEOI(12);
-// }
-
-
-void
-ps2_mouse::driver_main( void* )
+void kdriver::ps2_mouse::driver_main( void* )
 {
-    // auto *stream = &(vfsFindFile("dev/ms0/event")->stream);
-
-    // static uint8_t packet[4];
-    // static uint8_t idx = 0;
-    // static vec2 mouse(512.0f);
-
     while (true)
     {
         ProcessMousePacket();
-        // mouse = vec2(mouse_x, mouse_y);
-        // stream->write(&mouse, sizeof(vec2));
         kthread::yield();
     }
 }
 
 
-// hwDriverInterface
-// kdriver::ps2_mouse::getInterface()
-// {
-//     static hwDriverInterface hwdi = {
-//         .irqno       = 0x12,
-//         .irq_handler = ps2_mouse::irq_handler,
-//         .entry       = ps2_mouse::driver_main
-//     };
-
-//     return hwdi;
-// }
 

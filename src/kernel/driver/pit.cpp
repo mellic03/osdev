@@ -1,4 +1,5 @@
 #include "pit.hpp"
+#include "pic.hpp"
 #include <kernel/ioport.hpp>
 #include <algorithm>
 
@@ -36,7 +37,7 @@ uint16_t PIT_HERTZ = 500;
 
 void PIT::init()
 {
-    PIT::set_ms(10);
+    PIT::set_ms(5);
     IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
     PIT::reload();
 }
@@ -86,6 +87,45 @@ bool PIT::edge()
 
     return edge;
 }
+
+
+
+
+#include "../interrupt/interrupt.hpp"
+#include <kernel/clock.hpp>
+#include <kthread.hpp>
+
+static void PIT_IrqHandler( kstackframe *frame )
+{
+    kclock::uptime_msecs.fetch_add(hwdi_PIT::timer_ms);
+    PIT::reload();
+    kthread::schedule(frame);
+}
+
+
+hwdi_PIT::hwdi_PIT( uint16_t ms )
+:   hwDriverInterface("PIT Controller")
+{
+    hwdi_PIT::timer_ms = ms;
+
+    PIT::init();
+    PIT::set_ms(hwdi_PIT::timer_ms);
+
+    this->irqno    = 0;
+    this->handler  = PIT_IrqHandler;
+    this->entry    = nullptr;
+}
+
+
+void
+hwdi_PIT::loadIrqHandler()
+{
+    kernel::registerIRQ(this->irqno, this->handler);
+    PIC::unmask(this->irqno);
+    PIC::unmask(2); // PIT also needs IRQ 2
+}
+
+
 
 
 

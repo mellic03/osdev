@@ -162,7 +162,15 @@
         "kmalloc.h": "c",
         "kintcode.h": "c",
         "kvirtio.h": "c",
-        "ksysc.h": "c"
+        "ksysc.h": "c",
+        "strstream": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp",
+        "shared_mutex": "cpp",
+        "slist": "cpp",
+        "*.ipp": "cpp",
+        "const.h": "c",
+        "sysinfo.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

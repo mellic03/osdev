@@ -10,7 +10,7 @@
 #include <kthread.hpp>
 
 using namespace idk;
-static std::mutex kmalloc_mutex;
+// static std::mutex kmalloc_mutex;
 static buddy_allocator *kalloc0;
 
 void kmalloc_init( uintptr_t base, size_t size )
@@ -25,7 +25,7 @@ void kmalloc_init( uintptr_t base, size_t size )
 
 void *kmalloc( size_t size )
 {
-    kthread::yield_guard lock(kthread::lock_count);
+    // std::lock_guard lock(kmalloc_mutex);
     return kalloc0->alloc(size, alignof(max_align_t));
 }
 

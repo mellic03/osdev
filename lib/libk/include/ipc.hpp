@@ -16,7 +16,7 @@ enum ipcprt_status: uint8_t
 
 
 ipcprt_status ipcport_open( uint16_t port );
-ipcprt_status ipcport_connect( uint16_t port );
+ipcprt_status ipcport_connect( uint16_t port, uint64_t timeout );
 size_t ipcport_send( uint16_t port, const void *src, size_t packets, size_t pktsize );
 size_t ipcport_recv ( uint16_t port, void *dst, size_t packets, size_t pktsize );
 

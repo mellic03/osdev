@@ -13,9 +13,10 @@ namespace std
 class std::mutex
 {
 private:
-    volatile bool m_locked = false;
 
 public:
+    volatile bool m_locked = false;
+
     void lock()
     {
         while (__atomic_test_and_set(&m_locked, __ATOMIC_ACQUIRE));

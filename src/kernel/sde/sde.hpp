@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../kvideo/kvideo.hpp"
-#include "context.hpp"
+#include "frame.hpp"
+#include "font.hpp"
+#include "texture.hpp"
 
 #include <kdef.h>
 #include <kmemxx.h>
@@ -15,21 +17,34 @@ void sde_main( void* );
 
 namespace sde
 {
-    WindowContext *createContext( ivec2 corner, ivec2 span );
-    void flushContext( WindowContext* );
-    void destroyContext( WindowContext* );
+    static constexpr uint16_t PORT_CMD = 0x5DEA;
+    static constexpr uint16_t PORT_MSG = 0x5DEB;
+    static constexpr uint8_t  SOTEXT   = 2;
+    static constexpr uint8_t  EOTEXT   = 3;
 
-    WindowContext *getCurrent();
-    void makeCurrent( WindowContext* );
+    struct MouseState
+    {
+        ivec2 pos;
+        bool ldown, rdown;
+        bool lup,   rup;
+    };
 
-    void blendMode( int mode );
+    extern MouseState  mouse;
+    extern ivec2      &mpos;
+    extern int        &mx;
+    extern int        &my;
+    extern sde::Frame *root;
+    extern sde::Frame *focus;
+    extern sde::Font  *sysfont;
+    extern vec4        sysfont_tint;
 
-    void hline( int x0, int x1, int y,  const vec4& );
-    void vline( int x,  int y0, int y1, const vec4& );
-    void rectOutline( ivec2 tl, ivec2 sp, const vec4& );
-    void rect( ivec2 tl, ivec2 sp, const vec4& );
-    void blit( ivec2 tl0, ivec2 tl1, ivec2 sp, const kframebuffer<vec4>& );
+    void sysfont_putchar( char ch, int x, int y, float z );
 
+    // uint32_t loadBMP( void *header );
+    // uint32_t loadTexture( uint32_t gx_format, const char *filepath );
+
+    sde::Frame *createWindow( ivec2 corner, ivec2 span );
+    void destroyWindow( Frame* );
 }
 
 

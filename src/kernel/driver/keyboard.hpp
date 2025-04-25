@@ -7,6 +7,13 @@
 #include "interface.hpp"
 
 
+struct hwdi_PS2Keyboard: public hwDriverInterface
+{
+    hwdi_PS2Keyboard();
+    virtual void loadIrqHandler() final;
+};
+
+
 namespace kdriver::ps2_kb
 {
     enum KeyEvent_: uint32_t

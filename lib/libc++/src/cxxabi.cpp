@@ -1,5 +1,5 @@
 #include <cxxabi>
-
+#include <kpanic.h>
 
 extern "C"
 {
@@ -68,7 +68,7 @@ namespace __cxxabiv1
 
 void __cxa_pure_virtual()
 {
-    // panic("Pure virtual function called!");
+    kpanic("[__cxa_pure_virtual] Pure virtual function called!");
 }
 
 

@@ -133,6 +133,7 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
 
     if (idx == -1)
     {
+        kpanic("buddy_allocator out of memory");
         KInterrupt<INT_OUT_OF_MEMORY>();
         return nullptr;
     }

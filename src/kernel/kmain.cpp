@@ -2,18 +2,19 @@
     #define __is_kernel
 #endif
 
-// #include "boot/requests.cpp"
-
 #include <kernel.h>
-#include <kernel/vfs.hpp>
+#include <kernel/clock.hpp>
 #include <kernel/log.hpp>
+#include <kernel/vfs.hpp>
 #include <kinterrupt.h>
 #include <kthread.hpp>
 
 #include <string.h>
 #include <stdio.h>
 
+#include "boot/boot.hpp"
 #include "cpu/gdt.hpp"
+#include "cpu/smp.hpp"
 #include "driver/mouse.hpp"
 #include "driver/pic.hpp"
 #include "driver/pit.hpp"
@@ -32,6 +33,8 @@
 #include "kshell/kshell.hpp"
 #include "panic.hpp"
 
+
+extern void LimineRes_init();
 
 void pagefault_handler( kstackframe* );
 
@@ -54,22 +57,9 @@ void badfile_handler( kstackframe* )
 }
 
 
-namespace kclock
-{
-    uint64_t uptime_msecs = 0;
-    double   uptime_secs  = 0.0;
-};
 
+#include "cpu/cpu.hpp"
 
-void pit_irq( kstackframe *frame )
-{
-    kclock::uptime_msecs += 5;
-    kclock::uptime_secs  += 1000.0 / double(PIT_HERTZ);
-    kthread::schedule(frame);
-
-    PIT::reload();
-    PIC::sendEOI(0);
-}
 
 
 #include <libc.h>
@@ -94,46 +84,29 @@ void call_ctors()
 }
 
 
+void pit_irq( kstackframe *frame )
+{
+    kclock::uptime_msecs.add_fetch(5);
+    kthread::schedule(frame);
+    PIT::reload();
+}
 
 extern void early_init();
 extern void late_init();
+extern void kpanic_init();
 
 
-extern "C"
-void _start()
+struct SMP_Info
 {
-    using namespace idk;    
-    asm volatile("cli");
+    uint32_t cpu_idx;
+    void (*start)();
+} smp_info[16];
 
-    idk::serial_init();
-    syslog log("_start");
 
-    early_init();
-    call_ctors(); 
-    late_init();
-
-    mouse_init();
-    PIT::init();
-    PIT::set_ms(5);
-    GDT::load();
-    GDT::flush();
-    idk::IDT_load();
-    idk::onInterrupt(INT_GENERAL_PROTECTION_FAULT, genfault_handler);
-    idk::onInterrupt(INT_PAGE_FAULT, pagefault_handler);
-    idk::onInterrupt(INT_BAD_FILE,      badfile_handler);
-    idk::onInterrupt(INT_OUT_OF_MEMORY, oom_handler);
-    idk::onInterrupt(INT_KTHREAD_START, kthread::start_handler);
-    idk::onInterrupt(INT_KTHREAD_YIELD, kthread::schedule);
-    idk::onInterrupt(INT_PANIC,   kpanic_handler);
-    idk::onInterrupt(INT_SYSCALL, idk::syscall_handler);
-    idk::onInterrupt(32+0,  pit_irq);
-    idk::onInterrupt(32+1,  kdriver::ps2_kb::irq_handler);
-    idk::onInterrupt(32+12, kdriver::ps2_mouse::irq_handler);
-
-    PIC::unmask(0);
-    PIC::unmask(1);
-    PIC::unmask(2);
-    PIC::unmask(12);
+static void cpu0_main()
+{
+    uint32_t cpu_idx = SMP::get_lapic_id();
+    syslog::kprintf("[cpu0_main] lapic_id=%u\n", cpu_idx);
 
     vfsInsertFile<char>("/dev/kb0/raw",   64, vfsFileFlag_Stream);
     vfsInsertFile<char>("/dev/kb0/event", 64, vfsFileFlag_Stream);
@@ -142,20 +115,56 @@ void _start()
     vfsInsertFile<char>("/dev/stdout",    1024, vfsFileFlag_Stream);
     vfsInsertDirectory("/dev/tty0/");
 
-	asm volatile ("sti");
+    // hwDriverInterface *hwDrivers[] = {
+    //     new hwdi_PS2Mouse(),
+    //     new hwdi_PS2Keyboard(),
+    //     new hwdi_PIT(5)
+    // };
+
+    mouse_init();
+    PIT::init();
+    PIT::set_ms(5);
+    GDT::load();
+    GDT::flush();
+    kernel::IDT_load();
+    kernel::onInterrupt(INT_GENERAL_PROTECTION_FAULT,  genfault_handler);
+    kernel::onInterrupt(INT_PAGE_FAULT,                pagefault_handler);
+    kernel::onInterrupt(INT_BAD_FILE,                  badfile_handler);
+    kernel::onInterrupt(INT_OUT_OF_MEMORY,             oom_handler);
+    kernel::onInterrupt(INT_KTHREAD_START,             kthread::start_handler);
+    kernel::onInterrupt(INT_KTHREAD_YIELD,             kthread::schedule);
+    kernel::onInterrupt(INT_PANIC,                     kpanic_handler);
+    kernel::onInterrupt(INT_SYSCALL,                   idk::syscall_handler);
+    kernel::registerIRQ(0,                             pit_irq);
+    kernel::registerIRQ(1,                             kdriver::ps2_kb::irq_handler);
+    kernel::registerIRQ(12,                            kdriver::ps2_mouse::irq_handler);
+
+    PIC::unmask(0);
+    PIC::unmask(1);
+    PIC::unmask(2);
+    PIC::unmask(12);
 
     libc_init();
     libcpp::init();
 
-    // for (size_t i=0; i<req.modules->module_count; i++)
+    // for (auto *hwd: hwDrivers)
     // {
-    //     auto *F = reqs.modules->modules[i];
-    //     vfsInsertFile(F->path, F->address, F->size);
+    //     hwd->loadIrqHandler();
     // }
+	asm volatile ("sti");
+
+    // std::vector<kthread*> threads;
+    // for (auto *hwd: hwDrivers)
+    // {
+    //     if (!hwd->entry)
+    //         continue;
+    //     threads.push_back(new kthread(hwd->name, hwd->entry, nullptr));
+    // }
+    // threads.push_back(new kthread("SDE", sde_main, nullptr));
+    // threads.push_back(new kthread("KShell", kshell_main, nullptr));
 
     kthread t0("ps2_mouse", kdriver::ps2_mouse::driver_main, nullptr);
     kthread t1("ps2_kb", kdriver::ps2_kb::driver_main, nullptr);
-    // kthread t2("kvideo", kvideo_blit_main, nullptr);
     kthread t3("SDE", sde_main, nullptr);
     kthread t4("KShell", kshell_main, nullptr);
     kthread::start();
@@ -164,8 +173,68 @@ void _start()
     {
         asm volatile ("hlt");
     }
+}
 
-    kernel_hcf();
+
+
+
+static void SMP_processor_init( limine_mp_info *limineInfo )
+{
+    uint32_t idx = limineInfo->lapic_id;
+    kernel::CPU::enableSSE(idx);
+    syslog::kprintf("[SMP_processor_init] lapic_id=%u\n", idx);
+    // smp_info[idx].start();
+
+    switch (idx)
+    {
+        default:
+        case 0: return;
+        case 1: gx_main(); return;
+        case 2: break;
+        case 3: break;
+    }
+
+    while (true) { asm volatile ("cli; hlt"); }
+}
+
+
+
+extern "C"
+void _start()
+{
+    using namespace idk;
+    asm volatile("cli");
+
+    uint32_t boot_lapic = SMP::get_lapic_id();
+    kernel::CPU::enableSSE(boot_lapic);
+
+    idk::serial_init();
+    early_init();
+    call_ctors();
+    late_init();
+
+    syslog log("_start");
+    log("boot_lapic:  %u\n", boot_lapic);
+
+    for (size_t i=0; i<limine_res.mp->cpu_count; i++)
+    {
+        auto *info = limine_res.mp->cpus[i];
+
+        syslog lg("CPU %d", i);
+        lg("processor_id: %u", info->processor_id);
+        lg("lapic_id:     %u", info->lapic_id);
+        lg("goto_address: 0x%lx", info->goto_address);
+        info->extra_argument = (uint64_t)i;
+    
+        if (info->lapic_id != boot_lapic)
+        {
+            __atomic_store_n(&(info->goto_address), &SMP_processor_init, __ATOMIC_SEQ_CST);
+        }
+    }
+
+    cpu0_main();
+
+    while (true) { asm volatile ("cli; hlt"); }
 }
 
 
@@ -186,7 +255,7 @@ void stacktrace( kstackframe *frame )
 void pagefault_handler( kstackframe *frame )
 {
     syslog log("Exception PAGE_FAULT");
-    log("thread %d (%s)", kthread::m_curr->tid, kthread::m_curr->name);
+    // log("thread %d (%s)", kthread::m_curr->tid, kthread::m_curr->name);
 
     log("rip:   0x%lx", frame->iret_rip);
     log("rsp:   0x%lx", frame->iret_rsp);

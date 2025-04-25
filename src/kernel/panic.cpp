@@ -1,8 +1,19 @@
 #include "panic.hpp"
-#include <kernel/log.hpp>
-#include <kernel.h>
 #include "kvideo/kvideo.hpp"
+// #include "kvideo/font.hpp"
+#include <kernel/log.hpp>
+#include <kernel/vfs.hpp>
+#include <kernel.h>
 #include <kstackframe.h>
+
+
+// static idk::FontBuffer *kpanic_font;
+
+// void kpanic_init()
+// {
+//     auto *file = vfsFindFile("/font/cutive-w12hf18.bmp");
+//     kpanic_font = new idk::FontBuffer((BMP_header*)(file->addr));
+// }
 
 
 void kpanic_handler( kstackframe *frame )

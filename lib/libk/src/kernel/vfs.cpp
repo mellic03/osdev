@@ -11,7 +11,7 @@
 // static char m_buf1[128];
 vfsDirEntry *vfsEntry::rootdir = new vfsDirEntry(nullptr, "R:");
 // static vfsDirEntry *m_root = new vfsDirEntry(m_root, "R");
-static std::mutex vfs_mutex;
+// static std::mutex vfs_mutex;
 
 
 
@@ -23,7 +23,7 @@ static std::mutex vfs_mutex;
 vfsDirEntry*
 vfsInsertDirectory( const char *dpath )
 {
-    auto lock = kthread::yield_guard(kthread::lock_count);
+    // auto lock = kthread::yield_guard(kthread::lock_count);
     VFS_SYSLOG("vfsInsertDirectory");
     VFS_LOG("dpath:  \"%s\"", dpath);
 
@@ -65,7 +65,7 @@ vfsFindDirectory( const char *pth )
 vfsDirEntry*
 vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 {
-    auto lock = kthread::yield_guard(kthread::lock_count);
+    // auto lock = kthread::yield_guard(kthread::lock_count);
     VFS_SYSLOG("vfsFindDirectory(%s)", dpath);
 
     if ((strlen(dpath) == 1) && (dpath[0] == '/'))
@@ -120,7 +120,7 @@ vfsFindDirectory( vfsDirEntry *cwd, const char *dpath )
 vfsFileEntry*
 vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 {
-    auto lock = kthread::yield_guard(kthread::lock_count);
+    // auto lock = kthread::yield_guard(kthread::lock_count);
     VFS_SYSLOG("vfsInsertFile");
     VFS_LOG("fpath:  \"%s\"", fpath);
 
@@ -152,7 +152,7 @@ vfsInsertFile( const char *fpath, void *addr, size_t size, uint32_t flags )
 vfsFileEntry*
 vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 {
-    kthread::yield_guard lock(kthread::lock_count);
+    // kthread::yield_guard lock(kthread::lock_count);
     VFS_SYSLOG("vfsFindFile(%s)", fpath);
 
     if (fpath[0] == '/')
@@ -180,7 +180,7 @@ vfsFindFile( vfsDirEntry *cwd, const char *fpath )
 vfsFileEntry*
 vfsFindFile( const char *fname )
 {
-    kthread::yield_guard lock(kthread::lock_count);
+    // kthread::yield_guard lock(kthread::lock_count);
     VFS_SYSLOG("vfsFindFile(%s)", fname);
     return vfsFindFile(vfsEntry::rootdir, fname);
 }

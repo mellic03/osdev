@@ -3,16 +3,13 @@
 #include "../driver/pic.hpp"
 #include "../cpu/gdt.hpp"
 
-using namespace idk;
+// using namespace idk;
 static constexpr size_t NUM_INTERRUPTS = 100;
 using isr_type = void (*)(kstackframe*);
 
 idt_entry_t  idt[256] __attribute__((aligned(0x10))) ; 
 idtr_t       idtr;
 isr_type     usr_table[NUM_INTERRUPTS];
-
-static constexpr uint8_t IRQ_MASTER_IDX = 32;
-static constexpr uint8_t IRQ_SLAVE_IDX  = 40;
 
 
 
@@ -25,27 +22,17 @@ extern "C"
 extern "C"
 void __isr_dispatch( kstackframe *frame )
 {
-    // syslog log("__interrupt_dispatch");
-    // log("vcode: %u", frame->vcode);
-
+    using namespace kernel;
     uint32_t vcode = frame->vcode;
-
-    if (vcode > NUM_INTERRUPTS)
-    {
-        // log("vcode > NUM_INTERRUPTS");
-    }
 
     if (usr_table[vcode])
     {
         usr_table[vcode](frame);
     }
 
-    if (IRQ_MASTER_IDX <= vcode && vcode <= IRQ_SLAVE_IDX+12)
+    if (IRQ_MASTER <= vcode && vcode <= IRQ_SLAVE+12)
     {
-        if (usr_table[vcode] == nullptr)
-        {
-            PIC::sendEOI(vcode);
-        }
+        PIC::sendEOI(vcode);
     }
 
 }
@@ -72,11 +59,11 @@ void idt_set_descriptor( uint8_t idx, void *isr, uint8_t flags )
 #define INTERRUPT_GATE 0x8E
 #define TRAP_GATE 0x8F
 
-void idk::IDT_load()
+void kernel::IDT_load()
 {
-    syslog log("idk::IDT_load");
+    syslog log("kernel::IDT_load");
 
-    PIC::remap(IRQ_MASTER_IDX, IRQ_SLAVE_IDX);
+    PIC::remap(kernel::IRQ_MASTER, kernel::IRQ_SLAVE);
     PIC::disable();
 
     for (size_t i=0; i<NUM_INTERRUPTS; i++)
@@ -99,7 +86,7 @@ void idk::IDT_load()
 }
 
 
-void idk::onInterrupt( uint8_t vcode, void (*callback)(kstackframe*) )
+void kernel::onInterrupt( uint8_t vcode, void (*handler)(kstackframe*) )
 {
     if (vcode > NUM_INTERRUPTS)
     {
@@ -108,7 +95,13 @@ void idk::onInterrupt( uint8_t vcode, void (*callback)(kstackframe*) )
 
     else
     {
-        usr_table[vcode] = callback;
+        usr_table[vcode] = handler;
     }
+}
+
+
+void kernel::registerIRQ( uint8_t irqno, void (*handler)(kstackframe*) )
+{
+    usr_table[kernel::IRQ_MASTER + irqno] = handler;
 }
 

@@ -7,38 +7,38 @@ static volatile LIMINE_BASE_REVISION(3);
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_hhdm_request lim_hhdm_req = {
     .id = LIMINE_HHDM_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_executable_address_request lim_addr_req = {
     .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_framebuffer_request lim_fb_req = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_module_request lim_module_req = {
     .id = LIMINE_MODULE_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_memmap_request lim_mmap_req = {
     .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
-    .revision = 0
+    .revision = 3
 };
 
 
@@ -65,13 +65,17 @@ static volatile LIMINE_REQUESTS_END_MARKER;
 //     }
 // }
 
+LimineRes limine_res;
 
-struct LimineRes
+void LimineRes_init()
 {
-    uint64_t                      hhdm;
-    limine_framebuffer_response  *fb;
-    limine_executable_address_response *addr;
-    limine_module_response       *modules;
-    limine_memmap_response       *mmaps;
-    limine_mp_response           *mp;
-};
+    limine_res = {
+        .hhdm    = lim_hhdm_req.response->offset,
+        .fb      = lim_fb_req.response,
+        .addr    = lim_addr_req.response,
+        .modules = lim_module_req.response,
+        .mmaps   = lim_mmap_req.response,
+        .mp      = lim_mp_req.response
+    };
+}
+

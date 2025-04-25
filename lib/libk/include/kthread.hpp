@@ -7,18 +7,46 @@
 #include <kstackframe.h>
 
 
+struct kPCB;
+struct kTCB;
+class  kthread;
+
+
+// namespace kernel
+// {
+//     kthread *this_thread();
+// }
+
+
+
+struct kTCB
+{
+    uint64_t tid;
+    uint64_t rsp;
+    uint64_t rip;
+    uint64_t status;
+
+    struct {
+        uint64_t r11, r12, r13, r14, r15;
+        uint64_t rax, rbx, rcx, rdx;
+        uint64_t rdi, rsi, rbp;
+    } registers;
+
+    kTCB *next;
+
+} __attribute__((packed));
+
+
+
+
 enum kproc_status: uint8_t
 {
     KPROC_DEAD = 0,
     KPROC_READY,
+    KPROC_SLEEPING,
     KPROC_RUNNING
 };
 
-
-struct kthread_frame
-{
-    uint64_t rip, rsp, r11, r12, r13, r14, r15, rax, rbx, rcx, rdx, rdi, rsi, rbp;
-};
 
 
 
@@ -40,7 +68,8 @@ public:
     uint8_t *stack;
     kstackframe frame;
     kthread *next;
-    uint64_t lastTimeAwake;
+    uint64_t timeToWake;
+    uint64_t timer;
 
     kthread( const char thread_name[], void (*)(void*), void *arg );
     ~kthread();
@@ -49,43 +78,17 @@ public:
     static void sleep( uint64_t ms );
     static void yield();
     static void exit();    
-    static void wrapper( void (*)(void*), void* );
-
+    static size_t this_tid();
+    
     static void start_handler( kstackframe* );
     static void schedule( kstackframe* );
-    static size_t this_tid();
+    static void wrapper( void (*)(void*), void* );
 
     
 public:
     static std::mutex global_lock;
     inline static std::atomic_int lock_count = 0;
 
-    // struct lock_thing
-    // {
-    //     lock_thing( std::atomic_int& );
-    //     ~lock_thing();
-    // };
-
-    // [[nodiscard]]
-    // static lock_thing yield_guard();
-
-    // struct yield_guard
-    // {
-    //     inline
-    //     yield_guard()
-    //     {
-    //         kthread::lock_count++;
-    //         // syslog::kprintf("[yield_guard] %d\n", kthread::lock_count.add_fetch(1));
-    //     };
-        
-    //     inline
-    //     ~yield_guard()
-    //     {
-    //         kthread::lock_count--;
-    //         // syslog::kprintf("[yield_guard] %d\n", kthread::lock_count.sub_fetch(1));
-    //     };
-        
-    // };
 
     class yield_guard
     {

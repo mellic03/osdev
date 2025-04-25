@@ -1,6 +1,8 @@
 #include "sde.hpp"
-#include "frame_tty.hpp"
+#include "texture.hpp"
 #include "../driver/mouse.hpp"
+#include "../gx/gx.hpp"
+#include "../kvideo/font.hpp"
 
 #include <kthread.hpp>
 #include <kmalloc.h>
@@ -9,126 +11,144 @@
 #include <algorithm>
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
-#include <ipc.hpp>
+
+
+sde::Frame     *sde::root;
+sde::Frame     *sde::focus;
+
+sde::MouseState sde::mouse;
+ivec2          &sde::mpos = sde::mouse.pos;
+int            &sde::mx   = sde::mpos.x;
+int            &sde::my   = sde::mpos.y;
+
+sde::Font      *sde::sysfont = nullptr;
+vec4            sde::sysfont_tint = vec4(1.0f);
+
+static void findFocus( sde::Frame* );
+static bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p );
+
+
+static void onLMousePress()
+{
+    syslog::kprintf("[onLMousePress]\n");
+    auto *&focus  = sde::focus;
+
+    if (focus)
+    {
+        if (!rect_point_overlap(focus->m_wcorner, focus->m_span, sde::mpos))
+            focus = nullptr;
+
+        // else if (gxDepthSample(sde::mx, sde::my) >= 0.995f)
+        //     sde::focus = nullptr;
+
+        else if (sde::focus && sde::focus->_onLeftPress)
+            sde::focus->_onLeftPress(sde::focus);
+    }
+
+    sde::mouse.ldown = true;
+    sde::mouse.lup   = false;
+}
+
+static void onLMouseRelease()
+{
+    syslog::kprintf("[onLMouseRelease]\n");
+    sde::mouse.ldown = false;
+    sde::mouse.lup   = true;
+}
 
 
 
-static sde::WindowContext *m_current = nullptr;
-static std::vector<sde::WindowContext*> m_contexts;
+void mouse_stuff()
+{
+    auto &mpos = hwdi_PS2Mouse::position;
+    mpos.x = std::clamp(mpos.x, 1, kvideo::W-1);
+    mpos.y = std::clamp(mpos.y, 1, kvideo::H-1);
+    sde::mouse = {mpos, hwdi_PS2Mouse::left, hwdi_PS2Mouse::right};
+
+    if (sde::mouse.ldown && !sde::focus)
+    {
+        findFocus(sde::root);
+    }
+
+    static ivec2 mprev = mpos;
+    ivec2 mdelta = mpos - mprev;
+    mprev = mpos;
+
+    if (sde::focus && sde::mouse.ldown)
+    {
+        sde::focus->m_corner += mdelta;
+        mdelta *= 0;
+    }
+}
+
 
 void sde_main( void* )
 {
-    ipcport_open(0x5DEA); // 24042;
+    sde::root    = new sde::Frame(0, 0, kvideo::W, kvideo::H);
+    sde::sysfont = new sde::Font("/font/cutive-w12hf18.bmp");
 
-    // if (res != PORT_OPEN)
-    // {
-    //     kpanic("Ruh roh");
-    // }
+    int wp_w=0, wp_h=0, csr_w=0, csr_h=0;
+    uint32_t wallpaper = sde::TextureLoad<uint8_t>("/img/undertale.bmp", &wp_w, &wp_h);
+    uint32_t cursor    = sde::TextureLoad<uint8_t>("/img/cursor.bmp", &csr_w, &csr_h);
 
-    bool    msg = false;
-    uint8_t pkt = 0xFE;
-    uint64_t qword = 0;
+    hwdi_PS2Mouse::onLeftDown = onLMousePress;
+    hwdi_PS2Mouse::onLeftUp   = onLMouseRelease;
+
+    gxEnable(GX_BLEND);
+    gxEnable(GX_DEPTH_TEST);
 
     while (true)
     {
-        for (auto *ctx: m_contexts)
+        gxClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gxClearDepth(1.0f);
+        gxClear(GX_COLOR_BUFFER_BIT | GX_DEPTH_BUFFER_BIT);
+        gxBlitTexture(wallpaper, {0, 0, wp_w, wp_h, 0.999f});
+    
+        for (auto *win: sde::root->m_children)
         {
-            sde::makeCurrent(ctx);
-            ctx->draw();
+            win->m_depth = 0.99f;
+        
+            if (win == sde::focus)
+                win->m_depth = 0.5f;
+
+            win->draw();
             kthread::yield();
-
-            sde::flushContext(ctx);
-            kthread::yield();
         }
 
-        kvideo::swapBuffers();
-        kthread::yield();
-
-        if (!msg && ipcport_recv(0x5DEA, &qword, 1, 8))
+        for (auto *win: sde::root->m_children)
         {
-            if (qword == 0xDEADBEBE)
-            {
-                syslog::kprintf("[SDE] recieving message: ");
-                msg = true;
-            }
-
-            else if (qword == 0xB00B5) // 721077
-            {
-                auto *ctx = sde::createContext(ivec2(450, 450), ivec2(200, 200));
-                ctx->m_style.fill = true;
-                ctx->m_style.fill_color = vec4(0.85, 0.85, 0.5, 0.9);
-            }
-
-            else
-            {
-                syslog::kprintf("[SDE] recieved packet %u\n", qword);
-            }
-
+            win->update();
         }
 
-        else if (msg && ipcport_recv(0x5DEA, &pkt, 1, 1))
-        {
-            if (pkt == '\0')
-            {
-                syslog::kprintf("\n");
-                msg = false;
-                continue;
-            }
+        mouse_stuff();
+    
+        gxDisable(GX_DEPTH_TEST);
+        gxBlitTexture(cursor, {sde::mouse.pos.x, sde::mouse.pos.y, 2*csr_w, 2*csr_h, 0.01f});
+        gxEnable(GX_DEPTH_TEST);
 
-            else
-            {
-                syslog::kprintf("%c", pkt);
-            }
-
-        }
-
+        gxFlush();
     }
 }
 
 
 
-sde::WindowContext*
-sde::createContext( ivec2 corner, ivec2 span )
+sde::Frame*
+sde::createWindow( ivec2 tl, ivec2 sp )
 {
-    auto *ctx = new sde::WindowContext(corner, span);
-    m_contexts.push_back(ctx);
-
-    char buf[64];
-    memset(buf, 0, sizeof(buf));
-    sprintf(buf, "/conf/sde/ctx-%d", ctx->ID);
-
-    vfsInsertFile<uint8_t>(buf, 4096, vfsFileFlag_None);
-
-    return ctx;
+    auto *win = new sde::Frame(tl.x, tl.y, sp.x, sp.y);
+    sde::root->m_children.push_back(win);
+    return win;
 }
 
 
 void
-sde::flushContext( sde::WindowContext *ctx )
-{
-    auto &src = ctx->rgba;
-    auto &tl  = ctx->m_global;
-    auto &sp  = ctx->m_span;
-    kvideo::blit(tl, ivec2(0, 0), sp, src);
-
-    kmemset<vec4>(ctx->rgba.buf, 0, ctx->W*ctx->H*sizeof(vec4));
-
-    // for (int i=0; i<ctx->H; i++)
-    // {
-        // kmemset<vec4>(src[i], 0, ctx->W);
-        // kthread::yield();
-    // }
-}
-
-
-void
-sde::destroyContext( sde::WindowContext *ctx )
+sde::destroyWindow( sde::Frame *win )
 {
     int idx = -1;
 
-    for (int i=0; i<int(m_contexts.size()); i++)
+    for (int i=0; i<int(sde::root->m_children.size()); i++)
     {
-        if (m_contexts[i] == ctx)
+        if (sde::root->m_children[i] == win)
         {
             idx = i;
             break;
@@ -137,125 +157,71 @@ sde::destroyContext( sde::WindowContext *ctx )
 
     if (idx != -1)
     {
-        m_contexts[idx] = m_contexts.back();
-        m_contexts.back() = ctx;
-        delete ctx;
-        m_contexts.pop_back();
+        sde::root->m_children[idx] = sde::root->m_children.back();
+        sde::root->m_children.pop_back();
+        delete win;
     }
 }
 
 
-sde::WindowContext*
-sde::getCurrent()
-{
-    return m_current;
-}
+// sde::WindowContext*
+// sde::getCurrent()
+// {
+//     return sde_current;
+// }
 
 
-void
-sde::makeCurrent( sde::WindowContext *ctx )
-{
-    m_current = ctx;
-}
+// void
+// sde::makeCurrent( sde::WindowContext *ctx )
+// {
+//     sde_current = ctx;
+// }
 
 
+// void
+// sde::hline( int x0, int x1, int y, const vec4 &color )
+// {
+//     auto *ctx = sde::getCurrent();
+//     auto *tex = gxGetTexture(ctx->rgba);
+//     auto *dst = (vec4*)(tex->data);
+//     int width = tex->w;
 
-bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
-{
-    bool x = p.x == std::clamp(p.x, tl.x, tl.x+sp.x);
-    bool y = p.y == std::clamp(p.y, tl.y, tl.y+sp.y);
-    return x && y;
-}
+//     if (y < 0 || y >= ctx->H)
+//     {
+//         return;
+//     }
 
+//     x0 = std::max(x0, 0);
+//     x1 = std::min(x1, ctx->W-1);
 
-
-
-void
-sde::hline( int x0, int x1, int y, const vec4 &color )
-{
-    auto *ctx = sde::getCurrent();
-    auto &dst = ctx->rgba;
-
-    // x0 -= ctx->global.x;
-    // x1 -= ctx->global.x;
-    // y  -= ctx->global.y;
-
-    if (y < 0 || y >= ctx->H)
-    {
-        return;
-    }
-
-    x0 = std::max(x0, 0);
-    x1 = std::min(x1, ctx->W-1);
-
-    for (int x=x0; x<=x1; x++)
-    {
-        dst[y][x] = color;
-    }
-}
-
-void
-sde::vline( int x, int y0, int y1, const vec4 &color )
-{
-    auto *ctx = sde::getCurrent();
-    auto &dst = ctx->rgba;
-
-    // x  -= ctx->global.x;
-    // y0 -= ctx->global.y;
-    // y1 -= ctx->global.y;
-
-    if (x < 0 || x >= ctx->W)
-    {
-        return;
-    }
-
-    y0 = std::max(y0, 0);
-    y1 = std::min(y1, ctx->H-1);
-
-    for (int y=y0; y<=y1; y++)
-    {
-        dst[y][x] = color;
-    }
-}
-
-void
-sde::rectOutline( ivec2 tl, ivec2 sp, const vec4 &color )
-{
-    int x0 = tl.x;
-    int x1 = tl.x + sp.x;
-    int y0 = tl.y;
-    int y1 = tl.y + sp.y;
-
-    hline(x0, x1, y0, color);
-    hline(x0, x1, y1, color);
-    vline(x0, y0, y1, color);
-    vline(x1, y0, y1, color);
-}
+//     for (int x=x0; x<=x1; x++)
+//     {
+//         dst[width*y + x] = color;
+//     }
+// }
 
 
-void
-sde::rect( ivec2 tl, ivec2 sp, const vec4 &color )
-{
-    auto *ctx = sde::getCurrent();
-    auto &dst = ctx->rgba;
+// void
+// sde::vline( int x, int y0, int y1, const vec4 &color )
+// {
+//     auto *ctx = sde::getCurrent();
+//     auto *tex = gxGetTexture(ctx->rgba);
+//     auto *dst = (vec4*)(tex->data);
+//     int width = tex->w;
 
-    int x0 = std::max(tl.x, 0);
-    int x1 = std::min(tl.x+sp.x, ctx->W);
-    int y0 = std::max(tl.y, 0);
-    int y1 = std::min(tl.y+sp.y, ctx->H);
+//     if (x < 0 || x >= ctx->W)
+//     {
+//         return;
+//     }
 
-    for (int y=y0; y<y1; y++)
-    {
-        for (int x=x0; x<x1; x++)
-        {
-            dst[y][x] = color;
-        }
-        kthread::yield();
-    }
+//     y0 = std::max(y0, 0);
+//     y1 = std::min(y1, ctx->H-1);
 
-    kthread::yield();
-}
-
+//     for (int y=y0; y<=y1; y++)
+//     {
+//         dst[width*y + x] = color;
+//     }
+// }
 
 
 
@@ -278,50 +244,60 @@ vec4 unpack_vec4( uint32_t src )
 
 
 
-static int blend_mode = 1;
 
-void
-sde::blendMode( int mode )
+void sde::sysfont_putchar( char ch, int x, int y, float z )
 {
-    syslog log("sde::blendMode");
-    log("blend_mode: %d", mode);
-    blend_mode = mode;
+    ivec2 span   = sysfont->getGlyphExtents();
+    ivec2 corner = sysfont->getGlyphCorner(ch);
+
+    if (corner.x < 0)
+    {
+        return;
+    }
+  
+    gxBlitTexture(
+        sysfont->m_tex,
+        {x, y, span.x, span.y, z},
+        {corner.x, corner.y, span.x, span.y}
+    );
 }
 
 
-void
-sde::blit( ivec2 tl0, ivec2 tl1, ivec2 sp, const kframebuffer<vec4> &src )
+
+
+
+
+static bool rect_point_overlap( vec2 tl, vec2 sp, vec2 p )
 {
-    auto *ctx = sde::getCurrent();
-    auto &dst = ctx->rgba;
-
-    int xmin = std::max(tl0.x, 0);
-    int xmax = std::min(tl0.x+sp.x, ctx->W);
-    int ymin = std::max(tl0.y, 0);
-    int ymax = std::min(tl0.y+sp.y, ctx->H);
-
-    if (blend_mode == 0)
-    {
-        for (int y=ymin, sy=tl1.y; y<ymax; y++, sy++)
-        {
-            for (int x=xmin, sx=tl1.x; x<xmax; x++, sx++)
-            {
-                dst[y][x] = src[sy][sx];
-            }
-        }
-    }
-
-    else if (blend_mode == 1)
-    {
-        for (int y=ymin, sy=tl1.y; y<ymax; y++, sy++)
-        {
-            for (int x=xmin, sx=tl1.x; x<xmax; x++, sx++)
-            {
-                float a = src[sy][sx].a;
-                dst[y][x] = (1.0f - a)*dst[y][x] + a*src[sy][sx];
-            }
-        }
-    }
-
+    bool x = (tl.x <= p.x) && (p.x <= tl.x + sp.x);
+    bool y = (tl.y <= p.y) && (p.y <= tl.y + sp.y);
+    return x && y; 
 }
 
+
+static void findFocus( sde::Frame *curr )
+{
+    static float zNearest = 1.0f;
+    if (curr == sde::root)
+    {
+        zNearest = 1.0f;
+    }
+
+    else
+    {
+        auto  &mouse   = sde::mouse;
+        bool  overlap  = rect_point_overlap(curr->m_wcorner, curr->m_span, vec2(mouse.pos));
+        float zCurrent = gxDepthSample(mouse.pos.x, mouse.pos.y);
+
+        if (overlap && (zCurrent < zNearest))
+        {
+            zNearest = zCurrent;
+            sde::focus = curr;
+        }
+    }
+
+    for (auto *F: curr->m_children)
+    {
+        findFocus(F);
+    }
+}

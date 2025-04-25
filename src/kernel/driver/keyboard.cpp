@@ -3,8 +3,9 @@
 #endif
 
 #include "keyboard.hpp"
-#include <kernel/ioport.hpp>
+#include "../interrupt/interrupt.hpp"
 #include "pic.hpp"
+#include <kernel/ioport.hpp>
 #include <kernel/vfs.hpp>
 #include <kernel/log.hpp>
 
@@ -34,8 +35,6 @@ kdriver::ps2_kb::irq_handler( kstackframe* )
         rawfh->stream.write(&code, 1);
     else
         syslog::kprintf("[ps2_kb::irq_handler] REEEEEE\n");
-
-    PIC::sendEOI(1);
 }
 
 
@@ -236,4 +235,29 @@ char scode_getchar( uint8_t code )
         case DOWN_FORWARDSLASH:     return '/';
     }
 }
+
+
+
+
+
+
+hwdi_PS2Keyboard::hwdi_PS2Keyboard()
+:   hwDriverInterface("PS2 Keyboard")
+{
+    this->irqno   = 1;
+    this->handler = kdriver::ps2_kb::irq_handler;
+    this->entry   = kdriver::ps2_kb::driver_main;
+}
+
+
+void
+hwdi_PS2Keyboard::loadIrqHandler()
+{
+    // asm volatile ("cli");
+    kernel::registerIRQ(this->irqno, this->handler);
+    PIC::unmask(this->irqno);
+    // asm volatile ("sti");
+}
+
+
 

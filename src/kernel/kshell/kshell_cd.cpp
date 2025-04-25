@@ -2,8 +2,6 @@
 #include <kstring.h>
 #include <string.h>
 using namespace KShell;
-extern kTTY *kshell_tty;
-
 
 
 // vfsDirEntry *kshell_getdir( vfsDirEntry *cwd, char *name )
@@ -19,7 +17,7 @@ extern kTTY *kshell_tty;
 // }
 
 
-char *kshell_cd( char *dst, int argc, char **argv )
+char *kshell_cd( char *dst, int argc, char argv[16][32]  )
 {
     syslog log("kshell_cd");
 
@@ -27,16 +25,20 @@ char *kshell_cd( char *dst, int argc, char **argv )
 
     if (argc == 1)
     {
-        dst = kssprintln(dst, log, "cd: no arguments");
-        return dst;
+        return kssprintln(dst, log, "cd: no arguments");
     }
 
     vfsDirEntry *dir = vfsFindDirectory(cwd, argv[1]);
 
     if (dir)
+    {
         cwd = dir;
+    }
+
     else
+    {
         dst = kssprintln(dst, log, "cd: could not find directory \"%s\"", argv[1]);
+    }
 
     return dst;
 }

@@ -9,7 +9,7 @@
 // static uint64_t exec_args[16];
 
 
-// char *kshell_exec( char *dst, int argc, char **argv )
+// char *kshell_exec( char *dst, int argc, char argv[16][32]  )
 // {
 //     auto &cwd = kshell_tty->getCWD();
 

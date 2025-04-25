@@ -114,7 +114,7 @@
 
 //         if (strncmp(file->path, "/font", 5) == 0)
 //         {
-//             auto *header = (ck_BMP_header*)file->address;
+//             auto *header = (BMP_header*)file->address;
 //             m_fonts.push_back(FontBuffer(file->string, header));
 //         }
 

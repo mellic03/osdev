@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# qemu-img create -f qcow2 ./output/sysdisk.img 16G
+qemu-img create -f qcow2 ./output/sysdisk.img 16G
 
 qemu-system-x86_64 \
     -enable-kvm \
     -m 4G \
     -smp 4 \
+    -hda ./output/sysdisk.img \
     -cdrom ./output/idkernel.iso \
-    -serial stdio
-    # -vga qxl \
+    -serial stdio \
     # -device virtio-vga,id=display0 \
     # -device virtio-vga,id=display1 \
     # -spice port=5900,disable-ticketing=on

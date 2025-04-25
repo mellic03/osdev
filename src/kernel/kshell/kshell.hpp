@@ -4,7 +4,7 @@
 #include <kernel/log.hpp>
 #include "../tty.hpp"
 
-
+extern kTTY *kshell_tty;
 void kshell_main( void *arg );
 
 
@@ -13,15 +13,16 @@ namespace KShell
     static constexpr int MAX_ARG_COUNT  = 16;
     static constexpr int MAX_ARG_LENGTH = 32;
 
-    extern int kshell_indent;
-    void pushIndent();
-    void popIndent();
+
+    // extern int kshell_indent;
+    // void pushIndent();
+    // void popIndent();
 
     template <typename... Args>
     char *kssprintln( char *dst, const char *fmt, Args... args )
     {
-        for (int i=0; i<KShell::kshell_indent; i++)
-            dst += sprintf(dst, " ");
+        // for (int i=0; i<KShell::kshell_indent; i++)
+            // dst += sprintf(dst, " ");
         dst += sprintf(dst, fmt, args...);
         dst += sprintf(dst, "\n");
         return dst;
@@ -30,8 +31,8 @@ namespace KShell
     template <typename... Args>
     char *kssprintln( char *dst, syslog &log, const char *fmt, Args... args )
     {
-        for (int i=0; i<KShell::kshell_indent; i++)
-            dst += sprintf(dst, " ");
+        // for (int i=0; i<KShell::kshell_indent; i++)
+            // dst += sprintf(dst, " ");
 
         dst += sprintf(dst, fmt, args...);
         dst += sprintf(dst, "\n");
@@ -42,10 +43,17 @@ namespace KShell
     }
 
     template <typename... Args>
+    char *kssprint( char *dst, const char *fmt, Args... args )
+    {
+        dst += sprintf(dst, fmt, args...);
+        return dst;
+    }
+
+    template <typename... Args>
     char *kssprint( char *dst, syslog &log, const char *fmt, Args... args )
     {
-        for (int i=0; i<KShell::kshell_indent; i++)
-            dst += sprintf(dst, " ");
+        // for (int i=0; i<KShell::kshell_indent; i++)
+            // dst += sprintf(dst, " ");
 
         dst += sprintf(dst, fmt, args...);
         log.print(fmt, args...);

@@ -2,7 +2,7 @@
     #define __is_kernel
 #endif
 
-#include "boot/requests.cpp"
+#include "boot/boot.hpp"
 #include "cpu/cpu.hpp"
 #include "cpu/smp.hpp"
 #include "kvideo/kvideo.hpp"
@@ -14,44 +14,29 @@
 #include <kernel/log.hpp>
 #include <kernel/vfs.hpp>
 
-LimineRes reqs;
 
 using  mmap_type = struct { uintptr_t base; size_t size; };
 PMM::MemMap pmm_mmaps[32];
 size_t      num_mmaps;
-bool        processor_enabled[32];
-idk::CPU    processor_states[32];
 
-
+extern void LimineRes_init();
 static void load_mmaps();
 
 
 void early_init()
 {
     syslog log("early_init");
-
-    reqs = {
-        .hhdm    = lim_hhdm_req.response->offset,
-        .fb      = lim_fb_req.response,
-        .addr    = lim_addr_req.response,
-        .modules = lim_module_req.response,
-        .mmaps   = lim_mmap_req.response,
-        .mp      = lim_mp_req.response
-    };
+    LimineRes_init();
 
     for (size_t i=0; i<32; i++)
     {
-        pmm_mmaps[i] = { 0, 0 };
-        processor_enabled[i] = false;
+        pmm_mmaps[i] = {0, 0};
     }
-    processor_states[0].init();
 
     load_mmaps();
-    PMM::init(pmm_mmaps, num_mmaps, reqs.hhdm);
+    PMM::init(pmm_mmaps, num_mmaps, limine_res.hhdm);
     VMM::init();
-
     kmalloc_init(pmm_mmaps[0].base + PMM::hhdm, pmm_mmaps[0].size);
-
 }
 
 
@@ -59,15 +44,14 @@ void early_init()
 void late_init()
 {
     syslog log("late_init");
-    SMP::init(reqs.mp);
-    kvideo::init((uintptr_t)(reqs.fb));
+    kvideo::init((uintptr_t)(limine_res.fb));
 
-    for (size_t i=0; i<reqs.modules->module_count; i++)
+    for (size_t i=0; i<limine_res.modules->module_count; i++)
     {
-        auto *F = reqs.modules->modules[i];
+        auto *F = limine_res.modules->modules[i];
         vfsInsertFile(F->path, F->address, F->size);
     }
-
+    // SMP::init(limine_res.mp);
 }
 
 
@@ -81,9 +65,9 @@ static void load_mmaps()
     PMM::MemMap *top = pmm_mmaps;
     
     // Load usable memmaps
-    for (uint64_t i=0; i<reqs.mmaps->entry_count; i++)
+    for (uint64_t i=0; i<limine_res.mmaps->entry_count; i++)
     {
-        auto *entry = reqs.mmaps->entries[i];
+        auto *entry = limine_res.mmaps->entries[i];
         if (entry->type == LIMINE_MEMMAP_USABLE)
         {
             *(top++) = { entry->base, entry->length };

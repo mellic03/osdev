@@ -7,13 +7,38 @@
 /*
     http://www.daubnet.com/en/file-format-bmp
 */
-struct ck_BMP_infoheader
+
+
+
+enum BI_: uint32_t
+{
+    BI_RGB       = 0,  /* No compression - straight BGR data */
+    BI_RLE8      = 1,  /* 8-bit run-length compression */
+    BI_RLE4      = 2,  /* 4-bit run-length compression */
+    BI_BITFIELDS = 3,  /* RGB bitmap with RGB masks */
+};
+
+static inline
+const char *BI_string( uint32_t compression )
+{
+    switch (compression)
+    {
+        default:            return "BI_INVALID";
+        case BI_RGB:        return "BI_RGB";
+        case BI_RLE8:       return "BI_RLE8";
+        case BI_RLE4:       return "BI_RLE4";
+        case BI_BITFIELDS:  return "BI_BITFIELDS";
+    }
+}
+
+
+struct BMP_infoheader
 {
     uint32_t width;
     uint32_t height;
     uint16_t planes;
-    uint16_t bpp;
-    uint32_t compression;
+    uint16_t bpp;           // bits per pixel
+    uint32_t compression;   // 0, 1, 2, 3 --> none, 8bit run length, 4bit run length, mask
     uint32_t imagesize;
 
     // Entire field can be set to 0 --> zero compression
@@ -25,7 +50,8 @@ struct ck_BMP_infoheader
 
 } __attribute__((packed));
 
-struct ck_BMP_header
+
+struct BMP_header
 {
     uint16_t signature;
     uint32_t filesize;
@@ -33,19 +59,38 @@ struct ck_BMP_header
     uint32_t offset; // offset to image data
 
     uint32_t infosize; // should be sizeof(infoheader)
-    ck_BMP_infoheader infoheader;
+    BMP_infoheader infoheader;
 
-    void *data;
-    /*
-        pixels[0]
-        ...
-        pixels[bpp * imagesize]
-    */
+    uint8_t rest[8];
+
 } __attribute__((packed));
+
+
+
+struct BMP_File
+{
+    int w, h, bpp;
+    size_t nbytes;
+    void *data;
+
+    BMP_File( void *addr )
+    {
+        auto *header = (BMP_header*)addr;
+        auto &info   = header->infoheader;
+    
+        this->w      = int(info.width);
+        this->h      = int(info.height);
+        this->bpp    = int(info.bpp);
+        this->nbytes = header->filesize;
+        this->data   = (void*)((uintptr_t)header + header->offset);
+    }
+
+};
+
 
 // void test()
 // {
-//     sizeof(ck_BMP_infoheader);
+//     sizeof(BMP_infoheader);
 // }
 
 

@@ -1,7 +1,6 @@
 #include "kshell.hpp"
 #include <kstring.h>
 using namespace KShell;
-extern kTTY *kshell_tty;
 
 
 extern vfsDirEntry *kshell_getdir( vfsDirEntry*, char* );
@@ -30,12 +29,17 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
 {
     if (depth >= max_depth)
         return dst;
-    KShell::pushIndent();
+
+    static int tabs = 1;
+    tabs++;
+    // KShell::pushIndent();
 
     for (auto *E: dir->children)
     {
         if (E->is_dir())
         {
+            for (int i=0; i<tabs; i++)
+                dst = kssprint(dst, log, "\t");
             dst = kssprintln(dst, log, "%s/", E->name);
             dst = internal_ls(dst, log, (vfsDirEntry*)E, depth+1, max_depth);
         }
@@ -45,11 +49,14 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
     {
         if (E->is_file())
         {
-           dst = kssprintln(dst, "%s", E->name);
+            for (int i=0; i<tabs; i++)
+                dst = kssprint(dst, log, "\t");
+            dst = kssprintln(dst, "%s", E->name);
         }
     }
 
-    KShell::popIndent();
+    // KShell::popIndent();
+    tabs--;
     return dst;
 }
 
@@ -57,7 +64,7 @@ internal_ls( char *dst, syslog &log, vfsDirEntry *dir, int depth, int max_depth 
 #include <ipc.hpp>
 
 
-char *kshell_ls( char *dst, int argc, char **argv )
+char *kshell_ls( char *dst, int argc, char argv[16][32]  )
 {
     syslog log("kshell_ls");
     auto &cwd = kshell_tty->getCWD();

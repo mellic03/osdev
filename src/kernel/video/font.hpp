@@ -34,8 +34,8 @@
 //     const char *name;
 
 //     FontBuffer();
-//     FontBuffer( const char *filename, ck_BMP_header* );
-//     // void init( const char *filename, ck_BMP_header* );
+//     FontBuffer( const char *filename, BMP_header* );
+//     // void init( const char *filename, BMP_header* );
 
 //     idk::Bounds *getGlyph( char c );
 

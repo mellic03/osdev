@@ -1,7 +1,8 @@
 #pragma once
 
 #include "frame.hpp"
-#include "../kvideo/font.hpp"
+#include "font.hpp"
+// #include "../kvideo/font.hpp"
 #include "../tty.hpp"
 
 namespace sde
@@ -14,16 +15,18 @@ namespace sde
 class sde::TextFrame: public sde::Frame
 {
 protected:
-    const char      *m_text;
-    idk::FontBuffer *m_font;
+    const char *m_text;
+    sde::Font  *m_font;
     ivec2 text_dst, text_spn;
 
     void _reset();
+    void _next_col();
+    void _next_row();
     void _putchar( char ch, bool move = true );
     void _putstr( const char* );
 
 public:
-    TextFrame( const char *text, idk::FontBuffer*, ivec2 tl, ivec2 sp );
+    TextFrame( int x, int y, int w, int h, const char *text, sde::Font* );
     virtual void draw() override;
 
 };
@@ -37,7 +40,7 @@ private:
     kTTY *m_tty;
 
 public:
-    TerminalFrame( kTTY *tty, ivec2 tl=ivec2(0), ivec2 sp=ivec2(100) );
+    TerminalFrame( int x, int y, int w, int h, kTTY *tty );
     virtual void draw() final;
 
 };

@@ -2,38 +2,44 @@
 #include <kfile.h>
 #include <stdio.h>
 #include <kernel/vfs.hpp>
-#include "kvideo/font.hpp"
+#include "sde/font.hpp"
 
 
 struct kTTY
 {
 private:
     vfsDirEntry *cwd;
+    void _putr();
 
 public:
-    char *history;
-    char *htop, *hend;
+    int hlen;
+    int hrow;
+    size_t size;
 
-    char *prompt;
-    char *ptop, *pend;
+    char *history,  *hbase, *htop, *hend;
+    char *prompt,   *pbase, *ptop, *pend;
+    char *response, *rbase, *rtop, *rend;
 
-    idk::FontBuffer *font;
+    sde::Font *font;
     bool running;
 
     kTTY();
-    kTTY( size_t size );
+    kTTY( int history_length );
 
-    void hclear();
-    void pclear();
+    void _clear( char *&top, char *base );
+    void hclear() { _clear(htop, hbase); };
+    void pclear() { _clear(ptop, pbase); };
+    void rclear() { _clear(rtop, rbase); };
     void clear();
 
-    void _putc( char *&top, char *end, char ch );
-    void hputc( char ch ) { _putc(htop, hend, ch); };
-    void pputc( char ch ) { _putc(ptop, pend, ch); };
+    void submit( void (*callback)(kTTY*));
+    void _putc( char *&top, char *base, char *end, char ch );
+    void hputc( char ch ); // { _putc(htop, history, hend, ch); };
+    void pputc( char ch ) { _putc(ptop, prompt, pend, ch); };
 
-    void _puts( char *&top, char *end, const char *str );
-    void hputs( const char *str ) { _puts(htop, hend, str); }
-    void pputs( const char *str ) { _puts(ptop, pend, str); }
+    void _puts( char *&top, char *base, char *end, const char *str );
+    void hputs( const char *str ); // { _puts(htop, history, hend, str); }
+    void pputs( const char *str ) { _puts(ptop, prompt, pend, str); }
 
     template <typename... Args>
     void hsprintf( const char *fmt, Args... args )

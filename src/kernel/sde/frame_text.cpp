@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 
-sde::TextFrame::TextFrame( const char *text, idk::FontBuffer *font, ivec2 tl, ivec2 sp )
-:   Frame(tl, sp),
+sde::TextFrame::TextFrame( int x, int y, int w, int h, const char *text, sde::Font *font )
+:   Frame(x, y, w, h),
     m_text(text),
     m_font(font)
 {
@@ -24,20 +24,44 @@ sde::TextFrame::_reset()
     text_spn = m_font->getGlyphExtents();
 }
 
+void
+sde::TextFrame::_next_col()
+{
+    text_spn = m_font->getGlyphExtents();
+    text_dst.x += text_spn.x;
+    if (text_dst.x > m_span.x)
+        _next_row();
+}
+
+void
+sde::TextFrame::_next_row()
+{
+    text_spn = m_font->getGlyphExtents();
+    text_dst.x  = 0;
+    text_dst.y += text_spn.y;
+}
+
 
 void
 sde::TextFrame::_putchar( char ch, bool move )
 {
+    int    col   = 0;
     ivec2 &dst   = text_dst;
     ivec2 &tspn  = text_spn;
 
-    if (dst.x > m_w || dst.y > m_h)
+    if (dst.y > m_span.y)
     {
         return;
     }
 
+    if (dst.x > m_span.x)
+    {
+        _next_row();
+    }
+
     if (move && (ch == '\n'))
     {
+        col   = 0;
         dst.x = 0;
         dst.y += tspn.y;
         return;
@@ -48,10 +72,11 @@ sde::TextFrame::_putchar( char ch, bool move )
     {
         return;
     }
-    
-    sde::blit(
-        m_global+dst, corner, tspn,
-        kframebuffer<vec4>(m_font->W, m_font->H, (*m_font)[0])
+
+    gxBlitTexture(
+        m_font->m_tex,
+        {m_wcorner.x+dst.x, m_wcorner.y+dst.y, tspn.x, tspn.y, m_depth},
+        {corner.x, corner.y, tspn.x, tspn.y}
     );
 
     if (move == false)
@@ -59,10 +84,12 @@ sde::TextFrame::_putchar( char ch, bool move )
         return;
     }
 
+    col   += 1;
     dst.x += tspn.x;
 
-    if (dst.x > m_w)
+    if (dst.x > m_span.x)
     {
+        col   = 0;
         dst.x = 0;
         dst.y += tspn.y;
     }
@@ -90,8 +117,8 @@ sde::TextFrame::draw()
 
 
 
-sde::TerminalFrame::TerminalFrame( kTTY *tty, ivec2 tl, ivec2 sp )
-:   TextFrame (nullptr, tty->font, tl, sp),
+sde::TerminalFrame::TerminalFrame( int x, int y, int w, int h, kTTY *tty )
+:   TextFrame (x, y, w, h, nullptr, tty->font),
     m_tty     (tty)
 {
 
@@ -102,22 +129,9 @@ void
 sde::TerminalFrame::draw()
 {
     Frame::draw();
-    m_font = m_tty->font;
 
+    m_font = m_tty->font;
     _reset();
     _putstr(m_tty->history);
-    _putstr("[");
-    _putstr(m_tty->getCWD()->name);
-    _putstr("] ");
-
-    char *pbase = m_tty->prompt;
-    char *ptop  = m_tty->ptop;
-
-    for (int i=0; i<ptop-pbase; i++)
-    {
-        _putchar(pbase[i]);
-    }
-    _putchar('_', false);
-    _putstr(ptop);
-
+    _putstr(m_tty->prompt);
 }

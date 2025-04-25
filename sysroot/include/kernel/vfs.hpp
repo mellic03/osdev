@@ -64,6 +64,7 @@ inline const char *vfsFileFlagStr( uint32_t bit )
         case vfsFileFlag_None:       return "vfsFileFlag_None";
         case vfsFileFlag_Virtual:    return "vfsFileFlag_Virtual";
         case vfsFileFlag_Stream:     return "vfsFileFlag_Stream";
+        case vfsFileFlag_Text:       return "vfsFileFlag_Text";
         case vfsFileFlag_Executable: return "vfsFileFlag_Executable";
     }
 };

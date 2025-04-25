@@ -4,7 +4,7 @@
 using namespace KShell;
 
 
-char *kshell_mkdir( char *dst, int argc, char **argv )
+char *kshell_mkdir( char *dst, int argc, char argv[16][32]  )
 {
     syslog log("kshell_mkdir");
     // auto &cwd = kshell_tty->getCWD();

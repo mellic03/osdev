@@ -6,10 +6,24 @@
 
 
 template <typename T>
+T& vec<1, T>::operator[]( size_t )
+{
+    return x;
+}
+
+template <typename T>
+T const& vec<1, T>::operator[]( size_t ) const
+{
+    return x;
+}
+
+
+
+
+
+template <typename T>
 T& vec<2, T>::operator[]( size_t i )
 {
-    // return *(&x + i);
-    // static_assert(i < 2);
     switch (i)
     {
         default: case 0: return x;
@@ -20,18 +34,12 @@ T& vec<2, T>::operator[]( size_t i )
 template <typename T>
 T const& vec<2, T>::operator[]( size_t i ) const
 {
-    // return *(&x + i);
-    // static_assert(i < 2);
     switch (i)
     {
         default: case 0: return x;
                  case 1: return y;
     }
 }
-
-
-
-
 
 
 
@@ -43,7 +51,6 @@ T const& vec<2, T>::operator[]( size_t i ) const
 template <typename T>
 T& vec<3, T>::operator[]( size_t i )
 {
-    // static_assert(i < 3);
     switch (i)
     {
         default: case 0: return x;
@@ -55,7 +62,6 @@ T& vec<3, T>::operator[]( size_t i )
 template <typename T>
 T const& vec<3, T>::operator[]( size_t i ) const
 {
-    // static_assert(i < 3);
     switch (i)
     {
         default: case 0: return x;
@@ -100,7 +106,7 @@ template <typename T> vec<4, T>::vec( T x, const vec<3,T> &yzw )
 template <typename T>
 T& vec<4, T>::operator[]( size_t i )
 {
-    // static_assert(i < 4);
+    // return *(&x + i);
     switch (i)
     {
         default: case 0: return x;
@@ -113,7 +119,7 @@ T& vec<4, T>::operator[]( size_t i )
 template <typename T>
 T const& vec<4, T>::operator[]( size_t i ) const
 {
-    // static_assert(i < 4);
+    // return *(&x + i);
     switch (i)
     {
         default: case 0: return x;

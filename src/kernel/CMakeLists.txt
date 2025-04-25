@@ -3,6 +3,8 @@ file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
 
+    ${CMAKE_CURRENT_SOURCE_DIR}/boot/requests.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/cpu.asm
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu/smp.cpp
@@ -22,6 +24,8 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/memory/*.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/sde/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gx/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gx/command/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/syscall/*.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/video/*.cpp

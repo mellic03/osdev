@@ -6,8 +6,6 @@
 #include <stdint.h>
 
 
-
-
 namespace std
 {
     template <typename T>
@@ -18,6 +16,9 @@ namespace std
 
     template <typename T>
     constexpr const T& clamp( const T &X, const T &lo, const T &hi );
+
+    template <typename T>
+    constexpr void swap( T &A, T &B );
 
 }
 

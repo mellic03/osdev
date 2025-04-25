@@ -29,3 +29,12 @@ std::clamp( const T &X, const T &lo, const T &hi )
 }
 
 
+template <typename T>
+constexpr void
+std::swap( T &A, T &B )
+{
+    T temp = A;
+    A = B;
+    B = temp;
+}
+

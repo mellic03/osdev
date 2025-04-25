@@ -14,39 +14,57 @@ extern "C"
 
 
 void
-idk::CPU::init()
+kernel::CPU::enableSSE( int idx )
 {
-    #ifdef __libk_sse
-        __cpu_enable_SSE();
-        fxsave();
-    #endif
-}
-
-
-
-void
-idk::CPU::fxsave()
-{
-    asm volatile("fxsave %0 " : : "m"(m_fxsave));
+    __cpu_enable_SSE();
+    CPU::fxsave(idx);
 }
 
 
 void
-idk::CPU::fxrstor()
+kernel::CPU::fxsave( int idx )
 {
-    asm volatile("fxrstor %0" : : "m"(m_fxsave));
+    asm volatile("fxsave %0 " : : "m"(CPU::fxdata[idx]));
 }
-
-
-uint64_t
-idk::CPU::getCR3()
-{
-    return cpu_get_cr3();
-}
-
 
 void
-idk::CPU::setCR3( uint64_t value )
+kernel::CPU::fxrstor( int idx )
 {
-    return cpu_set_cr3(value);
+    asm volatile("fxrstor %0 " : : "m"(CPU::fxdata[idx]));
 }
+
+
+// void
+// idk::CPU::static_init()
+// {
+//     // #ifdef __libk_sse
+//     __cpu_enable_SSE();
+//     CPU::static_fxsave();
+//     // #endif
+// }
+
+// void
+// idk::CPU::static_fxsave()
+// {
+//     asm volatile("fxsave %0 " : : "m"(CPU::static_fxdata));
+// }
+
+// void
+// idk::CPU::static_fxrstor()
+// {
+//     asm volatile("fxrstor %0" : : "m"(CPU::static_fxdata));
+// }
+
+
+// uint64_t
+// idk::CPU::getCR3()
+// {
+//     return cpu_get_cr3();
+// }
+
+
+// void
+// idk::CPU::setCR3( uint64_t value )
+// {
+//     return cpu_set_cr3(value);
+// }

@@ -5,10 +5,9 @@
 #include <stdlib.h>
 
 using namespace KShell;
-extern kTTY *kshell_tty;
 
 
-char *kshell_font( char *dst, int argc, char **argv )
+char *kshell_font( char *dst, int argc, char argv[16][32]  )
 {
     auto &cwd = kshell_tty->getCWD();
 
@@ -35,9 +34,12 @@ char *kshell_font( char *dst, int argc, char **argv )
 
     if (file)
     {
-        if (file->other == nullptr)
-            file->other = new idk::FontBuffer((ck_BMP_header*)file->addr);
-        kshell_tty->font = (idk::FontBuffer*)(file->other);
+    //     if (file->other == nullptr)
+    //     {
+    //         kvideo::Texture_rgba8u fontbmp((BMP_header*)(file->addr));
+    //         file->other = new sde::Font(fontbmp);
+    //     }
+    //     kshell_tty->font = (sde::Font*)(file->other);
     }
 
     else

@@ -17,7 +17,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/sysroot/bin")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
-
 include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
 include_directories("${CMAKE_SOURCE_DIR}/external/")
@@ -30,7 +29,7 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/kernel/")
-add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
+# add_subdirectory("${CMAKE_SOURCE_DIR}/src/programs/")
 
 
 add_executable(
@@ -44,24 +43,10 @@ target_compile_definitions(
     -D__is_kernel
 )
 
-target_link_options(
-    ${PROJECT_NAME} PUBLIC
-    -Wl,-m,elf_x86_64
-    -Wl,--build-id=none
-    -static
-    -nostdlib
-    -nodefaultlibs
-    -nostartfiles
-    -zmax-page-size=0x1000
-    -mno-red-zone
-    -mcmodel=large
-    -T${CMAKE_SOURCE_DIR}/src/linker.ld
-)
-
-target_compile_options(
-    ${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=undefined>
-)
+# target_compile_options(
+#     ${PROJECT_NAME} PRIVATE
+#     $<$<COMPILE_LANGUAGE:CXX>:-fsanitize=undefined>
+# )
 
 
 target_link_libraries(

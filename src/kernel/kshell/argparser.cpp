@@ -6,7 +6,7 @@
 using namespace KShell;
 
 
-int kshell_argparser( const char *src, char **argv )
+int kshell_argparser( const char *src, char argv[16][32]  )
 {
     // syslog log("kshell_argparser");
     int argc = 0;

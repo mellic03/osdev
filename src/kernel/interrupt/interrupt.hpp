@@ -28,11 +28,14 @@ struct idtr_t
 
 
 
-namespace idk
+namespace kernel
 {
+	static constexpr uint8_t IRQ_MASTER = 32;
+	static constexpr uint8_t IRQ_SLAVE  = 40;
+	
     void IDT_load();
-    // void ISR_load( uint8_t vcode, handler_type );
-	void onInterrupt( uint8_t vcode, void (*callback)(kstackframe*) );
+	void onInterrupt( uint8_t vcode, void (*handler)(kstackframe*) );
+	void registerIRQ( uint8_t irqno, void (*handler)(kstackframe*) );
 }
 
 
