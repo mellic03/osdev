@@ -49,22 +49,24 @@ vec<N, T> operator op( const vec<N, T> &L, T R )\
     return v;\
 }
 
-
-#define vec_OPERATOR_CONSTRUCT(sz)\
-template <typename U>\
-vec( const vec<sz, U> &R )\
+#define vec_OPERATOR_CONSTRUCT(szA)\
+template <size_t szB, typename U>\
+vec( const vec<szB, U> &R )\
 {\
-    for (size_t i=0; i<sz; i++)     (*this)[i] = T(R[i]);\
+    constexpr size_t szmin = std::min(size_t(szA), size_t(szB));\
+    for (size_t i=0; i<szmin; i++) (*this)[i] = T(R[i]);\
 }
 
 
-#define vec_OPERATOR_ASSIGN(sz)\
-template <typename U>\
-vec operator=( const vec<sz, U> &R )\
+#define vec_OPERATOR_ASSIGN(szA)\
+template <size_t szB, typename U>\
+vec operator=( const vec<szB, U> &R )\
 {\
-    for (size_t i=0; i<sz; i++)     (*this)[i] = T(R[i]);\
+    constexpr size_t szmin = std::min(size_t(szA), size_t(szB));\
+    for (size_t i=0; i<szmin; i++) (*this)[i] = T(R[i]);\
     return *this;\
 }\
+
 
 
 vec_OPERATOR_VEC_VEC(+)
@@ -91,14 +93,15 @@ vec_OPERATOR_VEC_SCALAR(/)
 
 
 
-
 template <typename T>
-struct vec<1, T>
+struct alignas(T) vec<1, T>
 {
+    using value_type = T;
+
     union { T x, r; };
 
     vec(): vec(0) {  };
-    vec( T _x ): vec(x) {  };
+    vec( T _x ): x(_x) {  };
 
     T& operator[]( size_t );
     T const& operator[]( size_t ) const;
@@ -111,13 +114,15 @@ struct vec<1, T>
     vec_OPERATOR_CONSTRUCT(1)
     vec_OPERATOR_ASSIGN(1)
 
-} __attribute__((aligned(sizeof(T))));
+};
 
 
 
 template <typename T>
-struct vec<2, T>
+struct alignas(T) vec<2, T>
 {
+    using value_type = T;
+
     union { T x, r; };
     union { T y, g; };
 
@@ -138,14 +143,16 @@ struct vec<2, T>
     vec_OPERATOR_CONSTRUCT(2)
     vec_OPERATOR_ASSIGN(2)
 
-} __attribute__((aligned(sizeof(T))));
+};
 
 
 
 
 template <typename T>
-struct vec<3, T>
+struct alignas(T) vec<3, T>
 {
+    using value_type = T;
+
     union { T x, r; };
     union { T y, g; };
     union { T z, b; };
@@ -169,12 +176,14 @@ struct vec<3, T>
     vec_OPERATOR_CONSTRUCT(3)
     vec_OPERATOR_ASSIGN(3)
 
-} __attribute__((aligned(sizeof(T))));
+};
 
 
 template <typename T>
-struct vec<4, T>
+struct alignas(T) vec<4, T>
 {
+    using value_type = T;
+
     union { T x, r; };
     union { T y, g; };
     union { T z, b; };
@@ -201,7 +210,7 @@ struct vec<4, T>
     vec_OPERATOR_CONSTRUCT(4)
     vec_OPERATOR_ASSIGN(4)
 
-} __attribute__((aligned(sizeof(T))));
+};
 
 
 

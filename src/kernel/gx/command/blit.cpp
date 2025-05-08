@@ -10,79 +10,90 @@
 #include "../gx_assign.hpp"
 #include "../gx_mix.hpp"
 
+// template <typename dst_type, typename src_type>
+// void gx_blit_loop( const gxDrawCmd& )
+// {
+//     static_assert(false, "Should be unreachable");
+// }
 
-
-template <typename dst_type, typename src_type, bool depth_test, bool alpha_blend>
+template <size_t szA, typename dtype, size_t szB, typename stype, bool, bool>
 void gx_blit_loop( const gxDrawCmd &cmd )
 {
+    // static_assert(std::is_same_v<dst_type, u8vec4>, "rip");
+    // static_assert(std::is_same_v<src_type, u8vec4> | std::is_same_v<src_type, u8vec3>, "rip");
     auto &bcmd = cmd.data.blit;
     // vec4 tint = cmd.conf.tint;
-    float *depth = (float*)(gxGetTexture(cmd.conf.depth)->data);
+    // float *depth = (float*)(gxGetTexture(cmd.conf.depth)->data);
 
     auto *dtex = gxGetTexture(bcmd.dst);
-    auto *dst  = (dst_type*)(dtex->data);
+    auto *dst  = (vec<szA, dtype>*)(dtex->data);
     int   dstw = dtex->w;
     auto &dstrect = bcmd.dstrect;
 
     auto *stex = gxGetTexture(bcmd.src);
-    auto *src  = (src_type*)(stex->data);
+    auto *src  = (vec<szB, stype>*)(stex->data);
     int   srcw = stex->w;
     auto &srcrect = bcmd.srcrect;
 
-    int xmin = std::max(dstrect.x, 0);
-    int xmax = std::min(dstrect.x+dstrect.w, dtex->w);
-    int ymin = std::max(dstrect.y, 0);
-    int ymax = std::min(dstrect.y+dstrect.h, dtex->h);
+    // int xmin = std::max(dstrect.x, 0);
+    // int xmax = std::min(dstrect.x+dstrect.w, dtex->w);
+    // int ymin = std::max(dstrect.y, 0);
+    // int ymax = std::min(dstrect.y+dstrect.h, dtex->h);
 
-    int srcx=0, srcy=0;
-    int dstx=0, dsty=0;
-    int dstidx=0, srcidx=0;
-    float alpha = 0.0f;
+    // int xmin = std::max(dstrect.x, 0);
+    // int xmax = std::min(dstrect.x+dstrect.w, dtex->w-1);
+    // int ymin = std::max(dstrect.y, 0);
+    // int ymax = std::min(dstrect.y+dstrect.h, dtex->h-1);
 
-    int jmax = ymax-ymin;
-    int imax = xmax-xmin;
-    int srcymin = srcrect.y;
-    int srcymax = srcrect.y+srcrect.h;
-    int srcxmin = srcrect.x;
-    int srcxmax = srcrect.x+srcrect.w;
+    // int srcx=0, srcy=0;
+    // int dstx=0, dsty=0;
+    // int dstidx=0, srcidx=0;
+    // float alpha = 0.0f;
 
-    for (int j=0; j<jmax; j++)
+    // int jmax = ymax-ymin;
+    // int imax = xmax-xmin;
+    // int srcymin = srcrect.y;
+    // int srcymax = srcrect.y+srcrect.h;
+    // int srcxmin = srcrect.x;
+    // int srcxmax = srcrect.x+srcrect.w;
+    constexpr bool int_flt = std::is_integral_v<dtype> && std::is_floating_point_v<stype>;
+    constexpr bool flt_int = std::is_floating_point_v<dtype> && std::is_integral_v<stype>;
+
+    vec<szA, dtype> srcColor;
+
+    // for (int dsty=ymin; dsty<ymax; dsty++)
+    for (int i=0; i<dstrect.h; i++)
     {
-        alpha = float(j) / float(jmax);
-        srcy  = int((1.0f-alpha)*srcymin + alpha*srcymax + 0.5f);
-        dsty  = ymin + j;
+        int dst_y = std::clamp(dstrect.y+i, 0, dtex->h-1);
+        int src_y = std::clamp(srcrect.y+i, 0, stex->h-1);
 
-        for (int i=0; i<imax; i++)
+        // for (int dstx=xmin; dstx<xmax; dstx++)
+        for (int j=0; j<dstrect.w; j++)
         {
-            alpha = float(i) / float(imax);
-            srcx  = int((1.0f-alpha)*srcxmin + alpha*srcxmax + 0.5f);
-            dstx  = xmin + i;
+            int dst_x = std::clamp(dstrect.x+j, 0, dtex->w-1);
+            int src_x = std::clamp(srcrect.x+j, 0, stex->w-1);
+    
+            int dstidx = dstw*dst_y + dst_x;
+            int srcidx = srcw*src_y + src_x;
 
-            dstidx = dstw*dsty + dstx;
-            srcidx = srcw*srcy + srcx;
-
-            if constexpr (depth_test == true)
-            {
-                if (depth[dstidx] < dstrect.z)
-                    continue;
-                depth[dstidx] = dstrect.z;
-            }
-
-            auto srcColor = src[srcidx];
-
-            // if constexpr (std::is_same_v<src_type, u8vec4>)
+            // if constexpr (depth_test)
             // {
-            //     vec4 temp;
-            //     gx_assign(temp, srcColor);
-            //     temp *= tint;
-            //     gx_assign(srcColor, temp);
+            //     if (depth[dstidx] < dstrect.z)
+            //         continue;
+            //     depth[dstidx] = dstrect.z;
             // }
 
-            if constexpr (alpha_blend == true)
-                gx_mix(dst[dstidx], srcColor);
+            // // if constexpr (std::is_integral_v<dtype> == std::is_integral_v<stype>)
+            if      constexpr (int_flt)  srcColor = vec<szA, dtype>(255.0f * src[srcidx]);
+            else if constexpr (flt_int)  srcColor = vec<szA, dtype>(src[srcidx]);
+            else                         srcColor = src[srcidx];
 
-            if constexpr (alpha_blend == false)
-                gx_assign(dst[dstidx], srcColor);
+            // srcColor = vec<szA, dtype>(src[srcidx]);
+
+            // if constexpr (alpha_blend && szA==4 && szB==4)
+            //     dst[dstidx] = gx_mix(dst[dstidx], srcColor);
+            // else
+                dst[dstidx] = srcColor;
         }
     }
 }
@@ -90,15 +101,15 @@ void gx_blit_loop( const gxDrawCmd &cmd )
 
 
 
-template <typename dst_type, typename src_type>
+template <size_t szA, typename dtype, size_t szB, typename stype>
 static void blit_xx_yy( const gxDrawCmd &cmd )
 {
     using fn_type = void (*)( const gxDrawCmd& );
     static fn_type table[4] = {
-        gx_blit_loop<dst_type, src_type, false, false>,
-        gx_blit_loop<dst_type, src_type, false, true>,
-        gx_blit_loop<dst_type, src_type, true,  false>,
-        gx_blit_loop<dst_type, src_type, true,  true>
+        gx_blit_loop<szA, dtype, szB, stype, false, false>,
+        gx_blit_loop<szA, dtype, szB, stype, false, true>,
+        gx_blit_loop<szA, dtype, szB, stype, true,  false>,
+        gx_blit_loop<szA, dtype, szB, stype, true,  true>
     };
 
     int idx = 0;
@@ -109,64 +120,67 @@ static void blit_xx_yy( const gxDrawCmd &cmd )
 }
 
 
-static void blit_u8vec3_xx( const gxDrawCmd &cmd )
+// static void blit_u8vec3_xx( const gxDrawCmd &cmd )
+// {
+//     auto &bcmd = cmd.data.blit;
+//     auto *src = gxGetTexture(bcmd.src);
+
+//     switch (src->format)
+//     {
+//         default: kpanic("[blit_u8vec4_xx] invalid src->format"); break;
+//         // case GX_R8:      blit_xx_yy<u8vec3, uint8_t>(cmd); break;
+//         // case GX_RGB8:    blit_xx_yy<u8vec3, u8vec3>(cmd);  break;
+//         case GX_RGBA8:   blit_xx_yy<u8vec3, u8vec4>(cmd);  break;
+//         // case GX_RGBA32F: blit_xx_yy<u8vec3, vec4>(cmd);    break;
+//     }
+// }
+
+template <size_t N, typename dtype>
+static void blit_xx( const gxDrawCmd &cmd )
 {
     auto &bcmd = cmd.data.blit;
     auto *src = gxGetTexture(bcmd.src);
 
     switch (src->format)
     {
-        default: kpanic("[blit_u8vec4_xx] invalid src->format"); break;
-        case GX_R8:      blit_xx_yy<u8vec3, uint8_t>(cmd); break;
-        case GX_RGB8:    blit_xx_yy<u8vec3, u8vec3>(cmd);  break;
-        case GX_RGBA8:   blit_xx_yy<u8vec3, u8vec4>(cmd);  break;
-        case GX_RGBA32F: blit_xx_yy<u8vec3, vec4>(cmd);    break;
-    }
-}
-
-static void blit_u8vec4_xx( const gxDrawCmd &cmd )
-{
-    auto &bcmd = cmd.data.blit;
-    auto *src = gxGetTexture(bcmd.src);
-
-    switch (src->format)
-    {
-        default: kpanic("[blit_u8vec4_xx] invalid src->format"); break;
-        case GX_R8:      blit_xx_yy<u8vec4, uint8_t>(cmd); break;
-        case GX_RGB8:    blit_xx_yy<u8vec4, u8vec3>(cmd);  break;
-        case GX_RGBA8:   blit_xx_yy<u8vec4, u8vec4>(cmd);  break;
-        case GX_RGBA32F: blit_xx_yy<u8vec4, vec4>(cmd);    break;
+        default: syslog::kprintf("RIP: %u\n", src->format); kpanic("[blit_u8vec4_xx] invalid src->format"); break;
+        // case GX_R8:      blit_xx_yy<u8vec4, uint8_t>(cmd); break;
+        case GX_RGB8:    blit_xx_yy<N, dtype, 3, uint8_t>(cmd);  break;
+        case GX_RGBA8:   blit_xx_yy<N, dtype, 4, uint8_t>(cmd);  break;
+        // case GX_RGBA32F: blit_xx_yy<u8vec4, vec4>(cmd);    break;
     }
 }
 
 
-static void blit_vec4_xx( const gxDrawCmd &cmd )
-{
-    auto &bcmd = cmd.data.blit;
-    auto *src  = gxGetTexture(bcmd.src);
+// static void blit_vec4_xx( const gxDrawCmd &cmd )
+// {
+//     auto &bcmd = cmd.data.blit;
+//     auto *src  = gxGetTexture(bcmd.src);
 
-    switch (src->format)
-    {
-        default: kpanic("[blit_vec4_xx] invalid src->format"); break;
-        case GX_R8:      blit_xx_yy<vec4, uint8_t>(cmd); break;
-        case GX_RGB8:    blit_xx_yy<vec4, u8vec3>(cmd);  break;
-        case GX_RGBA8:   blit_xx_yy<vec4, u8vec4>(cmd);  break;
-        case GX_RGBA32F: blit_xx_yy<vec4, vec4>(cmd);    break;
-    }
-}
+//     switch (src->format)
+//     {
+//         default: kpanic("[blit_vec4_xx] invalid src->format"); break;
+//         // case GX_R8:      blit_xx_yy<vec4, uint8_t>(cmd); break;
+//         // case GX_RGB8:    blit_xx_yy<vec4, u8vec3>(cmd);  break;
+//         case GX_RGBA8:   blit_xx_yy<vec4, u8vec4>(cmd);  break;
+//         case GX_RGBA32F: blit_xx_yy<vec4, vec4>(cmd);    break;
+//     }
+// }
 
 
 void gx_ExecCommand_Blit( const gxDrawCmd &cmd )
 {
     auto &bcmd = cmd.data.blit;
     auto *dst = gxGetTexture(bcmd.dst);
+    // auto *src = gxGetTexture(bcmd.src);
+    // syslog log("gx_ExecCommand_Blit: dst=%u, src=%u", dst->format, src->format);
 
     switch (dst->format)
     {
-        default: kpanic("[gx_ExecCommand_Blit] invalid dst->format"); break;
-        case GX_RGB8:    blit_u8vec3_xx(cmd); break;
-        case GX_RGBA8:   blit_u8vec4_xx(cmd); break;
-        case GX_RGBA32F: blit_vec4_xx(cmd);   break;
+        default: kpanic("[gx_ExecCommand_Blit] Invalid dst format"); break;
+        case GX_RGB8:    blit_xx<3, uint8_t>(cmd); break;
+        case GX_RGBA8:   blit_xx<4, uint8_t>(cmd); break;
+        // case GX_RGBA32F: blit_xx<1, float>(cmd);   break;
     }
 
 }

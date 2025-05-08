@@ -1,4 +1,3 @@
-#include <libc.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -27,27 +26,27 @@ FILE *stdout = nullptr;
 // }
 
 #ifdef __is_kernel
-    #include <kernel/vfs.hpp>
     #include <kthread.hpp>
 #endif
-#include <kfstream.hpp>
 
 
 int fflush( FILE *addr )
 {
-    ((kfstream*)addr)->flush();
+    if (!addr) {  };
 
-    #ifdef __is_kernel
-        kthread::yield();
+    // ((kfstream*)addr)->flush();
 
-    #else
-        // ksysc_request req = {
-        //     .type = SYSC_FILE_FLUSH,
-        //     .data = fh
-        // };
-        // libk_syscall(&req);
+    // #ifdef __is_kernel
+    //     kthread::yield();
 
-    #endif
+    // #else
+    //     // ksysc_request req = {
+    //     //     .type = SYSC_FILE_FLUSH,
+    //     //     .data = fh
+    //     // };
+    //     // libk_syscall(&req);
+
+    // #endif
 
 
     return 0;

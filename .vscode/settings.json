@@ -170,7 +170,11 @@
         "slist": "cpp",
         "*.ipp": "cpp",
         "const.h": "c",
-        "sysinfo.h": "c"
+        "sysinfo.h": "c",
+        "unistd_64.h": "c",
+        "scoped_allocator": "cpp",
+        "kscancode.h": "c",
+        "ioport.hpp": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",
@@ -178,8 +182,8 @@
         "${workspaceFolder}/include/",
         "${workspaceFolder}/lib/libc/include/",
         "${workspaceFolder}/lib/libc++/include/",
-        "${workspaceFolder}/lib/libstim/include/",
-        "${workspaceFolder}/lib/libk/include/"
+        "${workspaceFolder}/kernel/include/"
+
     ],
     "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true
 }

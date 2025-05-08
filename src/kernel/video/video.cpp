@@ -7,7 +7,7 @@
 // #include "video.hpp"
 // #include <kernel/log.hpp>
 // #include <kmalloc.h>
-// #include <kmemxx.h>
+// #include <kmemxx.hpp>
 // #include <string.h>
 // #include <algorithm>
 

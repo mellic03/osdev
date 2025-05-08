@@ -1,10 +1,7 @@
-#include <libc.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <kernel/vfs.hpp>
 
 
 
@@ -163,18 +160,20 @@ vprintf( const char *fmt, va_list args )
 
 
 int
-vfprintf( FILE *addr, const char *fmt, va_list args )
+// vfprintf( FILE *addr, const char *fmt, va_list args )
+vfprintf( FILE*, const char*, va_list )
 {
-    auto *stream = &((vfsFileEntry*)addr)->stream;
-    int n = vsprintf((char*)(&stream->m_base[stream->m_write]), fmt, args);
-    stream->m_write = (stream->m_write + n) % stream->m_size;
-    stream->flush();
+    // auto *stream = &((vfsFileEntry*)addr)->stream;
+    // int n = vsprintf((char*)(&stream->m_base[stream->m_write]), fmt, args);
+    // stream->m_write = (stream->m_write + n) % stream->m_size;
+    // stream->flush();
 
-    #ifndef __is_kernel
-        kthread::yield();
-    #endif
+    // #ifndef __is_kernel
+    //     kthread::yield();
+    // #endif
+    // return n;
 
-    return n;
+    return 0;
 }
 
 

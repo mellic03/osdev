@@ -2,11 +2,13 @@
 #include "gxTexture.hpp"
 #include "command/macros.hpp"
 #include <kmalloc.h>
+#include <mutex>
 #include <vector>
 
 
 static std::vector<gxTexture> gx_textures;
 static std::vector<uint32_t>  gx_freelist;
+static std::mutex             gx_mutex;
 
 __attribute__((constructor))
 static void gx_texture_init( void )
@@ -37,6 +39,8 @@ static bool isValidID( uint32_t texid )
 uint32_t
 gxCreateTextureExplicit( uint32_t flags, uint32_t format, void *data, int w, int h )
 {
+    gx_mutex.lock();
+
     uint32_t idx = 0;
 
     if (gx_freelist.empty())
@@ -79,6 +83,8 @@ gxCreateTextureExplicit( uint32_t flags, uint32_t format, void *data, int w, int
         .w      = w,
         .h      = h
     };
+
+    gx_mutex.unlock();
 
     return idx;
 }

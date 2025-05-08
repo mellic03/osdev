@@ -6,60 +6,77 @@
 #include "command.hpp"
 
 #include "../kvideo/kvideo.hpp"
-#include "../boot/boot.hpp"
-#include "../cpu/cpu.hpp"
-#include "../cpu/smp.hpp"
 #include <kernel/clock.hpp>
 #include <kernel/log.hpp>
-#include <kernel/vfs.hpp>
 #include <kmalloc.h>
 #include <kthread.hpp>
-#include <kmemxx.h>
+#include <kmemxx.hpp>
 #include <string.h>
 #include <algorithm>
+#include <atomic>
 #include <type_traits>
 
+
+
+// std::atomic_int gx_flushbarrier;
+// static std::atomic_int gx_entryCount;
 
 static gxDrawCmd  gx_cmdBuf[256];
 static uint8_t    gx_cmdHead = 0;
 static uint8_t    gx_cmdTail = 0;
 static int        gx_cmdSize = 0;
 static std::mutex gx_mutex;
-
-// static gx_Context gx_ctx;
 static uint32_t   gx_renderColor;
-static uint32_t   gx_renderDepth;
 
 #define MUTEX_LOCK(Content)\
-{\
     gx_mutex.lock();\
     Content\
     gx_mutex.unlock();\
-}\
-    
 
-void gx_main()
+
+
+// __attribute__((constructor))
+// static void gx_init()
+// {
+
+//     gx_entryCount.store(0);
+// }
+
+
+void gx_main( void* )
 {
-    uint32_t cpu_idx = SMP::get_lapic_id();
-    syslog::kprintf("[gx_main] lapic_id=%u\n", cpu_idx);
+    // int entryid = gx_entryCount++;
+    // syslog::kprintf("[gx_main] entryid=%d\n", entryid);
 
-    gxEnable(GX_BLEND);
-    gxEnable(GX_DEPTH_TEST);
-    gxViewport(0, 0, kvideo::W, kvideo::H);
-    gxClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    gx_renderColor = gxCreateTextureExplicit(
-        gxResourceFlag_ExplicitAlloc | gxResourceFlag_ExplicitFree,
-        GX_UNSIGNED_BYTE+kvideo::stride, kvideo::backbuffer, kvideo::W, kvideo::H
-    );
-
-    gx_renderDepth = gxCreateTexture(GX_R32F, nullptr, kvideo::W, kvideo::H);
-
-    MUTEX_LOCK(
+    // if (entryid == 0)
+    // {
+        // syslog::kprintf("[gx_main] Yeet\n");
+        gxEnable(GX_BLEND);
+        gxEnable(GX_DEPTH_TEST);
+        gxDisable(GX_STENCIL_TEST);
+    
+        gxViewport(0, 0, kvideo::W, kvideo::H);
+        gxClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    
+        gx_renderColor = gxCreateTextureExplicit(
+            gxResourceFlag_ExplicitAlloc | gxResourceFlag_ExplicitFree,
+            GX_UNSIGNED_BYTE+kvideo::stride, kvideo::backbuffer, kvideo::W, kvideo::H
+        );
+    
         auto *ctx = gxGetCurrent();
-        ctx->target.color = gx_renderColor;
-        ctx->target.depth = gx_renderDepth;
-    )
+        gx_mutex.lock();
+        
+        ctx->target.color   = gx_renderColor;
+        ctx->target.depth   = gxCreateTexture(GX_R32F, nullptr, kvideo::W, kvideo::H);
+        ctx->target.stencil = gxCreateTexture(GX_R8,   nullptr, kvideo::W, kvideo::H);
+        
+        gx_mutex.unlock();
+    // }
+
+    // else
+    // {
+    //     syslog::kprintf("[gx_main] Ree %d\n", entryid);
+    // }
 
     gxDrawCmd cmd{};
     bool has_cmd = false;
@@ -68,14 +85,14 @@ void gx_main()
     {
         has_cmd = false;
 
-        MUTEX_LOCK(
+        gx_mutex.lock();
             if (gx_cmdSize > 0)
             {
                 has_cmd = true;
                 cmd = gx_cmdBuf[gx_cmdHead++];
                 gx_cmdSize -= 1;
             }
-        )
+        gx_mutex.unlock();
 
         if (has_cmd)
         {
@@ -87,6 +104,17 @@ void gx_main()
 }
 
 
+// void gx_waitBarrier( std::atomic_int &barrier )
+// {
+//     barrier--;
+//     while (barrier.load() > 0)
+//     {
+//         kthread::yield();
+//     }
+// }
+
+
+
 void gxEnable( gxEnum e )
 {
     auto *ctx = gxGetCurrent();
@@ -94,8 +122,9 @@ void gxEnable( gxEnum e )
     switch (e)
     {
         default: break;
-        case GX_BLEND:      ctx->conf.blend = true; break;
-        case GX_DEPTH_TEST: ctx->conf.depth = true; break;
+        case GX_BLEND:        ctx->conf.blend   = true; break;
+        case GX_DEPTH_TEST:   ctx->conf.depth   = true; break;
+        case GX_STENCIL_TEST: ctx->conf.stencil = true; break;
     }
 }
 
@@ -106,8 +135,9 @@ void gxDisable( gxEnum e )
     switch (e)
     {
         default: break;
-        case GX_BLEND:      ctx->conf.blend = false; break;
-        case GX_DEPTH_TEST: ctx->conf.depth = false; break;
+        case GX_BLEND:        ctx->conf.blend   = false; break;
+        case GX_DEPTH_TEST:   ctx->conf.depth   = false; break;
+        case GX_STENCIL_TEST: ctx->conf.stencil = false; break;
     }
 }
 
@@ -122,7 +152,6 @@ template <typename T>
 void gxPushCommand( gxDrawCmd_ type, const T &cmd )
 {
     auto *ctx = gxGetCurrent();
-
     {
         gx_mutex.lock();
 
@@ -152,7 +181,7 @@ void gxFlush()
     //     {vec3(0), vec3(0), vec3(0)},
     //     {vec2(10.0f/500.0f, 10.0f/500.0f), vec2(200.0f/500.0f, 50.0f/500.0f), vec2(100.0f/500.0f, 500.0f/500.0f)}
     // };
-    // gx_rasterize(P);
+    // gx_rasterize(P)
 
     int count = 255;
     while (count > 0)
@@ -167,7 +196,7 @@ void gxFlush()
 
 float gxDepthSample( int x, int y )
 {
-    auto  *ctx = gxGetCurrent();
+    auto  *ctx  = gxGetCurrent();
     auto  *tex  = gxGetTexture(ctx->target.depth);
     float *data = (float*)(tex->data);
 
@@ -194,9 +223,18 @@ void gxClearDepth( float d )
     gxGetCurrent()->cleardepth = d;
 }
 
+void gxClearStencil( int s )
+{
+    gxGetCurrent()->clearstencil = s;
+}
+
 void gxClear( uint32_t mask )
 {
     gxPushContext();
+    gxDisable(GX_BLEND);
+    gxDisable(GX_DEPTH_TEST);
+    gxDisable(GX_STENCIL_TEST);
+
     auto *ctx = gxGetCurrent();
 
     if (mask & GX_COLOR_BUFFER_BIT)
@@ -208,19 +246,19 @@ void gxClear( uint32_t mask )
     {
         uint32_t texid = ctx->target.depth;
         gxTexture *tex = gxGetTexture(texid);
-    
-        gxDisable(GX_BLEND);
-        gxDisable(GX_DEPTH_TEST);
         gxDrawRect(texid, {0, 0, tex->w, tex->h}, true, 0, vec4(ctx->cleardepth));
     }
 
-    // if (mask & GX_STENCIL_BUFFER_BIT)
+    if (mask & GX_STENCIL_BUFFER_BIT)
     {
-        // gxClearTexture(gx_renderStencil);
+        uint32_t texid = ctx->target.stencil;
+        gxTexture *tex = gxGetTexture(texid);
+        gxDrawRect(texid, {0, 0, tex->w, tex->h}, true, 0, vec4(ctx->clearstencil));
     }
 
     gxPopContext();
 }
+
 
 void gxClearTexture( uint32_t texid )
 {

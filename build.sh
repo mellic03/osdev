@@ -1,5 +1,10 @@
 #!/bin/bash
 
+cd ./tooling
+# ./build.sh
+cd ../
+
+
 mkdir -p ./build
 cd ./build
 cmake ../
@@ -13,7 +18,6 @@ cd ../
 # cd ../../
 # cp src/programs/bin/* src/iso_root/bin
 
-
 # git clone https://github.com/limine-bootloader/limine.git \
 #       --branch=v9.x-binary --depth=8 \
 #       external/limine
@@ -26,7 +30,7 @@ rm -rf output
 mkdir -p output
 cp -R src/iso_root output/iso_root
 
-cp -v sysroot/bin/idkernel output/iso_root/boot/
+cp -v sysroot/usr/bin/idkernel output/iso_root/boot/
 cp -v external/limine/limine-bios.sys \
       external/limine/limine-bios-cd.bin \
       external/limine/limine-uefi-cd.bin \

@@ -5,9 +5,9 @@
 #include <algorithm>
 
 
-#include <kscancode.h>
+#include <kernel/kscancode.h>
 #include <kthread.hpp>
-#include <kernel/vfs.hpp>
+// #include <kernel/vfs.hpp>
 #include "driver/keyboard.hpp"
 
 #include "kshell/kshell.hpp"
@@ -28,7 +28,7 @@ kTTY::kTTY()
 
 
 kTTY::kTTY( int hist_len )
-:   cwd     (vfsInsertDirectory("dev/tty0/")),
+:   cwd     (vfs2::open<vfs2DirEntry>("dev/tty0/")),
     hlen    (hist_len),
     hrow    (0),
     size    (80*hist_len),
@@ -188,12 +188,11 @@ void kTTY::moveCursor( int dir )
 
 
 
-vfsDirEntry *&kTTY::getCWD()
+vfs2DirEntry *&kTTY::getCWD()
 {
     if (cwd == nullptr)
     {
-        cwd = vfsInsertDirectory("dev/tty0/");
-
+        cwd = vfs2::open<vfs2DirEntry>("dev/tty0/");
     }
 
     return cwd;

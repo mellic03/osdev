@@ -1,0 +1,13 @@
+#pragma once
+#include "type_traits"
+
+
+namespace std
+{
+    template <typename From, typename To>
+    concept convertible_to = requires(From from) {
+        static_cast<To>(from);
+    };
+
+
+}

@@ -1,10 +1,17 @@
 #pragma once
+#include <atomic>
 #include <kmath/vec.hpp>
 #include "command.hpp"
 #include "gxContext.hpp"
 #include "gxPrimitive.hpp"
 
-void gx_main();
+
+// extern std::atomic_int gx_flushbarrier;
+// std::atomic_int gx_createBarrier( int count );
+// void gx_waitBarrier( std::atomic_int &barrier );
+// void gx_wait( std::atomic_int signal );
+
+void gx_main(void*);
 void gx_rasterize( const gxTrianglePrimitive &P );
 
 void  gxEnable( gxEnum );
@@ -20,6 +27,7 @@ void    *gxGetBuffer( uint32_t );
 void gxTintColor( float r, float g, float b, float a );
 void gxClearColor( float r, float g, float b, float a );
 void gxClearDepth( float d );
+void gxClearStencil( int s );
 void gxClear( uint32_t mask );
 void gxClearTexture( uint32_t );
 

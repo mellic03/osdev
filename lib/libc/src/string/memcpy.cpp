@@ -1,26 +1,26 @@
 #include <string.h>
-#include <immintrin.h>
+// #include <immintrin.h>
 
 
-void memcpy_sse32( void *dst_ptr, const void *src_ptr, uint32_t count )
-{
-    uint32_t *dst = (uint32_t *)dst_ptr;
-    const uint32_t *src = (const uint32_t *)src_ptr;
+// void memcpy_sse32( void *dst_ptr, const void *src_ptr, uint32_t count )
+// {
+//     uint32_t *dst = (uint32_t *)dst_ptr;
+//     const uint32_t *src = (const uint32_t *)src_ptr;
 
-    __m128i reg;
+//     __m128i reg;
 
-    for (uint32_t i=0; i<count; i+=4)
-    {
-        reg = _mm_loadu_si128((__m128i *)(src+i));
-        _mm_storeu_si128((__m128i *)(dst+i), reg);
-    }
+//     for (uint32_t i=0; i<count; i+=4)
+//     {
+//         reg = _mm_loadu_si128((__m128i *)(src+i));
+//         _mm_storeu_si128((__m128i *)(dst+i), reg);
+//     }
 
-    uint32_t rem = count % 4;
-    for (uint32_t i=count-rem; i<count; i++)
-    {
-        dst[i] = src[i];
-    }
-}
+//     uint32_t rem = count % 4;
+//     for (uint32_t i=count-rem; i<count; i++)
+//     {
+//         dst[i] = src[i];
+//     }
+// }
 
 
 void *memcpy_u8( void *dst, const void *src, size_t n )

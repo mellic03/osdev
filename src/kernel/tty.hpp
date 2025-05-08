@@ -1,14 +1,13 @@
 #pragma once
-#include <kfile.h>
 #include <stdio.h>
-#include <kernel/vfs.hpp>
+#include <kernel/vfs2.hpp>
 #include "sde/font.hpp"
 
 
 struct kTTY
 {
 private:
-    vfsDirEntry *cwd;
+    vfs2DirEntry *cwd;
     void _putr();
 
 public:
@@ -55,7 +54,7 @@ public:
 
     void moveCursor( int dir );
 
-    vfsDirEntry *&getCWD();
+    vfs2DirEntry *&getCWD();
     // const char *submit();
 
 };

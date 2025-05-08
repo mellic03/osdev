@@ -35,54 +35,49 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 # set(KPROGRAM_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/programs/linker.ld")
 set(SSE_FLAGS "-mmmx -msse -msse2")
 # set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
-add_definitions(-D__libk_sse=true)
+# add_definitions(-D__libk_sse=true)
 
-
-# set(IDKERNEL_C_CXX_FLAGS
-#     "-O0 -g \
-#     -fno-inline -fno-tree-vectorize \
-#     -Wall -Wextra -Werror -pedantic \
-#     -Wno-vexing-parse \
-#     -fno-omit-frame-pointer \
-#     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
-#     -ggdb -Wno-builtin-declaration-mismatch \
-#     -ffreestanding \
-#     -fno-asynchronous-unwind-tables \
-#     -fno-exceptions \
-#     -fno-stack-protector \
-#     -fno-stack-check \
-#     -fno-PIC \
-#     -fno-PIE \
-#     -mno-80387 \
-#     -z max-page-size=0x1000 -mno-red-zone \
-#     -m64 -mcmodel=large -march=x86-64 \
-#     --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
-#     -nostartfiles \
-#     -static \
-#     -Wl,--no-relax -Wl,--gc-sections \
-#     ${SSE_FLAGS} \
-#     -Wno-missing-field-initializers"
-# )
 
 set(IDKERNEL_C_CXX_FLAGS
-    "-O2 \
+    "-O0 -g \
+    ${SSE_FLAGS} \
+    -fno-inline -fno-tree-vectorize \
     -Wall -Wextra -Werror -pedantic \
+    -Wno-vexing-parse \
+    -fno-omit-frame-pointer \
+    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+    -ggdb -Wno-builtin-declaration-mismatch \
     -ffreestanding \
+    -fno-asynchronous-unwind-tables \
     -fno-exceptions \
-    -fno-stack-protector \
-    -fno-stack-check \
     -fno-PIC \
     -fno-PIE \
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
-    -m64 -mcmodel=large -march=x86-64 \
-    --sysroot=${CMAKE_SOURCE_DIR}/sysroot \
-    -nostartfiles \
-    -static \
+    -mcmodel=kernel \
+    -nostdlib \
     -Wl,--no-relax -Wl,--gc-sections \
-    -mmmx -msse -msse2 \
     -Wno-missing-field-initializers"
 )
+
+# set(IDKERNEL_C_CXX_FLAGS
+#     "-O3 \
+#     ${SSE_FLAGS} \
+#     -Wall -Wextra -Werror -pedantic \
+#     -ffreestanding \
+#     -fno-asynchronous-unwind-tables \
+#     -fno-exceptions \
+#     -funroll-loops \
+#     -fno-PIC \
+#     -fno-PIE \
+#     -mno-80387 \
+#     -z max-page-size=0x1000 -mno-red-zone \
+#     -mcmodel=kernel \
+#     -nostdlib \
+#     -static \
+#     -Wl,--no-relax -Wl,--gc-sections \
+#     -Wno-missing-field-initializers"
+# )
 
 set(CMAKE_C_FLAGS
     "-std=c11 \
@@ -95,9 +90,7 @@ set(CMAKE_CXX_FLAGS
     ${IDKERNEL_C_CXX_FLAGS} \
     -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/new \
     -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/libc++ \
-    -fno-rtti \
-    -MMD \
-    -MP"
+    -fno-rtti"
 )
 
 set(CMAKE_ASM_NASM_FLAGS
@@ -106,18 +99,16 @@ set(CMAKE_ASM_NASM_FLAGS
 )
 
 
-# set(
-#     CMAKE_EXE_LINKER_FLAGS
-#     "-Wl,-m,elf_x86_64 \
-#     -Wl,--build-id=none \
-#     -static \
-#     -nostdlib \
-#     -nodefaultlibs \
-#     -nostartfiles \
-#     -zmax-page-size=0x1000 \
-#     -mno-red-zone \
-#     -T${CMAKE_SOURCE_DIR}/src/linker.ld"
-# )
+set(
+    CMAKE_EXE_LINKER_FLAGS
+    "-Wl,-m,elf_x86_64 \
+    -Wl,--build-id=none \
+    -nostdlib \
+    -mcmodel=kernel \
+    -zmax-page-size=0x1000 \
+    -mno-red-zone \
+    -T${CMAKE_SOURCE_DIR}/src/linker.ld"
+)
 
 
 # set(

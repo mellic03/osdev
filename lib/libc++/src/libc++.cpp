@@ -2,14 +2,6 @@
 #include <cstdlib>
 
 
-#ifdef __is_kernel
-void libcpp::init()
-{
-    return;
-}
-#endif
-
-
 void *operator new( size_t nbytes )
 {
     return malloc(nbytes);
