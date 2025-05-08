@@ -67,7 +67,6 @@ add_definitions(-D__libk_sse=true)
 set(IDKERNEL_C_CXX_FLAGS
     "-O2 \
     -Wall -Wextra -Werror -pedantic \
-    -fno-omit-frame-pointer \
     -ffreestanding \
     -fno-exceptions \
     -fno-stack-protector \
