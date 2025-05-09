@@ -1,6 +1,6 @@
 #pragma once
 #include <kdef.h>
-#include "sym_type.hpp"
+#include "sym_t.hpp"
 
 #include "sym_libc.hpp"
 #include "sym_kthread.hpp"

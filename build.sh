@@ -3,8 +3,8 @@
 cd ./modules
 ./build.sh keyboard
 ./build.sh mouse
-./build.sh storage
 ./build.sh daemon
+# ./build.sh storage
 cd ../
 cp -r ./modules/modules/ ./kernel/initrd/.
 
@@ -39,7 +39,7 @@ mkdir -p output/iso_root/boot/limine/
 cp -R kernel/limine.conf output/iso_root/boot/limine/limine.conf
 
 cd kernel/initrd
-tar -cvf initrd.tar.gz *
+tar -cvf initrd.tar.gz * > /dev/null 2>&1
 cp ./initrd.tar.gz ../../output/iso_root/initrd.tar.gz
 mv ./initrd.tar.gz ../initrd.tar.gz
 cd ../../

@@ -11,14 +11,14 @@ ELF Header:
   Version:                           0x1
   Entry point address:               0x1000
   Start of program headers:          64 (bytes into file)
-  Start of section headers:          13736 (bytes into file)
+  Start of section headers:          13856 (bytes into file)
   Flags:                             0x0
   Size of this header:               64 (bytes)
   Size of program headers:           56 (bytes)
   Number of program headers:         5
   Size of section headers:           64 (bytes)
-  Number of section headers:         17
-  Section header string table index: 16
+  Number of section headers:         15
+  Section header string table index: 14
 
 Section Headers:
   [Nr] Name              Type             Address           Offset
@@ -26,37 +26,33 @@ Section Headers:
   [ 0]                   NULL             0000000000000000  00000000
        0000000000000000  0000000000000000           0     0     0
   [ 1] .text             PROGBITS         0000000000001000  00001000
-       0000000000000469  0000000000000000  AX       0     0     2
+       000000000000053f  0000000000000000  AX       0     0     1
   [ 2] .rodata           PROGBITS         0000000000002000  00002000
-       0000000000000007  0000000000000000   A       0     0     1
-  [ 3] .eh_frame         PROGBITS         0000000000002008  00002008
-       0000000000000138  0000000000000000   A       0     0     8
-  [ 4] .interp           PROGBITS         0000000000002140  00002140
+       0000000000000066  0000000000000000   A       0     0     8
+  [ 3] .eh_frame         PROGBITS         0000000000002068  00002068
+       00000000000000b8  0000000000000000   A       0     0     8
+  [ 4] .interp           PROGBITS         0000000000002120  00002120
        000000000000000f  0000000000000000   A       0     0     1
-  [ 5] .dynsym           DYNSYM           0000000000002150  00002150
+  [ 5] .dynsym           DYNSYM           0000000000002130  00002130
        0000000000000018  0000000000000018   A       6     1     8
-  [ 6] .dynstr           STRTAB           0000000000002168  00002168
+  [ 6] .dynstr           STRTAB           0000000000002148  00002148
        0000000000000001  0000000000000000   A       0     0     1
-  [ 7] .hash             HASH             0000000000002170  00002170
+  [ 7] .hash             HASH             0000000000002150  00002150
        0000000000000010  0000000000000004   A       5     0     8
-  [ 8] .rela.dyn         RELA             0000000000002180  00002180
-       0000000000000018  0000000000000018   A       5     0     8
-  [ 9] .ctors            PROGBITS         0000000000003000  00003000
-       0000000000000008  0000000000000000  WA       0     0     8
-  [10] .dynamic          DYNAMIC          0000000000003008  00003008
-       0000000000000100  0000000000000010  WA       6     0     8
-  [11] .got.plt          PROGBITS         0000000000003108  00003108
+  [ 8] .dynamic          DYNAMIC          0000000000003000  00003000
+       00000000000000d0  0000000000000010  WA       6     0     8
+  [ 9] .got.plt          PROGBITS         00000000000030d0  000030d0
        0000000000000018  0000000000000008  WA       0     0     8
-  [12] .bss              NOBITS           0000000000003120  00003120
-       0000000000000088  0000000000000000  WA       0     0     32
-  [13] .comment          PROGBITS         0000000000000000  00003120
+  [10] .bss              NOBITS           00000000000030e8  000030e8
+       0000000000000088  0000000000000000  WA       0     0     8
+  [11] .comment          PROGBITS         0000000000000000  000030e8
        0000000000000012  0000000000000001  MS       0     0     1
-  [14] .symtab           SYMTAB           0000000000000000  00003138
-       0000000000000258  0000000000000018          15    10     8
-  [15] .strtab           STRTAB           0000000000000000  00003390
-       0000000000000193  0000000000000000           0     0     1
-  [16] .shstrtab         STRTAB           0000000000000000  00003523
-       0000000000000082  0000000000000000           0     0     1
+  [12] .symtab           SYMTAB           0000000000000000  00003100
+       00000000000002e8  0000000000000018          13    10     8
+  [13] .strtab           STRTAB           0000000000000000  000033e8
+       00000000000001c3  0000000000000000           0     0     1
+  [14] .shstrtab         STRTAB           0000000000000000  000035ab
+       0000000000000071  0000000000000000           0     0     1
 Key to Flags:
   W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
   L (link order), O (extra OS processing required), G (group), T (TLS),
@@ -70,75 +66,75 @@ Program Headers:
                  FileSiz            MemSiz              Flags  Align
   PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
                  0x0000000000000118 0x0000000000000118  R      0x8
-  INTERP         0x0000000000002140 0x0000000000002140 0x0000000000002140
+  INTERP         0x0000000000002120 0x0000000000002120 0x0000000000002120
                  0x000000000000000f 0x000000000000000f  R      0x1
       [Requesting program interpreter: /lib/ld64.so.1]
   LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
-                 0x0000000000002198 0x0000000000002198  R E    0x1000
+                 0x0000000000002160 0x0000000000002160  R E    0x1000
   LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000
-                 0x0000000000000120 0x00000000000001a8  RW     0x1000
-  DYNAMIC        0x0000000000003008 0x0000000000003008 0x0000000000003008
-                 0x0000000000000100 0x0000000000000100  RW     0x8
+                 0x00000000000000e8 0x0000000000000170  RW     0x1000
+  DYNAMIC        0x0000000000003000 0x0000000000003000 0x0000000000003000
+                 0x00000000000000d0 0x00000000000000d0  RW     0x8
 
  Section to Segment mapping:
   Segment Sections...
    00     
    01     .interp 
-   02     .text .rodata .eh_frame .interp .dynsym .dynstr .hash .rela.dyn 
-   03     .ctors .dynamic .got.plt .bss 
+   02     .text .rodata .eh_frame .interp .dynsym .dynstr .hash 
+   03     .dynamic .got.plt .bss 
    04     .dynamic 
 
-Dynamic section at offset 0x3008 contains 12 entries:
+Dynamic section at offset 0x3000 contains 8 entries:
   Tag        Type                         Name/Value
- 0x0000000000000004 (HASH)               0x2170
- 0x0000000000000005 (STRTAB)             0x2168
- 0x0000000000000006 (SYMTAB)             0x2150
+ 0x0000000000000004 (HASH)               0x2150
+ 0x0000000000000005 (STRTAB)             0x2148
+ 0x0000000000000006 (SYMTAB)             0x2130
  0x000000000000000a (STRSZ)              1 (bytes)
  0x000000000000000b (SYMENT)             24 (bytes)
  0x0000000000000015 (DEBUG)              0x0
- 0x0000000000000007 (RELA)               0x2180
- 0x0000000000000008 (RELASZ)             24 (bytes)
- 0x0000000000000009 (RELAENT)            24 (bytes)
  0x000000006ffffffb (FLAGS_1)            Flags: PIE
- 0x000000006ffffff9 (RELACOUNT)          1
  0x0000000000000000 (NULL)               0x0
 
-Relocation section '.rela.dyn' at offset 0x2180 contains 1 entry:
-  Offset          Info           Type           Sym. Value    Sym. Name + Addend
-000000003000  000000000008 R_X86_64_RELATIVE                    143f
+There are no relocations in this file.
 No processor specific unwind information to decode
 
 Symbol table '.dynsym' contains 1 entry:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
 
-Symbol table '.symtab' contains 25 entries:
+Symbol table '.symtab' contains 31 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
      1: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS daemon.cpp
-     2: 0000000000001231    56 FUNC    LOCAL  DEFAULT    1 _ZL8sde_mainPv
-     3: 0000000000003120    72 OBJECT  LOCAL  DEFAULT   12 _ZL6daemon
-     4: 0000000000001403    60 FUNC    LOCAL  DEFAULT    1 _Z41__static_ini[...]
-     5: 000000000000143f    42 FUNC    LOCAL  DEFAULT    1 _GLOBAL__sub_I_init
-     6: 0000000000002000     0 NOTYPE  LOCAL  DEFAULT    2 .LC0
+     2: 000000000000130f   342 FUNC    LOCAL  DEFAULT    1 _ZL8sde_mainPv
+     3: 0000000000002000     0 NOTYPE  LOCAL  DEFAULT    2 .LC0
+     4: 000000000000201f     0 NOTYPE  LOCAL  DEFAULT    2 .LC1
+     5: 0000000000002040     0 NOTYPE  LOCAL  DEFAULT    2 .LC2
+     6: 000000000000205f     0 NOTYPE  LOCAL  DEFAULT    2 .LC3
      7: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
-     8: 0000000000003008     0 OBJECT  LOCAL  DEFAULT   10 _DYNAMIC
-     9: 0000000000003108     0 OBJECT  LOCAL  DEFAULT   11 _GLOBAL_OFFSET_TABLE_
-    10: 00000000000012c8    97 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIiEPvS0_T_m
-    11: 0000000000003180     8 OBJECT  WEAK   DEFAULT   12 _ZSt7realloc
-    12: 0000000000003190     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread5yieldE
-    13: 000000000000126a    94 FUNC    WEAK   DEFAULT    1 _ZN15DaemonInter[...]
-    14: 0000000000001329   100 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
-    15: 0000000000003188     8 OBJECT  WEAK   DEFAULT   12 _ZSt4free
-    16: 000000000000114c   229 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
-    17: 0000000000003170     8 OBJECT  WEAK   DEFAULT   12 _ZSt6printf
-    18: 00000000000031a0     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread4exitE
-    19: 0000000000001000   332 FUNC    GLOBAL DEFAULT    1 init
-    20: 000000000000126a    94 FUNC    WEAK   DEFAULT    1 _ZN15DaemonInter[...]
-    21: 0000000000003168     8 OBJECT  WEAK   DEFAULT   12 _ZSt6assert
-    22: 000000000000138d   118 FUNC    WEAK   DEFAULT    1 _Z7kmemcpyIcEPvS[...]
-    23: 0000000000003178     8 OBJECT  WEAK   DEFAULT   12 _ZSt6malloc
-    24: 0000000000003198     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread5sleepE
+     8: 0000000000003000     0 OBJECT  LOCAL  DEFAULT    8 _DYNAMIC
+     9: 00000000000030d0     0 OBJECT  LOCAL  DEFAULT    9 _GLOBAL_OFFSET_TABLE_
+    10: 0000000000003120     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo10back[...]
+    11: 0000000000003158     8 OBJECT  WEAK   DEFAULT   10 _ZSt7realloc
+    12: 0000000000003168     8 OBJECT  WEAK   DEFAULT   10 _ZSt5clock
+    13: 0000000000003100     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread5yieldE
+    14: 0000000000001465   100 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
+    15: 0000000000003160     8 OBJECT  WEAK   DEFAULT   10 _ZSt4free
+    16: 000000000000114e   449 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
+    17: 0000000000003148     8 OBJECT  WEAK   DEFAULT   10 _ZSt6printf
+    18: 0000000000003128     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo4rectE
+    19: 00000000000030f8     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel10find[...]
+    20: 0000000000003118     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo11fron[...]
+    21: 0000000000003130     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo4fillE
+    22: 0000000000003110     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread4exitE
+    23: 0000000000001000   334 FUNC    GLOBAL DEFAULT    1 init
+    24: 00000000000030f0     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel4hangE
+    25: 0000000000003140     8 OBJECT  WEAK   DEFAULT   10 _ZSt6assert
+    26: 0000000000003138     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo11swap[...]
+    27: 00000000000014c9   118 FUNC    WEAK   DEFAULT    1 _Z7kmemcpyIcEPvS[...]
+    28: 0000000000003150     8 OBJECT  WEAK   DEFAULT   10 _ZSt6malloc
+    29: 00000000000030e8     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel5panicE
+    30: 0000000000003108     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread5sleepE
 
 Histogram for bucket list length (total of 1 bucket):
  Length  Number     % of total  Coverage
@@ -162,81 +158,79 @@ start address 0x0000000000001000
 Program Header:
     PHDR off    0x0000000000000040 vaddr 0x0000000000000040 paddr 0x0000000000000040 align 2**3
          filesz 0x0000000000000118 memsz 0x0000000000000118 flags r--
-  INTERP off    0x0000000000002140 vaddr 0x0000000000002140 paddr 0x0000000000002140 align 2**0
+  INTERP off    0x0000000000002120 vaddr 0x0000000000002120 paddr 0x0000000000002120 align 2**0
          filesz 0x000000000000000f memsz 0x000000000000000f flags r--
     LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**12
-         filesz 0x0000000000002198 memsz 0x0000000000002198 flags r-x
+         filesz 0x0000000000002160 memsz 0x0000000000002160 flags r-x
     LOAD off    0x0000000000003000 vaddr 0x0000000000003000 paddr 0x0000000000003000 align 2**12
-         filesz 0x0000000000000120 memsz 0x00000000000001a8 flags rw-
- DYNAMIC off    0x0000000000003008 vaddr 0x0000000000003008 paddr 0x0000000000003008 align 2**3
-         filesz 0x0000000000000100 memsz 0x0000000000000100 flags rw-
+         filesz 0x00000000000000e8 memsz 0x0000000000000170 flags rw-
+ DYNAMIC off    0x0000000000003000 vaddr 0x0000000000003000 paddr 0x0000000000003000 align 2**3
+         filesz 0x00000000000000d0 memsz 0x00000000000000d0 flags rw-
 
 Dynamic Section:
-  HASH                 0x0000000000002170
-  STRTAB               0x0000000000002168
-  SYMTAB               0x0000000000002150
+  HASH                 0x0000000000002150
+  STRTAB               0x0000000000002148
+  SYMTAB               0x0000000000002130
   STRSZ                0x0000000000000001
   SYMENT               0x0000000000000018
   DEBUG                0x0000000000000000
-  RELA                 0x0000000000002180
-  RELASZ               0x0000000000000018
-  RELAENT              0x0000000000000018
   FLAGS_1              0x0000000008000000
-  RELACOUNT            0x0000000000000001
 
 Sections:
 Idx Name          Size      VMA               LMA               File off  Algn
-  0 .text         00000469  0000000000001000  0000000000001000  00001000  2**1
+  0 .text         0000053f  0000000000001000  0000000000001000  00001000  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .rodata       00000007  0000000000002000  0000000000002000  00002000  2**0
+  1 .rodata       00000066  0000000000002000  0000000000002000  00002000  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  2 .eh_frame     00000138  0000000000002008  0000000000002008  00002008  2**3
+  2 .eh_frame     000000b8  0000000000002068  0000000000002068  00002068  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .interp       0000000f  0000000000002140  0000000000002140  00002140  2**0
+  3 .interp       0000000f  0000000000002120  0000000000002120  00002120  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  4 .dynsym       00000018  0000000000002150  0000000000002150  00002150  2**3
+  4 .dynsym       00000018  0000000000002130  0000000000002130  00002130  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .dynstr       00000001  0000000000002168  0000000000002168  00002168  2**0
+  5 .dynstr       00000001  0000000000002148  0000000000002148  00002148  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  6 .hash         00000010  0000000000002170  0000000000002170  00002170  2**3
+  6 .hash         00000010  0000000000002150  0000000000002150  00002150  2**3
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .rela.dyn     00000018  0000000000002180  0000000000002180  00002180  2**3
-                  CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .ctors        00000008  0000000000003000  0000000000003000  00003000  2**3
+  7 .dynamic      000000d0  0000000000003000  0000000000003000  00003000  2**3
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .dynamic      00000100  0000000000003008  0000000000003008  00003008  2**3
+  8 .got.plt      00000018  00000000000030d0  00000000000030d0  000030d0  2**3
                   CONTENTS, ALLOC, LOAD, DATA
- 10 .got.plt      00000018  0000000000003108  0000000000003108  00003108  2**3
-                  CONTENTS, ALLOC, LOAD, DATA
- 11 .bss          00000088  0000000000003120  0000000000003120  00003120  2**5
+  9 .bss          00000088  00000000000030e8  00000000000030e8  000030e8  2**3
                   ALLOC
- 12 .comment      00000012  0000000000000000  0000000000000000  00003120  2**0
+ 10 .comment      00000012  0000000000000000  0000000000000000  000030e8  2**0
                   CONTENTS, READONLY
 SYMBOL TABLE:
 0000000000000000 l    df *ABS*	0000000000000000 daemon.cpp
-0000000000001231 l     F .text	0000000000000038 _ZL8sde_mainPv
-0000000000003120 l     O .bss	0000000000000048 _ZL6daemon
-0000000000001403 l     F .text	000000000000003c _Z41__static_initialization_and_destruction_0v
-000000000000143f l     F .text	000000000000002a _GLOBAL__sub_I_init
+000000000000130f l     F .text	0000000000000156 _ZL8sde_mainPv
 0000000000002000 l       .rodata	0000000000000000 .LC0
+000000000000201f l       .rodata	0000000000000000 .LC1
+0000000000002040 l       .rodata	0000000000000000 .LC2
+000000000000205f l       .rodata	0000000000000000 .LC3
 0000000000000000 l    df *ABS*	0000000000000000 
-0000000000003008 l     O .dynamic	0000000000000000 _DYNAMIC
-0000000000003108 l     O .got.plt	0000000000000000 _GLOBAL_OFFSET_TABLE_
-00000000000012c8  w    F .text	0000000000000061 _Z7kmemsetIiEPvS0_T_m
-0000000000003180  w    O .bss	0000000000000008 _ZSt7realloc
-0000000000003190  w    O .bss	0000000000000008 _ZN7kthread5yieldE
-000000000000126a  w    F .text	000000000000005e _ZN15DaemonInterfaceC1Ev
-0000000000001329  w    F .text	0000000000000064 _Z7kmemsetIcEPvS0_T_m
-0000000000003188  w    O .bss	0000000000000008 _ZSt4free
-000000000000114c  w    F .text	00000000000000e5 _ZN4ksym7loadsymEPNS_6ksym_tE
-0000000000003170  w    O .bss	0000000000000008 _ZSt6printf
-00000000000031a0  w    O .bss	0000000000000008 _ZN7kthread4exitE
-0000000000001000 g     F .text	000000000000014c init
-000000000000126a  w    F .text	000000000000005e _ZN15DaemonInterfaceC2Ev
-0000000000003168  w    O .bss	0000000000000008 _ZSt6assert
-000000000000138d  w    F .text	0000000000000076 _Z7kmemcpyIcEPvS0_PKvm
-0000000000003178  w    O .bss	0000000000000008 _ZSt6malloc
-0000000000003198  w    O .bss	0000000000000008 _ZN7kthread5sleepE
+0000000000003000 l     O .dynamic	0000000000000000 _DYNAMIC
+00000000000030d0 l     O .got.plt	0000000000000000 _GLOBAL_OFFSET_TABLE_
+0000000000003120  w    O .bss	0000000000000008 _ZN6kvideo10backbufferE
+0000000000003158  w    O .bss	0000000000000008 _ZSt7realloc
+0000000000003168  w    O .bss	0000000000000008 _ZSt5clock
+0000000000003100  w    O .bss	0000000000000008 _ZN7kthread5yieldE
+0000000000001465  w    F .text	0000000000000064 _Z7kmemsetIcEPvS0_T_m
+0000000000003160  w    O .bss	0000000000000008 _ZSt4free
+000000000000114e  w    F .text	00000000000001c1 _ZN4ksym7loadsymEPNS_6ksym_tE
+0000000000003148  w    O .bss	0000000000000008 _ZSt6printf
+0000000000003128  w    O .bss	0000000000000008 _ZN6kvideo4rectE
+00000000000030f8  w    O .bss	0000000000000008 _ZN6kernel10findModuleE
+0000000000003118  w    O .bss	0000000000000008 _ZN6kvideo11frontbufferE
+0000000000003130  w    O .bss	0000000000000008 _ZN6kvideo4fillE
+0000000000003110  w    O .bss	0000000000000008 _ZN7kthread4exitE
+0000000000001000 g     F .text	000000000000014e init
+00000000000030f0  w    O .bss	0000000000000008 _ZN6kernel4hangE
+0000000000003140  w    O .bss	0000000000000008 _ZSt6assert
+0000000000003138  w    O .bss	0000000000000008 _ZN6kvideo11swapBuffersE
+00000000000014c9  w    F .text	0000000000000076 _Z7kmemcpyIcEPvS0_PKvm
+0000000000003150  w    O .bss	0000000000000008 _ZSt6malloc
+00000000000030e8  w    O .bss	0000000000000008 _ZN6kernel5panicE
+0000000000003108  w    O .bss	0000000000000008 _ZN7kthread5sleepE
 
 
 
@@ -256,314 +250,351 @@ Disassembly of section .text:
     1000:	55                   	push   %rbp
     1001:	48 89 e5             	mov    %rsp,%rbp
     1004:	53                   	push   %rbx
-    1005:	48 83 ec 18          	sub    $0x18,%rsp
+    1005:	48 83 ec 28          	sub    $0x28,%rsp
     1009:	48 8d 1d f9 ff ff ff 	lea    -0x7(%rip),%rbx        # 1009 <init+0x9>
-    1010:	49 bb ff 20 00 00 00 	movabs $0x20ff,%r11
+    1010:	49 bb c7 20 00 00 00 	movabs $0x20c7,%r11
     1017:	00 00 00 
     101a:	4c 01 db             	add    %r11,%rbx
-    101d:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    1021:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    101d:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    1021:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
     1025:	48 89 c7             	mov    %rax,%rdi
-    1028:	48 b8 44 e0 ff ff ff 	movabs $0xffffffffffffe044,%rax
+    1028:	48 b8 7e e0 ff ff ff 	movabs $0xffffffffffffe07e,%rax
     102f:	ff ff ff 
     1032:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
     1036:	ff d0                	call   *%rax
-    1038:	ba 48 00 00 00       	mov    $0x48,%edx
-    103d:	be 00 00 00 00       	mov    $0x0,%esi
-    1042:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    1049:	00 00 00 
-    104c:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1050:	48 89 c7             	mov    %rax,%rdi
-    1053:	48 b8 c0 e1 ff ff ff 	movabs $0xffffffffffffe1c0,%rax
-    105a:	ff ff ff 
-    105d:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1061:	ff d0                	call   *%rax
-    1063:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    106a:	00 00 00 
-    106d:	48 8d 14 03          	lea    (%rbx,%rax,1),%rdx
-    1071:	b8 00 00 00 00       	mov    $0x0,%eax
-    1076:	b9 09 00 00 00       	mov    $0x9,%ecx
-    107b:	48 89 d7             	mov    %rdx,%rdi
-    107e:	f3 48 ab             	rep stos %rax,%es:(%rdi)
-    1081:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    1088:	00 00 00 
-    108b:	48 c7 04 03 02 00 00 	movq   $0x2,(%rbx,%rax,1)
-    1092:	00 
-    1093:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    109a:	00 00 00 
-    109d:	48 c7 44 03 08 01 00 	movq   $0x1,0x8(%rbx,%rax,1)
-    10a4:	00 00 
-    10a6:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    10ad:	00 00 00 
-    10b0:	48 c7 44 03 10 01 00 	movq   $0x1,0x10(%rbx,%rax,1)
-    10b7:	00 00 
-    10b9:	48 ba 18 00 00 00 00 	movabs $0x18,%rdx
-    10c0:	00 00 00 
-    10c3:	48 b8 29 e1 ff ff ff 	movabs $0xffffffffffffe129,%rax
-    10ca:	ff ff ff 
-    10cd:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10d1:	48 89 44 13 20       	mov    %rax,0x20(%rbx,%rdx,1)
-    10d6:	ba 08 00 00 00       	mov    $0x8,%edx
-    10db:	be 00 00 00 00       	mov    $0x0,%esi
-    10e0:	48 b8 30 00 00 00 00 	movabs $0x30,%rax
-    10e7:	00 00 00 
-    10ea:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10ee:	48 89 c7             	mov    %rax,%rdi
-    10f1:	48 b8 21 e2 ff ff ff 	movabs $0xffffffffffffe221,%rax
-    10f8:	ff ff ff 
-    10fb:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10ff:	ff d0                	call   *%rax
-    1101:	ba 06 00 00 00       	mov    $0x6,%edx
-    1106:	48 b8 f8 ee ff ff ff 	movabs $0xffffffffffffeef8,%rax
-    110d:	ff ff ff 
-    1110:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1114:	48 89 c6             	mov    %rax,%rsi
-    1117:	48 b8 30 00 00 00 00 	movabs $0x30,%rax
-    111e:	00 00 00 
-    1121:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1125:	48 89 c7             	mov    %rax,%rdi
-    1128:	48 b8 85 e2 ff ff ff 	movabs $0xffffffffffffe285,%rax
-    112f:	ff ff ff 
-    1132:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1136:	ff d0                	call   *%rax
-    1138:	48 b8 18 00 00 00 00 	movabs $0x18,%rax
-    113f:	00 00 00 
-    1142:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1146:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
-    114a:	c9                   	leave
-    114b:	c3                   	ret
+    1038:	48 b8 80 00 00 00 00 	movabs $0x80,%rax
+    103f:	00 00 00 
+    1042:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
+    1046:	bf 40 00 00 00       	mov    $0x40,%edi
+    104b:	ff d0                	call   *%rax
+    104d:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1051:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1055:	48 c7 00 02 00 00 00 	movq   $0x2,(%rax)
+    105c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1060:	48 c7 40 08 01 00 00 	movq   $0x1,0x8(%rax)
+    1067:	00 
+    1068:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    106c:	c6 40 10 00          	movb   $0x0,0x10(%rax)
+    1070:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1074:	c6 40 11 00          	movb   $0x0,0x11(%rax)
+    1078:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    107c:	c6 40 12 00          	movb   $0x0,0x12(%rax)
+    1080:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1084:	c6 40 13 00          	movb   $0x0,0x13(%rax)
+    1088:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    108c:	c6 40 14 00          	movb   $0x0,0x14(%rax)
+    1090:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1094:	c6 40 15 00          	movb   $0x0,0x15(%rax)
+    1098:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    109c:	c6 40 16 00          	movb   $0x0,0x16(%rax)
+    10a0:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10a4:	c6 40 17 00          	movb   $0x0,0x17(%rax)
+    10a8:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10ac:	48 ba 3f e2 ff ff ff 	movabs $0xffffffffffffe23f,%rdx
+    10b3:	ff ff ff 
+    10b6:	48 8d 14 13          	lea    (%rbx,%rdx,1),%rdx
+    10ba:	48 89 50 18          	mov    %rdx,0x18(%rax)
+    10be:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10c2:	48 c7 40 20 00 00 00 	movq   $0x0,0x20(%rax)
+    10c9:	00 
+    10ca:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10ce:	48 c7 40 28 00 00 00 	movq   $0x0,0x28(%rax)
+    10d5:	00 
+    10d6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10da:	48 c7 40 30 00 00 00 	movq   $0x0,0x30(%rax)
+    10e1:	00 
+    10e2:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10e6:	48 c7 40 38 00 00 00 	movq   $0x0,0x38(%rax)
+    10ed:	00 
+    10ee:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    10f2:	48 83 c0 10          	add    $0x10,%rax
+    10f6:	ba 08 00 00 00       	mov    $0x8,%edx
+    10fb:	be 00 00 00 00       	mov    $0x0,%esi
+    1100:	48 89 c7             	mov    %rax,%rdi
+    1103:	48 b8 95 e3 ff ff ff 	movabs $0xffffffffffffe395,%rax
+    110a:	ff ff ff 
+    110d:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    1111:	ff d0                	call   *%rax
+    1113:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1117:	48 8d 48 10          	lea    0x10(%rax),%rcx
+    111b:	ba 06 00 00 00       	mov    $0x6,%edx
+    1120:	48 b8 8f ef ff ff ff 	movabs $0xffffffffffffef8f,%rax
+    1127:	ff ff ff 
+    112a:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    112e:	48 89 c6             	mov    %rax,%rsi
+    1131:	48 89 cf             	mov    %rcx,%rdi
+    1134:	48 b8 f9 e3 ff ff ff 	movabs $0xffffffffffffe3f9,%rax
+    113b:	ff ff ff 
+    113e:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    1142:	ff d0                	call   *%rax
+    1144:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1148:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+    114c:	c9                   	leave
+    114d:	c3                   	ret
 
-000000000000114c <_ZN4ksym7loadsymEPNS_6ksym_tE>:
-    114c:	55                   	push   %rbp
-    114d:	48 89 e5             	mov    %rsp,%rbp
-    1150:	48 83 ec 18          	sub    $0x18,%rsp
-    1154:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1154 <_ZN4ksym7loadsymEPNS_6ksym_tE+0x8>
-    115b:	49 bb b4 1f 00 00 00 	movabs $0x1fb4,%r11
-    1162:	00 00 00 
-    1165:	4c 01 d8             	add    %r11,%rax
-    1168:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    116c:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    1170:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
-    1174:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    1178:	48 8b 12             	mov    (%rdx),%rdx
-    117b:	48 b9 60 00 00 00 00 	movabs $0x60,%rcx
-    1182:	00 00 00 
-    1185:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1189:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    118d:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    1191:	48 b9 68 00 00 00 00 	movabs $0x68,%rcx
-    1198:	00 00 00 
-    119b:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    119f:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    11a3:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    11a7:	48 b9 70 00 00 00 00 	movabs $0x70,%rcx
-    11ae:	00 00 00 
-    11b1:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    11b5:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    11b9:	48 8b 52 18          	mov    0x18(%rdx),%rdx
-    11bd:	48 b9 78 00 00 00 00 	movabs $0x78,%rcx
-    11c4:	00 00 00 
-    11c7:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    11cb:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    11cf:	48 8b 52 20          	mov    0x20(%rdx),%rdx
-    11d3:	48 b9 80 00 00 00 00 	movabs $0x80,%rcx
-    11da:	00 00 00 
-    11dd:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    11e1:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    11e5:	48 83 c2 28          	add    $0x28,%rdx
-    11e9:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
-    11ed:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    11f1:	48 8b 12             	mov    (%rdx),%rdx
-    11f4:	48 b9 88 00 00 00 00 	movabs $0x88,%rcx
-    11fb:	00 00 00 
-    11fe:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1202:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    1206:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    120a:	48 b9 90 00 00 00 00 	movabs $0x90,%rcx
-    1211:	00 00 00 
-    1214:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1218:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    121c:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    1220:	48 b9 98 00 00 00 00 	movabs $0x98,%rcx
-    1227:	00 00 00 
-    122a:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    122e:	90                   	nop
-    122f:	c9                   	leave
-    1230:	c3                   	ret
+000000000000114e <_ZN4ksym7loadsymEPNS_6ksym_tE>:
+    114e:	55                   	push   %rbp
+    114f:	48 89 e5             	mov    %rsp,%rbp
+    1152:	48 83 ec 28          	sub    $0x28,%rsp
+    1156:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1156 <_ZN4ksym7loadsymEPNS_6ksym_tE+0x8>
+    115d:	49 bb 7a 1f 00 00 00 	movabs $0x1f7a,%r11
+    1164:	00 00 00 
+    1167:	4c 01 d8             	add    %r11,%rax
+    116a:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    116e:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    1172:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    1176:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    117a:	48 8b 12             	mov    (%rdx),%rdx
+    117d:	48 b9 70 00 00 00 00 	movabs $0x70,%rcx
+    1184:	00 00 00 
+    1187:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    118b:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    118f:	48 8b 52 08          	mov    0x8(%rdx),%rdx
+    1193:	48 b9 78 00 00 00 00 	movabs $0x78,%rcx
+    119a:	00 00 00 
+    119d:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    11a1:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    11a5:	48 8b 52 10          	mov    0x10(%rdx),%rdx
+    11a9:	48 b9 80 00 00 00 00 	movabs $0x80,%rcx
+    11b0:	00 00 00 
+    11b3:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    11b7:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    11bb:	48 8b 52 18          	mov    0x18(%rdx),%rdx
+    11bf:	48 b9 88 00 00 00 00 	movabs $0x88,%rcx
+    11c6:	00 00 00 
+    11c9:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    11cd:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    11d1:	48 8b 52 20          	mov    0x20(%rdx),%rdx
+    11d5:	48 b9 90 00 00 00 00 	movabs $0x90,%rcx
+    11dc:	00 00 00 
+    11df:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    11e3:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    11e7:	48 8b 52 28          	mov    0x28(%rdx),%rdx
+    11eb:	48 b9 98 00 00 00 00 	movabs $0x98,%rcx
+    11f2:	00 00 00 
+    11f5:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    11f9:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    11fd:	48 83 c2 30          	add    $0x30,%rdx
+    1201:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
+    1205:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    1209:	48 8b 12             	mov    (%rdx),%rdx
+    120c:	48 b9 48 00 00 00 00 	movabs $0x48,%rcx
+    1213:	00 00 00 
+    1216:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    121a:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    121e:	48 8b 52 08          	mov    0x8(%rdx),%rdx
+    1222:	48 b9 50 00 00 00 00 	movabs $0x50,%rcx
+    1229:	00 00 00 
+    122c:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    1230:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    1234:	48 8b 52 10          	mov    0x10(%rdx),%rdx
+    1238:	48 b9 58 00 00 00 00 	movabs $0x58,%rcx
+    123f:	00 00 00 
+    1242:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    1246:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    124a:	48 8b 52 18          	mov    0x18(%rdx),%rdx
+    124e:	48 b9 60 00 00 00 00 	movabs $0x60,%rcx
+    1255:	00 00 00 
+    1258:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    125c:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    1260:	48 8b 52 20          	mov    0x20(%rdx),%rdx
+    1264:	48 b9 68 00 00 00 00 	movabs $0x68,%rcx
+    126b:	00 00 00 
+    126e:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    1272:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    1276:	48 83 c2 58          	add    $0x58,%rdx
+    127a:	48 89 55 e8          	mov    %rdx,-0x18(%rbp)
+    127e:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    1282:	48 8b 12             	mov    (%rdx),%rdx
+    1285:	48 b9 30 00 00 00 00 	movabs $0x30,%rcx
+    128c:	00 00 00 
+    128f:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    1293:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    1297:	48 8b 52 08          	mov    0x8(%rdx),%rdx
+    129b:	48 b9 38 00 00 00 00 	movabs $0x38,%rcx
+    12a2:	00 00 00 
+    12a5:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    12a9:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    12ad:	48 8b 52 10          	mov    0x10(%rdx),%rdx
+    12b1:	48 b9 40 00 00 00 00 	movabs $0x40,%rcx
+    12b8:	00 00 00 
+    12bb:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    12bf:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    12c3:	48 83 c2 70          	add    $0x70,%rdx
+    12c7:	48 89 55 e0          	mov    %rdx,-0x20(%rbp)
+    12cb:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    12cf:	48 8b 12             	mov    (%rdx),%rdx
+    12d2:	48 b9 18 00 00 00 00 	movabs $0x18,%rcx
+    12d9:	00 00 00 
+    12dc:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    12e0:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    12e4:	48 8b 52 08          	mov    0x8(%rdx),%rdx
+    12e8:	48 b9 20 00 00 00 00 	movabs $0x20,%rcx
+    12ef:	00 00 00 
+    12f2:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    12f6:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    12fa:	48 8b 52 10          	mov    0x10(%rdx),%rdx
+    12fe:	48 b9 28 00 00 00 00 	movabs $0x28,%rcx
+    1305:	00 00 00 
+    1308:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
+    130c:	90                   	nop
+    130d:	c9                   	leave
+    130e:	c3                   	ret
 
-0000000000001231 <_ZL8sde_mainPv>:
-    1231:	55                   	push   %rbp
-    1232:	48 89 e5             	mov    %rsp,%rbp
-    1235:	53                   	push   %rbx
-    1236:	48 83 ec 18          	sub    $0x18,%rsp
-    123a:	48 8d 1d f9 ff ff ff 	lea    -0x7(%rip),%rbx        # 123a <_ZL8sde_mainPv+0x9>
-    1241:	49 bb ce 1e 00 00 00 	movabs $0x1ece,%r11
-    1248:	00 00 00 
-    124b:	4c 01 db             	add    %r11,%rbx
-    124e:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    1252:	48 b8 90 00 00 00 00 	movabs $0x90,%rax
-    1259:	00 00 00 
-    125c:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    1260:	bf 32 00 00 00       	mov    $0x32,%edi
-    1265:	ff d0                	call   *%rax
-    1267:	eb e9                	jmp    1252 <_ZL8sde_mainPv+0x21>
-    1269:	90                   	nop
+000000000000130f <_ZL8sde_mainPv>:
+    130f:	55                   	push   %rbp
+    1310:	48 89 e5             	mov    %rsp,%rbp
+    1313:	53                   	push   %rbx
+    1314:	48 83 ec 38          	sub    $0x38,%rsp
+    1318:	48 8d 1d f9 ff ff ff 	lea    -0x7(%rip),%rbx        # 1318 <_ZL8sde_mainPv+0x9>
+    131f:	49 bb b8 1d 00 00 00 	movabs $0x1db8,%r11
+    1326:	00 00 00 
+    1329:	4c 01 db             	add    %r11,%rbx
+    132c:	48 89 7d c8          	mov    %rdi,-0x38(%rbp)
+    1330:	48 b8 28 00 00 00 00 	movabs $0x28,%rax
+    1337:	00 00 00 
+    133a:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
+    133e:	be 05 00 00 00       	mov    $0x5,%esi
+    1343:	bf 01 00 00 00       	mov    $0x1,%edi
+    1348:	ff d0                	call   *%rax
+    134a:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    134e:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    1352:	48 89 45 d8          	mov    %rax,-0x28(%rbp)
+    1356:	48 b8 78 00 00 00 00 	movabs $0x78,%rax
+    135d:	00 00 00 
+    1360:	48 8b 14 03          	mov    (%rbx,%rax,1),%rdx
+    1364:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    1368:	48 89 c6             	mov    %rax,%rsi
+    136b:	48 b8 30 ef ff ff ff 	movabs $0xffffffffffffef30,%rax
+    1372:	ff ff ff 
+    1375:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    1379:	48 89 c7             	mov    %rax,%rdi
+    137c:	b8 00 00 00 00       	mov    $0x0,%eax
+    1381:	ff d2                	call   *%rdx
+    1383:	48 b8 78 00 00 00 00 	movabs $0x78,%rax
+    138a:	00 00 00 
+    138d:	48 8b 14 03          	mov    (%rbx,%rax,1),%rdx
+    1391:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    1395:	48 83 c0 10          	add    $0x10,%rax
+    1399:	48 89 c6             	mov    %rax,%rsi
+    139c:	48 b8 4f ef ff ff ff 	movabs $0xffffffffffffef4f,%rax
+    13a3:	ff ff ff 
+    13a6:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    13aa:	48 89 c7             	mov    %rax,%rdi
+    13ad:	b8 00 00 00 00       	mov    $0x0,%eax
+    13b2:	ff d2                	call   *%rdx
+    13b4:	48 b8 78 00 00 00 00 	movabs $0x78,%rax
+    13bb:	00 00 00 
+    13be:	48 8b 14 03          	mov    (%rbx,%rax,1),%rdx
+    13c2:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    13c6:	48 8b 40 30          	mov    0x30(%rax),%rax
+    13ca:	48 89 c6             	mov    %rax,%rsi
+    13cd:	48 b8 70 ef ff ff ff 	movabs $0xffffffffffffef70,%rax
+    13d4:	ff ff ff 
+    13d7:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
+    13db:	48 89 c7             	mov    %rax,%rdi
+    13de:	b8 00 00 00 00       	mov    $0x0,%eax
+    13e3:	ff d2                	call   *%rdx
+    13e5:	c7 45 ec c8 00 00 00 	movl   $0xc8,-0x14(%rbp)
+    13ec:	c7 45 e8 c8 00 00 00 	movl   $0xc8,-0x18(%rbp)
+    13f3:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    13f7:	48 8b 50 30          	mov    0x30(%rax),%rdx
+    13fb:	48 8d 45 d0          	lea    -0x30(%rbp),%rax
+    13ff:	be 08 00 00 00       	mov    $0x8,%esi
+    1404:	48 89 c7             	mov    %rax,%rdi
+    1407:	ff d2                	call   *%rdx
+    1409:	48 83 f8 08          	cmp    $0x8,%rax
+    140d:	0f 94 c0             	sete   %al
+    1410:	84 c0                	test   %al,%al
+    1412:	74 0c                	je     1420 <_ZL8sde_mainPv+0x111>
+    1414:	8b 45 d0             	mov    -0x30(%rbp),%eax
+    1417:	89 45 ec             	mov    %eax,-0x14(%rbp)
+    141a:	8b 45 d4             	mov    -0x2c(%rbp),%eax
+    141d:	89 45 e8             	mov    %eax,-0x18(%rbp)
+    1420:	48 b8 58 00 00 00 00 	movabs $0x58,%rax
+    1427:	00 00 00 
+    142a:	4c 8b 04 03          	mov    (%rbx,%rax,1),%r8
+    142e:	8b 75 e8             	mov    -0x18(%rbp),%esi
+    1431:	8b 45 ec             	mov    -0x14(%rbp),%eax
+    1434:	b9 90 01 00 00       	mov    $0x190,%ecx
+    1439:	ba 90 01 00 00       	mov    $0x190,%edx
+    143e:	89 c7                	mov    %eax,%edi
+    1440:	41 ff d0             	call   *%r8
+    1443:	48 b8 68 00 00 00 00 	movabs $0x68,%rax
+    144a:	00 00 00 
+    144d:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
+    1451:	ff d0                	call   *%rax
+    1453:	48 b8 30 00 00 00 00 	movabs $0x30,%rax
+    145a:	00 00 00 
+    145d:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
+    1461:	ff d0                	call   *%rax
+    1463:	eb 8e                	jmp    13f3 <_ZL8sde_mainPv+0xe4>
 
-000000000000126a <_ZN15DaemonInterfaceC1Ev>:
-    126a:	55                   	push   %rbp
-    126b:	48 89 e5             	mov    %rsp,%rbp
-    126e:	48 83 ec 08          	sub    $0x8,%rsp
-    1272:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1272 <_ZN15DaemonInterfaceC1Ev+0x8>
-    1279:	49 bb 96 1e 00 00 00 	movabs $0x1e96,%r11
-    1280:	00 00 00 
-    1283:	4c 01 d8             	add    %r11,%rax
-    1286:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
-    128a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    128e:	48 c7 00 00 00 00 00 	movq   $0x0,(%rax)
-    1295:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    1299:	48 c7 40 08 00 00 00 	movq   $0x0,0x8(%rax)
-    12a0:	00 
-    12a1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    12a5:	48 c7 40 10 00 00 00 	movq   $0x0,0x10(%rax)
-    12ac:	00 
-    12ad:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    12b1:	48 c7 40 18 00 00 00 	movq   $0x0,0x18(%rax)
-    12b8:	00 
-    12b9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    12bd:	48 c7 40 20 00 00 00 	movq   $0x0,0x20(%rax)
-    12c4:	00 
-    12c5:	90                   	nop
-    12c6:	c9                   	leave
-    12c7:	c3                   	ret
+0000000000001465 <_Z7kmemsetIcEPvS0_T_m>:
+    1465:	55                   	push   %rbp
+    1466:	48 89 e5             	mov    %rsp,%rbp
+    1469:	48 83 ec 28          	sub    $0x28,%rsp
+    146d:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 146d <_Z7kmemsetIcEPvS0_T_m+0x8>
+    1474:	49 bb 63 1c 00 00 00 	movabs $0x1c63,%r11
+    147b:	00 00 00 
+    147e:	4c 01 d8             	add    %r11,%rax
+    1481:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1485:	89 f0                	mov    %esi,%eax
+    1487:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    148b:	88 45 e4             	mov    %al,-0x1c(%rbp)
+    148e:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1492:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    1496:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    149a:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    149e:	48 01 d0             	add    %rdx,%rax
+    14a1:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    14a5:	eb 12                	jmp    14b9 <_Z7kmemsetIcEPvS0_T_m+0x54>
+    14a7:	0f b6 55 e4          	movzbl -0x1c(%rbp),%edx
+    14ab:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14af:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    14b3:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    14b7:	88 10                	mov    %dl,(%rax)
+    14b9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14bd:	48 3b 45 f0          	cmp    -0x10(%rbp),%rax
+    14c1:	72 e4                	jb     14a7 <_Z7kmemsetIcEPvS0_T_m+0x42>
+    14c3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    14c7:	c9                   	leave
+    14c8:	c3                   	ret
 
-00000000000012c8 <_Z7kmemsetIiEPvS0_T_m>:
-    12c8:	55                   	push   %rbp
-    12c9:	48 89 e5             	mov    %rsp,%rbp
-    12cc:	48 83 ec 28          	sub    $0x28,%rsp
-    12d0:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 12d0 <_Z7kmemsetIiEPvS0_T_m+0x8>
-    12d7:	49 bb 38 1e 00 00 00 	movabs $0x1e38,%r11
-    12de:	00 00 00 
-    12e1:	4c 01 d8             	add    %r11,%rax
-    12e4:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    12e8:	89 75 e4             	mov    %esi,-0x1c(%rbp)
-    12eb:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
-    12ef:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    12f3:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
-    12f7:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    12fb:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    12ff:	48 01 d0             	add    %rdx,%rax
-    1302:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
-    1306:	eb 11                	jmp    1319 <_Z7kmemsetIiEPvS0_T_m+0x51>
-    1308:	8b 55 e4             	mov    -0x1c(%rbp),%edx
-    130b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    130f:	48 8d 48 04          	lea    0x4(%rax),%rcx
-    1313:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
-    1317:	89 10                	mov    %edx,(%rax)
-    1319:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    131d:	48 3b 45 f0          	cmp    -0x10(%rbp),%rax
-    1321:	72 e5                	jb     1308 <_Z7kmemsetIiEPvS0_T_m+0x40>
-    1323:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1327:	c9                   	leave
-    1328:	c3                   	ret
-
-0000000000001329 <_Z7kmemsetIcEPvS0_T_m>:
-    1329:	55                   	push   %rbp
-    132a:	48 89 e5             	mov    %rsp,%rbp
-    132d:	48 83 ec 28          	sub    $0x28,%rsp
-    1331:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1331 <_Z7kmemsetIcEPvS0_T_m+0x8>
-    1338:	49 bb d7 1d 00 00 00 	movabs $0x1dd7,%r11
-    133f:	00 00 00 
-    1342:	4c 01 d8             	add    %r11,%rax
-    1345:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    1349:	89 f0                	mov    %esi,%eax
-    134b:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
-    134f:	88 45 e4             	mov    %al,-0x1c(%rbp)
-    1352:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1356:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
-    135a:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    135e:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    1362:	48 01 d0             	add    %rdx,%rax
-    1365:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
-    1369:	eb 12                	jmp    137d <_Z7kmemsetIcEPvS0_T_m+0x54>
-    136b:	0f b6 55 e4          	movzbl -0x1c(%rbp),%edx
-    136f:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    1373:	48 8d 48 01          	lea    0x1(%rax),%rcx
-    1377:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
-    137b:	88 10                	mov    %dl,(%rax)
-    137d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    1381:	48 3b 45 f0          	cmp    -0x10(%rbp),%rax
-    1385:	72 e4                	jb     136b <_Z7kmemsetIcEPvS0_T_m+0x42>
-    1387:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    138b:	c9                   	leave
-    138c:	c3                   	ret
-
-000000000000138d <_Z7kmemcpyIcEPvS0_PKvm>:
-    138d:	55                   	push   %rbp
-    138e:	48 89 e5             	mov    %rsp,%rbp
-    1391:	48 83 ec 38          	sub    $0x38,%rsp
-    1395:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1395 <_Z7kmemcpyIcEPvS0_PKvm+0x8>
-    139c:	49 bb 73 1d 00 00 00 	movabs $0x1d73,%r11
-    13a3:	00 00 00 
-    13a6:	4c 01 d8             	add    %r11,%rax
-    13a9:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
-    13ad:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
-    13b1:	48 89 55 c8          	mov    %rdx,-0x38(%rbp)
-    13b5:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    13b9:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
-    13bd:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
-    13c1:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
-    13c5:	48 01 d0             	add    %rdx,%rax
-    13c8:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
-    13cc:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
-    13d0:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
-    13d4:	eb 1d                	jmp    13f3 <_Z7kmemcpyIcEPvS0_PKvm+0x66>
-    13d6:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
-    13da:	48 8d 50 01          	lea    0x1(%rax),%rdx
-    13de:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
-    13e2:	0f b6 10             	movzbl (%rax),%edx
-    13e5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    13e9:	48 8d 48 01          	lea    0x1(%rax),%rcx
-    13ed:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
-    13f1:	88 10                	mov    %dl,(%rax)
-    13f3:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    13f7:	48 3b 45 e8          	cmp    -0x18(%rbp),%rax
-    13fb:	72 d9                	jb     13d6 <_Z7kmemcpyIcEPvS0_PKvm+0x49>
-    13fd:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    1401:	c9                   	leave
-    1402:	c3                   	ret
-
-0000000000001403 <_Z41__static_initialization_and_destruction_0v>:
-    1403:	55                   	push   %rbp
-    1404:	48 89 e5             	mov    %rsp,%rbp
-    1407:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1407 <_Z41__static_initialization_and_destruction_0v+0x4>
-    140e:	49 bb 01 1d 00 00 00 	movabs $0x1d01,%r11
-    1415:	00 00 00 
-    1418:	4c 01 d8             	add    %r11,%rax
-    141b:	48 ba 18 00 00 00 00 	movabs $0x18,%rdx
-    1422:	00 00 00 
-    1425:	48 8d 14 10          	lea    (%rax,%rdx,1),%rdx
-    1429:	48 89 d7             	mov    %rdx,%rdi
-    142c:	48 ba 62 e1 ff ff ff 	movabs $0xffffffffffffe162,%rdx
-    1433:	ff ff ff 
-    1436:	48 8d 04 10          	lea    (%rax,%rdx,1),%rax
-    143a:	ff d0                	call   *%rax
-    143c:	90                   	nop
-    143d:	5d                   	pop    %rbp
-    143e:	c3                   	ret
-
-000000000000143f <_GLOBAL__sub_I_init>:
-    143f:	55                   	push   %rbp
-    1440:	48 89 e5             	mov    %rsp,%rbp
-    1443:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1443 <_GLOBAL__sub_I_init+0x4>
-    144a:	49 bb c5 1c 00 00 00 	movabs $0x1cc5,%r11
-    1451:	00 00 00 
-    1454:	4c 01 d8             	add    %r11,%rax
-    1457:	48 ba fb e2 ff ff ff 	movabs $0xffffffffffffe2fb,%rdx
-    145e:	ff ff ff 
-    1461:	48 8d 04 10          	lea    (%rax,%rdx,1),%rax
-    1465:	ff d0                	call   *%rax
-    1467:	5d                   	pop    %rbp
-    1468:	c3                   	ret
+00000000000014c9 <_Z7kmemcpyIcEPvS0_PKvm>:
+    14c9:	55                   	push   %rbp
+    14ca:	48 89 e5             	mov    %rsp,%rbp
+    14cd:	48 83 ec 38          	sub    $0x38,%rsp
+    14d1:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 14d1 <_Z7kmemcpyIcEPvS0_PKvm+0x8>
+    14d8:	49 bb ff 1b 00 00 00 	movabs $0x1bff,%r11
+    14df:	00 00 00 
+    14e2:	4c 01 d8             	add    %r11,%rax
+    14e5:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    14e9:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    14ed:	48 89 55 c8          	mov    %rdx,-0x38(%rbp)
+    14f1:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    14f5:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    14f9:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    14fd:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1501:	48 01 d0             	add    %rdx,%rax
+    1504:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1508:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    150c:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1510:	eb 1d                	jmp    152f <_Z7kmemcpyIcEPvS0_PKvm+0x66>
+    1512:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    1516:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    151a:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
+    151e:	0f b6 10             	movzbl (%rax),%edx
+    1521:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1525:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    1529:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    152d:	88 10                	mov    %dl,(%rax)
+    152f:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1533:	48 3b 45 e8          	cmp    -0x18(%rbp),%rax
+    1537:	72 d9                	jb     1512 <_Z7kmemcpyIcEPvS0_PKvm+0x49>
+    1539:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    153d:	c9                   	leave
+    153e:	c3                   	ret
 
 
 
@@ -571,124 +602,128 @@ Disassembly of section .text:
 
 
 -------- hexdump -C daemon.bin --------
-00000000  55 48 89 e5 53 48 83 ec  18 48 8d 1d f9 ff ff ff  |UH..SH...H......|
-00000010  49 bb ff 20 00 00 00 00  00 00 4c 01 db 48 89 7d  |I.. ......L..H.}|
-00000020  e8 48 8b 45 e8 48 89 c7  48 b8 44 e0 ff ff ff ff  |.H.E.H..H.D.....|
-00000030  ff ff 48 8d 04 03 ff d0  ba 48 00 00 00 be 00 00  |..H......H......|
-00000040  00 00 48 b8 18 00 00 00  00 00 00 00 48 8d 04 03  |..H.........H...|
-00000050  48 89 c7 48 b8 c0 e1 ff  ff ff ff ff ff 48 8d 04  |H..H.........H..|
-00000060  03 ff d0 48 b8 18 00 00  00 00 00 00 00 48 8d 14  |...H.........H..|
-00000070  03 b8 00 00 00 00 b9 09  00 00 00 48 89 d7 f3 48  |...........H...H|
-00000080  ab 48 b8 18 00 00 00 00  00 00 00 48 c7 04 03 02  |.H.........H....|
-00000090  00 00 00 48 b8 18 00 00  00 00 00 00 00 48 c7 44  |...H.........H.D|
-000000a0  03 08 01 00 00 00 48 b8  18 00 00 00 00 00 00 00  |......H.........|
-000000b0  48 c7 44 03 10 01 00 00  00 48 ba 18 00 00 00 00  |H.D......H......|
-000000c0  00 00 00 48 b8 29 e1 ff  ff ff ff ff ff 48 8d 04  |...H.).......H..|
-000000d0  03 48 89 44 13 20 ba 08  00 00 00 be 00 00 00 00  |.H.D. ..........|
-000000e0  48 b8 30 00 00 00 00 00  00 00 48 8d 04 03 48 89  |H.0.......H...H.|
-000000f0  c7 48 b8 21 e2 ff ff ff  ff ff ff 48 8d 04 03 ff  |.H.!.......H....|
-00000100  d0 ba 06 00 00 00 48 b8  f8 ee ff ff ff ff ff ff  |......H.........|
-00000110  48 8d 04 03 48 89 c6 48  b8 30 00 00 00 00 00 00  |H...H..H.0......|
-00000120  00 48 8d 04 03 48 89 c7  48 b8 85 e2 ff ff ff ff  |.H...H..H.......|
-00000130  ff ff 48 8d 04 03 ff d0  48 b8 18 00 00 00 00 00  |..H.....H.......|
-00000140  00 00 48 8d 04 03 48 8b  5d f8 c9 c3 55 48 89 e5  |..H...H.]...UH..|
-00000150  48 83 ec 18 48 8d 05 f9  ff ff ff 49 bb b4 1f 00  |H...H......I....|
-00000160  00 00 00 00 00 4c 01 d8  48 89 7d e8 48 8b 55 e8  |.....L..H.}.H.U.|
-00000170  48 89 55 f8 48 8b 55 f8  48 8b 12 48 b9 60 00 00  |H.U.H.U.H..H.`..|
-00000180  00 00 00 00 00 48 89 14  08 48 8b 55 f8 48 8b 52  |.....H...H.U.H.R|
-00000190  08 48 b9 68 00 00 00 00  00 00 00 48 89 14 08 48  |.H.h.......H...H|
-000001a0  8b 55 f8 48 8b 52 10 48  b9 70 00 00 00 00 00 00  |.U.H.R.H.p......|
-000001b0  00 48 89 14 08 48 8b 55  f8 48 8b 52 18 48 b9 78  |.H...H.U.H.R.H.x|
-000001c0  00 00 00 00 00 00 00 48  89 14 08 48 8b 55 f8 48  |.......H...H.U.H|
-000001d0  8b 52 20 48 b9 80 00 00  00 00 00 00 00 48 89 14  |.R H.........H..|
-000001e0  08 48 8b 55 e8 48 83 c2  28 48 89 55 f0 48 8b 55  |.H.U.H..(H.U.H.U|
-000001f0  f0 48 8b 12 48 b9 88 00  00 00 00 00 00 00 48 89  |.H..H.........H.|
-00000200  14 08 48 8b 55 f0 48 8b  52 08 48 b9 90 00 00 00  |..H.U.H.R.H.....|
-00000210  00 00 00 00 48 89 14 08  48 8b 55 f0 48 8b 52 10  |....H...H.U.H.R.|
-00000220  48 b9 98 00 00 00 00 00  00 00 48 89 14 08 90 c9  |H.........H.....|
-00000230  c3 55 48 89 e5 53 48 83  ec 18 48 8d 1d f9 ff ff  |.UH..SH...H.....|
-00000240  ff 49 bb ce 1e 00 00 00  00 00 00 4c 01 db 48 89  |.I.........L..H.|
-00000250  7d e8 48 b8 90 00 00 00  00 00 00 00 48 8b 04 03  |}.H.........H...|
-00000260  bf 32 00 00 00 ff d0 eb  e9 90 55 48 89 e5 48 83  |.2........UH..H.|
-00000270  ec 08 48 8d 05 f9 ff ff  ff 49 bb 96 1e 00 00 00  |..H......I......|
-00000280  00 00 00 4c 01 d8 48 89  7d f8 48 8b 45 f8 48 c7  |...L..H.}.H.E.H.|
-00000290  00 00 00 00 00 48 8b 45  f8 48 c7 40 08 00 00 00  |.....H.E.H.@....|
-000002a0  00 48 8b 45 f8 48 c7 40  10 00 00 00 00 48 8b 45  |.H.E.H.@.....H.E|
-000002b0  f8 48 c7 40 18 00 00 00  00 48 8b 45 f8 48 c7 40  |.H.@.....H.E.H.@|
-000002c0  20 00 00 00 00 90 c9 c3  55 48 89 e5 48 83 ec 28  | .......UH..H..(|
-000002d0  48 8d 05 f9 ff ff ff 49  bb 38 1e 00 00 00 00 00  |H......I.8......|
-000002e0  00 4c 01 d8 48 89 7d e8  89 75 e4 48 89 55 d8 48  |.L..H.}..u.H.U.H|
-000002f0  8b 45 e8 48 89 45 f8 48  8b 55 e8 48 8b 45 d8 48  |.E.H.E.H.U.H.E.H|
-00000300  01 d0 48 89 45 f0 eb 11  8b 55 e4 48 8b 45 f8 48  |..H.E....U.H.E.H|
-00000310  8d 48 04 48 89 4d f8 89  10 48 8b 45 f8 48 3b 45  |.H.H.M...H.E.H;E|
-00000320  f0 72 e5 48 8b 45 e8 c9  c3 55 48 89 e5 48 83 ec  |.r.H.E...UH..H..|
-00000330  28 48 8d 05 f9 ff ff ff  49 bb d7 1d 00 00 00 00  |(H......I.......|
-00000340  00 00 4c 01 d8 48 89 7d  e8 89 f0 48 89 55 d8 88  |..L..H.}...H.U..|
-00000350  45 e4 48 8b 45 e8 48 89  45 f8 48 8b 55 e8 48 8b  |E.H.E.H.E.H.U.H.|
-00000360  45 d8 48 01 d0 48 89 45  f0 eb 12 0f b6 55 e4 48  |E.H..H.E.....U.H|
-00000370  8b 45 f8 48 8d 48 01 48  89 4d f8 88 10 48 8b 45  |.E.H.H.H.M...H.E|
-00000380  f8 48 3b 45 f0 72 e4 48  8b 45 e8 c9 c3 55 48 89  |.H;E.r.H.E...UH.|
-00000390  e5 48 83 ec 38 48 8d 05  f9 ff ff ff 49 bb 73 1d  |.H..8H......I.s.|
-000003a0  00 00 00 00 00 00 4c 01  d8 48 89 7d d8 48 89 75  |......L..H.}.H.u|
-000003b0  d0 48 89 55 c8 48 8b 45  d8 48 89 45 f8 48 8b 55  |.H.U.H.E.H.E.H.U|
-000003c0  d8 48 8b 45 c8 48 01 d0  48 89 45 e8 48 8b 45 d0  |.H.E.H..H.E.H.E.|
-000003d0  48 89 45 f0 eb 1d 48 8b  45 f0 48 8d 50 01 48 89  |H.E...H.E.H.P.H.|
-000003e0  55 f0 0f b6 10 48 8b 45  f8 48 8d 48 01 48 89 4d  |U....H.E.H.H.H.M|
-000003f0  f8 88 10 48 8b 45 f8 48  3b 45 e8 72 d9 48 8b 45  |...H.E.H;E.r.H.E|
-00000400  d8 c9 c3 55 48 89 e5 48  8d 05 f9 ff ff ff 49 bb  |...UH..H......I.|
-00000410  01 1d 00 00 00 00 00 00  4c 01 d8 48 ba 18 00 00  |........L..H....|
-00000420  00 00 00 00 00 48 8d 14  10 48 89 d7 48 ba 62 e1  |.....H...H..H.b.|
-00000430  ff ff ff ff ff ff 48 8d  04 10 ff d0 90 5d c3 55  |......H......].U|
-00000440  48 89 e5 48 8d 05 f9 ff  ff ff 49 bb c5 1c 00 00  |H..H......I.....|
-00000450  00 00 00 00 4c 01 d8 48  ba fb e2 ff ff ff ff ff  |....L..H........|
-00000460  ff 48 8d 04 10 ff d0 5d  c3 00 00 00 00 00 00 00  |.H.....]........|
-00000470  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00000000  55 48 89 e5 53 48 83 ec  28 48 8d 1d f9 ff ff ff  |UH..SH..(H......|
+00000010  49 bb c7 20 00 00 00 00  00 00 4c 01 db 48 89 7d  |I.. ......L..H.}|
+00000020  d8 48 8b 45 d8 48 89 c7  48 b8 7e e0 ff ff ff ff  |.H.E.H..H.~.....|
+00000030  ff ff 48 8d 04 03 ff d0  48 b8 80 00 00 00 00 00  |..H.....H.......|
+00000040  00 00 48 8b 04 03 bf 40  00 00 00 ff d0 48 89 45  |..H....@.....H.E|
+00000050  e8 48 8b 45 e8 48 c7 00  02 00 00 00 48 8b 45 e8  |.H.E.H......H.E.|
+00000060  48 c7 40 08 01 00 00 00  48 8b 45 e8 c6 40 10 00  |H.@.....H.E..@..|
+00000070  48 8b 45 e8 c6 40 11 00  48 8b 45 e8 c6 40 12 00  |H.E..@..H.E..@..|
+00000080  48 8b 45 e8 c6 40 13 00  48 8b 45 e8 c6 40 14 00  |H.E..@..H.E..@..|
+00000090  48 8b 45 e8 c6 40 15 00  48 8b 45 e8 c6 40 16 00  |H.E..@..H.E..@..|
+000000a0  48 8b 45 e8 c6 40 17 00  48 8b 45 e8 48 ba 3f e2  |H.E..@..H.E.H.?.|
+000000b0  ff ff ff ff ff ff 48 8d  14 13 48 89 50 18 48 8b  |......H...H.P.H.|
+000000c0  45 e8 48 c7 40 20 00 00  00 00 48 8b 45 e8 48 c7  |E.H.@ ....H.E.H.|
+000000d0  40 28 00 00 00 00 48 8b  45 e8 48 c7 40 30 00 00  |@(....H.E.H.@0..|
+000000e0  00 00 48 8b 45 e8 48 c7  40 38 00 00 00 00 48 8b  |..H.E.H.@8....H.|
+000000f0  45 e8 48 83 c0 10 ba 08  00 00 00 be 00 00 00 00  |E.H.............|
+00000100  48 89 c7 48 b8 95 e3 ff  ff ff ff ff ff 48 8d 04  |H..H.........H..|
+00000110  03 ff d0 48 8b 45 e8 48  8d 48 10 ba 06 00 00 00  |...H.E.H.H......|
+00000120  48 b8 8f ef ff ff ff ff  ff ff 48 8d 04 03 48 89  |H.........H...H.|
+00000130  c6 48 89 cf 48 b8 f9 e3  ff ff ff ff ff ff 48 8d  |.H..H.........H.|
+00000140  04 03 ff d0 48 8b 45 e8  48 8b 5d f8 c9 c3 55 48  |....H.E.H.]...UH|
+00000150  89 e5 48 83 ec 28 48 8d  05 f9 ff ff ff 49 bb 7a  |..H..(H......I.z|
+00000160  1f 00 00 00 00 00 00 4c  01 d8 48 89 7d d8 48 8b  |.......L..H.}.H.|
+00000170  55 d8 48 89 55 f8 48 8b  55 f8 48 8b 12 48 b9 70  |U.H.U.H.U.H..H.p|
+00000180  00 00 00 00 00 00 00 48  89 14 08 48 8b 55 f8 48  |.......H...H.U.H|
+00000190  8b 52 08 48 b9 78 00 00  00 00 00 00 00 48 89 14  |.R.H.x.......H..|
+000001a0  08 48 8b 55 f8 48 8b 52  10 48 b9 80 00 00 00 00  |.H.U.H.R.H......|
+000001b0  00 00 00 48 89 14 08 48  8b 55 f8 48 8b 52 18 48  |...H...H.U.H.R.H|
+000001c0  b9 88 00 00 00 00 00 00  00 48 89 14 08 48 8b 55  |.........H...H.U|
+000001d0  f8 48 8b 52 20 48 b9 90  00 00 00 00 00 00 00 48  |.H.R H.........H|
+000001e0  89 14 08 48 8b 55 f8 48  8b 52 28 48 b9 98 00 00  |...H.U.H.R(H....|
+000001f0  00 00 00 00 00 48 89 14  08 48 8b 55 d8 48 83 c2  |.....H...H.U.H..|
+00000200  30 48 89 55 f0 48 8b 55  f0 48 8b 12 48 b9 48 00  |0H.U.H.U.H..H.H.|
+00000210  00 00 00 00 00 00 48 89  14 08 48 8b 55 f0 48 8b  |......H...H.U.H.|
+00000220  52 08 48 b9 50 00 00 00  00 00 00 00 48 89 14 08  |R.H.P.......H...|
+00000230  48 8b 55 f0 48 8b 52 10  48 b9 58 00 00 00 00 00  |H.U.H.R.H.X.....|
+00000240  00 00 48 89 14 08 48 8b  55 f0 48 8b 52 18 48 b9  |..H...H.U.H.R.H.|
+00000250  60 00 00 00 00 00 00 00  48 89 14 08 48 8b 55 f0  |`.......H...H.U.|
+00000260  48 8b 52 20 48 b9 68 00  00 00 00 00 00 00 48 89  |H.R H.h.......H.|
+00000270  14 08 48 8b 55 d8 48 83  c2 58 48 89 55 e8 48 8b  |..H.U.H..XH.U.H.|
+00000280  55 e8 48 8b 12 48 b9 30  00 00 00 00 00 00 00 48  |U.H..H.0.......H|
+00000290  89 14 08 48 8b 55 e8 48  8b 52 08 48 b9 38 00 00  |...H.U.H.R.H.8..|
+000002a0  00 00 00 00 00 48 89 14  08 48 8b 55 e8 48 8b 52  |.....H...H.U.H.R|
+000002b0  10 48 b9 40 00 00 00 00  00 00 00 48 89 14 08 48  |.H.@.......H...H|
+000002c0  8b 55 d8 48 83 c2 70 48  89 55 e0 48 8b 55 e0 48  |.U.H..pH.U.H.U.H|
+000002d0  8b 12 48 b9 18 00 00 00  00 00 00 00 48 89 14 08  |..H.........H...|
+000002e0  48 8b 55 e0 48 8b 52 08  48 b9 20 00 00 00 00 00  |H.U.H.R.H. .....|
+000002f0  00 00 48 89 14 08 48 8b  55 e0 48 8b 52 10 48 b9  |..H...H.U.H.R.H.|
+00000300  28 00 00 00 00 00 00 00  48 89 14 08 90 c9 c3 55  |(.......H......U|
+00000310  48 89 e5 53 48 83 ec 38  48 8d 1d f9 ff ff ff 49  |H..SH..8H......I|
+00000320  bb b8 1d 00 00 00 00 00  00 4c 01 db 48 89 7d c8  |.........L..H.}.|
+00000330  48 b8 28 00 00 00 00 00  00 00 48 8b 04 03 be 05  |H.(.......H.....|
+00000340  00 00 00 bf 01 00 00 00  ff d0 48 89 45 e0 48 8b  |..........H.E.H.|
+00000350  45 e0 48 89 45 d8 48 b8  78 00 00 00 00 00 00 00  |E.H.E.H.x.......|
+00000360  48 8b 14 03 48 8b 45 e0  48 89 c6 48 b8 30 ef ff  |H...H.E.H..H.0..|
+00000370  ff ff ff ff ff 48 8d 04  03 48 89 c7 b8 00 00 00  |.....H...H......|
+00000380  00 ff d2 48 b8 78 00 00  00 00 00 00 00 48 8b 14  |...H.x.......H..|
+00000390  03 48 8b 45 e0 48 83 c0  10 48 89 c6 48 b8 4f ef  |.H.E.H...H..H.O.|
+000003a0  ff ff ff ff ff ff 48 8d  04 03 48 89 c7 b8 00 00  |......H...H.....|
+000003b0  00 00 ff d2 48 b8 78 00  00 00 00 00 00 00 48 8b  |....H.x.......H.|
+000003c0  14 03 48 8b 45 d8 48 8b  40 30 48 89 c6 48 b8 70  |..H.E.H.@0H..H.p|
+000003d0  ef ff ff ff ff ff ff 48  8d 04 03 48 89 c7 b8 00  |.......H...H....|
+000003e0  00 00 00 ff d2 c7 45 ec  c8 00 00 00 c7 45 e8 c8  |......E......E..|
+000003f0  00 00 00 48 8b 45 d8 48  8b 50 30 48 8d 45 d0 be  |...H.E.H.P0H.E..|
+00000400  08 00 00 00 48 89 c7 ff  d2 48 83 f8 08 0f 94 c0  |....H....H......|
+00000410  84 c0 74 0c 8b 45 d0 89  45 ec 8b 45 d4 89 45 e8  |..t..E..E..E..E.|
+00000420  48 b8 58 00 00 00 00 00  00 00 4c 8b 04 03 8b 75  |H.X.......L....u|
+00000430  e8 8b 45 ec b9 90 01 00  00 ba 90 01 00 00 89 c7  |..E.............|
+00000440  41 ff d0 48 b8 68 00 00  00 00 00 00 00 48 8b 04  |A..H.h.......H..|
+00000450  03 ff d0 48 b8 30 00 00  00 00 00 00 00 48 8b 04  |...H.0.......H..|
+00000460  03 ff d0 eb 8e 55 48 89  e5 48 83 ec 28 48 8d 05  |.....UH..H..(H..|
+00000470  f9 ff ff ff 49 bb 63 1c  00 00 00 00 00 00 4c 01  |....I.c.......L.|
+00000480  d8 48 89 7d e8 89 f0 48  89 55 d8 88 45 e4 48 8b  |.H.}...H.U..E.H.|
+00000490  45 e8 48 89 45 f8 48 8b  55 e8 48 8b 45 d8 48 01  |E.H.E.H.U.H.E.H.|
+000004a0  d0 48 89 45 f0 eb 12 0f  b6 55 e4 48 8b 45 f8 48  |.H.E.....U.H.E.H|
+000004b0  8d 48 01 48 89 4d f8 88  10 48 8b 45 f8 48 3b 45  |.H.H.M...H.E.H;E|
+000004c0  f0 72 e4 48 8b 45 e8 c9  c3 55 48 89 e5 48 83 ec  |.r.H.E...UH..H..|
+000004d0  38 48 8d 05 f9 ff ff ff  49 bb ff 1b 00 00 00 00  |8H......I.......|
+000004e0  00 00 4c 01 d8 48 89 7d  d8 48 89 75 d0 48 89 55  |..L..H.}.H.u.H.U|
+000004f0  c8 48 8b 45 d8 48 89 45  f8 48 8b 55 d8 48 8b 45  |.H.E.H.E.H.U.H.E|
+00000500  c8 48 01 d0 48 89 45 e8  48 8b 45 d0 48 89 45 f0  |.H..H.E.H.E.H.E.|
+00000510  eb 1d 48 8b 45 f0 48 8d  50 01 48 89 55 f0 0f b6  |..H.E.H.P.H.U...|
+00000520  10 48 8b 45 f8 48 8d 48  01 48 89 4d f8 88 10 48  |.H.E.H.H.H.M...H|
+00000530  8b 45 f8 48 3b 45 e8 72  d9 48 8b 45 d8 c9 c3 00  |.E.H;E.r.H.E....|
+00000540  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
-00001000  73 68 69 74 64 65 00 00  14 00 00 00 00 00 00 00  |shitde..........|
-00001010  01 7a 52 00 01 78 10 01  1b 0c 07 08 90 01 00 00  |.zR..x..........|
-00001020  1c 00 00 00 1c 00 00 00  24 f1 ff ff e5 00 00 00  |........$.......|
-00001030  00 41 0e 10 86 02 43 0d  06 02 e0 c6 0c 07 08 00  |.A....C.........|
-00001040  18 00 00 00 3c 00 00 00  e9 f1 ff ff 38 00 00 00  |....<.......8...|
-00001050  00 41 0e 10 86 02 43 0d  06 45 83 03 1c 00 00 00  |.A....C..E......|
-00001060  58 00 00 00 06 f2 ff ff  5e 00 00 00 00 41 0e 10  |X.......^....A..|
-00001070  86 02 43 0d 06 02 59 c6  0c 07 08 00 20 00 00 00  |..C...Y..... ...|
-00001080  78 00 00 00 7c ef ff ff  4c 01 00 00 00 41 0e 10  |x...|...L....A..|
-00001090  86 02 43 0d 06 45 83 03  03 42 01 c6 c3 0c 07 08  |..C..E...B......|
-000010a0  1c 00 00 00 9c 00 00 00  20 f2 ff ff 61 00 00 00  |........ ...a...|
-000010b0  00 41 0e 10 86 02 43 0d  06 02 5c c6 0c 07 08 00  |.A....C...\.....|
-000010c0  1c 00 00 00 bc 00 00 00  61 f2 ff ff 64 00 00 00  |........a...d...|
-000010d0  00 41 0e 10 86 02 43 0d  06 02 5f c6 0c 07 08 00  |.A....C..._.....|
-000010e0  1c 00 00 00 dc 00 00 00  a5 f2 ff ff 76 00 00 00  |............v...|
-000010f0  00 41 0e 10 86 02 43 0d  06 02 71 c6 0c 07 08 00  |.A....C...q.....|
-00001100  1c 00 00 00 fc 00 00 00  fb f2 ff ff 3c 00 00 00  |............<...|
-00001110  00 41 0e 10 86 02 43 0d  06 77 c6 0c 07 08 00 00  |.A....C..w......|
-00001120  1c 00 00 00 1c 01 00 00  17 f3 ff ff 2a 00 00 00  |............*...|
-00001130  00 41 0e 10 86 02 43 0d  06 65 c6 0c 07 08 00 00  |.A....C..e......|
-00001140  2f 6c 69 62 2f 6c 64 36  34 2e 73 6f 2e 31 00 00  |/lib/ld64.so.1..|
-00001150  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00001000  5b 73 64 65 5f 6d 61 69  6e 5d 20 69 66 61 63 65  |[sde_main] iface|
+00001010  3a 20 20 20 20 20 20 20  30 78 25 6c 78 0a 00 5b  |:       0x%lx..[|
+00001020  73 64 65 5f 6d 61 69 6e  5d 20 69 66 61 63 65 2d  |sde_main] iface-|
+00001030  3e 73 69 67 3a 20 20 25  73 0a 00 00 00 00 00 00  |>sig:  %s.......|
+00001040  5b 73 64 65 5f 6d 61 69  6e 5d 20 6d 73 64 65 76  |[sde_main] msdev|
+00001050  2d 3e 72 65 61 64 3a 20  30 78 25 6c 78 0a 00 73  |->read: 0x%lx..s|
+00001060  68 69 74 64 65 00 00 00  14 00 00 00 00 00 00 00  |hitde...........|
+00001070  01 7a 52 00 01 78 10 01  1b 0c 07 08 90 01 00 00  |.zR..x..........|
+00001080  1c 00 00 00 1c 00 00 00  c6 f0 ff ff c1 01 00 00  |................|
+00001090  00 41 0e 10 86 02 43 0d  06 03 bc 01 c6 0c 07 08  |.A....C.........|
+000010a0  18 00 00 00 3c 00 00 00  67 f2 ff ff 56 01 00 00  |....<...g...V...|
+000010b0  00 41 0e 10 86 02 43 0d  06 45 83 03 20 00 00 00  |.A....C..E.. ...|
+000010c0  58 00 00 00 3c ef ff ff  4e 01 00 00 00 41 0e 10  |X...<...N....A..|
+000010d0  86 02 43 0d 06 45 83 03  03 44 01 c6 c3 0c 07 08  |..C..E...D......|
+000010e0  1c 00 00 00 7c 00 00 00  7d f3 ff ff 64 00 00 00  |....|...}...d...|
+000010f0  00 41 0e 10 86 02 43 0d  06 02 5f c6 0c 07 08 00  |.A....C..._.....|
+00001100  1c 00 00 00 9c 00 00 00  c1 f3 ff ff 76 00 00 00  |............v...|
+00001110  00 41 0e 10 86 02 43 0d  06 02 71 c6 0c 07 08 00  |.A....C...q.....|
+00001120  2f 6c 69 62 2f 6c 64 36  34 2e 73 6f 2e 31 00 00  |/lib/ld64.so.1..|
+00001130  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
-00001170  01 00 00 00 01 00 00 00  00 00 00 00 00 00 00 00  |................|
-00001180  00 30 00 00 00 00 00 00  08 00 00 00 00 00 00 00  |.0..............|
-00001190  3f 14 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |?...............|
-000011a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00001150  01 00 00 00 01 00 00 00  00 00 00 00 00 00 00 00  |................|
+00001160  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
-00002000  3f 14 00 00 00 00 00 00  04 00 00 00 00 00 00 00  |?...............|
-00002010  70 21 00 00 00 00 00 00  05 00 00 00 00 00 00 00  |p!..............|
-00002020  68 21 00 00 00 00 00 00  06 00 00 00 00 00 00 00  |h!..............|
-00002030  50 21 00 00 00 00 00 00  0a 00 00 00 00 00 00 00  |P!..............|
-00002040  01 00 00 00 00 00 00 00  0b 00 00 00 00 00 00 00  |................|
-00002050  18 00 00 00 00 00 00 00  15 00 00 00 00 00 00 00  |................|
-00002060  00 00 00 00 00 00 00 00  07 00 00 00 00 00 00 00  |................|
-00002070  80 21 00 00 00 00 00 00  08 00 00 00 00 00 00 00  |.!..............|
-00002080  18 00 00 00 00 00 00 00  09 00 00 00 00 00 00 00  |................|
-00002090  18 00 00 00 00 00 00 00  fb ff ff 6f 00 00 00 00  |...........o....|
-000020a0  00 00 00 08 00 00 00 00  f9 ff ff 6f 00 00 00 00  |...........o....|
-000020b0  01 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-000020c0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00002000  04 00 00 00 00 00 00 00  50 21 00 00 00 00 00 00  |........P!......|
+00002010  05 00 00 00 00 00 00 00  48 21 00 00 00 00 00 00  |........H!......|
+00002020  06 00 00 00 00 00 00 00  30 21 00 00 00 00 00 00  |........0!......|
+00002030  0a 00 00 00 00 00 00 00  01 00 00 00 00 00 00 00  |................|
+00002040  0b 00 00 00 00 00 00 00  18 00 00 00 00 00 00 00  |................|
+00002050  15 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+00002060  fb ff ff 6f 00 00 00 00  00 00 00 08 00 00 00 00  |...o............|
+00002070  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
-00002100  00 00 00 00 00 00 00 00  08 30 00 00 00 00 00 00  |.........0......|
-00002110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-00002120
+000020d0  00 30 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |.0..............|
+000020e0  00 00 00 00 00 00 00 00                           |........|
+000020e8
 
 
 

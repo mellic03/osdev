@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kfs/bmp.hpp>
-#include <kmath/vec.hpp>
+#include <filesystem/bmp.hpp>
+#include <math/vec.hpp>
 
 
 namespace idk

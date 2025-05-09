@@ -19,7 +19,6 @@ const char *ModuleTypeStr( uint64_t type );
 const char *DeviceTypeStr( uint64_t type );
 const char *DaemonTypeStr( uint64_t type );
 const char *ModuleBaseTypeStr( uint64_t modtype, uint64_t basetype );
-const char *ModuleSubTypeStr( uint64_t modtype, uint64_t subtype );
 
 
 enum ModuleType_: uint64_t
@@ -58,18 +57,8 @@ enum DaemonType_: uint64_t
 #define MODULE_INTERFACE_HEADER \
 uint64_t modtype        = ModuleType_Invalid;\
 uint64_t basetype       = ModuleType_Invalid;\
-uint64_t subtype        = ModuleType_Invalid;\
 char     signature[8]   = {0,0,0,0,0,0,0,0};\
 void     (*main)(void*) = nullptr;\
-
-// struct ModuleHeader
-// {
-//     uint64_t modtype = ModuleType_Invalid;
-//     uint64_t subtype = ModuleType_Invalid;
-//     int64_t  isrno   = -1;
-//     void    *isrfn   = nullptr;
-//     char     signature[8];
-// };
 
 
 struct ModuleInterface

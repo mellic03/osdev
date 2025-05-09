@@ -156,21 +156,18 @@ void irq_handler( intframe_t* )
 
 
 
-static CharDevInterface kbdevice;
-
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
-    // std::printf("[keyboard.cpp init]\n");
-
     rawstream.clear();
     keystream.clear();
 
-    kbdevice = {
+    auto *kbdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
+
+    *kbdev = {
         .modtype  = ModuleType_Device,
-        .basetype = DeviceType_Char,
-        .subtype  = DeviceType_Keyboard,
+        .basetype = DeviceType_Keyboard,
         .main     = driver_main,
 
         .open     = nullptr,
@@ -181,10 +178,9 @@ ModuleInterface *init( ksym::ksym_t *sym )
         .isrfn    = irq_handler,
     };
 
-    auto &dev = kbdevice;
-    kmemset<char>(dev.signature, '\0', sizeof(dev.signature));
-    kmemcpy<char>(dev.signature, "kboard", 6);
+    kmemset<char>(kbdev->signature, '\0', sizeof(kbdev->signature));
+    kmemcpy<char>(kbdev->signature, "kboard", 6);
 
-    return (ModuleInterface*)(&kbdevice);
+    return (ModuleInterface*)kbdev;
 }
 

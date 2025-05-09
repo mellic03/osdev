@@ -1,6 +1,6 @@
 #include <kpanic.h>
 #include <kernel/log.hpp>
-#include "kernel/video.hpp"
+#include "kernel/kvideo.hpp"
 
 void kpanic( const char *msg )
 {

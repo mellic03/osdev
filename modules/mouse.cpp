@@ -137,7 +137,7 @@ static void mouse_init()
 
 static void irq_handler( intframe_t* )
 {
-    std::printf("[mouse irq]\n");
+    // std::printf("[mouse irq]\n");
     uint8_t data = IO::inb(0x60);
     switch(MouseCycle){
         case 0:
@@ -177,20 +177,17 @@ static void driver_main( void* )
 
 static size_t driver_read( void *dstbuf, size_t nbytes )
 {
-    int *dst = (int*)dstbuf;
-    // auto *src = (uint8_t*)(&mbitch);
-    // size_t count = 0;
+    auto *dst = (uint8_t*)dstbuf;
+    auto *src = (uint8_t*)(&mbitch);
+    size_t count = 0;
 
-    dst[0] = mbitch.x;
-    dst[1] = mbitch.y;
+    while ((count < nbytes) && (count < sizeof(MouseBitch)))
+    {
+        *(dst++) = *(src++);
+        count++;
+    }
 
-    // while ((count < nbytes) && (count < sizeof(MouseBitch)))
-    // {
-    //     *(dst++) = *(src++);
-    //     count++;
-    // }
-
-    return 2;
+    return count;
 }
 
 static size_t driver_write( const void*, size_t )
@@ -200,19 +197,17 @@ static size_t driver_write( const void*, size_t )
 
 
 
-static CharDevInterface mousedevice;
-
 
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
-    kmemset(&mousedevice, 0, sizeof(mousedevice));
 
-    mousedevice = {
+    auto *msdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
+
+    *msdev = {
         .modtype  = ModuleType_Device,
-        .basetype = DeviceType_Char,
-        .subtype  = DeviceType_Mouse,
+        .basetype = DeviceType_Mouse,
         .main     = driver_main,
 
         .open     = nullptr,
@@ -223,11 +218,10 @@ ModuleInterface *init( ksym::ksym_t *sym )
         .isrfn    = irq_handler
     };
 
-    auto &dev = mousedevice;
-    kmemset<char>(dev.signature, '\0', sizeof(dev.signature));
-    kmemcpy<char>(dev.signature, "Mouse", 5);
+    kmemset<char>(msdev->signature, '\0', sizeof(msdev->signature));
+    kmemcpy<char>(msdev->signature, "mouse", 5);
 
-    return (ModuleInterface*)(&dev);
+    return (ModuleInterface*)msdev;
 }
 
 

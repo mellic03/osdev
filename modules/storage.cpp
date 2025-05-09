@@ -5,16 +5,6 @@
 
 static uint8_t block_data[1024];
 
-void dev_open()
-{
-
-}
-
-void dev_close()
-{
-
-}
-
 size_t dev_read( void *dst, size_t offset, size_t nbytes )
 {
     kmemcpy<uint8_t>(dst, block_data+offset, nbytes);
@@ -31,7 +21,6 @@ size_t dev_write( const void *src, size_t offset, size_t nbytes )
 
 static BlockDevInterface storagedevice;
 
-
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
@@ -39,12 +28,11 @@ ModuleInterface *init( ksym::ksym_t *sym )
 
     storagedevice = {
         .modtype  = ModuleType_Device,
-        .basetype = DeviceType_Char,
-        .subtype  = DeviceType_Mouse,
+        .basetype = DeviceType_Storage,
         .main     = nullptr,
 
-        .open     = dev_open,
-        .close    = dev_close,
+        .open     = nullptr,
+        .close    = nullptr,
         .read     = dev_read,
         .write    = dev_write,
         .isrno    = -1,

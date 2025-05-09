@@ -2,10 +2,6 @@
 #include <kdef.h>
 #include <idk_fptr.hpp>
 
-#ifdef KTHREAD_H
-    #error "rip"
-#endif
-
 #define FPTR inline idk::fptr
 
 namespace kthread

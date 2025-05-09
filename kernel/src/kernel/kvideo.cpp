@@ -2,7 +2,7 @@
     #define __is_kernel
 #endif
 
-#include <kernel/video.hpp>
+#include <kernel/kvideo.hpp>
 #include "kvideo.hpp"
 
 #include <kernel/boot_limine.hpp>
@@ -21,8 +21,8 @@ size_t kvideo::BPP = 0;
 size_t kvideo::stride = 0;
 size_t kvideo::nbytes = 0;
 
-uint8_t* volatile kvideo::frontbuffer;
-uint8_t* volatile kvideo::backbuffer;
+uint8_t *kvideo::frontbuffer;
+uint8_t *kvideo::backbuffer;
 
 
 void kvideo::initFrontbuffer( uintptr_t fbres )
@@ -66,7 +66,48 @@ void kvideo::initBackbuffer( uintptr_t )
 
 void kvideo::swapBuffers()
 {
+    // kvideo::fill(0, 0, 0, 255);
     kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
+
+    static uint8_t rgba[4];
+    rgba[0] = 0;
+    rgba[1] = 0;
+    rgba[2] = 0;
+    rgba[3] = 255;
+
+    for (int i=0; i<W*H; i++)
+    {
+        for (size_t j=0; j<stride; j++)
+        {
+            backbuffer[stride*i + j] = rgba[j];
+        }
+    }
+}
+
+
+void kvideo::rect( int x0, int y0, int w, int h )
+{
+    static uint8_t rgba[4];
+    rgba[0] = 50;
+    rgba[1] = 200;
+    rgba[2] = 200;
+    rgba[3] = 255;
+
+    for (int y=y0; y<y0+h; y++)
+    {
+        if (y<0 || y>=kvideo::H)
+            continue;
+
+        for (int x=x0; x<x0+w; x++)
+        {
+            if (x<0 || x>=kvideo::W)
+                continue;
+
+            size_t idx = stride * (W*y + x);
+            for (size_t k=0; k<stride; k++)
+                backbuffer[idx + k] = rgba[k];
+        }
+    }
 }
 
 

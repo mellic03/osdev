@@ -1,7 +1,7 @@
 #pragma once
 
 #include <kdef.h>
-#include <kmath/vec.hpp>
+#include <math/vec.hpp>
 #include "interface.hpp"
 
 

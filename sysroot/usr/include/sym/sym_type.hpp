@@ -9,9 +9,10 @@ namespace ksym
         struct {
             void  (*assert)(bool);
             void  (*printf)(const char*, ...);
-            void* (*malloc)(size_t);
-            void* (*realloc)(void*, size_t);
+            void *(*malloc)(size_t);
+            void *(*realloc)(void*, size_t);
             void  (*free)(void*);
+            uint64_t (*clock)();
         } libc_sym;
 
         struct {
@@ -19,6 +20,11 @@ namespace ksym
             void (*sleep)(uint64_t);
             void (*exit)();
         } kthread_sym;
+
+        struct {
+            void (*panic)(const char*);
+            void (*hang)();
+        } kernel_sym;
     };
 
     ksym_t *getsym();

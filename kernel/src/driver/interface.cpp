@@ -23,8 +23,8 @@ const char *DeviceTypeStr( uint64_t type )
         case DeviceType_Video: return "DeviceType_Video";
         case DeviceType_Keyboard: return "DeviceType_Keyboard";
         case DeviceType_Mouse: return "DeviceType_Mouse";
-        case DeviceType_Block: return "BlockDeviceInterface";
-        case DeviceType_Char: return  "CharDeviceInterface";
+        // case DeviceType_Block: return "BlockDeviceInterface";
+        // case DeviceType_Char: return  "CharDeviceInterface";
     }
 }
 
@@ -50,13 +50,3 @@ const char *ModuleBaseTypeStr( uint64_t modtype, uint64_t basetype )
     }
 }
 
-
-const char *ModuleSubTypeStr( uint64_t modtype, uint64_t subtype )
-{
-    switch (modtype)
-    {
-        default: return "INVALID_TYPE";
-        case ModuleType_Device: return DeviceTypeStr(subtype);
-        case ModuleType_Daemon: return DaemonTypeStr(subtype);
-    }
-}
