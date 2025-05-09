@@ -22,6 +22,8 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
 
     {
         auto &lib = sym->kvideo_sym;
+        kvideo::W           = lib.W;
+        kvideo::H           = lib.H;
         kvideo::frontbuffer = lib.frontbuffer;
         kvideo::backbuffer  = lib.backbuffer;
         kvideo::rect        = lib.rect;

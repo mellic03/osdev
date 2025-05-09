@@ -19,6 +19,7 @@ namespace ksym
         } libc_sym;
 
         struct {
+            int W, H;
             uint8_t *frontbuffer;
             uint8_t *backbuffer;
             void (*rect)(int x, int y, int w, int h);

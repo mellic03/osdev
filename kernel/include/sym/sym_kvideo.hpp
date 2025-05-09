@@ -4,6 +4,8 @@
 
 namespace kvideo
 {
+    inline int W;
+    inline int H;
     inline uint8_t *frontbuffer;
     inline uint8_t *backbuffer;
     inline void (*rect)(int, int, int, int);

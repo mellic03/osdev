@@ -13,8 +13,8 @@ static void sde_main( void* )
     std::printf("[sde_main] msdev->read: 0x%lx\n", msdev->read);
     // std::printf("[sde_main] mousedev: 0x%lx\n", msdev);
 
-    int xpos = 200;
-    int ypos = 200;
+    int xpos = 50;
+    int ypos = 50;
 
 
     while (true)
@@ -25,11 +25,10 @@ static void sde_main( void* )
         {
             xpos = xy[0];
             ypos = xy[1];
-        
         }
 
         // std::printf("[sde_main] xpos=%d\n", xpos);
-        kvideo::rect(xpos, ypos, 400, 400);
+        kvideo::rect(xpos, ypos, 100, 100);
 
         kvideo::swapBuffers();
         kthread::yield();

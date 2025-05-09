@@ -26,6 +26,8 @@ ksym::ksym_t *ksym::getsym()
 
     {
         auto &lib = kernel_sym.kvideo_sym;
+        lib.W           = kvideo::W;
+        lib.H           = kvideo::H;
         lib.frontbuffer = kvideo::frontbuffer;
         lib.backbuffer  = kvideo::backbuffer;
         lib.rect        = kvideo::rect;

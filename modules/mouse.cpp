@@ -6,6 +6,7 @@
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
+#include <algorithm>
 
 struct MouseBitch
 {
@@ -70,7 +71,7 @@ void ProcessMousePacket()
 
     bool xNegative, yNegative, xOverflow, yOverflow;
 
-    mbitch.l  = (MousePacket[0] & 0b01);
+    mbitch.l = (MousePacket[0] & 0b01);
     mbitch.r = (MousePacket[0] & 0b10);
 
     xNegative = (MousePacket[0] & PS2XSign);
@@ -106,8 +107,9 @@ void ProcessMousePacket()
         }
     }
 
-    mbitch.x = mbitch.x;
-    mbitch.y = mbitch.y;
+    mbitch.x = std::clamp(mbitch.x, 0, kvideo::W-1);
+    mbitch.y = std::clamp(mbitch.y, 0, kvideo::H-1);
+
     MousePacketReady = false;
 }
 
