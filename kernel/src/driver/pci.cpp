@@ -309,7 +309,6 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
     
         bar = pci_read_dword(bs, st, fn, PCI_BAR0 + 4*i);
 
-
         if (bar == 0)
         {
             continue;

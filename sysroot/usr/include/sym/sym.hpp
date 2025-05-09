@@ -1,25 +1,28 @@
 #pragma once
-// #include <stddef.h>
-// #include <stdint.h>
 #include <kdef.h>
+#include "sym_type.hpp"
 
-enum Sym_ ENUM_DTYPE(uint8_t)
+#include "sym_libc.hpp"
+#include "sym_kthread.hpp"
+
+inline void ksym::loadsym( ksym::ksym_t *sym )
 {
-    Sym_Begin = 1,
-    Sym_Entry,
-    Sym_End
-};
+    {
+        auto &lib = sym->libc_sym;
+        std::assert  = lib.assert;
+        std::printf  = lib.printf;
+        std::malloc  = lib.malloc;
+        std::realloc = lib.realloc;
+        std::free    = lib.free;
+    }
 
-struct symtable_t
-{
-    uint8_t type;
-    char    name[16];
-    void   *addr;
-};
+    {
+        auto &lib = sym->kthread_sym;
+        kthread::yield = lib.yield;
+        kthread::sleep = lib.sleep;
+        kthread::exit  = lib.exit;
+    }
+}
 
 
-#define SYM_BEGIN()            {Sym_Begin, "\0",  nullptr}
-#define SYM_ENTRY(func)        {Sym_Entry, #func, (void*)func}
-#define SYM_ALIAS(alias, func) {Sym_Entry, alias, (void*)func}
-#define SYM_END()              {Sym_End,   "\0",  nullptr}
 

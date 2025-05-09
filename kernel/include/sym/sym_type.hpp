@@ -1,0 +1,28 @@
+#pragma once
+#include <kdef.h>
+#include <functional>
+
+namespace ksym
+{
+    struct ksym_t
+    {
+        struct {
+            void  (*assert)(bool);
+            void  (*printf)(const char*, ...);
+            void* (*malloc)(size_t);
+            void* (*realloc)(void*, size_t);
+            void  (*free)(void*);
+        } libc_sym;
+
+        struct {
+            void (*yield)();
+            void (*sleep)(uint64_t);
+            void (*exit)();
+        } kthread_sym;
+    };
+
+    ksym_t *getsym();
+    void    loadsym( ksym_t* );
+}
+
+

@@ -32,7 +32,7 @@ double fmod( double x, double y );
 
 double sin( double x );
 double cos( double x );
-double acos( double x );
+// double acos( double x );
 double fabs( double x );
 
 

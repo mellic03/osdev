@@ -33,7 +33,9 @@
 #define CMD_READBACK                    0xc0
 
 
-uint16_t PIT_HERTZ = 500;
+uint16_t PIT::HERTZ = 500;
+uint16_t PIT::MILLISECONDS = 2;
+
 
 void PIT::init()
 {
@@ -45,7 +47,7 @@ void PIT::init()
 
 void PIT::reload()
 {
-    uint16_t reload_value = PIT_FREQUENCY / PIT_HERTZ;
+    uint16_t reload_value = PIT::FREQUENCY / PIT::HERTZ;
     IO::outb(PIT_COUNTER0, reload_value & 0xFF);
     IO::outb(PIT_COUNTER0, (reload_value >> 8) & 0xFF);
 }
@@ -53,20 +55,24 @@ void PIT::reload()
 
 void PIT::set_hz( uint16_t hz )
 {
-    PIT_HERTZ = hz;
+    PIT::HERTZ = hz;
+    // PIT::MILLISECONDS = (hz/1000) * 1000000;
 }
 
 
 void PIT::set_ms( uint16_t ms )
 {
+    PIT::MILLISECONDS = ms;
     PIT::set_hz(1000000 / (1000 * ms));
+    // PIT::HERTZ = 1000000 / (1000*ms);
+    // PIT::MILLISECONDS = ms;
 }
 
 uint32_t PIT::sleep( uint64_t ms )
 {
     uint32_t ticks = 0;
 
-    while (ticks < ((PIT_FREQUENCY / 1000) * ms))
+    while (ticks < ((PIT::FREQUENCY / 1000) * ms))
     {
         ticks++;
         __asm__ ("hlt");
@@ -101,39 +107,39 @@ bool PIT::edge()
 
 
 
-#include <cpu/scheduler.hpp>
-#include <kernel/interrupt.hpp>
-#include <kernel/clock.hpp>
-#include <kthread.hpp>
+// #include <cpu/scheduler.hpp>
+// #include <kernel/interrupt.hpp>
+// #include <kernel/clock.hpp>
+// #include <kthread.hpp>
 
 
-static void PIT_IrqHandler( intframe_t *frame )
-{
-    kclock::detail::tick(hwdi_PIT::timer_ms);
-    ThreadScheduler::scheduleISR(frame);
-    PIT::reload();
-}
+// static void PIT_IrqHandler( intframe_t *frame )
+// {
+//     kclock::detail::tick(hwdi_PIT::timer_ms);
+//     ThreadScheduler::scheduleISR(frame);
+//     PIT::reload();
+// }
 
 
-hwdi_PIT::hwdi_PIT( uint16_t ms )
-:   hwDriverInterface("PIT Controller")
-{
-    hwdi_PIT::timer_ms = ms;
-    PIT::init();
-    PIT::set_ms(hwdi_PIT::timer_ms);
+// hwdi_PIT::hwdi_PIT( uint16_t ms )
+// :   hwDriverInterface("PIT Controller")
+// {
+//     hwdi_PIT::timer_ms = ms;
+//     PIT::init();
+//     PIT::set_ms(hwdi_PIT::timer_ms);
 
-    this->irqno    = 0;
-    this->handler  = PIT_IrqHandler;
-    this->entry    = nullptr;
-}
+//     this->irqno    = 0;
+//     this->handler  = PIT_IrqHandler;
+//     this->entry    = nullptr;
+// }
 
 
-void
-hwdi_PIT::loadIrqHandler()
-{
-    CPU::installIRQ(this->irqno, this->handler);
-    PIC::unmask(this->irqno);
-}
+// void
+// hwdi_PIT::loadIrqHandler()
+// {
+//     CPU::installIRQ(this->irqno, this->handler);
+//     PIC::unmask(this->irqno);
+// }
 
 
 

@@ -1,6 +1,7 @@
 #include <cpu/scheduler.hpp>
 #include <kthread.hpp>
 #include "kernel/clock.hpp"
+#include "kernel/log.hpp"
 #include <cpu/cpu.hpp>
 #include <kthread.hpp>
 #include <kassert.h>
@@ -9,15 +10,75 @@
 
 
 
+static void threadManager_UpdateDead( ThreadScheduler *sd )
+{
+    auto &dead = sd->m_dead;
+
+    while (dead.size() > 0)
+    {
+        auto *th = dead.back(); dead.pop_back();
+        // syslog::printf("[threadManager_UpdateDead] \"%s\"\n", th->name);
+        vec_remove(sd->m_threads, th);
+        sd->releaseThread(th);
+    }
+}
+
+static void threadManager_UpdateSleeping( ThreadScheduler *sd )
+{
+    // auto &active   = sd->m_active;
+    auto &sleeping = sd->m_sleeping;
+
+    for (int i=0; i<int(sleeping.size()); i++)
+    {
+        kthread_t *th = sleeping[i];
+        if (kclock::now() >= th->wakeTime)
+        {
+            th->status = KThread_READY;
+            vec_remove(sleeping, th);
+            // vec_insert(sd.t, th);
+            i -= 1;
+        }
+    }
+}
+
+
+
+static void threadManager( void* )
+{
+    while (true)
+    {
+        // auto *cpu = SMP::this_cpu();
+        // syslog::printf("[CPU%u threadManager]\n", cpu->id);
+        
+        auto *sd = SMP::this_sched();
+        threadManager_UpdateDead(sd);
+        threadManager_UpdateSleeping(sd);
+        kthread::yield();
+    }
+}
+
+
+
+
+
+
+
+
+
+
 static void kthread_wrapper( void (*fn)(void*), void *arg )
 {
+    // syslog::printf("[kthread_wrapper] entry\n");
     fn(arg);
+    // syslog::printf("[kthread_wrapper] exit\n");
+
     auto *th = SMP::this_thread();
-    th->status = KThread_DEAD;
+    auto *sd = SMP::this_sched();
+    sd->makeDead(th);
+    kthread::yield();
 
     while (true) { asm volatile ("hlt"); }
 }
-
 
 
 
@@ -34,8 +95,9 @@ ThreadScheduler::ThreadScheduler( cpu_t *cpu )
 void
 ThreadScheduler::start()
 {
+    createThread("threadManager", threadManager, nullptr);
     m_currIdx = 0;
-    KInterrupt<Int_KTHREAD_START>();
+    KInterrupt<IntNo_KTHREAD_START>();
 }
 
 
@@ -45,14 +107,13 @@ kthread_t*
 ThreadScheduler::createThread( const char *name, void (*fn)(void*), void *arg )
 {
     auto *th = (kthread_t*)kmalloc(sizeof(kthread_t));
-    m_threads.push_back(th);
 
     memset(th->stack, 0, sizeof(th->stack));
     memset(th->name, '\0', sizeof(th->name));
     strncpy(th->name, name, sizeof(th->name));
 
     th->cpu              = m_cpu;
-    th->tid              = m_threads.size() - 1;
+    th->tid              = m_thread_tid++;
     th->status           = KThread_READY;
     th->wakeTime         = 0;
     th->stackTop         = th->stack + sizeof(th->stack) - 16;
@@ -65,37 +126,51 @@ ThreadScheduler::createThread( const char *name, void (*fn)(void*), void *arg )
     th->frame.iret_flags = 0x202; // CPU::getRFLAGS() ??
     // asm volatile("fxsave %0 " : : "m"(th->fxdata));
 
+    m_threads.push_back(th);
+    makeReady(th);
+
     return th;
 }
 
-
-
-uint8_t
-ThreadScheduler::getNextIdx()
+void
+ThreadScheduler::releaseThread( kthread_t *th )
 {
-    uint8_t nextIdx = (m_currIdx+1) % m_threads.size();
-    auto   *next    = m_threads[nextIdx];
-
-    if (next->status != KThread_SLEEPING)
-    {
-        return nextIdx;
-    }
-
-    while (nextIdx != m_currIdx)
-    {
-        next = m_threads[nextIdx];
-
-        if (kclock::now() >= next->wakeTime)
-        {
-            next->status = KThread_READY;
-            return nextIdx;
-        }
-
-        nextIdx = (nextIdx+1) % m_threads.size();
-    }
-
-    return m_currIdx;
+    kfree(th);
 }
+
+
+void
+ThreadScheduler::makeDead( kthread_t *th )
+{
+    CPU::cli();
+    th->status = KThread_DEAD;
+    vec_insert(m_dead, th);
+    vec_remove(m_threads, th);
+    CPU::sti();
+}
+
+
+void
+ThreadScheduler::makeSleeping( kthread_t *th )
+{
+    CPU::cli();
+    th->status = KThread_SLEEPING;
+    vec_insert(m_sleeping, th);
+    // vec_remove(m_threads, th);
+    CPU::sti();
+}
+
+void
+ThreadScheduler::makeReady( kthread_t *th )
+{
+    CPU::cli();
+    th->status = KThread_READY;
+    vec_insert(m_threads, th);
+    vec_remove(m_sleeping, th);
+    CPU::sti();
+}
+
+
 
 
 
@@ -121,7 +196,6 @@ void swap_threads( kthread_t *curr, kthread_t *next, intframe_t *frame )
 
 
 
-
 void
 ThreadScheduler::trampoline( intframe_t *frame )
 {
@@ -143,29 +217,26 @@ void
 ThreadScheduler::schedule( intframe_t *frame )
 {
     if (m_cpu->currThread == nullptr)
-    {
         return;
+    if (m_threads.empty())
+        return;
+
+    uint8_t nextIdx = (m_currIdx+1) % m_threads.size();
+    kthread_t *curr = m_threads[m_currIdx];
+    kthread_t *next = m_threads[nextIdx];
+
+    while (next != curr)
+    {
+        if (next->status != KThread_SLEEPING)
+            break;
+        nextIdx = (nextIdx+1) % m_threads.size();
+        next    = m_threads[nextIdx];
     }
 
-    // for (size_t i=0; i<m_threads.size(); i++)
-    // {
-    //     if (m_threads[i]->status == KThread_DEAD)
-    //     {
-    //         removeThread(i);
-    //         break;
-    //     }
-    // }
-
-    uint8_t nextIdx = getNextIdx();
-    auto *curr = m_threads[m_currIdx];
-    auto *next = m_threads[nextIdx];
-
-    // kassert("dead thread", curr->status != KThread_DEAD);
-    // kassert("dead thread", next->status != KThread_DEAD);
+    m_currIdx = nextIdx;
 
     swap_threads(curr, next, frame);
 
-    m_currIdx = nextIdx;
     m_cpu->currThread = m_threads[m_currIdx];
 }
 

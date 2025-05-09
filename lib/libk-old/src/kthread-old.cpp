@@ -40,8 +40,8 @@
 
 // void kthread::start()
 // {
-//     // syslog::kprintf("test: %lu", __kTCB_curr.tid);
-//     KInterrupt<Int_KTHREAD_START>();
+//     // syslog::printf("test: %lu", __kTCB_curr.tid);
+//     KInterrupt<IntNo_KTHREAD_START>();
 // }
 
 // void kthread::sleep( uint64_t ms )
@@ -49,12 +49,12 @@
 //     kthread::m_curr->timeLastAwake = kclock::uptime_msecs.load();
 //     kthread::m_curr->sleepDuration = ms;
 //     kthread::m_curr->status = KPROC_SLEEPING;
-//     KInterrupt<Int_KTHREAD_YIELD>();
+//     KInterrupt<IntNo_KTHREAD_YIELD>();
 // }
 
 // void kthread::yield()
 // {
-//     KInterrupt<Int_KTHREAD_YIELD>();
+//     KInterrupt<IntNo_KTHREAD_YIELD>();
 // }
 
 // void kthread::exit()
@@ -189,7 +189,7 @@
 
 // // void kthread::ted_bundy( void* )
 // // {
-// //     syslog::kprintf("void [kthread::ted_bundy](void*)\n");
+// //     syslog::printf("void [kthread::ted_bundy](void*)\n");
 
 // //     while (true)
 // //     {
@@ -199,7 +199,7 @@
 // //         {
 // //             if (th->status == KPROC_DEAD)
 // //             {
-// //                 syslog::kprintf("[kthread::ted_bundy] removing process %d\n", th->tid);
+// //                 syslog::printf("[kthread::ted_bundy] removing process %d\n", th->tid);
 // //                 kthread::remove(th);
 // //                 break;
 // //             }

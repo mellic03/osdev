@@ -1,6 +1,6 @@
 #include "syscall.hpp"
 #include <kernel/interrupt.hpp>
-#include <kernel/vfs2.hpp>
+#include <filesystem/vfs2.hpp>
 #include <cpu/cpu.hpp>
 #include <kassert.h>
 #include <kmalloc.h>
@@ -14,7 +14,7 @@ void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res )
     cpu->syscall_req = (uintptr_t)req;
     cpu->syscall_res = (uintptr_t)res;
 
-    KInterrupt<Int_SYSCALL>();
+    KInterrupt<IntNo_SYSCALL>();
 }
 
 

@@ -6,32 +6,33 @@
 #include <khang.h>
 #include <kthread.hpp>
 
+#include <kernel/boot_limine.hpp>
 #include <kernel/clock.hpp>
 #include <kernel/log.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/syscall.h>
-#include <kernel/vfs2.hpp>
 #include <kernel/memory/vmm.hpp>
-#include <kernel/boot_limine.hpp>
+#include <kernel/module.hpp>
+
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
 
 #include <string.h>
 #include <stdio.h>
 
-#include <driver/mouse.hpp>
 #include <driver/pci.hpp>
 #include <driver/pit.hpp>
 #include <driver/pic.hpp>
 #include <driver/apic.hpp>
 #include <driver/lapic.hpp>
-#include <driver/keyboard.hpp>
 #include <driver/serial.hpp>
-#include <driver/ramfs.hpp>
+
+#include <filesystem/ramfs.hpp>
+#include <filesystem/vfs2.hpp>
+#include <filesystem/initrd.hpp>
 
 #include "syscall/syscall.hpp"
 #include "cpu/smp.hpp"
-
 
 
 static void genfaultISR( intframe_t* );
@@ -39,10 +40,9 @@ static void pagefaultISR( intframe_t* );
 static void outOfMemoryISR( intframe_t* );
 
 
-
 extern "C"
 {
-    using ctor_t = void (*)();
+    using  ctor_t = void(*)();
     extern ctor_t __init_array_start[];
     extern ctor_t __init_array_end[];
 }
@@ -59,48 +59,41 @@ void call_ctors()
 }
 
 
-
-
-
-#include <kassert.h>
-#include <math.h>
+static void PIT_IrqHandler( intframe_t *frame )
+{
+    kclock::detail::tick(PIT::MILLISECONDS);
+    ThreadScheduler::scheduleISR(frame);
+    PIT::reload();
+}
 
 
 
 static void cpu0_main( void* )
 {
-    // asm volatile ("cli");
+    syslog::printf("[cpu0_main]\n");
 
     // while (true)
     // {
-    //     syslog::kprintf("[cpu0_main]\n");
+    //     syslog::printf("[cpu0_main]\n");
     // }
 
-    // syslog log("cpu0_main");
-    // log("lapic id: %u", info->lapic_id);
+    // while (true)
+    // {
+    //     int values[5];
+    //     size_t n = kernel::modules[0].read(values, sizeof(values));
+    //     if (n > 0)
+    //         syslog::println("[%lu bytes] (x, y): (%d, %d)", n, values[0], values[1]);
+    //     kthread::sleep(10);
+    // }
 
-    // log("BIG GAY BITCH");
-
-    while (true)
-    {
-        asm volatile ("hlt");
-    }
+    kthread::exit();
 }
 
 
 
-extern void LimineRes_init();
+// external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/plugin/include
 extern void early_init();
 extern void late_init();
-
-// external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/plugin/include
-
-static hwDriverInterface *hwDrivers[] = {
-    new hwPS2Mouse(),
-    new hwPS2Keyboard(),
-    new hwdi_PIT(2)
-};
-
 
 
 extern "C"
@@ -114,72 +107,130 @@ void _start()
 
     PIC::remap(PIC::IRQ_MASTER, PIC::IRQ_SLAVE);
     PIC::disable();
+
+    PIT::init();
+    PIT::set_ms(2);
+
     // enableAPIC();
     // LocalApicInit();
 
     CPU::createIDT();
     CPU::installIDT();
-    CPU::installISR(Int_GENERAL_PROTECTION_FAULT,  genfaultISR);
-    CPU::installISR(Int_PAGE_FAULT,                pagefaultISR);
-    CPU::installISR(Int_OUT_OF_MEMORY,             outOfMemoryISR);
-    CPU::installISR(Int_KTHREAD_START,             ThreadScheduler::trampolineISR);
-    CPU::installISR(Int_KTHREAD_YIELD,             ThreadScheduler::scheduleISR);
-    CPU::installISR(Int_SYSCALL,                   kernel::syscallISR);
+    CPU::installISR(IntNo_GENERAL_PROTECTION_FAULT,  genfaultISR);
+    CPU::installISR(IntNo_PAGE_FAULT,                pagefaultISR);
+    CPU::installISR(IntNo_OUT_OF_MEMORY,             outOfMemoryISR);
+    CPU::installISR(IntNo_KTHREAD_START,             ThreadScheduler::trampolineISR);
+    CPU::installISR(IntNo_KTHREAD_YIELD,             ThreadScheduler::scheduleISR);
+    CPU::installISR(IntNo_SYSCALL,                   kernel::syscallISR);
+    CPU::installIRQ(IrqNo_PIT, PIT_IrqHandler);
 
     serial::init();
     syslog log("_start");
 
     early_init();
     call_ctors();
-    late_init();
-
-    // VMM::mapPage(0xDEADBEBE);
-    // auto *buf = (uint8_t*)0xDEADBEBE;
-    // for (int i=0; i<16; i++)
-    //     buf[i] = i*2;
-    // for (int i=0; i<16; i++)
-    //     log("buf[%d]: %u", i, buf[i]);
-
-
-    // ramfsEntry *kbraw   = rfs::open("/dev/kb0/raw");
-    // ramfsEntry *kbevent = rfs::open("/dev/kb0/event");
-    // ramfsEntry *fhsout  = rfs::open("/dev/stdout");
-    // rfs::fwrite(kbevent, nullptr, 256);
-
-    vfs2::open<vfs2CharDevice>("/dev/kb0/raw",   256,  nullptr);
-    vfs2::open<vfs2CharDevice>("/dev/kb0/event", 256,  nullptr);
-    vfs2::open<vfs2CharDevice>("/dev/stdout",    1024, nullptr);
-    // vfs2::walk(vfs2::root);
+    // PCI::init();
 
     SMP::init(1);
-    kthread::create("idle", kthread::idlemain, nullptr);
-
-    for (auto *hwd: hwDrivers)
-    {
-        hwd->loadIrqHandler();
-        PIC::unmask(hwd->irqno);
-    }
+    PIC::unmask(IrqNo_PIT);
     PIC::unmask(2);
     SMP::start();
 
-    for (auto *hwd: hwDrivers)
-    {
-        if (hwd->entry)
-            kthread::create(hwd->name, hwd->entry, hwd->arg);
-    }
+    kernel::loadModules(initrd::find("modules/"));
+    kernel::initModules();
 
     // cpu->createThread("SDE",       sde_main, nullptr);
     // cpu->createThread("kshell",    kshell_main, nullptr);
     kthread::create("cpu0_main", cpu0_main, nullptr);
     kthread::start();
 
-
-    while (true) { asm volatile ("hlt"); }
+    kernel::hang();
 }
 
 
 
 
+
+// template <typename ret_type, typename... Args>
+// static ret_type someFunctionCall( void *addr, Args... args )
+// {
+//     using fn_type = ret_type (*)(Args...);
+//     return ((fn_type)addr)(args...);
+// }
+
+
+
+// static void module_load( void *program, size_t size )
+// {
+//     syslog log("module_load 0x%lx", program);
+
+//     // void *addr = kmalloc(size);
+//     // memcpy(addr, program, size);
+//     void *addr = program;
+//     auto  res  = someFunctionCall<DriverInterface>(addr, &sym_libc);
+
+//     log("name: %s", res.signature);
+//     log("type: %u", res.type);
+//     log("main: 0x%lx", res.main);
+//     deviceDrivers.push_back(res);
+// }
+
+
+// static void elf_test()
+// {
+//     // syslog log("elf_test");
+
+//     // void  *addr;
+//     // size_t size;
+
+//     // if (ustar::find(tarball, "modules/test.bin", addr, size))
+//     //     module_load(addr, size);
+
+//     // if (ustar::find(tarball, "modules/mouse.bin", addr, size))
+//     //     module_load(addr, size);
+
+//     // Elf64_Ehdr *ehdr = (Elf64_Ehdr*)(fh->sof);
+//     // log("e_type:   %s",    Elf64_etypeStr(ehdr->e_type));
+//     // log("e_entry:  0x%lx", ehdr->e_entry);
+//     // log("e_flags:  %u",    ehdr->e_flags);
+
+//     // Elf64_Phdr *phdrs = (Elf64_Phdr*)(fh->sof + ehdr->e_phoff);
+//     // for (int i=0; i<ehdr->e_phnum; i++)
+//     // {
+//     //     Elf64_Phdr *phdr = phdrs + i;
+//     //     log("p_type:   %u",    phdr->p_type);
+//     //     log("p_flags:  %u",    phdr->p_flags);
+//     //     log("p_offset: %lu",   phdr->p_offset);
+//     //     log("p_vaddr:  0x%lx", phdr->p_vaddr);
+//     //     log("p_paddr:  0x%lx", phdr->p_paddr);
+//     //     log("p_filesz: %lu",   phdr->p_filesz);
+//     //     log("p_memsz:  %lu",   phdr->p_memsz);
+//     //     log("p_align:  %lu",   phdr->p_align);
+//     // }
+
+
+//     // Elf64_Shdr *shdrs = (Elf64_Shdr*)(fh->sof + ehdr->e_shoff);
+//     // for (int i=0; i<ehdr->e_shnum; i++)
+//     // {
+//     //     Elf64_Shdr *shdr = shdrs + i;
+
+//     //     if (shdr->sh_type == SHT_SYMTAB)
+//     //         symtab = shdr;
+//     //     else if (shdr->sh_type == SHT_STRTAB && i != ehdr->e_shstrndx)
+//     //         strtab = shdr;
+
+//     //     // if (shdr->sh_type == SHT_REL || shdr->sh_type == SHT_RELA)
+//     //     // {
+//     //     //     log("Relocation section found");
+//     //     //     log("sh_addr:   0x%lx",  shdr->sh_addr);
+//     //     //     log("sh_offset: 0x%lx",  shdr->sh_offset);
+//     //     //     log("sh_size:   %lu",    shdr->sh_size);
+//     //     //     log("");
+//     //     //     elf_do_shdr(fh->sof, shdr);
+//     //     // }
+//     // }
+
+// }
 
 
 
@@ -208,27 +259,28 @@ void stacktrace( intframe_t *frame )
 
 static void genfaultISR( intframe_t* )
 {
-    syslog::kprintf("Exception GENERAL_PROTECTION_FAULT");
-    khang();
+    syslog::printf("Exception GENERAL_PROTECTION_FAULT");
+    kernel::hang();
 }
 
 static void outOfMemoryISR( intframe_t* )
 {
-    syslog::kprintf("Exception OUT_OF_MEMORY");
-    khang();
+    syslog::printf("Exception OUT_OF_MEMORY");
+    kernel::hang();
 }
 
 static void pagefaultISR( intframe_t *frame )
 {
     syslog log("Exception PAGE_FAULT");
 
-    auto *cpu = SMP::this_cpu();
-    if (cpu)
-        log("cpu %d", cpu->id);
+    if (SMP::is_initialized())
+    {
+        auto *cpu = SMP::this_cpu();
+        if (cpu) log("cpu %d", cpu->id);
 
-    auto *th = cpu->currThread;
-    if (th)
-        log("thread %d (%s)", th, th->name);
+        auto *th = cpu->currThread;
+        if (th) log("thread %d (%s)", th, th->name);
+    }
 
     log("rip:   0x%lx", frame->iret_rip);
     log("rsp:   0x%lx", frame->iret_rsp);
@@ -278,59 +330,6 @@ static void pagefaultISR( intframe_t *frame )
     
     kpanic("Page fault");
 }
-
-
-
-
-
-
-
-
-// #include <kernel/elf.h>
-// #include <kernel/memory/vmm.hpp>
-
-
-// void load_phdr( Elf64_Ehdr *ehdr, Elf64_Phdr *phdr )
-// {
-//     if (phdr->p_type != PT_LOAD)
-//         return;
-
-//     VMM::mapPage(phdr->p_paddr, phdr->p_memsz);
-
-//     void* dest = vmm_alloc_at(phdr->p_vaddr, phdr->p_memsz, VM_FLAG_WRITE);
-//     memcpy(dest, (void*)ehdr + phdr->p_offset, phdr->p_filesz);
-
-//     const zero_count = phdr->p_memsz - phdr->p_filesz;
-//     memset(dest + phdr->p_filesz, 0, zero_count);
-// }
-
-
-// void loop_phdrs( Elf64_Ehdr *ehdr )
-// {
-//     Elf64_Phdr *phdrs = (Elf64_Phdr*)((uintptr_t)ehdr + ehdr->e_phoff);
-
-//     for (size_t i=0; i<ehdr->e_phnum; i++)
-//     {
-//         // Elf64_Phdr pheader = phdrs[i];
-//         load_phdr(ehdr, &phdrs[i]);
-//     }
-// }
-
-
-// void elf_init()
-// {
-//     ramfsEntry *fh = rfs::open("/bin/test.elf");
-
-//     Elf64_Phdr phdr;
-
-// 	loader_t *elfloader = (loader_t *)malloc(sizeof(loader_t));
-// 	elfloader->name = "ELF32";
-// 	elfloader->probe = (void *)elf_probe;
-// 	elfloader->start = (void *)elf_start;
-// 	register_loader(elfloader);
-// 	_kill();
-// }
-
 
 
 

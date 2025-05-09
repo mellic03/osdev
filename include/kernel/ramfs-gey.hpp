@@ -3,7 +3,7 @@
 // #include <algorithm>
 
 
-// struct RamFSHeader
+// struct rfsHeader
 // {
 //     size_t inode_count;
 //     size_t block_count;

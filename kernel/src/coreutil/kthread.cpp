@@ -16,19 +16,29 @@
 
 void kthread::yield()
 {
-    // auto *cpu = SMP::this_cpu();
-    KInterrupt<Int_KTHREAD_YIELD>();
+    KInterrupt<IntNo_KTHREAD_YIELD>();
 }
 
 
 void kthread::sleep( uint64_t ms )
 {
     auto *th = SMP::this_thread();
+    auto *sd = SMP::this_sched();
+
     th->wakeTime = kclock::now() + ms;
-    th->status   = KThread_SLEEPING;
+    sd->makeSleeping(th);
+
     kthread::yield();
 }
 
+
+void kthread::exit()
+{
+    auto *th = SMP::this_thread();
+    auto *sd = SMP::this_sched();
+    sd->makeDead(th);
+    kthread::yield();
+}
 
 
 kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
@@ -47,17 +57,18 @@ void kthread::start()
 
 void kthread::idlemain( void* )
 {
+    cpu_t *cpu = SMP::this_cpu();
+    syslog::printf("[CPU%lu idlemain]\n", cpu->id);
+
     while (true)
     {
-        // cpu_t *cpu = SMP::this_cpu();
-        // syslog::kprintf("[CPU %u] idlemain\n", cpu->id);
-        // asm volatile ("hlt");
+        kthread::sleep(20);
     }
 }
 
 // void kthread::yield()
 // {
-//     KInterrupt<Int_KTHREAD_YIELD>();
+//     KInterrupt<IntNo_KTHREAD_YIELD>();
 // }
 
 // void kthread::exit()

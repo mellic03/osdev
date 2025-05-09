@@ -7,7 +7,7 @@ void kernel_assert( const char *msg, bool cond,
 {
     if (!cond)
     {
-        syslog::kprintf(
+        syslog::printf(
             "[kassert failed] \"%s\", line %d in function \"%s\"",
             file, line, func
         );

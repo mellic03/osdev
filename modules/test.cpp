@@ -1,39 +1,73 @@
-#include <kernel/module.hpp>
+#include <driver/interface.hpp>
+#include <sym/sym.hpp>
+#include <kmemxx.hpp>
 
-
-void driver_open( void* )
+extern "C"
 {
+    #if UINT32_MAX == UINTPTR_MAX
+        #define STACK_CHK_GUARD 0xe2dee396
+    #else
+        #define STACK_CHK_GUARD 0x595e9fbd94fda766
+    #endif
+    
+    uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
+    
+    __attribute__((noreturn))
+    void __stack_chk_fail(void)
+    {
+        // kpanic("Stack smashing detected");
+        while (true) {  };
+    }
+}
 
+
+
+void driver_init( ksym_t* )
+{
 
 }
 
-size_t driver_read( void *dst, size_t nbytes )
+void driver_close()
 {
-    return nbytes;
+
 }
 
-
-size_t driver_write( const void *, size_t  )
+size_t driver_read( void*, size_t )
 {
-    return 0;
+    return 21;
 }
 
+size_t driver_write( const void*, size_t  )
+{
+    return 42;
+}
 
-static CharDeviceInterface interface;
-static iTableEntry table[3];
 
 
 extern "C"
-iTableEntry *init( void* )
+ModuleInterface init( ksym::ksym_t *sym )
 {
-    interface = CharDeviceInterface(
-        driver_open, nullptr, driver_read, driver_write
-    );
+    // auto *sym = (ksym_t*)ptr;
+    // sym->printf("Test from init!\n");
+    // printf = sym->printf;
 
-    table[0] = { ITABLE_BEGIN, NULL };
-    table[1] = { ITABLE_CHAR_DEVICE, &interface };
-    table[2] = { ITABLE_END, NULL };
+    // auto *interface = (CharDeviceInterface*)sym->malloc(sizeof(CharDeviceInterface));
+    // auto *table = (iTableEntry*)sym->malloc(3*sizeof(iTableEntry));
 
-    return table;
+    ModuleInterface dev = {
+        .type  = DevInterface_Block,
+        .main  = nullptr,
+        .init  = driver_init,
+        .close = driver_close,
+        .read  = driver_read,
+        .write = driver_write,
+        // .irq   = nullptr,
+        // .irqno = 0
+    };
+
+    kmemset<char>(dev.signature, '\0', sizeof(dev.signature));
+    kmemcpy<char>(dev.signature, "Test", 4);
+
+    return dev;
 }
 

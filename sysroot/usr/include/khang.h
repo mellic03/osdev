@@ -1,8 +1,14 @@
 #pragma once
 
-inline void khang()
+
+namespace kernel
 {
-    while (1) { asm volatile ("cli; hlt"); }
+    inline void hang()
+    {
+        while (true) { asm volatile ("cli; hlt"); }
+    }
 }
+
+
 
 

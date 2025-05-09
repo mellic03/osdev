@@ -41,7 +41,7 @@ int main( int argc, char **argv )
 
         std::print("File \"{}\"\n", relpath.c_str());
 
-        ramfsEntry *rfsEntry = rfs.open(relpath.c_str());
+        rfsEntry *rfsEntry = rfs.open(relpath.c_str());
         std::print("  Read success\n");
 
         rfs.file_write(rfsEntry, (const uint8_t*)buf, filesize);

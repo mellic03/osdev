@@ -1,4 +1,11 @@
 #pragma once
+
+#ifndef KTHREAD_H
+    #define KTHREAD_H
+#endif
+
+
+
 #include "cpu/cpu.hpp"
 #include <kernel/interrupt.hpp>
 
@@ -33,6 +40,7 @@ namespace kthread
 {
     void yield();
     void sleep( uint64_t ms );
+    void exit();
     
     kthread_t *create( const char *name, void (*fn)(void*), void *arg );
     void start();

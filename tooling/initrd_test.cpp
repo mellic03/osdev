@@ -11,11 +11,11 @@ int main( int argc, char **argv )
 {
     std::ifstream stream("ramdisk", std::ios::binary);
 
-    RamFSHeader header;
+    rfsHeader header;
     RamFS *ramfs = new RamFS();
     size_t blockHeapSize;
 
-    stream.read(reinterpret_cast<char*>(&header), sizeof(RamFSHeader));
+    stream.read(reinterpret_cast<char*>(&header), sizeof(rfsHeader));
     stream.read(reinterpret_cast<char*>(ramfs), sizeof(RamFS));
 
     // std::cout << "header.block_count: " << header.block_count << "\n";

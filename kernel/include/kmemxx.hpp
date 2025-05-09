@@ -17,7 +17,7 @@ void *memcpy128 ( uint128_t*, const uint128_t*, size_t n );
 // void *memset128 ( uint128_t*, const uint128_t*, size_t n );
 
 
-template <typename T>
+template <typename T=uint8_t>
 inline constexpr
 void *kmemcpy( void *dst, const void *src, size_t nbytes )
 {
@@ -33,7 +33,7 @@ void *kmemcpy( void *dst, const void *src, size_t nbytes )
     return dst;
 }
 
-template <typename T>
+template <typename T=uint8_t>
 inline constexpr
 void *kmemset( void *dst, T value, size_t nbytes )
 {

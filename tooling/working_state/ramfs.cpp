@@ -12,17 +12,17 @@
 
 RamFS::RamFS( void *base )
 {
-    m_header = (ramfsHeader*)base;
+    m_header = (rfsHeader*)base;
     m_base   = (uintptr_t)base;
     m_end    = m_base + m_header->totalSize;
 
-    const ramfsHeader &H = *m_header;
+    const rfsHeader &H = *m_header;
 
     m_entryBitmap = (entryBitmap_type*)(m_base + H.entryBitmapOffset);
     m_blockBitmap = (blockBitmap_type*)(m_base + H.blockBitmapOffset);
-    m_entryHeap   = (ramfsEntry*)(m_base + H.entryHeapOffset);
+    m_entryHeap   = (rfsEntry*)(m_base + H.entryHeapOffset);
     m_blockHeap   = (uint8_t*   )(m_base + H.blockHeapOffset);
-    m_root        = (ramfsEntry*)(m_base + H.rootOffset);
+    m_root        = (rfsEntry*)(m_base + H.rootOffset);
 
     // std::print("[RamFS::RamFS] blockCapacity: {}\n", m_header->blockCapacity);
     // std::print("[RamFS::RamFS] m_blockBitmap->m_setcount: {}\n", m_blockBitmap->m_setcount);
@@ -43,15 +43,15 @@ void RamFS::formatDisk()
     // memset((void*)m_base, 0, m_end-m_base);
     size_t offset = 0;
 
-    m_header = (ramfsHeader*)m_base;
+    m_header = (rfsHeader*)m_base;
     *m_header = {
         .totalSize     = (size_t)(m_end - m_base),
         .blockSize     = RFS_BLOCK_SIZE,
         .entryCapacity = RamFS::rfsEntryCapacity,
         .blockCapacity = RamFS::rfsBlockCapacity
     };
-    // data += sizeof(ramfsHeader);
-    offset += sizeof(ramfsHeader);
+    // data += sizeof(rfsHeader);
+    offset += sizeof(rfsHeader);
 
     // m_entryBitmap
     m_header->entryBitmapOffset = offset;
@@ -69,8 +69,8 @@ void RamFS::formatDisk()
 
     // m_entryHeap
     m_header->entryHeapOffset = offset;
-    m_entryHeap = (ramfsEntry*)(m_base+offset);
-    offset += m_header->entryCapacity * sizeof(ramfsEntry);
+    m_entryHeap = (rfsEntry*)(m_base+offset);
+    offset += m_header->entryCapacity * sizeof(rfsEntry);
 
     // m_blockHeap
     m_header->blockHeapOffset = offset;
@@ -78,7 +78,7 @@ void RamFS::formatDisk()
     offset += m_header->blockCapacity * m_header->blockSize;
 
     // m_root
-    m_root = allocEntry(ramfsEntry_Directory, "root");
+    m_root = allocEntry(rfsEntry_Directory, "root");
     m_header->rootOffset = (uintptr_t)m_root - m_base;
 
     // assert((data < m_end));
@@ -96,12 +96,12 @@ int32_t RamFS::allocBlock()
     //     std::print("[allocBlock] m_blockBitmap.m_setcount: {}\n", m_blockBitmap->m_setcount);
     // assert((block_id >= 0));
 
-    *(getBlock(block_id)) = ramfsBlock();
+    *(getBlock(block_id)) = rfsBlock();
     return block_id;
 }
 
 
-ramfsEntry *RamFS::allocEntry( uint32_t type, const char *name )
+rfsEntry *RamFS::allocEntry( uint32_t type, const char *name )
 {
     int32_t entry_id = allocEntryID();
     auto   *entry    = getEntry(entry_id);
@@ -118,9 +118,9 @@ ramfsEntry *RamFS::allocEntry( uint32_t type, const char *name )
     memset(entry->name, '\0', 32);
     strncpy(entry->name, name, 32);
 
-    *(getBlock(entry->block_id)) = ramfsBlock();
+    *(getBlock(entry->block_id)) = rfsBlock();
 
-    if (type == ramfsEntry_Directory)
+    if (type == rfsEntry_Directory)
     {
         auto *block   = getBlock(entry->block_id);
         auto *entries = (int32_t*)(block->data);
@@ -141,24 +141,24 @@ ramfsEntry *RamFS::allocEntry( uint32_t type, const char *name )
 
 
 
-ramfsEntry *RamFS::getEntry( int32_t id )
+rfsEntry *RamFS::getEntry( int32_t id )
 {
     // assert((id >= 0));
     return &(m_entryHeap[id]);
 }
 
-ramfsBlock *RamFS::getBlock( int32_t id )
+rfsBlock *RamFS::getBlock( int32_t id )
 {
     // assert((id >= 0));
-    return (ramfsBlock*)(m_blockHeap + sizeof(ramfsBlock)*id);
+    return (rfsBlock*)(m_blockHeap + sizeof(rfsBlock)*id);
 }
 
 
 // void RamFS::addToDirectory( int32_t dir_id, int32_t entry_id )
-void RamFS::addToDirectory( ramfsEntry *dir, ramfsEntry *entry )
+void RamFS::addToDirectory( rfsEntry *dir, rfsEntry *entry )
 {
-    // auto *dir   = (ramfsEntry*)getEntry(dir_id);
-    // auto *entry = (ramfsEntry*)getEntry(entry_id);
+    // auto *dir   = (rfsEntry*)getEntry(dir_id);
+    // auto *entry = (rfsEntry*)getEntry(entry_id);
     auto *block = getBlock(dir->block_id);
     auto *entries = (int32_t*)(block->data);
     entries[dir->nEntries++] = entry->entry_id;
@@ -166,7 +166,7 @@ void RamFS::addToDirectory( ramfsEntry *dir, ramfsEntry *entry )
 }
 
 
-// void RamFS::printAbsolutePath( ramfsEntry *entry )
+// void RamFS::printAbsolutePath( rfsEntry *entry )
 // {
 //     std::vector<std::string> names;
 //     names.push_back(std::string(entry->name));
@@ -191,7 +191,7 @@ void RamFS::addToDirectory( ramfsEntry *dir, ramfsEntry *entry )
 
 
 
-size_t RamFS::block_write( ramfsBlock *block, const uint8_t *src, size_t nbytes )
+size_t RamFS::block_write( rfsBlock *block, const uint8_t *src, size_t nbytes )
 {
     size_t count = 0;
 
@@ -205,7 +205,7 @@ size_t RamFS::block_write( ramfsBlock *block, const uint8_t *src, size_t nbytes 
 }
 
 
-size_t RamFS::file_write( ramfsEntry *file, const uint8_t *src, size_t nbytes )
+size_t RamFS::file_write( rfsEntry *file, const uint8_t *src, size_t nbytes )
 {
     if (file->block_id == -1)
     {
@@ -241,7 +241,7 @@ size_t RamFS::file_write( ramfsEntry *file, const uint8_t *src, size_t nbytes )
 
 
 
-ramfsEntry *RamFS::find_child( ramfsEntry *dir, const char *name )
+rfsEntry *RamFS::find_child( rfsEntry *dir, const char *name )
 {
     if (dir->block_id == -1)
     {
@@ -276,7 +276,7 @@ ramfsEntry *RamFS::find_child( ramfsEntry *dir, const char *name )
 
 #include <iostream>
 
-ramfsEntry *RamFS::open( const char *path )
+rfsEntry *RamFS::open( const char *path )
 {
     // std::print("[RamFS::open] path=\"{}\"\n", path);
 
@@ -287,7 +287,7 @@ ramfsEntry *RamFS::open( const char *path )
     static char name[64];
     memset(name, '\0', sizeof(name));
 
-    ramfsEntry *curr = m_root;
+    rfsEntry *curr = m_root;
 
     
     while (A < B)
@@ -300,12 +300,12 @@ ramfsEntry *RamFS::open( const char *path )
         // log("curr->type: %lu", curr->type);
         // std::cout << " / " << name;
 
-        if (curr->type != ramfsEntry_Directory)
+        if (curr->type != rfsEntry_Directory)
         {
             return nullptr;
         }
 
-        ramfsEntry *next = find_child(curr, name);
+        rfsEntry *next = find_child(curr, name);
 
         // File already exists
         if ((next != nullptr) && (*B == '\0'))
@@ -316,14 +316,14 @@ ramfsEntry *RamFS::open( const char *path )
         // File needs to be created
         else if (*B == '\0')
         {
-            next = allocEntry(ramfsEntry_File, name);
+            next = allocEntry(rfsEntry_File, name);
             addToDirectory(curr, next);
             return next;
         }
 
         else if (next == nullptr)
         {
-            next = allocEntry(ramfsEntry_Directory, name);
+            next = allocEntry(rfsEntry_Directory, name);
             addToDirectory(curr, next);
         }
 
@@ -359,7 +359,7 @@ void RamFS::walk( int32_t entry_id, int depth )
 
     auto *entry = getEntry(entry_id);
 
-    if (entry->type != ramfsEntry_Directory)
+    if (entry->type != rfsEntry_Directory)
     {
         INDENT;
         // std::print("-{}\n", entry->name);

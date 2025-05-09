@@ -2,24 +2,24 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "interface.hpp"
+// #include "interface.hpp"
 
 
-struct hwdi_PIT: public hwDriverInterface
-{
-    inline static uint16_t timer_ms = 5;
+// struct hwdi_PIT: public hwDriverInterface
+// {
+//     inline static uint16_t timer_ms = 5;
 
-    hwdi_PIT( uint16_t ms );
-    virtual void loadIrqHandler() final;
-};
+//     hwdi_PIT( uint16_t ms );
+//     virtual void loadIrqHandler() final;
+// };
 
-
-
-static constexpr uint32_t PIT_FREQUENCY = uint32_t(1193182);
-extern uint16_t PIT_HERTZ;
 
 namespace PIT
 {
+    static constexpr uint32_t FREQUENCY = uint32_t(1193182);
+    extern uint16_t HERTZ;
+    extern uint16_t MILLISECONDS;
+
     void init();
     void reload();
     void set_hz( uint16_t hz );

@@ -25,26 +25,46 @@ struct intframe_t
 } __attribute__((packed));
 
 
-enum Int_: uint8_t
+enum IntNo_: uint8_t
 {
-    Int_DIVISION_ERROR            = 0,
-    Int_DEBUG 			          = 1,
-    Int_INVALID_OPCODE            = 6,
-    Int_DEVICE_UNAVAILABLE        = 7,
-    Int_DOUBLE_FAULT              = 8,
-    Int_INVALID_TSS               = 10,
-    Int_SEGMENT_NOT_PRESENT       = 11,
-    Int_STACK_SEGFAULT            = 12,
-    Int_GENERAL_PROTECTION_FAULT  = 13,
-    Int_PAGE_FAULT	  	          = 14,
+    IntNo_DIVISION_ERROR            = 0,
+    IntNo_DEBUG 			        = 1,
+    IntNo_INVALID_OPCODE            = 6,
+    IntNo_DEVICE_UNAVAILABLE        = 7,
+    IntNo_DOUBLE_FAULT              = 8,
+    IntNo_INVALID_TSS               = 10,
+    IntNo_SEGMENT_NOT_PRESENT       = 11,
+    IntNo_STACK_SEGFAULT            = 12,
+    IntNo_GENERAL_PROTECTION_FAULT  = 13,
+    IntNo_PAGE_FAULT	  	        = 14,
 
-    Int_BAD_ALLOC 	  	          = 52,
-    Int_BAD_FREE  	  	          = 53,
-    Int_OUT_OF_MEMORY 	          = 54,
+    IntNo_BAD_ALLOC 	  	        = 52,
+    IntNo_BAD_FREE  	  	        = 53,
+    IntNo_OUT_OF_MEMORY 	        = 54,
 
-    Int_KTHREAD_START             = 96,
-    Int_KTHREAD_YIELD             = 97,
-    Int_SYSCALL 	  	          = 99
+    IntNo_KTHREAD_START             = 96,
+    IntNo_KTHREAD_YIELD             = 97,
+    IntNo_SYSCALL 	  	            = 0x80,
+};
+
+enum IrqNo_: uint8_t
+{
+    IrqNo_PIT                   = 0,
+    IrqNo_Keyboard              = 1,
+    IrqNo_Cascade               = 2,
+    IrqNo_COM2                  = 3,
+    IrqNo_COM1                  = 4,
+    IrqNo_LPT2                  = 5,
+    IrqNo_FloppyDisk            = 6,
+    IrqNo_Spurious              = 7,
+    IrqNo_CMOS                  = 8,
+    IrqNo_Free9                 = 9,
+    IrqNo_Free10                = 10,
+    IrqNo_Free11                = 11,
+    IrqNo_Mouse                 = 12,
+    IrqNo_FPU                   = 13,
+    IrqNo_PrimaryATA            = 14,
+    IrqNo_SecondaryATA          = 15,
 };
 
 
@@ -61,7 +81,7 @@ enum Int_: uint8_t
     using isrHandlerFn = void (*)(intframe_t*);
     using irqHandlerFn = void (*)(intframe_t*);
 
-    template <uint8_t isrno>
+    template <uint16_t isrno>
     constexpr inline void KInterrupt() { asm volatile("int %0" : : "i" (isrno)); }
 
 #else

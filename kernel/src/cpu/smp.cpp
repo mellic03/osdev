@@ -98,6 +98,7 @@ cpu_t *SMP::init( size_t max_cpus )
     }
 
     wrmsr(MSR_GS_BASE, reinterpret_cast<uint64_t>(bsp_cpu));
+    kthread::create("idle", kthread::idlemain, nullptr);
 
     return bsp_cpu;
 }
@@ -110,6 +111,11 @@ void SMP::start()
 }
 
 
+bool SMP::is_initialized()
+{
+    return smp_ready.load();
+}
+
 
 cpu_t *SMP::boot_cpu()
 {
@@ -120,10 +126,7 @@ cpu_t *SMP::boot_cpu()
 cpu_t *SMP::this_cpu()
 {
     cpu_t *cpu;
-    asm volatile (
-        "mov %%gs:0, %0"
-        : "=r"(cpu)
-    );
+    asm volatile ("mov %%gs:0, %0" : "=r"(cpu));
     kassert("No cpu", cpu != nullptr);
     return cpu;
 }

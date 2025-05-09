@@ -6,8 +6,8 @@
 #include <print>
 
 #define KERNEL_TOOLING
-#include "../kernel/include/driver/ramfs.hpp"
-#include "../kernel/src/driver/ramfs.cpp"
+#include "../kernel/include/filesystem/ramfs.hpp"
+#include "../kernel/src/filesystem/ramfs.cpp"
 
 
 
@@ -23,7 +23,6 @@ int main( int argc, char **argv )
 
     size_t MEGA = 1024*1024;
     RamFS rfs(malloc(64*MEGA), 64*MEGA);
-
 
     for (auto &entry: fs::recursive_directory_iterator(fs::path(argv[1])))
     {
@@ -41,7 +40,7 @@ int main( int argc, char **argv )
         stream.read(reinterpret_cast<char*>(buf), filesize);
     
             // std::print("File \"{}\"\n", relpath.c_str());
-            ramfsEntry *rfsEntry = rfs.open(relpath.c_str());
+            rfsEntry *rfsEntry = rfs.open(relpath.c_str());
             // std::print("  Read success\n");
             rfs.fwrite(rfsEntry, buf, filesize);
             // std::print("  Write success\n");

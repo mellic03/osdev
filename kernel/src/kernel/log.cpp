@@ -15,9 +15,9 @@ void syslog::popIndent ( int n ) { indent -= n; }
 
 
 void
-syslog::kprintf( const char *fmt, ... )
+syslog::printf( const char *fmt, ... )
 {
-    // m_mutex.lock();
+    m_mutex.lock();
     va_list args;
     va_start(args, fmt);
     int n = vsprintf(buf, fmt, args);
@@ -26,8 +26,26 @@ syslog::kprintf( const char *fmt, ... )
     for (int i=0; i<n; i++)
         IO::outb(IO::COM1, buf[i]);
     
-    // m_mutex.unlock();
+    m_mutex.unlock();
 }
+
+
+void
+syslog::println( const char *fmt, ... )
+{
+    m_mutex.lock();
+    va_list args;
+    va_start(args, fmt);
+    int n = vsprintf(buf, fmt, args);
+    va_end(args);
+
+    for (int i=0; i<n; i++)
+        IO::outb(IO::COM1, buf[i]);
+    IO::outb(IO::COM1, '\n');
+
+    m_mutex.unlock();
+}
+
 
 void
 syslog::print( const char *fmt, ... )

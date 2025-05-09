@@ -9,10 +9,12 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/*.asm
     ${CMAKE_CURRENT_SOURCE_DIR}/src/driver/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/driver/*.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/interrupt/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/syscall/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sym/*.cpp
 )
 
 set(IDKERNEL_SOURCES ${SOURCES} PARENT_SCOPE)

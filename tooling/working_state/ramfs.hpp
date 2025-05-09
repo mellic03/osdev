@@ -13,22 +13,22 @@ class RamFS;
 static constexpr size_t RFS_BLOCK_SIZE = 1024;
 
 
-enum ramfsEntry_: uint32_t
+enum rfsEntry_: uint32_t
 {
-    ramfsEntry_Invalid = 0,
-    ramfsEntry_Directory,
-    ramfsEntry_File,
+    rfsEntry_Invalid = 0,
+    rfsEntry_Directory,
+    rfsEntry_File,
 };
 
 
-enum ramfsFlag_: uint32_t
+enum rfsFlag_: uint32_t
 {
-    ramfsFlag_None    = 0,
-    ramfsFlag_Symlink = 1<<0,
+    rfsFlag_None    = 0,
+    rfsFlag_Symlink = 1<<0,
 };
 
 
-struct ramfsBlock
+struct rfsBlock
 {
     int32_t  next_id; // 4
     uint32_t padding; // 4
@@ -37,7 +37,7 @@ struct ramfsBlock
     // 4 + 4 + 8 + 8 == 3*8 == 24 bytes
     uint8_t  data[RFS_BLOCK_SIZE - 3*sizeof(uint64_t)];
 
-    ramfsBlock()
+    rfsBlock()
     {
         next_id = -1;
         padding = 0;
@@ -48,9 +48,9 @@ struct ramfsBlock
 };
 
 
-struct ramfsEntry
+struct rfsEntry
 {
-    static constexpr uint32_t etype = ramfsEntry_Invalid;
+    static constexpr uint32_t etype = rfsEntry_Invalid;
 
     uint32_t type;
     uint32_t flags;
@@ -65,7 +65,7 @@ struct ramfsEntry
 
 
 
-struct ramfsHeader
+struct rfsHeader
 {
     size_t totalSize;
     size_t blockSize;
@@ -108,21 +108,21 @@ private:
     int32_t allocEntryID() { return allocID(*m_entryBitmap); }
     int32_t allocBlock();
 
-    ramfsEntry *find_child( ramfsEntry*, const char *name );
+    rfsEntry *find_child( rfsEntry*, const char *name );
 
 
 public:
-    ramfsHeader                *m_header;
+    rfsHeader                *m_header;
     uintptr_t                   m_base;
     uintptr_t                   m_end;
 
     entryBitmap_type           *m_entryBitmap;
     blockBitmap_type           *m_blockBitmap;
 
-    ramfsEntry                 *m_entryHeap;
+    rfsEntry                 *m_entryHeap;
     uint8_t                    *m_blockHeap;
 
-    ramfsEntry                 *m_root;
+    rfsEntry                 *m_root;
 
     // RamFS() {  };
     RamFS( void *base );
@@ -130,18 +130,18 @@ public:
 
     void        formatDisk();
 
-    ramfsEntry *allocEntry( uint32_t type, const char *name );
+    rfsEntry *allocEntry( uint32_t type, const char *name );
 
-    ramfsEntry *getEntry( int32_t id );
-    ramfsBlock *getBlock( int32_t id );
-    void        addToDirectory( ramfsEntry *dir, ramfsEntry *entry );
-    // void        printAbsolutePath( ramfsEntry *entry );
+    rfsEntry *getEntry( int32_t id );
+    rfsBlock *getBlock( int32_t id );
+    void        addToDirectory( rfsEntry *dir, rfsEntry *entry );
+    // void        printAbsolutePath( rfsEntry *entry );
 
-    ramfsEntry *open( const char *path );
+    rfsEntry *open( const char *path );
     void        walk( int32_t entry_id, int depth=0 );
 
-    size_t block_write( ramfsBlock *block, const uint8_t *srcbuf, size_t nbytes );
-    size_t file_write( ramfsEntry *file, const uint8_t *srcbuf, size_t nbytes );
+    size_t block_write( rfsBlock *block, const uint8_t *srcbuf, size_t nbytes );
+    size_t file_write( rfsEntry *file, const uint8_t *srcbuf, size_t nbytes );
 };
 
 

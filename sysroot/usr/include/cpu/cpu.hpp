@@ -48,6 +48,8 @@ extern "C"
 
 namespace SMP
 {
+    bool       is_initialized();
+
     cpu_t     *boot_cpu();
 
     cpu_t     *this_cpu();
@@ -57,7 +59,6 @@ namespace SMP
     kthread_t *this_thread();
     uint64_t   this_tid();
 }
-
 
 
 namespace CPU
@@ -77,6 +78,8 @@ namespace CPU
     void fxsave( uint8_t *dst );
     void fxrstor( uint8_t *src );
 
+    constexpr inline void cli() { asm volatile ("cli"); }
+    constexpr inline void sti() { asm volatile ("sti"); }
     
     // static int cpuHasMSR()
     // {

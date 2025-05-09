@@ -11,23 +11,23 @@
 
 class RamFS;
 
-enum ramfsEntry_: uint32_t
+enum rfsEntry_: uint32_t
 {
-    ramfsEntry_Invalid = 0,
-    ramfsEntry_Directory,
-    ramfsEntry_File,
+    rfsEntry_Invalid = 0,
+    rfsEntry_Directory,
+    rfsEntry_File,
 };
 
 
-enum ramfsFlag_: uint32_t
+enum rfsFlag_: uint32_t
 {
-    ramfsFlag_None    = 0,
-    ramfsFlag_Symlink = 1<<0,
+    rfsFlag_None    = 0,
+    rfsFlag_Symlink = 1<<0,
 };
 
 
 
-struct ramfsBlock
+struct rfsBlock
 {
     int32_t  idx;
     int32_t  next_id;
@@ -36,18 +36,18 @@ struct ramfsBlock
     size_t   end;
     uint8_t  data[1];
 
-    ramfsBlock( size_t block_size )
+    rfsBlock( size_t block_size )
     {
         idx     = 0;
         next_id = -1;
         base    = 0;
         tail    = 0;
-        end     = block_size - offsetof(ramfsBlock, data);
+        end     = block_size - offsetof(rfsBlock, data);
     }
 };
 
 
-struct ramfsEntry
+struct rfsEntry
 {
     uint32_t type;
     uint32_t flags;
@@ -61,7 +61,7 @@ struct ramfsEntry
 };
 
 
-struct ramfsHeader
+struct rfsHeader
 {
     size_t size;
     size_t blockSize;
@@ -97,23 +97,23 @@ private:
         return -1;
     }
     int32_t allocEntryID() { return allocID(*m_entryBitmap); }
-    int32_t allocBlock( ramfsBlock *tail=nullptr );
-    ramfsEntry *find_child( ramfsEntry*, const char *name );
-    size_t block_write( ramfsBlock *block, const uint8_t *src, size_t nbytes );
+    int32_t allocBlock( rfsBlock *tail=nullptr );
+    rfsEntry *find_child( rfsEntry*, const char *name );
+    size_t block_write( rfsBlock *block, const uint8_t *src, size_t nbytes );
 
 
 public:
-    ramfsHeader *m_header;
+    rfsHeader *m_header;
     uintptr_t    m_base;
     uintptr_t    m_end;
 
     idk_BitMap  *m_entryBitmap;
     idk_BitMap  *m_blockBitmap;
 
-    ramfsEntry  *m_entryHeap;
+    rfsEntry  *m_entryHeap;
     uint8_t     *m_blockHeap;
 
-    ramfsEntry  *m_root;
+    rfsEntry  *m_root;
 
     RamFS() {  };
     RamFS( void *base );
@@ -121,20 +121,20 @@ public:
 
     void        formatDisk();
     void        loadDisk();
-    void        addToDirectory( ramfsEntry *dir, ramfsEntry *entry );
-    void        appendBlock( ramfsEntry *entry );
+    void        addToDirectory( rfsEntry *dir, rfsEntry *entry );
+    void        appendBlock( rfsEntry *entry );
 
-    ramfsEntry *allocEntry( uint32_t type, const char *name );
-    ramfsEntry *getEntry( int32_t entry_id );
-    ramfsBlock *getBlock( int32_t block_id );
-    ramfsBlock *getLastBlock( int32_t block_id );
+    rfsEntry *allocEntry( uint32_t type, const char *name );
+    rfsEntry *getEntry( int32_t entry_id );
+    rfsBlock *getBlock( int32_t block_id );
+    rfsBlock *getLastBlock( int32_t block_id );
 
-    ramfsEntry *open( const char *path );
+    rfsEntry *open( const char *path );
     void        walk( int32_t entry_id, int depth=0 );
 
-    size_t      fwrite( ramfsEntry *file, const uint8_t *src, size_t nbytes );
-    // size_t      fread( ramfsEntry *file, void *dst, size_t nbytes );
-    // size_t      ftell( ramfsEntry *file );
+    size_t      fwrite( rfsEntry *file, const uint8_t *src, size_t nbytes );
+    // size_t      fread( rfsEntry *file, void *dst, size_t nbytes );
+    // size_t      ftell( rfsEntry *file );
 
     // rfsEntryIterator begin() { return rfsEntryIterator(*this, m_root, 0);  };
     // rfsEntryIterator end()   { return rfsEntryIterator(*this, nullptr, 0); };
@@ -146,12 +146,12 @@ namespace rfs
 {
     void init( void *base );
 
-    ramfsEntry *open( const char *path );
-    size_t      fwrite( ramfsEntry *file, const uint8_t *src, size_t nbytes );
-    // size_t      fread ( ramfsEntry *file, uint8_t *dst, size_t nbytes );
+    rfsEntry *open( const char *path );
+    size_t      fwrite( rfsEntry *file, const uint8_t *src, size_t nbytes );
+    // size_t      fread ( rfsEntry *file, uint8_t *dst, size_t nbytes );
 
-    size_t      ftell( ramfsEntry *fh ); //           { return fh->cursor; }
-    size_t      fseek( ramfsEntry *fh, size_t p ); // { fh->cursor = p; return p;  }
+    size_t      ftell( rfsEntry *fh ); //           { return fh->cursor; }
+    size_t      fseek( rfsEntry *fh, size_t p ); // { fh->cursor = p; return p;  }
 }
 
 
@@ -160,10 +160,10 @@ namespace rfs
 // struct rfsEntryIterator
 // {
 //     RamFS &rfs;
-//     ramfsEntry *entry;
+//     rfsEntry *entry;
 //     uint32_t entryno;
 
-//     rfsEntryIterator( RamFS &fs, ramfsEntry *E, uint32_t eno )
+//     rfsEntryIterator( RamFS &fs, rfsEntry *E, uint32_t eno )
 //     :   rfs(fs), entry(E), entryno(eno)
 //     {
 //         if (entry && entryno > entry->entry_count)
@@ -204,11 +204,11 @@ namespace rfs
 //         return (entry != rhs.entry) || (entryno != rhs.entryno);
 //     };
 
-//     ramfsEntry *operator* ();
+//     rfsEntry *operator* ();
 
 // };
 
-// inline ramfsEntry *rfsEntryIterator::operator* ()
+// inline rfsEntry *rfsEntryIterator::operator* ()
 // {
 //     auto *block   = rfs.getBlock(dir->block_id);
 //     auto *entries = (int32_t*)(block->data);

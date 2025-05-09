@@ -1,50 +1,20 @@
+#include <driver/interface.hpp>
+#include <sym/sym.hpp>
+
 #include <kernel/interrupt.hpp>
 #include <kernel/ioport.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <ctype.h>
-
-
-// int global_var = 42;
-// void redirect_got() {
-//     void **got_entry = (void **)(global_var@GOTPCREL + (uintptr_t)&redirect_got);
-//     *got_entry = (void *)0xdeadbeef;  // Change GOT entry to point elsewhere
-// }
+#include <ringbuffer.hpp>
 
 
 #define STATE_NORMAL 0
 #define STATE_PREFIX 1
 
-static uint8_t raw_buf[256];
-static uint8_t raw_head;
-static uint8_t raw_tail;
-
-static KeyEvent key_buf[256];
-static uint8_t key_head;
-static uint8_t key_tail;
-
-
-extern "C"
-{
-    #if UINT32_MAX == UINTPTR_MAX
-        #define STACK_CHK_GUARD 0xe2dee396
-    #else
-        #define STACK_CHK_GUARD 0x595e9fbd94fda766
-    #endif
-    
-    uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
-    
-    __attribute__((noreturn))
-    void __stack_chk_fail(void)
-    {
-        // kpanic("Stack smashing detected");
-        while (true) {  };
-    }
-}
-
-
-
-char shift_table[256];
+static idk::RingBuffer<uint8_t, 256>  rawstream;
+static idk::RingBuffer<KeyEvent, 256> keystream;
+static char shift_table[256];
 
 void create_shift_table()
 {
@@ -112,7 +82,7 @@ void driver_update( uint8_t scancode )
             .key  = 0
         };
 
-        key_buf[key_tail++] = event;
+        keystream.push_back(event);
 
         state = STATE_NORMAL;
         return;
@@ -145,52 +115,29 @@ void driver_update( uint8_t scancode )
         .key  = key
     };
 
-    key_buf[key_tail++] = event;
+    keystream.push_back(event);
 }
-
-
-
-#include <kernel/module.hpp>
-#include <sym/sym.hpp>
 
 
 void driver_main( void* )
 {
     create_shift_table();
 
-    raw_head = 0;
-    raw_tail  = 0;
-    key_head = 0;
-    key_tail  = 0;
-
-    uint8_t scancode;
-
     while (true)
     {
-        while (raw_tail > 0)
-        {
-            scancode = raw_buf[raw_head++];
-            raw_tail--;
+        // std::printf("[kboard] rawsize: %lu\n", rawstream.size());
+        uint8_t scancode;
+        if (rawstream.pop_front(scancode))
             driver_update(scancode);
-        }
+    
+        kthread::yield();
     }
-
 }
 
 
-size_t driver_read( void *dst, size_t nbytes )
+size_t driver_read( void*, size_t )
 {
-    auto  *dstbuf  = (KeyEvent*)dst;
-    size_t count = 0;
-
-    while (key_tail > 0 && count < nbytes)
-    {
-        *(dstbuf++) = key_buf[key_head++];
-        key_tail--;
-        count++;
-    }
-
-    return count;
+    return 0;
 }
 
 size_t driver_write( const void *, size_t  )
@@ -202,25 +149,42 @@ size_t driver_write( const void *, size_t  )
 void irq_handler( intframe_t* )
 {
     uint8_t code = IO::inb(0x60);
-    raw_buf[raw_tail++] = code;
+    rawstream.push_back(code);
+    std::printf("[kboard irq] code=%u\n", code);
 }
 
 
 
-static CharDeviceInterface interface;
-static iTableEntry table[3];
+
+static CharDevInterface kbdevice;
 
 extern "C"
-iTableEntry *init( void* )
+ModuleInterface *init( ksym::ksym_t *sym )
 {
-    interface = CharDeviceInterface(
-        driver_main, nullptr, driver_read, driver_write
-    );
+    ksym::loadsym(sym);
+    // std::printf("[keyboard.cpp init]\n");
 
-    table[0] = { ITABLE_BEGIN, NULL };
-    table[1] = { ITABLE_CHAR_DEVICE, &interface };
-    table[2] = { ITABLE_END, NULL };
+    rawstream.clear();
+    keystream.clear();
 
-    return table;
+    kbdevice = {
+        .modtype  = ModuleType_Device,
+        .basetype = DeviceType_Char,
+        .subtype  = DeviceType_Keyboard,
+        .main     = driver_main,
+
+        .open     = nullptr,
+        .close    = nullptr,
+        .read     = driver_read,
+        .write    = driver_write,
+        .isrno    = IrqNo_Keyboard,
+        .isrfn    = irq_handler,
+    };
+
+    auto &dev = kbdevice;
+    kmemset<char>(dev.signature, '\0', sizeof(dev.signature));
+    kmemcpy<char>(dev.signature, "kboard", 6);
+
+    return (ModuleInterface*)(&kbdevice);
 }
 

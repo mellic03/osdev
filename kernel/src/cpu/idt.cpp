@@ -7,11 +7,15 @@
 #include <driver/pic.hpp>
 
 
-static constexpr size_t  NUM_INTERRUPTS = 255;
+static constexpr size_t NUM_INTERRUPTS = 255;
+static constexpr size_t HANDLERS_PER_ISRNO = 4;
+// using isrDispatchTable_t = idk::static_vector<isrHandlerFn, MAX_HANDLERS_PER_ISRNO>;
 
 static idt_entry_t  idt_entries[256] __attribute__((aligned(0x10))) ; 
 static idt_ptr_t    idtr;
-static isrHandlerFn usr_table[NUM_INTERRUPTS];
+
+static size_t       usr_count[NUM_INTERRUPTS];
+static isrHandlerFn usr_handlers[NUM_INTERRUPTS][HANDLERS_PER_ISRNO];
 
 extern "C"
 {
@@ -24,10 +28,18 @@ void isr_dispatch( intframe_t *frame )
 {
     uint32_t isrno = frame->isrno;
 
-    if (usr_table[isrno])
+    for (size_t i=0; i<HANDLERS_PER_ISRNO; i++)
     {
-        usr_table[isrno](frame);
+        if (usr_handlers[isrno][i])
+        {
+            usr_handlers[isrno][i](frame);
+        }
     }
+
+    // if (usr_table[isrno])
+    // {
+    //     usr_table[isrno](frame);
+    // }
 
     if (PIC::IRQ_MASTER <= isrno && isrno <= PIC::IRQ_SLAVE+12)
     {
@@ -63,7 +75,10 @@ void CPU::createIDT()
 
     for (size_t i=0; i<NUM_INTERRUPTS; i++)
     {
-        usr_table[i] = nullptr;
+        for (size_t j=0; j<HANDLERS_PER_ISRNO; j++)
+            usr_handlers[i][j] = nullptr;
+        usr_count[i] = 0;
+
         idt_setdesc(i, (uintptr_t)(isr_table[i]), INTERRUPT_GATE);
     }
 
@@ -84,12 +99,16 @@ void CPU::installIDT()
 
 void CPU::installISR( uint8_t isrno, isrHandlerFn handler )
 {
-    usr_table[isrno] = handler;
+    if (usr_count[isrno] < HANDLERS_PER_ISRNO)
+    {
+        size_t idx = usr_count[isrno]++;
+        usr_handlers[isrno][idx] = handler;
+    }
 }
 
 
 void CPU::installIRQ( uint8_t irqno, irqHandlerFn handler )
 {
-    usr_table[PIC::IRQ_MASTER + irqno] = handler;
+    CPU::installISR(PIC::IRQ_MASTER + irqno, handler);
 }
 

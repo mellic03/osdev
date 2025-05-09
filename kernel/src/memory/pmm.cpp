@@ -75,13 +75,10 @@ void PMM::free( uintptr_t phys )
 
 
 
-void PMM::init( MemMap *mmaps, size_t num_mmaps, size_t hhdm_offset )
+void PMM::init( const MemMap &mmap, size_t hhdm_offset )
 {
     PMM::hhdm = hhdm_offset;
     syslog log("PMM::init");
-
-    if (num_mmaps) {  }
-    auto &mmap = mmaps[1];
 
     m_npages     = (mmap.size / PAGE_SIZE) - 2;
     m_bitmap     = (uint64_t*)(mmap.base + hhdm);

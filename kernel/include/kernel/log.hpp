@@ -11,7 +11,8 @@ public:
     static void disable();
     static void pushIndent( int n=4 );
     static void popIndent( int n=4 );
-    static void kprintf( const char *fmt, ... );
+    static void printf( const char *fmt, ... );
+    static void println( const char *fmt, ... );
     static void print( const char *fmt, ... );
 
     template <typename... Args>
@@ -19,10 +20,10 @@ public:
     {
         if (!enabled)
             return;
-        print("[");
-        kprintf(fmt, args...);
-        kprintf("]\n");
-        print("{\n");
+        syslog::print("[");
+        syslog::printf(fmt, args...);
+        syslog::printf("]\n");
+        syslog::print("{\n");
         pushIndent();
     }
 
@@ -31,7 +32,7 @@ public:
         if (!enabled)
             return;
         popIndent();
-        print("}\n");
+        syslog::print("}\n");
     }
 
     void operator()( const char *fmt, ... );

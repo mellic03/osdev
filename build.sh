@@ -1,5 +1,13 @@
 #!/bin/bash
 
+cd ./modules
+./build.sh keyboard
+./build.sh mouse
+./build.sh storage
+./build.sh daemon
+cd ../
+cp -r ./modules/modules/ ./kernel/initrd/.
+
 cd ./tooling
 # ./build.sh
 cd ../
@@ -27,8 +35,16 @@ cd ../
 # cd ../
 
 rm -rf output
-mkdir -p output
-cp -R src/iso_root output/iso_root
+mkdir -p output/iso_root/boot/limine/
+cp -R kernel/limine.conf output/iso_root/boot/limine/limine.conf
+
+cd kernel/initrd
+tar -cvf initrd.tar.gz *
+cp ./initrd.tar.gz ../../output/iso_root/initrd.tar.gz
+mv ./initrd.tar.gz ../initrd.tar.gz
+cd ../../
+
+
 
 cp -v sysroot/usr/bin/idkernel output/iso_root/boot/
 cp -v external/limine/limine-bios.sys \

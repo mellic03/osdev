@@ -51,7 +51,7 @@ int main( int argc, char **argv )
         stream.close();
     }
 
-    RamFSHeader header = {
+    rfsHeader header = {
         .inode_count = 1024,
         .block_count = blockHeapSize / RamFS::BLOCK_SIZE,
         .block_size  = RamFS::BLOCK_SIZE,
@@ -60,7 +60,7 @@ int main( int argc, char **argv )
 
 
     std::ofstream stream(argv[2], std::ios::binary);
-    stream.write(reinterpret_cast<const char*>(&header), sizeof(RamFSHeader));
+    stream.write(reinterpret_cast<const char*>(&header), sizeof(rfsHeader));
     stream.write(reinterpret_cast<const char*>(ramfs), sizeof(RamFS));
     stream.write(reinterpret_cast<const char*>(ramfs->m_blockHeapData), blockHeapSize);
     stream.close();

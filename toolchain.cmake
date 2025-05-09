@@ -107,7 +107,7 @@ set(
     -mcmodel=kernel \
     -zmax-page-size=0x1000 \
     -mno-red-zone \
-    -T${CMAKE_SOURCE_DIR}/src/linker.ld"
+    -T${CMAKE_SOURCE_DIR}/kernel/linker.ld"
 )
 
 

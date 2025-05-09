@@ -36,7 +36,6 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
 add_executable(
     ${PROJECT_NAME}
-    ${CMAKE_SOURCE_DIR}/src/tinyubsan.cpp
     ${IDKERNEL_SOURCES}
 )
 
