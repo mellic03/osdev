@@ -1,10 +1,13 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
 
-#include <kernel/interrupt.hpp>
+#include <kernel/log.hpp>
 #include <kernel/ioport.hpp>
+#include <kernel/input.hpp>
+#include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
+#include <algorithm>
 #include <ctype.h>
 #include <ringbuffer.hpp>
 
@@ -129,7 +132,6 @@ void driver_main( void* )
         uint8_t scancode;
         if (rawstream.pop_front(scancode))
             driver_update(scancode);
-    
         kthread::yield();
     }
 }
@@ -152,7 +154,6 @@ void irq_handler( intframe_t* )
     rawstream.push_back(code);
     std::printf("[kboard irq] code=%u\n", code);
 }
-
 
 
 

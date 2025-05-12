@@ -2,17 +2,21 @@
     #define __is_kernel
 #endif
 
+#include <kassert.h>
 #include <kpanic.h>
 #include <khang.h>
 #include <kthread.hpp>
+#include <new>
 
 #include <kernel/boot_limine.hpp>
 #include <kernel/clock.hpp>
 #include <kernel/log.hpp>
 #include <kernel/interrupt.hpp>
+#include <kernel/input.hpp>
 #include <kernel/syscall.h>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/module.hpp>
+#include <kernel/kvideo.hpp>
 
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
@@ -20,11 +24,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <sys/acpi.hpp>
+#include <driver/pic.hpp>
 #include <driver/pci.hpp>
 #include <driver/pit.hpp>
-#include <driver/pic.hpp>
-#include <driver/apic.hpp>
-#include <driver/lapic.hpp>
 #include <driver/serial.hpp>
 
 #include <filesystem/ramfs.hpp>
@@ -32,7 +35,7 @@
 #include <filesystem/initrd.hpp>
 
 #include "syscall/syscall.hpp"
-#include "cpu/smp.hpp"
+#include "smp/smp.hpp"
 
 
 static void genfaultISR( intframe_t* );
@@ -61,58 +64,170 @@ void call_ctors()
 
 static void PIT_IrqHandler( intframe_t *frame )
 {
-    kclock::detail::tick(PIT::MILLISECONDS);
-    ThreadScheduler::scheduleISR(frame);
-    PIT::reload();
+    kclock::detail::tick(1);
+    // syslog::println("[PIT_IrqHandler]");
+    // syslog::println("[PIT_IrqHandler] CPU %u", SMP::this_cpu()->id);
+
+    if (SMP::this_sched()->m_isRunning.load() == true)
+        ThreadScheduler::scheduleISR(frame);
+
 }
-
-
-
-static void cpu0_main( void* )
-{
-    syslog::printf("[cpu0_main]\n");
-
-    // while (true)
-    // {
-    //     syslog::printf("[cpu0_main]\n");
-    // }
-
-    // while (true)
-    // {
-    //     int values[5];
-    //     size_t n = kernel::modules[0].read(values, sizeof(values));
-    //     if (n > 0)
-    //         syslog::println("[%lu bytes] (x, y): (%d, %d)", n, values[0], values[1]);
-    //     kthread::sleep(10);
-    // }
-
-    kthread::exit();
-}
-
 
 
 // external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/plugin/include
+extern void LimineRes_init();
 extern void early_init();
 extern void late_init();
+static void smp_main(limine_mp_info*);
+
+
+
+// #include <atomic2>
+// #include <smp/barrier.hpp>
+std::atomic_int barrierA{4};
+// sl::Atomic<int> barrierB(4);
+
+
+// The volatile storage class was originally meant for memory-mapped I/O
+// registers.  Within the kernel, register accesses, too, should be protected
+// by locks, but one also does not want the compiler "optimizing" register
+// accesses within a critical section.  But, within the kernel, I/O memory
+// accesses are always done through accessor functions; accessing I/O memory
+// directly through pointers is frowned upon and does not work on all
+// architectures.  Those accessors are written to prevent unwanted
+// optimization, so, once again, volatile is unnecessary.
+
+// Another situation where one might be tempted to use volatile is
+// when the processor is busy-waiting on the value of a variable.  The right
+// way to perform a busy wait is::
+
+//     while (my_variable != what_i_want)
+//         cpu_relax();
+
+// asm volatile ("" ::: "memory")
+
+/*
+    https://stackoverflow.com/questions/67943540/why-can-asm-volatile-memory-serve-as-a-compiler-barrier
+
+    If a variable is potentially read or written, it matters what order that happens in.
+    The point of a "memory" clobber is to make sure the reads and/or writes in an asm statement
+    happen at the right point in the program's execution.
+*/
+
+void BarrierWait( std::atomic_int &barrier )
+{
+    barrier.fetch_sub(1, std::memory_order_seq_cst);
+
+    while (barrier.load(std::memory_order_seq_cst) > 0)
+    {
+        // lol does not work in loop
+        // asm volatile ("" ::: "memory");
+        asm volatile ("nop");
+    }
+}
+
+
+
+// std::atomic_int IRQ_disable_counter{0};
+
+// void lock_scheduler(void)
+// {
+//     CPU::cli();
+//     IRQ_disable_counter++;
+// }
+
+// void unlock_scheduler(void)
+// {
+//     if (IRQ_disable_counter-- == 0)
+//         CPU::sti();
+// }
+
+
+
+
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_rsdp_request lim_rsdp_req = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 3
+};
+
 
 
 extern "C"
 void _start()
 {
     asm volatile ("cli");
+    CPU::enableSSE();
+    serial::init();
+    syslog log("_start");
 
+    early_init();
+    call_ctors();
+
+    CPU::clearIDT();
+    ACPI::init((void*)(lim_rsdp_req.response->address));
+
+    barrierA.store(4);
+    SMP::initMulticore(smp_main);
+
+    kassert(false); // Should be unreachable!
+
+    kernel::halt();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// https://forum.osdev.org/viewtopic.php?t=57471
+// static kthread_t      *task_list[64];
+// static std::atomic_int task_count{0};
+const auto &println = syslog::println;
+
+
+// static void smp_hell( limine_mp_info* )
+// {
+//     while (true)
+//     {
+//         asm volatile ("cli; hlt");
+//     }
+// }
+
+
+static void smp_main( limine_mp_info *info )
+{
+    asm volatile ("cli");
+    CPU::enableSSE();
     CPU::createGDT();
     CPU::installGDT();
-    CPU::enableSSE();
+    size_t cpuid     = info->lapic_id;
+    cpu_t *cpu       = new (SMP::all_cpus + cpuid) cpu_t();
+           cpu->self = cpu;
+           cpu->id   = cpuid;
+    CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)cpu);
+    CPU::wrmsr(CPU::MSR_KERNEL_GS_BASE, (uint64_t)cpu);
+
+    println("[CPU%u] BarrierA 0", cpuid);
+    BarrierWait(barrierA);
+    println("[CPU%u] BarrierA 1", cpuid);
+
+    if (cpuid > 0)
+    {
+        kernel::hang();
+    }
 
     PIC::remap(PIC::IRQ_MASTER, PIC::IRQ_SLAVE);
     PIC::disable();
-
-    PIT::init();
-    PIT::set_ms(2);
-
-    // enableAPIC();
-    // LocalApicInit();
+    PIT::init(500);
 
     CPU::createIDT();
     CPU::installIDT();
@@ -122,118 +237,63 @@ void _start()
     CPU::installISR(IntNo_KTHREAD_START,             ThreadScheduler::trampolineISR);
     CPU::installISR(IntNo_KTHREAD_YIELD,             ThreadScheduler::scheduleISR);
     CPU::installISR(IntNo_SYSCALL,                   kernel::syscallISR);
-    CPU::installIRQ(IrqNo_PIT, PIT_IrqHandler);
-
-    serial::init();
-    syslog log("_start");
-
-    early_init();
-    call_ctors();
-    // PCI::init();
-
-    SMP::init(1);
-    PIC::unmask(IrqNo_PIT);
+    CPU::installIRQ(IrqNo_PIT,                       PIT_IrqHandler);
     PIC::unmask(2);
-    SMP::start();
 
-    kernel::loadModules(initrd::find("modules/"));
-    kernel::initModules();
 
-    // cpu->createThread("SDE",       sde_main, nullptr);
-    // cpu->createThread("kshell",    kshell_main, nullptr);
-    kthread::create("cpu0_main", cpu0_main, nullptr);
+    // https://github.com/jjwang/HanOS/blob/mainline/kernel/sys/acpi.c
+    // https://github.com/jteerice/FrazzOS/blob/3e5492db5f8201a426807466153f9dbb2df7fdb3/kernel/src/firmware/acpi.c#L130
+    // https://github.com/pdoane/osdev/blob/master/acpi/acpi.c
+
+    // kthread::create("cullmain", kthread::cullmain, nullptr);
+
+    if (cpuid == 0)
+    {
+        kernel::loadModules(initrd::find("drv/"));
+        kernel::loadModules(initrd::find("srv/"));
+        kernel::initModules();
+    }
+
+    asm volatile ("sti");
+    PIC::unmask(IrqNo_PIT);
+
+    // println("[CPU%u] APIC check: %u", cpuid, APIC::check());
+    kthread::create("idlemain", kthread::idlemain, nullptr);
     kthread::start();
 
-    kernel::hang();
+    kernel::halt();
 }
 
 
 
 
 
-// template <typename ret_type, typename... Args>
-// static ret_type someFunctionCall( void *addr, Args... args )
+
+
+// // Code A https://forum.osdev.org/viewtopic.php?t=57326
+// // --------------------------------------------------
+// struct CPU_t
 // {
-//     using fn_type = ret_type (*)(Args...);
-//     return ((fn_type)addr)(args...);
-// }
+//     struct CPU_t *self;
+//     int nr;
+// };
 
-
-
-// static void module_load( void *program, size_t size )
+// static CPU_t *cpu_self()
 // {
-//     syslog log("module_load 0x%lx", program);
-
-//     // void *addr = kmalloc(size);
-//     // memcpy(addr, program, size);
-//     void *addr = program;
-//     auto  res  = someFunctionCall<DriverInterface>(addr, &sym_libc);
-
-//     log("name: %s", res.signature);
-//     log("type: %u", res.type);
-//     log("main: 0x%lx", res.main);
-//     deviceDrivers.push_back(res);
+//     CPU_t *r;
+//     __asm__("mov %%gs:0, %0" : "=r"(r));
+//     return r;
 // }
+// // --------------------------------------------------
 
 
-// static void elf_test()
+// // Code B
+// // --------------------------------------------------
+// static CPU_t *cpu_self(void)
 // {
-//     // syslog log("elf_test");
-
-//     // void  *addr;
-//     // size_t size;
-
-//     // if (ustar::find(tarball, "modules/test.bin", addr, size))
-//     //     module_load(addr, size);
-
-//     // if (ustar::find(tarball, "modules/mouse.bin", addr, size))
-//     //     module_load(addr, size);
-
-//     // Elf64_Ehdr *ehdr = (Elf64_Ehdr*)(fh->sof);
-//     // log("e_type:   %s",    Elf64_etypeStr(ehdr->e_type));
-//     // log("e_entry:  0x%lx", ehdr->e_entry);
-//     // log("e_flags:  %u",    ehdr->e_flags);
-
-//     // Elf64_Phdr *phdrs = (Elf64_Phdr*)(fh->sof + ehdr->e_phoff);
-//     // for (int i=0; i<ehdr->e_phnum; i++)
-//     // {
-//     //     Elf64_Phdr *phdr = phdrs + i;
-//     //     log("p_type:   %u",    phdr->p_type);
-//     //     log("p_flags:  %u",    phdr->p_flags);
-//     //     log("p_offset: %lu",   phdr->p_offset);
-//     //     log("p_vaddr:  0x%lx", phdr->p_vaddr);
-//     //     log("p_paddr:  0x%lx", phdr->p_paddr);
-//     //     log("p_filesz: %lu",   phdr->p_filesz);
-//     //     log("p_memsz:  %lu",   phdr->p_memsz);
-//     //     log("p_align:  %lu",   phdr->p_align);
-//     // }
-
-
-//     // Elf64_Shdr *shdrs = (Elf64_Shdr*)(fh->sof + ehdr->e_shoff);
-//     // for (int i=0; i<ehdr->e_shnum; i++)
-//     // {
-//     //     Elf64_Shdr *shdr = shdrs + i;
-
-//     //     if (shdr->sh_type == SHT_SYMTAB)
-//     //         symtab = shdr;
-//     //     else if (shdr->sh_type == SHT_STRTAB && i != ehdr->e_shstrndx)
-//     //         strtab = shdr;
-
-//     //     // if (shdr->sh_type == SHT_REL || shdr->sh_type == SHT_RELA)
-//     //     // {
-//     //     //     log("Relocation section found");
-//     //     //     log("sh_addr:   0x%lx",  shdr->sh_addr);
-//     //     //     log("sh_offset: 0x%lx",  shdr->sh_offset);
-//     //     //     log("sh_size:   %lu",    shdr->sh_size);
-//     //     //     log("");
-//     //     //     elf_do_shdr(fh->sof, shdr);
-//     //     // }
-//     // }
-
+//     return ((__seg_gs struct CPU_t *)0)->self;
 // }
-
-
-
+// // --------------------------------------------------
 
 
 
@@ -250,7 +310,7 @@ void stacktrace( intframe_t *frame )
 
     for (int i=0; i<16; i++)
     {
-        log("rip: 0x%lx", sf->iret_rip);
+        log("rip: 0x%lx", sf->rip);
         log("rbp: 0x%lx\n", sf->rbp);
         sf = (intframe_t*)(&sf->rbp);
     }
@@ -269,21 +329,21 @@ static void outOfMemoryISR( intframe_t* )
     kernel::hang();
 }
 
+
+static std::atomic_int faultCount{0};
+
 static void pagefaultISR( intframe_t *frame )
 {
     syslog log("Exception PAGE_FAULT");
 
-    if (SMP::is_initialized())
-    {
-        auto *cpu = SMP::this_cpu();
-        if (cpu) log("cpu %d", cpu->id);
+    // auto *cpu = SMP::this_cpu();
+    // if (cpu) log("cpu %d", cpu->id);
 
-        auto *th = cpu->currThread;
-        if (th) log("thread %d (%s)", th, th->name);
-    }
+    // auto *th = SMP::this_thread();
+    // if (th) log("thread %d (%s)", th, th->name);
 
-    log("rip:   0x%lx", frame->iret_rip);
-    log("rsp:   0x%lx", frame->iret_rsp);
+    log("rip:   0x%lx", frame->rip);
+    log("rsp:   0x%lx", frame->rsp);
     log("r11:   0x%lx", frame->r11);
     log("r12:   0x%lx", frame->r12);
     log("r13:   0x%lx", frame->r13);

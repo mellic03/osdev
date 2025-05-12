@@ -135,11 +135,10 @@ void VMM::mapPage( uintptr_t phys, uintptr_t virt )
     asm volatile ("sti");
 }
 
-void VMM::mapPage( uintptr_t virt )
-{
-    VMM::mapPage(PMM::alloc(), virt);
-}
-
+// void VMM::mapPage( uintptr_t virt )
+// {
+//     VMM::mapPage(PMM::alloc(), virt);
+// }
 
 void
 VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes )

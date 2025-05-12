@@ -7,8 +7,13 @@ if [[ $# -eq 0 ]] ; then
 fi
 
 NAME=$1
+TYPE=$2
 
-    # -r \
+if [[ "$TYPE" == "" ]] ; then
+    echo RIPERONI
+    exit
+fi
+
 
 CXX_FLAGS="
     -std=c++23 \
@@ -32,41 +37,38 @@ CXX_FLAGS="
 
 
 
-# DSTDIR=../kernel/initrd/modules
-mkdir -p modules
+mkdir -p ./$TYPE
 mkdir -p temp
+mkdir -p dump
+DSTDIR=driver
 DSTELF=temp/$NAME.elf
 DSTBIN=temp/$NAME.bin
 COMPILER_EXE=../external/x86_64-elf-tools-linux/bin/x86_64-elf-g++
 
+
 $COMPILER_EXE -o temp/$NAME.elf ./$NAME.cpp $CXX_FLAGS
-mv temp/$NAME.elf modules/$NAME.elf
-objcopy -O binary modules/$NAME.elf modules/$NAME.bin
+mv temp/$NAME.elf $TYPE/$NAME.elf
+objcopy -O binary $TYPE/$NAME.elf $TYPE/$NAME.bin
 
-rm dump.txt
-echo "-------- readelf -a $NAME.elf --------" >> dump.txt
-readelf -a modules/$NAME.elf >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
 
-echo "-------- objdump -x $NAME.elf --------" >> dump.txt
-objdump -x modules/$NAME.elf >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
+rm dump/$NAME.txt
+echo "-------- readelf -a $NAME.elf --------" >> dump/$NAME.txt
+readelf -a $TYPE/$NAME.elf >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
 
-echo "-------- objdump -d $NAME.elf --------" >> dump.txt
-objdump -d modules/$NAME.elf >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
+echo "-------- objdump -s $NAME.elf --------" >> dump/$NAME.txt
+objdump -d $TYPE/$NAME.elf >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
+echo -e "\n" >> dump/$NAME.txt
 
-echo "-------- hexdump -C $NAME.bin --------" >> dump.txt
-hexdump -C modules/$NAME.bin >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
-echo -e "\n" >> dump.txt
+# echo "-------- hexdump -C $NAME.bin --------" >> dump.txt
+# hexdump -C $TYPE/$NAME.bin >> dump.txt
+# echo -e "\n" >> dump.txt
+# echo -e "\n" >> dump.txt
+# echo -e "\n" >> dump.txt
 
 rm -rf ./temp
 

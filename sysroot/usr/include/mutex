@@ -5,35 +5,11 @@
 
 namespace std
 {
-    class mutex: public kspinlock {  };
+    class mutex: public kspinlock<false> {  };
 
     template <typename lock_type = std::mutex>
     class lock_guard;
 }
-
-
-// class std::mutex
-// {
-// private:
-//     volatile bool m_locked = false;
-
-// public:
-
-//     void lock()
-//     {
-//         while (__atomic_test_and_set(&m_locked, __ATOMIC_ACQUIRE));
-//     }
-
-//     bool try_lock()
-//     {
-//         return !__atomic_test_and_set(&m_locked, __ATOMIC_ACQUIRE);
-//     }
-
-//     void unlock()
-//     {
-//         __atomic_clear(&m_locked, __ATOMIC_RELEASE);
-//     }
-// };
 
 
 

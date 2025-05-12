@@ -1,6 +1,8 @@
 #pragma once
 #include <kdef.h>
 #include <functional>
+#include <kernel/interrupt.hpp>
+#include <kernel/input.hpp>
 
 struct ModuleInterface;
 
@@ -22,16 +24,29 @@ namespace ksym
             int W, H;
             uint8_t *frontbuffer;
             uint8_t *backbuffer;
-            void (*rect)(int x, int y, int w, int h);
-            void (*fill)(uint8_t, uint8_t, uint8_t, uint8_t);
+            void (*clearBuffer)(uint8_t *buffer);
+            void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
+            void (*fillBuffer) (uint8_t *buffer);
+            void (*rect)       (int, int, int, int);
             void (*swapBuffers)();
-        } kvideo_sym;
+        } video_sym;
 
         struct {
             void (*yield)();
             void (*sleep)(uint64_t);
             void (*exit)();
-        } kthread_sym;
+        } thread_sym;
+
+        struct {
+            void (*triggerMouseEvent)(uint32_t, uint32_t);
+            void (*writeMsData)(const kinput::MsData*);
+            void (*readMsData)(kinput::MsData*);
+        } input_sym;
+
+        // struct {
+        //     void (*installISR)(uint8_t, isrHandlerFn);
+        //     void (*installIRQ)(uint8_t, irqHandlerFn);
+        // } cpu_sym;
 
         struct {
             void (*panic)(const char*);

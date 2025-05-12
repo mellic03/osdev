@@ -1,6 +1,8 @@
 #include <filesystem/ustar.hpp>
 #include <kernel/kstring.h>
+#include <kernel/log.hpp>
 #include <string.h>
+#include <stdio.h>
 
 size_t oct2bin( unsigned char *str, int size )
 {
@@ -15,43 +17,55 @@ size_t oct2bin( unsigned char *str, int size )
     return n;
 }
 
-#include <kernel/log.hpp>
+
+static bool ustar_isChild( void *A, void *B )
+{
+    if (A == B)
+        return false;
+    auto *nameA = (const char*)A;
+    auto *nameB = (const char*)B;
+    auto *slash = seek_ch(nameA, '/');
+    size_t len = slash-nameA;
+    if (*slash == '\0')
+        return false;
+    return strncmp(nameA, nameB, len) == 0;
+}
+
 
 // void ustar::forEach( void *archive, void(*action)(const char*, void*, size_t) )
-void ustar::forEach( void *addr, std::function<void(const char*, void*, size_t)> action )
+void ustar::forEach( void *addr, std::function<void(void*, size_t)> action )
 {
     auto *ptr = (unsigned char*)(addr);
     while (!memcmp(ptr + 257, "ustar", 5))
     {
         size_t fsize = oct2bin(ptr + 0x7c, 11);
-        action((const char*)ptr, (void*)(ptr+512), fsize);
+
+        // auto *name = (const char*)ptr;
+        // if (name[strlen(name)-1] != '/')
+        if (ustar_isChild(addr, ptr))
+            action((void*)ptr, fsize);
+
         ptr += (((fsize + 511) / 512) + 1) * 512;
     }
 }
 
 
-void ustar::list( void *addr )
+
+void ustar::listChilren( void *tar )
 {
-    syslog log("ustar::list");
-
-    auto *dirname = (const char*)addr;
-    auto *slash = seek_ch(dirname, '/');
-    size_t len = slash-dirname;
-
-    if (*slash == '\0')
-    {
-        log("Not a directory!");
-        return;
-    }
-
-    char root[128];
-    strncpy(root, dirname, slash-dirname);
-    log("%s/", root);
-
-    ustar::forEach(addr, [&log, root, len](const char *name, void*, size_t) {
-        if (strncmp(root, name, len) != 0)
+    syslog log("ustar::listChilren");
+    ustar::forEach(tar, [&log, tar](void *child, size_t) {
+        if (ustar_isChild(tar, (void*)child) == false)
             return;
-        log(name);
+        log((const char*)child);
+    });
+}
+
+void ustar::listAll( void *tar )
+{
+    syslog log("ustar::listAll");
+    ustar::forEach(tar, [&log](void *child, size_t) {
+        log("%s", (const char*)child);
     });
 }
 
@@ -72,16 +86,17 @@ void ustar::list( void *addr )
 //     return false;
 // }
 
-
-void *ustar::find( void *archive, const char *filename )
+void *ustar::find( void *archive, const char *name )
 {
     auto *ptr = (unsigned char*)(archive);
-    while (!memcmp(ptr + 257, "ustar", 5))
+    while (strncmp((const char*)(ptr+257), "ustar", 5) == 0)
     {
-        size_t fsize = oct2bin(ptr + 0x7c, 11);
-        if (!memcmp(ptr, filename, strlen(filename)+1))
-            return (void*)(ptr + 512);
-        ptr += (((fsize + 511) / 512) + 1) * 512;
+        size_t size = oct2bin(ptr + 0x7c, 11);
+        if (strncmp((const char*)ptr, name, strlen(name)) == 0)
+            return (void*)ptr;
+            // return (void*)(ptr + 512);
+        ptr += (((size + 511) / 512) + 1) * 512;
     }
     return nullptr;
 }
+

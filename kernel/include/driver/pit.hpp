@@ -17,17 +17,16 @@
 namespace PIT
 {
     static constexpr uint32_t FREQUENCY = uint32_t(1193182);
+    extern uint32_t CurrFrequency;
     extern uint16_t HERTZ;
-    extern uint16_t MILLISECONDS;
 
-    void init();
-    void reload();
-    void set_hz( uint16_t hz );
-    void set_ms( uint16_t ms );
+    void init( uint32_t new_frequency  );
+    // void set_hz( uint16_t hz );
+    // void set_ms( uint16_t ms );
     uint32_t sleep( uint64_t ms );
 
-    uint16_t read();
-    bool     edge();
+    // uint16_t read();
+    // bool     edge();
 
 }
 

@@ -4,11 +4,11 @@ string(ASCII 27 Esc)
 set(Green "${Esc}[32m")
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
-project(idkernel)
+project(CringeOS)
 ENABLE_LANGUAGE(ASM_NASM)
 
-set(IDKERNEL_LIBRARIES "")
-# set(IDKERNEL_SOURCES "")
+set(CringeOS_LIBRARIES "")
+# set(CringeOS_SOURCES "")
 
 set(KERNEL_SYSROOT_DIR ${CMAKE_SOURCE_DIR}/sysroot)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KERNEL_SYSROOT_DIR}/usr/lib)
@@ -36,7 +36,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
 add_executable(
     ${PROJECT_NAME}
-    ${IDKERNEL_SOURCES}
+    ${CringeOS_SOURCES}
 )
 
 target_compile_definitions(
@@ -48,7 +48,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     libc_k
     libc++_k
-    ${IDKERNEL_LIBRARIES} 
+    ${CringeOS_LIBRARIES} 
 )
 
 

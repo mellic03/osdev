@@ -3,21 +3,17 @@
 
 #include <kernel/log.hpp>
 #include <kernel/ioport.hpp>
+#include <kernel/input.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <algorithm>
 
-struct MouseBitch
-{
-    int x, y;
-    int l, m, r;
-};
 
+kinput::MsData msdata = {0, 0, 0, 0, 0};
 uint8_t MouseCycle = 0;
 uint8_t MousePacket[4];
 bool MousePacketReady = false;
-MouseBitch mbitch = {0, 0, 0, 0, 0};
 
 
 #define PS2Leftbutton 0b00000001
@@ -31,18 +27,10 @@ MouseBitch mbitch = {0, 0, 0, 0, 0};
 void MouseWait()
 {
     uint64_t timeout = 100000;
-    while (timeout--){
-        if ((IO::inb(0x64) & 0b10) == 0){
-            return;
-        }
-    }
-}
-
-void MouseWaitInput()
-{
-    uint64_t timeout = 100000;
-    while (timeout--){
-        if (IO::inb(0x64) & 0b1){
+    while (timeout--)
+    {
+        if ((IO::inb(0x64) & 0b10) == 0)
+        {
             return;
         }
     }
@@ -58,21 +46,21 @@ static void MouseWrite( uint8_t value )
 
 uint8_t MouseRead()
 {
-    MouseWaitInput();
+    MouseWait();
     return IO::inb(0x60);
 }
 
-void ProcessMousePacket()
+bool ProcessMousePacket()
 {
     if (!MousePacketReady)
     {
-        return;
+        return false;
     }
 
     bool xNegative, yNegative, xOverflow, yOverflow;
 
-    mbitch.l = (MousePacket[0] & 0b01);
-    mbitch.r = (MousePacket[0] & 0b10);
+    msdata.l = (MousePacket[0] & 0b01);
+    msdata.r = (MousePacket[0] & 0b10);
 
     xNegative = (MousePacket[0] & PS2XSign);
     yNegative = (MousePacket[0] & PS2YSign);
@@ -80,37 +68,39 @@ void ProcessMousePacket()
     yOverflow = (MousePacket[0] & PS2YOverflow);
 
     if (!xNegative){
-        mbitch.x += MousePacket[1];
+        msdata.x += MousePacket[1];
         if (xOverflow){
-            mbitch.x += 255;
+            msdata.x += 255;
         }
     } else
     {
         MousePacket[1] = 256 - MousePacket[1];
-        mbitch.x -= MousePacket[1];
+        msdata.x -= MousePacket[1];
         if (xOverflow){
-            mbitch.x -= 255;
+            msdata.x -= 255;
         }
     }
 
     if (!yNegative){
-        mbitch.y -= MousePacket[2];
+        msdata.y -= MousePacket[2];
         if (yOverflow){
-            mbitch.y -= 255;
+            msdata.y -= 255;
         }
     } else
     {
         MousePacket[2] = 256 - MousePacket[2];
-        mbitch.y += MousePacket[2];
+        msdata.y += MousePacket[2];
         if (yOverflow){
-            mbitch.y += 255;
+            msdata.y += 255;
         }
     }
 
-    mbitch.x = std::clamp(mbitch.x, 0, kvideo::W-1);
-    mbitch.y = std::clamp(mbitch.y, 0, kvideo::H-1);
+    msdata.x = std::clamp(msdata.x, 0, kvideo::W-1);
+    msdata.y = std::clamp(msdata.y, 0, kvideo::H-1);
+    // kinput::triggerMouseEvent();
 
     MousePacketReady = false;
+    return true;
 }
 
 
@@ -121,7 +111,7 @@ static void mouse_init()
 
     MouseWait();
     IO::outb(0x64, 0x20); // tells the keyboard controller that we want to send a command to the mouse
-    MouseWaitInput();
+    MouseWait();
     uint8_t status = IO::inb(0x60);
     status |= 0b10;
     MouseWait();
@@ -139,7 +129,6 @@ static void mouse_init()
 
 static void irq_handler( intframe_t* )
 {
-    // std::printf("[mouse irq]\n");
     uint8_t data = IO::inb(0x60);
     switch(MouseCycle){
         case 0:
@@ -160,6 +149,8 @@ static void irq_handler( intframe_t* )
             MouseCycle = 0;
             break;
     }
+
+    // PIC::sendEOI(IrqNo_Mouse);
 }
 
 
@@ -171,7 +162,10 @@ static void driver_main( void* )
 
     while (true)
     {
-        ProcessMousePacket();
+        if (ProcessMousePacket())
+        {
+            kinput::writeMsData(&msdata);
+        }
         kthread::yield();
     }
 }
@@ -180,10 +174,10 @@ static void driver_main( void* )
 static size_t driver_read( void *dstbuf, size_t nbytes )
 {
     auto *dst = (uint8_t*)dstbuf;
-    auto *src = (uint8_t*)(&mbitch);
+    auto *src = (uint8_t*)(&msdata);
     size_t count = 0;
 
-    while ((count < nbytes) && (count < sizeof(MouseBitch)))
+    while ((count < nbytes) && (count < sizeof(kinput::MsData)))
     {
         *(dst++) = *(src++);
         count++;
@@ -191,12 +185,6 @@ static size_t driver_read( void *dstbuf, size_t nbytes )
 
     return count;
 }
-
-static size_t driver_write( const void*, size_t )
-{
-    return 0;
-}
-
 
 
 
@@ -215,7 +203,7 @@ ModuleInterface *init( ksym::ksym_t *sym )
         .open     = nullptr,
         .close    = nullptr,
         .read     = driver_read,
-        .write    = driver_write,
+        .write    = nullptr,
         .isrno    = IrqNo_Mouse,
         .isrfn    = irq_handler
     };

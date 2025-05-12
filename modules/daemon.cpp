@@ -1,35 +1,40 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
+#include <kernel/input.hpp>
 #include <kmemxx.hpp>
 
 
 static void sde_main( void* )
 {
-    auto *iface = kernel::findModule(ModuleType_Device, DeviceType_Mouse);
-    auto *msdev = (CharDevInterface*)iface;
+    // auto *iface = kernel::findModule(ModuleType_Device, DeviceType_Mouse);
+    // auto *msdev = (CharDevInterface*)iface;
 
-    std::printf("[sde_main] iface:       0x%lx\n", iface);
-    std::printf("[sde_main] iface->sig:  %s\n",    iface->signature);
-    std::printf("[sde_main] msdev->read: 0x%lx\n", msdev->read);
+    // std::printf("[sde_main] iface:       0x%lx\n", iface);
+    // std::printf("[sde_main] iface->sig:  %s\n",    iface->signature);
+    // std::printf("[sde_main] msdev->read: 0x%lx\n", msdev->read);
     // std::printf("[sde_main] mousedev: 0x%lx\n", msdev);
 
-    int xpos = 50;
-    int ypos = 50;
+    kinput::MsData msdata;
+    msdata.x = 50;
+    msdata.y = 50;
 
+    // uint64_t prev_time;
+    // uint64_t curr_time;
+    // uint64_t accum = 0;
 
     while (true)
     {
-        int xy[2];
+        // curr_time = std::clock();
+        // accum += (curr_time - prev_time);
+        // prev_time = curr_time;
+        // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
 
-        if (msdev->read(xy, sizeof(xy)) == sizeof(xy))
-        {
-            xpos = xy[0];
-            ypos = xy[1];
-        }
+        kinput::readMsData(&msdata);
 
-        // std::printf("[sde_main] xpos=%d\n", xpos);
-        kvideo::rect(xpos, ypos, 100, 100);
-
+        kvideo::fillColor(200, 50, 50, 255);
+        kvideo::rect(msdata.x, msdata.y, 100, 100);
+        kthread::yield();
+    
         kvideo::swapBuffers();
         kthread::yield();
     }
@@ -57,6 +62,7 @@ ModuleInterface *init( ksym::ksym_t *sym )
     kmemset<char>(daemon->signature, '\0', sizeof(daemon->signature));
     kmemcpy<char>(daemon->signature, "shitde", 6);
 
+    // std::printf("[daemon.cpp] daemon: 0x%lx\n", daemon);
+
     return (ModuleInterface*)daemon;
 }
-

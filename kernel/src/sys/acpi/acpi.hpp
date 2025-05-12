@@ -1,0 +1,231 @@
+#pragma once
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+
+#include <kernel/boot_limine.hpp>
+#include <kernel/memory/pmm.hpp>
+#include <kernel/memory/vmm.hpp>
+#include <kernel/log.hpp>
+
+
+namespace ACPI
+{
+    void init( void* );
+
+    struct RSDP_t;
+    struct XSDP_t;
+
+    struct ACPISDTHeader;
+    struct RSDT_t;
+    struct XSDT_t;
+
+    struct GenericAddressStructure;
+    struct FADT_t;
+
+    template <typename table_type>
+    table_type *findTable( RSDT_t *rsdt, const char *signature );    
+
+}
+
+struct ACPI::RSDP_t
+{
+    char Signature[8];
+    uint8_t Checksum;
+    char OEMID[6];
+    uint8_t Revision;
+    uint32_t RsdtAddress;
+} __attribute__ ((packed));
+
+
+struct ACPI::XSDP_t
+{
+    char Signature[8];
+    uint8_t Checksum;
+    char OEMID[6];
+    uint8_t Revision;
+    uint32_t RsdtAddress;
+   
+    uint32_t Length;
+    uint64_t XsdtAddress;
+    uint8_t ExtendedChecksum;
+    uint8_t reserved[3];
+} __attribute__ ((packed));
+
+
+struct ACPI::ACPISDTHeader
+{
+    char Signature[4];
+    uint32_t Length;
+    uint8_t Revision;
+    uint8_t Checksum;
+    char OEMID[6];
+    char OEMTableID[8];
+    uint32_t OEMRevision;
+    uint32_t CreatorID;
+    uint32_t CreatorRevision;
+} __attribute__ ((packed));
+
+
+struct ACPI::RSDT_t
+{
+    ACPISDTHeader header;
+    uint32_t PointerToOtherSDT[1]; // [(h.Length - sizeof(h)) / 4];
+} __attribute__ ((packed));
+
+struct ACPI::XSDT_t
+{
+    ACPISDTHeader header;
+    uint64_t PointerToOtherSDT[1]; // [(h.Length - sizeof(h)) / 8];
+} __attribute__ ((packed));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct ACPI::GenericAddressStructure
+{
+    uint8_t AddressSpace;
+    uint8_t BitWidth;
+    uint8_t BitOffset;
+    uint8_t AccessSize;
+    uint64_t Address;
+}  __attribute__ ((packed));
+
+
+// Fixed ACPI Description Table
+// https://wiki.osdev.org/FADT
+struct ACPI::FADT_t
+{
+    ACPISDTHeader header;
+    uint32_t FirmwareCtrl;
+    uint32_t Dsdt;
+
+    // field used in ACPI 1.0; no longer in use, for compatibility only
+    uint8_t  Reserved;
+
+    uint8_t  PreferredPowerManagementProfile;
+    uint16_t SCI_Interrupt;
+    uint32_t SMI_CommandPort;
+    uint8_t  AcpiEnable;
+    uint8_t  AcpiDisable;
+    uint8_t  S4BIOS_REQ;
+    uint8_t  PSTATE_Control;
+    uint32_t PM1aEventBlock;
+    uint32_t PM1bEventBlock;
+    uint32_t PM1aControlBlock;
+    uint32_t PM1bControlBlock;
+    uint32_t PM2ControlBlock;
+    uint32_t PMTimerBlock;
+    uint32_t GPE0Block;
+    uint32_t GPE1Block;
+    uint8_t  PM1EventLength;
+    uint8_t  PM1ControlLength;
+    uint8_t  PM2ControlLength;
+    uint8_t  PMTimerLength;
+    uint8_t  GPE0Length;
+    uint8_t  GPE1Length;
+    uint8_t  GPE1Base;
+    uint8_t  CStateControl;
+    uint16_t WorstC2Latency;
+    uint16_t WorstC3Latency;
+    uint16_t FlushSize;
+    uint16_t FlushStride;
+    uint8_t  DutyOffset;
+    uint8_t  DutyWidth;
+    uint8_t  DayAlarm;
+    uint8_t  MonthAlarm;
+    uint8_t  Century;
+
+    // reserved in ACPI 1.0; used since ACPI 2.0+
+    uint16_t BootArchitectureFlags;
+
+    uint8_t  Reserved2;
+    uint32_t Flags;
+
+    // 12 byte structure; see below for details
+    GenericAddressStructure ResetReg;
+
+    uint8_t  ResetValue;
+    uint8_t  Reserved3[3];
+  
+    // 64bit pointers - Available on ACPI 2.0+
+    uint64_t                X_FirmwareControl;
+    uint64_t                X_Dsdt;
+
+    GenericAddressStructure X_PM1aEventBlock;
+    GenericAddressStructure X_PM1bEventBlock;
+    GenericAddressStructure X_PM1aControlBlock;
+    GenericAddressStructure X_PM1bControlBlock;
+    GenericAddressStructure X_PM2ControlBlock;
+    GenericAddressStructure X_PMTimerBlock;
+    GenericAddressStructure X_GPE0Block;
+    GenericAddressStructure X_GPE1Block;
+}  __attribute__ ((packed));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template <typename table_type>
+table_type *ACPI::findTable( RSDT_t *rsdt, const char *signature )
+{
+    syslog log("ACPI::findTable");
+    int entries = (rsdt->header.Length - sizeof(rsdt->header)) / 4;
+    log("entries: %d", entries);
+
+    for (int i=0; i<entries; i++)
+    {
+        uintptr_t phys = (uintptr_t)(rsdt->PointerToOtherSDT[i]);
+        uintptr_t virt = (uintptr_t)phys + PMM::hhdm;
+        log("phys: 0x%lx", phys);
+        log("virt: 0x%lx", virt);
+        auto *header = (ACPISDTHeader*)virt;
+
+        char buf[5];
+        memcpy(buf, header->Signature, 4);
+        buf[4] = '\0';
+        log("signature: \"%s\"", buf);
+
+        if (strncmp(header->Signature, signature, 4) == 0)
+            return (table_type*)header;
+    }
+    return nullptr;
+}
+

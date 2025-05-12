@@ -1,18 +1,12 @@
 #include <kernel/boot_limine.hpp>
 
 __attribute__((used, section(".limine_requests")))
-static volatile LIMINE_BASE_REVISION(3);
+static volatile LIMINE_BASE_REVISION(1);
 
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_hhdm_request lim_hhdm_req = {
     .id = LIMINE_HHDM_REQUEST,
-    .revision = 3
-};
-
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_executable_address_request lim_addr_req = {
-    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
     .revision = 3
 };
 
@@ -40,6 +34,7 @@ static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
     .revision = 3
 };
+
 
 
 __attribute__((used, section(".limine_requests_start")))
@@ -72,7 +67,6 @@ void LimineRes_init()
     limine_res = {
         .hhdm    = lim_hhdm_req.response->offset,
         .fb      = lim_fb_req.response,
-        .addr    = lim_addr_req.response,
         .modules = lim_module_req.response,
         .mmaps   = lim_mmap_req.response,
         .mp      = lim_mp_req.response

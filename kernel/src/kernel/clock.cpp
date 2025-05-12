@@ -10,5 +10,5 @@ uint64_t kclock::now()
 
 void kclock::detail::tick( uint64_t ms )
 {
-    uptime_msecs.add_fetch(ms);
+    uptime_msecs += ms;
 }

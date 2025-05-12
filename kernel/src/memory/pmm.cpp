@@ -1,6 +1,7 @@
 #include <kernel/memory/pmm.hpp>
 
 #include <kernel/bitmanip.hpp>
+#include <kernel/bitmap.hpp>
 #include <kernel/linear_allocator.hpp>
 #include <kernel/log.hpp>
 #include <kmemxx.hpp>

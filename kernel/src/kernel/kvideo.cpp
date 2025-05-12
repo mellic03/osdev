@@ -8,12 +8,15 @@
 #include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
 #include <kmalloc.h>
+#include <khang.h>
 #include <kthread.hpp>
 #include <kmemxx.hpp>
 #include <string.h>
 #include <algorithm>
 
 
+
+static uint8_t kvideoFillColor[4];
 int    kvideo::W = 0;
 int    kvideo::H = 0;
 int    kvideo::pitch = 0;
@@ -56,6 +59,7 @@ void kvideo::initFrontbuffer( uintptr_t fbres )
     kvideo::nbytes = pitch*H;
 
     kvideo::frontbuffer = (uint8_t*)fb->address;
+    kmemset<uint8_t>(kvideoFillColor, 0, sizeof(kvideoFillColor));
 }
 
 void kvideo::initBackbuffer( uintptr_t )
@@ -66,33 +70,52 @@ void kvideo::initBackbuffer( uintptr_t )
 
 void kvideo::swapBuffers()
 {
-    // kvideo::fill(0, 0, 0, 255);
     kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
+    kmemset<uint8_t>(backbuffer, 0, nbytes);
+}
 
-    static uint8_t rgba[4];
-    rgba[0] = 0;
-    rgba[1] = 0;
-    rgba[2] = 0;
-    rgba[3] = 255;
 
-    for (int i=0; i<W*H; i++)
+
+
+static void bufferCheck( uint8_t *buffer )
+{
+    if ((buffer != kvideo::backbuffer) && (buffer != kvideo::frontbuffer))
     {
-        for (size_t j=0; j<stride; j++)
-        {
-            backbuffer[stride*i + j] = rgba[j];
-        }
+        syslog::println("[kvideo::clearBuffer] wtf??");
+        kernel::hang();
     }
 }
 
 
+void kvideo::clearBuffer( uint8_t *buffer )
+{
+    bufferCheck(buffer);
+    kmemset<uint8_t>(buffer, 0, nbytes);
+}
+
+
+void kvideo::fillColor( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
+{
+    kvideoFillColor[0] = b;
+    kvideoFillColor[1] = g;
+    kvideoFillColor[2] = r;
+    kvideoFillColor[3] = a;
+}
+
+
+void kvideo::fillBuffer( uint8_t *buffer )
+{
+    bufferCheck(buffer);
+
+    for (int i=0; i<W*H; i++)
+        for (size_t j=0; j<stride; j++)
+            buffer[stride*i + j] = kvideoFillColor[j];
+}
+
+
+
 void kvideo::rect( int x0, int y0, int w, int h )
 {
-    static uint8_t rgba[4];
-    rgba[0] = 50;
-    rgba[1] = 200;
-    rgba[2] = 200;
-    rgba[3] = 255;
-
     for (int y=y0; y<y0+h; y++)
     {
         if (y<0 || y>=kvideo::H)
@@ -105,26 +128,9 @@ void kvideo::rect( int x0, int y0, int w, int h )
 
             size_t idx = stride * (W*y + x);
             for (size_t k=0; k<stride; k++)
-                backbuffer[idx + k] = rgba[k];
+                backbuffer[idx + k] = kvideoFillColor[k];
         }
     }
 }
 
-
-void kvideo::fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
-{
-    static uint8_t rgba[4];
-    rgba[0] = b;
-    rgba[1] = g;
-    rgba[2] = r;
-    rgba[3] = a;
-
-    for (int i=0; i<W*H; i++)
-    {
-        for (size_t j=0; j<stride; j++)
-        {
-            frontbuffer[stride*i + j] = rgba[j];
-        }
-    }
-}
 

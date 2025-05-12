@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 
 namespace std
@@ -17,53 +18,215 @@ namespace std
     using atomic_uint32_t = std::atomic<uint32_t>;
     using atomic_uint64_t = std::atomic<uint64_t>;
 
+    enum class memory_order: uint32_t
+    {
+        relaxed = __ATOMIC_RELAXED,
+        consume = __ATOMIC_CONSUME,
+        acquire = __ATOMIC_ACQUIRE,
+        release = __ATOMIC_RELEASE,
+        acq_rel = __ATOMIC_ACQ_REL,
+        seq_cst = __ATOMIC_SEQ_CST
+    };
+
+    inline constexpr memory_order memory_order_relaxed = memory_order::relaxed;
+    inline constexpr memory_order memory_order_consume = memory_order::consume;
+    inline constexpr memory_order memory_order_acquire = memory_order::acquire;
+    inline constexpr memory_order memory_order_release = memory_order::release;
+    inline constexpr memory_order memory_order_acq_rel = memory_order::acq_rel;
+    inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
+
 }
 
 
-template <typename T>
+
+
+
+template<typename T>
 class std::atomic
 {
 private:
-    T m_value;
+    constexpr static unsigned minAlignment = 
+        (sizeof(T) & (sizeof(T) - 1)) || sizeof(T) > 16 ? 0 : sizeof(T);
+    
+    constexpr static unsigned alignment = minAlignment > alignof(T) ? minAlignment : alignof(T);
+
+    alignas(alignment) T value {};
+
+    static_assert(__is_trivially_copyable(T), "Bad atomic type, must be trivally copyable");
 
 public:
-    using value_type = T;
+    constexpr atomic() noexcept : value{} 
+    {}
 
-    atomic() noexcept = default;
-    ~atomic() noexcept = default;
     atomic(const atomic&) = delete;
     atomic& operator=(const atomic&) = delete;
     atomic& operator=(const atomic&) volatile = delete;
 
-    constexpr atomic(T  desired ) noexcept
-    : m_value(desired) { }
+    constexpr atomic(T initialValue) noexcept : value(initialValue)
+    {}
 
-    void store( T desired, int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { __atomic_store_n(&m_value, desired, mem_order); }
+    operator T() const noexcept
+    { return load(); }
 
-    T load( int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { return __atomic_load_n(&m_value, mem_order); }
+    operator T() const volatile noexcept
+    { return load(); }
 
-    T fetch_add( T value, int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { return __atomic_fetch_add(&m_value, value, mem_order); }
+    T operator=(T incoming) noexcept
+    { store(incoming); return value; }
 
-    T add_fetch( T value, int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { return __atomic_add_fetch(&m_value, value, mem_order); }
+    T operator=(T incoming) volatile noexcept
+    { store(incoming); return value; }
 
-    T fetch_sub( T value, int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { return __atomic_fetch_sub(&m_value, value, mem_order); }
+    bool is_lock_free() const
+    { return __atomic_is_lock_free(sizeof(value), reinterpret_cast<void*>(-alignment));  }
 
-    T sub_fetch( T value, int mem_order=__ATOMIC_SEQ_CST ) volatile noexcept
-    { return __atomic_sub_fetch(&m_value, value, mem_order); }
+    bool is_lock_free() const volatile
+    { return __atomic_is_lock_free(sizeof(value), reinterpret_cast<void*>(-alignment));  }
 
-    T exchange( T value, int mem_order=__ATOMIC_SEQ_CST) volatile noexcept
-    { return __atomic_exchange_n(&m_value, value, mem_order); }
+    void store(T incoming, memory_order order = memory_order::seq_cst)
+    { __atomic_store_n(&value, incoming, (int)order); }
 
-    T operator++(int) { return fetch_add(1, __ATOMIC_SEQ_CST); }
-    T operator--(int) { return fetch_sub(1, __ATOMIC_SEQ_CST); }
-    T operator++()    { return add_fetch(1, __ATOMIC_SEQ_CST); }
-    T operator--()    { return sub_fetch(1, __ATOMIC_SEQ_CST); }
+    void store(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { __atomic_store_n(&value, incoming, (int)order); }
+
+    T load(memory_order order = memory_order::seq_cst) const
+    { return __atomic_load_n(&value, (int)order); }
+
+    T load(memory_order order = memory_order::seq_cst) const volatile
+    { return __atomic_load_n(&value, (int)order); }
+
+    T exchange(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_exchange_n(&value, incoming, (int)order); }
+
+    T exchange(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_exchange_n(&value, incoming, (int)order); }
+
+    bool compare_exchange(T& expected, T desired, memory_order order = memory_order::seq_cst)
+    { return __atomic_compare_exchange_n(&value, &expected, desired, false, (int)order, (int)order); }
+
+    bool compare_exchange(T& expected, T desired, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_compare_exchange_n(&value, &expected, desired, false, (int)order, (int)order); }
+
+    T operator++(int)
+    { return fetch_add(1); }
+
+    T operator++(int) volatile
+    { return fetch_add(1); }
+
+    T operator--(int)
+    { return fetch_sub(1); }
+
+    T operator--(int) volatile
+    { return fetch_sub(1); }
+
+    T operator++()
+    { return __atomic_add_fetch(&value, 1, (int)memory_order::seq_cst); }
+
+    T operator++() volatile
+    { return __atomic_add_fetch(&value, 1, (int)memory_order::seq_cst); }
+
+    T operator--()
+    { return __atomic_sub_fetch(&value, 1, (int)memory_order::seq_cst); }
+
+    T operator+=(T incoming)
+    { return __atomic_add_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator+=(T incoming) volatile
+    { return __atomic_add_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator-=(T incoming)
+    { return __atomic_sub_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator-=(T incoming) volatile
+    { return __atomic_sub_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator&=(T incoming)
+    { return __atomic_and_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator&=(T incoming) volatile
+    { return __atomic_and_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator|=(T incoming)
+    { return __atomic_or_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T operator|=(T incoming) volatile
+    { return __atomic_or_fetch(&value, incoming, (int)memory_order::seq_cst); }
+
+    T fetch_add(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_fetch_add(&value, incoming, (int)order); }
+
+    T fetch_add(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_fetch_add(&value, incoming, (int)order); }
+
+    T fetch_sub(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_fetch_sub(&value, incoming, (int)order); }
+
+    T fetch_sub(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_fetch_sub(&value, incoming, (int)order); }
+
+    T fetch_and(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_fetch_and(&value, incoming, (int)order); }
+
+    T fetch_and(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_fetch_and(&value, incoming, (int)order); }
+
+    T fetch_or(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_fetch_or(&value, incoming, (int)order); }
+
+    T fetch_or(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_fetch_or(&value, incoming, (int)order); }
+
+    T fetch_xor(T incoming, memory_order order = memory_order::seq_cst)
+    { return __atomic_fetch_xor(&value, incoming, (int)order); }
+
+    T fetch_xor(T incoming, memory_order order = memory_order::seq_cst) volatile
+    { return __atomic_fetch_xor(&value, incoming, (int)order); }
+
+    // void Add(T incoming, memory_order order = memory_order::seq_cst)
+    // { __atomic_fetch_add(&value, incoming, (int)order); }
+
+    // void Add(T incoming, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_fetch_add(&value, incoming, (int)order); }
+
+    // void Sub(T incoming, memory_order order = memory_order::seq_cst)
+    // { __atomic_fetch_sub(&value, incoming, (int)order); }
+
+    // void Sub(T incoming, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_fetch_sub(&value, incoming, (int)order); }
+
+    // void And(T incoming, memory_order order = memory_order::seq_cst)
+    // { __atomic_fetch_and(&value, incoming, (int)order); }
+
+    // void And(T incoming, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_fetch_and(&value, incoming, (int)order); }
+
+    // void Or(T incoming, memory_order order = memory_order::seq_cst)
+    // { __atomic_fetch_or(&value, incoming, (int)order); }
+
+    // void Or(T incoming, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_fetch_or(&value, incoming, (int)order); }
+
+    // void Xor(T incoming, memory_order order = memory_order::seq_cst)
+    // { __atomic_fetch_xor(&value, incoming, (int)order); }
+
+    // void Xor(T incoming, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_fetch_xor(&value, incoming, (int)order); }
+
+    // void ClearBits(T mask, memory_order order = memory_order::seq_cst)
+    // { __atomic_and_fetch(&value, (T)~mask, (int)order); }
+    
+    // void ClearBits(T mask, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_and_fetch(&value, (T)~mask, (int)order); }
+
+    // void SetBits(T mask, memory_order order = memory_order::seq_cst)
+    // { __atomic_or_fetch(&value, (T)mask, (int)order); }
+
+    // void SetBits(T mask, memory_order order = memory_order::seq_cst) volatile
+    // { __atomic_or_fetch(&value, (T)mask, (int)order); }
+
+    // bool HasBits(T mask, memory_order order = memory_order::seq_cst)
+    // { return (__atomic_load_n(&value, (int)order) & mask) != (T)0; }
+
+    // bool HasBits(T mask, memory_order order = memory_order::seq_cst) volatile
+    // { return (__atomic_load_n(&value, (int)order) & mask) != (T)0; }
 };
-
-
-

@@ -174,7 +174,11 @@
         "unistd_64.h": "c",
         "scoped_allocator": "cpp",
         "kscancode.h": "c",
-        "ioport.hpp": "c"
+        "ioport.hpp": "c",
+        "memory.h": "c",
+        "atomic2": "cpp",
+        "barrier": "cpp",
+        "atomic-old": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",

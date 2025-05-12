@@ -85,7 +85,7 @@ void vfs2::init()
 
 static vfs2Entry *findChild( vfs2DirEntry *dir, const char *name )
 {
-    kassert("entry must be a directory!", (dir->type == vfs2Entry_Directory));
+    kassert((dir->type == vfs2Entry_Directory));
 
     for (uint32_t i=0; i<dir->count; i++)
     {
@@ -217,7 +217,7 @@ vfs2::open( const char *path, uint64_t nbytes, void *data )
         B = seek_ch(A, '/');
     }
 
-    kassert("Should be unreachable", false);
+    kassert(false); // Should be unreachable
 
     return nullptr;
 }

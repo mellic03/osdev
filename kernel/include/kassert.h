@@ -1,7 +1,6 @@
 #pragma once
 #include <kpanic.h>
 
-void kernel_assert( const char *msg, bool cond,
-                    const char *file, int line, const char *func );
+void kernel_assert( const char *msg, bool cond, const char *file, int line, const char *func );
 
-#define kassert(msg, cond) kernel_assert(msg, cond, __FILE__, __LINE__, __func__)
+#define kassert(cond) kernel_assert(#cond, cond, __FILE__, __LINE__, __func__)

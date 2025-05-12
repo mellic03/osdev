@@ -48,7 +48,6 @@ void PIC::setmask( uint8_t IRQline )
 }
 
 
-
 void PIC::unmask( uint8_t IRQline )
 {
 	uint16_t port;
@@ -61,15 +60,17 @@ void PIC::unmask( uint8_t IRQline )
 	IO::outb(port, value);        
 }
 
+
 void PIC::disable()
 {
     IO::outb(PIC1_DATA, 0xFF);
     IO::outb(PIC2_DATA, 0xFF);
 }
 
-void PIC::sendEOI( uint8_t irq )
+
+void PIC::sendEOI( uint8_t irqno )
 {
-	if (irq >= 8)
+	if (irqno >= 8)
 	{
 		IO::outb(PIC2_CMD, 0x20);
 	}

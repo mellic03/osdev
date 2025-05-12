@@ -1,7 +1,7 @@
 #include <filesystem/initrd.hpp>
 #include <kernel/log.hpp>
 
-void *initrd::tarball;
+uint8_t *initrd::tarball;
 
 
 // bool initrd::find( const char *name, void *&addr, size_t &size )
@@ -11,11 +11,11 @@ void *initrd::find( const char *name )
 }
 
 
-void initrd::init( void *base )
+void initrd::init( void *tar )
 {
-    initrd::tarball = base;
-
     syslog log("initrd::init");
-    log("base: 0x%lx", initrd::tarball);
-    ustar::list(initrd::tarball);
+    log("tar: 0x%lx", tar);
+
+    initrd::tarball = (uint8_t*)tar;
+    ustar::listAll(initrd::tarball);
 }

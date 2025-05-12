@@ -14,13 +14,16 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/syscall/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sym/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sys/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/sys/acpi/*.cpp
 )
 
-set(IDKERNEL_SOURCES ${SOURCES} PARENT_SCOPE)
+set(CringeOS_SOURCES ${SOURCES} PARENT_SCOPE)
 
 
-file(
-    COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
-    DESTINATION ${KERNEL_SYSROOT_DIR}/usr/
-)
+# file(
+#     COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
+#     DESTINATION ${KERNEL_SYSROOT_DIR}/usr/
+# )

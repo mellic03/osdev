@@ -1,7 +1,9 @@
 #pragma once
-#include "../static_vector.hpp"
+#include "../smp/round_buffer.hpp"
 #include <kernel/interrupt.hpp>
+#include <vector>
 #include <algorithm>
+#include <mutex>
 
 struct cpu_t;
 struct kthread_t;
@@ -37,35 +39,40 @@ void vec_remove( T &vec, const U &data )
 }
 
 
+namespace kthread
+{
+    void cullmain( void* );
+    void idlemain( void* );
+}
 
 class ThreadScheduler
 {
 private:
-    cpu_t  *m_cpu;
-    uint8_t m_currIdx;
+    cpu_t  &m_cpu;
     size_t  m_thread_tid = 0;
 
     void trampoline( intframe_t* );
     void schedule( intframe_t* );
 
 public:
-    idk::static_vector<kthread_t*, 64> m_threads;
+    std::atomic_bool m_isRunning{false};
+    std::mutex       m_lock;
+
+    // std::vector<kthread_t*> m_threads;
+    idk::RoundBuffer<kthread_t*, 64> m_threads;
     // idk::static_vector<kthread_t*, 64> m_active;
-    idk::static_vector<kthread_t*, 64> m_sleeping;
-    idk::static_vector<kthread_t*, 64> m_dead;
+    // idk::static_vector<kthread_t*, 64> m_sleeping;
+    // idk::static_vector<kthread_t*, 64> m_dead;
 
     static void trampolineISR( intframe_t* );
     static void scheduleISR( intframe_t* );
 
-    ThreadScheduler( cpu_t* );
+    ThreadScheduler( cpu_t& );
 
     void       start();
-    kthread_t *createThread( const char *name, void (*fn)(void*), void *arg );
+    kthread_t *allocateThread( const char *name, void (*fn)(void*), void *arg );
+    kthread_t *addThread( const char *name, void (*fn)(void*), void *arg );
     void       releaseThread( kthread_t *thread );
-
-    void       makeDead( kthread_t *thread );
-    void       makeSleeping( kthread_t *thread );
-    void       makeReady( kthread_t *thread );
 };
 
 using ksched_t = ThreadScheduler;

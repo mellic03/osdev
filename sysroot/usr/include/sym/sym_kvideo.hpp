@@ -8,8 +8,10 @@ namespace kvideo
     inline int H;
     inline uint8_t *frontbuffer;
     inline uint8_t *backbuffer;
-    inline void (*rect)(int, int, int, int);
-    inline void (*fill)(uint8_t, uint8_t, uint8_t, uint8_t);
-    inline void (*swapBuffers)();
+    void (*clearBuffer)(uint8_t *buffer);
+    void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
+    void (*fillBuffer) (uint8_t *buffer);
+    void (*rect)       (int, int, int, int);
+    void (*swapBuffers)();
 }
 

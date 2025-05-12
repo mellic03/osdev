@@ -8,6 +8,7 @@
 #include <kernel/memory/vmm.hpp>
 #include <kernel/log.hpp>
 #include "kernel/kvideo.hpp"
+#include <kpanic.h>
 
 #include <kernel/module.hpp>
 #include <filesystem/initrd.hpp>
@@ -28,12 +29,14 @@ static void load_mmaps();
 
 
 
+
 void early_init()
 {
     LimineRes_init();
 
     syslog log("early_init");
     kvideo::initFrontbuffer((uintptr_t)(limine_res.fb));
+    // kpanic("Test panic");
 
     for (size_t i=0; i<32; i++)
         pmm_mmaps[i] = {0, 0};
@@ -50,6 +53,7 @@ void early_init()
         if (strcmp(file->path, "/initrd.tar.gz") == 0)
             initrd::init(file->address);
     }
+
 }
 
 

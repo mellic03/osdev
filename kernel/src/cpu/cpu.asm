@@ -1,13 +1,13 @@
 [bits 64]
 
-; global cpu_fxsave
-; global cpu_fxrstor
+global cpu_fxsave
+global cpu_fxrstor
 
 global cpu_get_cr3
 global cpu_set_cr3
 
-; global cpu_read_rflags
-; global cpu_write_rflags
+global cpu_get_rflags
+; global cpu_set_rflags
 
 global cpu_enable_sse
 global cpu_enable_avx
@@ -20,15 +20,15 @@ global cpu_flush_gdt
 
 section .text
 
-    ; align 16
-    ; cpu_fxsave:
-    ;     fxsave [rdi]
-    ;     ret
+    align 16
+    cpu_fxsave:
+        fxsave64 [rdi]
+        ret
 
-    ; align 16
-    ; cpu_fxrstor:
-    ;     fxrstor [rdi]
-    ;     ret
+    align 16
+    cpu_fxrstor:
+        fxrstor64 [rdi]
+        ret
 
 
     align 16
@@ -40,7 +40,6 @@ section .text
     cpu_set_cr3:       ; void cpu_set_cr3( uint64_t )
         mov cr3, rdi
         ret
-
 
     align 16
     cpu_enable_sse:
@@ -69,15 +68,13 @@ section .text
         pop rax
         ret
 
-
     align 16
-    cpu_load_gdt:           ; void cpu_load_gdt( void* )
+    cpu_load_gdt:
         lgdt [rdi]
         ret
 
-
     align 16
-    cpu_flush_gdt:          ; void cpu_flush_gdt( void )
+    cpu_flush_gdt:
         ; Reload CS register:
         push  0x08                  ; Push code segment to stack, 0x08 is a stand-in for your code segment
         lea   rax, [rel .reload_cs] ; Load address of .reload_CS into rax
@@ -91,4 +88,42 @@ section .text
         mov   fs, ax
         mov   gs, ax
         mov   ss, ax
+        ret
+    
+
+    align 16
+    global GDT64_Install
+    GDT64_Install:
+        lgdt [rdi]
+        mov rbp, rsp
+        push 0x10
+        push rbp
+        pushf
+        push 0x8
+        push .cont
+        iretq
+
+    .cont:
+        mov ax,  0x10 ; 0x10 is a stand-in for your data segment
+        mov ds,  ax
+        mov es,  ax
+        mov fs,  ax
+        mov gs,  ax
+        mov ss,  ax
+        ret
+
+
+    align 16
+    global cpuid_proc_feat_info
+    cpuid_proc_feat_info:
+        push rbp
+        mov rbp, rsp
+        mov eax, 1
+        cpuid
+        mov dword [rdi], eax
+        mov dword [rdi + 4], edx
+        mov dword [rdi + 8], ecx
+        mov dword [rdi + 12], ebx
+        mov rsp, rbp
+        pop rbp
         ret

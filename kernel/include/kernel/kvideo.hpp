@@ -15,8 +15,13 @@ namespace kvideo
     extern uint8_t *frontbuffer;
     extern uint8_t *backbuffer;
 
+    void clearBuffer( uint8_t *buffer );
+
+    void fillColor( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
+    void fillBuffer( uint8_t *buffer );
+    
     void rect( int x, int y, int w, int h );
-    void fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
+
     void swapBuffers();
 }
 

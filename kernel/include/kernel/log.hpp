@@ -1,9 +1,11 @@
 #pragma once
+#include <mutex>
 
 class syslog
 {
 private:
     // void _print( const char *fmt, ... );
+    inline static std::mutex m_mutex;
     static bool enabled;
 
 public:
@@ -18,8 +20,7 @@ public:
     template <typename... Args>
     syslog( const char *fmt, Args... args )
     {
-        if (!enabled)
-            return;
+        std::lock_guard lock(m_mutex);
         syslog::print("[");
         syslog::printf(fmt, args...);
         syslog::printf("]\n");
@@ -29,8 +30,7 @@ public:
 
     ~syslog()
     {
-        if (!enabled)
-            return;
+        std::lock_guard lock(m_mutex);
         popIndent();
         syslog::print("}\n");
     }

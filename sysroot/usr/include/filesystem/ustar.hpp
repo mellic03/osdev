@@ -4,10 +4,12 @@
 
 namespace ustar
 {
-    void forEach( void *addr, std::function<void(const char*, void*, size_t)> );
-    // void forEach( void *tar, void (*action)( const char *name, void *addr, size_t size ) );
+    static constexpr size_t NAME_OFFSET  = 0;
+    static constexpr size_t MAGIC_OFFSET = 257;
+    static constexpr size_t DATA_OFFSET  = 512;
 
-    void list( void *addr );
-    // bool find( void *tar, const char *filename, void *&addr, size_t &size );
-    void *find( void *addr, const char *filename );
+    void forEach( void *tar, std::function<void(void*, size_t)> );
+    void listChilren( void *tar );
+    void listAll( void *tar );
+    void *find( void *tar, const char *filename );
 }

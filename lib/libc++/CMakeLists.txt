@@ -42,8 +42,8 @@ target_compile_definitions(libc++_k PUBLIC -D__is_kernel)
 # )
 
 
-file(
-    COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
-    DESTINATION ${KERNEL_SYSROOT_DIR}/usr/
-)
+# file(
+#     COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
+#     DESTINATION ${KERNEL_SYSROOT_DIR}/usr/
+# )
 

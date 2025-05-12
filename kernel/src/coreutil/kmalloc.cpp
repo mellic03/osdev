@@ -1,5 +1,6 @@
 
 #include <new>
+#include <mutex>
 #include <kmalloc.h>
 
 #include <kernel/bitmanip.hpp>
@@ -8,23 +9,27 @@
 #include <kernel/memory.hpp>
 #include <kthread.hpp>
 
+
 static idk::buddy_allocator *kalloc0;
+static std::mutex kmalloc_mutex;
 
 
 void *kmalloc( size_t size )
 {
-    // std::lock_guard lock(kmalloc_mutex);
+    std::lock_guard lock(kmalloc_mutex);
     return kalloc0->alloc(size, alignof(max_align_t));
 }
 
 void *krealloc( void*, size_t )
 {
+    std::lock_guard lock(kmalloc_mutex);
     return nullptr;
     // return kalloc0.realloc(ptr, size);
 }
 
 void kfree( void *ptr )
 {
+    std::lock_guard lock(kmalloc_mutex);
     kalloc0->free(ptr);
     // kalloc0.free(((void**)ptr)[-1]);
 }

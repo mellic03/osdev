@@ -42,7 +42,7 @@ public:
 
     void push_back( const T &data )
     {
-        kassert("buffer overflow", m_top+1 <= m_end);
+        kassert(m_top+1 <= m_end);
 
         m_top = new (m_top) T(data);
         m_top++;
@@ -51,7 +51,7 @@ public:
     
     void pop_back()
     {
-        kassert("buffer underflow", m_top-1 >= m_base);
+        kassert(m_top-1 >= m_base);
 
         m_top--;
         m_top->~T();

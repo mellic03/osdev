@@ -11,9 +11,9 @@ using kstackframe = intframe_t;
 //     uint64_t rdi, rsi, rbp;
 //     uint64_t isrno, errno;
 
-//     uint64_t iret_rip;
-//     uint64_t iret_cs;
-//     uint64_t iret_flags;
-//     uint64_t iret_rsp;
-//     uint64_t iret_ss;
+//     uint64_t rip;
+//     uint64_t cs;
+//     uint64_t rflags;
+//     uint64_t rsp;
+//     uint64_t ss;
 // };

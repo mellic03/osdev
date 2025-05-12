@@ -55,23 +55,19 @@ enum DaemonType_: uint64_t
 
 
 #define MODULE_INTERFACE_HEADER \
-uint64_t modtype        = ModuleType_Invalid;\
-uint64_t basetype       = ModuleType_Invalid;\
-char     signature[8]   = {0,0,0,0,0,0,0,0};\
-void     (*main)(void*) = nullptr;\
+uint8_t  *baseAddress;\
+uint64_t  pageSize;\
+uint64_t  pageCount;\
+uint64_t  modtype        = ModuleType_Invalid;\
+uint64_t  basetype       = ModuleType_Invalid;\
+char      signature[8]   = {0,0,0,0,0,0,0,0};\
+void      (*main)(void*) = nullptr;\
 
 
 struct ModuleInterface
 {
     MODULE_INTERFACE_HEADER
     uint8_t data[1];
-};
-
-
-struct KernelModule
-{
-    void *address;
-    ModuleInterface *interface;
 };
 
 

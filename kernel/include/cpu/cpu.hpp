@@ -1,57 +1,72 @@
 #pragma once
+#include <kdef.h>
 #include <stdint.h>
 #include <cpuid.h>
+#include <atomic>
 #include <mutex>
 
+#include "tss.hpp"
 #include "gdt.hpp"
 #include "idt.hpp"
 #include "scheduler.hpp"
-// #include "kthread.hpp"
 
 struct kthread_t;
 struct ThreadScheduler;
 
+
+static constexpr uint64_t MSR_PAT =   0x0277;
+
+static constexpr uint64_t MSR_FS_BASE       =   0xC0000100;
+static constexpr uint64_t MSR_GS_BASE       =   0xC0000101;
+static constexpr uint64_t MSR_KERN_GS_BASE  =   0xC0000102;
+
+static constexpr uint64_t MSR_EFER =   0xC0000080;
+
+/* @see https://wiki.osdev.org/SYSCALL#AMD:_SYSCALL.2FSYSRET */
+/* Ring 0 and Ring 3 Segment bases, as well as SYSCALL EIP.
+ * Low 32 bits = SYSCALL EIP, bits 32-47 are kernel segment base, bits 48-63 are
+ * user segment base.
+ */
+static constexpr uint64_t MSR_STAR =   0xC0000081;
+/* The kernel's RIP SYSCALL entry for 64 bit software */
+static constexpr uint64_t MSR_LSTAR =   0xC0000082;
+/* The kernel's RIP for SYSCALL in compatibility mode */
+static constexpr uint64_t MSR_CSTAR =   0xC0000083;
+/* The low 32 bits are the SYSCALL flag mask. If a bit in this is set, the
+ * corresponding bit in rFLAGS is cleared
+ */
+static constexpr uint64_t MSR_SFMASK =   0xC0000084;
+
+
+
+
+
+
 struct cpu_t
 {
-    cpu_t *self;
-    uint64_t id;
+    cpu_t     *self;
+    uint64_t   id;
 
-    ThreadScheduler *sched = nullptr;
-    kthread_t  *idleThread = nullptr;
-    kthread_t  *currThread = nullptr;
+    ThreadScheduler sched;
 
-    uint64_t  syscall_no;
-    uintptr_t syscall_req;
-    uintptr_t syscall_res;
+    uint8_t    yldrsn;
+    uint64_t   syscall_no;
+    uintptr_t  syscall_req;
+    uintptr_t  syscall_res;
 
-    void     *gdt;
-    gdt_ptr_t gdtPtr;
-    idt_ptr_t idtPtr;
+    tss_t       tss __attribute__((aligned(16)));
+    uint64_t    gdt[5];
+    gdt_ptr_t   gdtPtr;
 
-    cpu_t(): self(nullptr), id(9999) {  };
-    cpu_t( uint64_t lapic_id );
+    idt_entry_t idtentries[256];
+    idt_ptr_t   idtPtr;
 
-    kthread_t *createThread( const char *name, void (*fn)(void*), void *arg )
-    { return this->sched->createThread(name, fn, arg); }
-
+    cpu_t(): sched(*this) {  };
 };
-
-extern "C"
-{
-    // extern void cpu_fxsave( cpu_t* );
-    // extern void cpu_fxrstor( cpu_t* );
-    // extern uintptr_t GDT64_ptr;
-    extern uint64_t cpu_readCR3();
-    extern void cpu_writeCR3( uint64_t );
-}
 
 
 namespace SMP
 {
-    bool       is_initialized();
-
-    cpu_t     *boot_cpu();
-
     cpu_t     *this_cpu();
     uint64_t   this_cpuid();
     ksched_t  *this_sched();
@@ -61,6 +76,8 @@ namespace SMP
 }
 
 
+
+
 namespace CPU
 {
     static constexpr uint16_t GDT_OFFSET_KERNEL_CODE = 0x08;
@@ -68,121 +85,142 @@ namespace CPU
 
     void createGDT();
     void installGDT();
+    void createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS );
+    void installGDT( gdt_ptr_t *gdtr );
 
+    void clearIDT();
     void createIDT();
     void installIDT();
+    void createIDT( idt_entry_t *idtbase, idt_ptr_t *idtptr );
+    void installIDT( idt_ptr_t idtptr );
+
     void installISR( uint8_t isrno, isrHandlerFn fn );
     void installIRQ( uint8_t irqno, irqHandlerFn fn );
-
-    void enableSSE();
-    void fxsave( uint8_t *dst );
-    void fxrstor( uint8_t *src );
-
-    constexpr inline void cli() { asm volatile ("cli"); }
-    constexpr inline void sti() { asm volatile ("sti"); }
-    
-    // static int cpuHasMSR()
-    // {
-    //     uint32_t eax, edx;
-    //     __get_cpuid(1, &eax, nullptr, nullptr, &edx);
-    //     return edx & CPUID_FLAG_MSR;
-    // }
-
-    uint64_t getCR3();
-    void     setCR3( uint64_t );
-
-    inline void getMSR(uint32_t msr, uint32_t *lo, uint32_t *hi)
-    {
-        __asm__ volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
-    }
-    
-    inline void setMSR(uint32_t msr, uint32_t lo, uint32_t hi)
-    {
-        __asm__ volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
-    }
-
-    inline uint64_t getRFLAGS()
-    {
-        uint64_t rflags;
-        asm volatile ( "pushfq\n\t"
-                       "pop %0"
-                       : "=r"(rflags)
-                       : : "memory" );
-        return rflags;
-    }
-
-    inline void setRFLAGS( uint64_t rflags )
-    {
-        asm volatile (
-            "pushfq\n\t"
-            "pop %0"
-            : "=r"(rflags)
-        );
-    }
 
 }
 
 
-// inline void cpu_readMSR( uint32_t msr, uint32_t *lo, uint32_t *hi )
-// {
-//    asm volatile("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
-// }
-
-// inline void cpu_writeMSR( uint32_t msr, uint32_t lo, uint32_t hi )
-// {
-//    asm volatile("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
-// }
 
 
-// // inline static
-// // void DoSwitch( CPU* cpu )
-// // {
-// //     asm volatile("fxrstor64 (%0)" ::"r"((uintptr_t)cpu->currentThread->fxState) : "memory");
 
-// //     asm volatile("wrmsr" ::"a"(cpu->currentThread->fsBase & 0xFFFFFFFF) /*Value low*/,
-// //                  "d"((cpu->currentThread->fsBase >> 32) & 0xFFFFFFFF) /*Value high*/, "c"(0xC0000100) /*Set FS Base*/);
+#include <kernel/interrupt.hpp>
 
-// //     TSS::SetKernelStack(&cpu->tss, (uintptr_t)cpu->currentThread->kernelStack);
+namespace CPU
+{
+    void enableSSE();
+    void fxsave( uint8_t *dst );
+    void fxrstor( uint8_t *src );
 
-// //     cpu->currentThread->timeSlice = cpu->currentThread->timeSliceDefault;
+    static constexpr uint32_t MSR_FS_BASE        = 0xC0000100;
+    static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
+    static constexpr uint32_t MSR_KERNEL_GS_BASE = 0xC0000102;
 
-// //     // Check for a few things
-// //     // - Process is in usermode
-// //     // - Pending unmasked signals
-// //     // If true, invoke the signal handler
-// //     if ((cpu->currentThread->registers.cs & 0x3) &&
-// //         (cpu->currentThread->pendingSignals & ~cpu->currentThread->EffectiveSignalMask())) {
-// //         if (cpu->currentThread->parent->State() == Process::Process_Running) {
-// //             int ret = acquireTestLock(&cpu->currentThread->kernelLock);
-// //             assert(!ret);
+    inline uint64_t rdmsr( uint32_t msr )
+    {
+        uint32_t lo, hi;
+        asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr));
+        return (uint64_t)lo | ((uint64_t)hi << 32);
+    }
 
-// //             cpu->currentThread->HandlePendingSignal(&cpu->currentThread->registers);
-// //             releaseLock(&cpu->currentThread->kernelLock);
-// //         }
-// //     }
+    inline void wrmsr( uint32_t msr, uint64_t value )
+    {
+        asm volatile ("wrmsr" : : "c"(msr), "a"(value & 0xFFFFFFFF), "d"(value >> 32));
+    }
 
-// //     asm volatile(
-// //         R"(mov %0, %%rsp;
-// //         mov %1, %%rax;
-// //         pop %%r15;
-// //         pop %%r14;
-// //         pop %%r13;
-// //         pop %%r12;
-// //         pop %%r11;
-// //         pop %%r10;
-// //         pop %%r9;
-// //         pop %%r8;
-// //         pop %%rbp;
-// //         pop %%rdi;
-// //         pop %%rsi;
-// //         pop %%rdx;
-// //         pop %%rcx;
-// //         pop %%rbx;
-        
-// //         mov %%rax, %%cr3
-// //         pop %%rax
-// //         addq $8, %%rsp
-// //         iretq)" ::"r"(&cpu->currentThread->registers),
-// //         "r"(cpu->currentThread->parent->GetPageMap()->pml4Phys));
-// // }
+    uint64_t getCR3();
+    void     setCR3( uint64_t );
 
+    /**
+     * Install a new pagetable by changing the CR3 value. Address must be divisable
+     * by pagesize. The address must be physical.
+     */
+    static inline void setPML4( uint64_t pagetable_address )
+    {
+        __asm__ volatile("mov cr3, rax"
+                        :
+                        : "a"(pagetable_address & 0xFFFFFFFFFFFFF000ULL));
+    }
+    
+    /**
+     * Gets the physical address of installed current page table.
+     */
+    static inline uint64_t getPML4()
+    {
+        uint64_t cr3;
+        __asm__ volatile("mov rax, cr3" : "=a"(cr3));
+        return cr3 & 0xFFFFFFFFFFFFF000ULL;
+    }
+
+
+    // inline uint64_t getRFLAGS()
+    // {
+    //     uint64_t rflags;
+    //     __asm__ volatile (
+    //         "pushfq\n"          // Push the RFLAGS register onto the stack
+    //         "popq %0\n"         // Pop the value from the stack into rflags
+    //         : "=r"(rflags)      // Output operand
+    //     );
+    //     return rflags;
+    // }
+    inline uint64_t getRFLAGS()
+    {
+        uint64_t flags;
+        asm volatile("pushf\n\t"
+                     "pop %0"
+                     : "=g"(flags));
+        return flags;
+    }
+
+    // inline void setRFLAGS( uint64_t rflags )
+    // {
+    //     asm volatile (
+    //         "pushfq\n\t"
+    //         "pop %0"
+    //         : "=r"(rflags)
+    //     );
+    // }
+    
+    inline void cli() { asm volatile ("cli"); }
+    inline void sti() { asm volatile ("sti"); }
+
+
+    __attribute__((always_inline))
+    inline bool checkInterrupts()
+    {
+        volatile unsigned long flags;
+        asm volatile("pushfq;"
+                    "pop %0;"
+                    : "=rm"(flags)::"memory", "cc");
+        return (flags & 0x200) != 0;
+    }
+
+
+    static inline uint64_t getTCS()
+    {
+        uint32_t timestamp_low, timestamp_high;
+        asm volatile("rdtsc" : "=a"(timestamp_low), "=d"(timestamp_high));
+        return ((uint64_t)timestamp_high << 32) | ((uint64_t)timestamp_low);
+    }
+
+
+    inline void setLocal( cpu_t *val )
+    {
+        val->self = val;
+        asm volatile("wrmsr" ::"a"((uintptr_t)val & 0xFFFFFFFF) /*Value low*/,
+                    "d"(((uintptr_t)val >> 32) & 0xFFFFFFFF) /*Value high*/, "c"(0xC0000102) /*Set Kernel GS Base*/);
+        asm volatile("wrmsr" ::"a"((uintptr_t)val & 0xFFFFFFFF) /*Value low*/,
+                    "d"(((uintptr_t)val >> 32) & 0xFFFFFFFF) /*Value high*/, "c"(0xC0000101) /*Set Kernel GS Base*/);
+    }
+
+    inline cpu_t *getLocal()
+    {
+        cpu_t *ret;
+        int intEnable = checkInterrupts();
+        asm("cli");
+        asm volatile("swapgs; movq %%gs:0, %0; swapgs;"
+                    : "=r"(ret)); // CPU info is 16-byte aligned as per liballoc alignment
+        if (intEnable)
+            asm("sti");
+        return ret;
+    }
+}

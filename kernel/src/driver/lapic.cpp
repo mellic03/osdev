@@ -4,10 +4,7 @@
 
 #include <driver/lapic.hpp>
 #include <kernel/ioport.hpp>
-// #include "intr/idt.h"
-// #include "acpi/acpi.h"
-// #include "console/console.h"
-// #include "cpu/io.h"
+#include <kernel/memory/pmm.hpp>
 
 // ------------------------------------------------------------------------------------------------
 // Local APIC Registers
@@ -73,48 +70,52 @@
 // Destination Field
 #define ICR_DESTINATION_SHIFT           24
 
-uint8_t *g_localApicAddr;
 
-// ------------------------------------------------------------------------------------------------
-static uint32_t LocalApicIn(uint32_t reg)
+
+
+uint32_t lapic_read_register(uint32_t reg)
 {
-    return MMIO::in32(g_localApicAddr + reg);
+    uintptr_t lapic_base = (uintptr_t)0xfee00000 + PMM::hhdm;
+    return *((volatile uint32_t *)lapic_base + reg);
+}
+
+// write to a local apic manager
+// currently not laid out for x2apic, otherwise would check
+// if supported and then use msr
+void lapic_write_register(uint32_t reg, uint32_t data)
+{
+    uintptr_t lapic_base = (uintptr_t)0xfee00000 + PMM::hhdm;
+    *((volatile uint32_t *)(lapic_base + reg)) = data;
 }
 
 // ------------------------------------------------------------------------------------------------
-static void LocalApicOut(uint32_t reg, uint32_t data)
-{
-    MMIO::out32(g_localApicAddr + reg, data);
-}
-
-// ------------------------------------------------------------------------------------------------
-void LocalApicInit()
+void LAPIC::enable()
 {
     // Clear task priority to enable all interrupts
-    LocalApicOut(LAPIC_TPR, 0);
+    lapic_write_register(LAPIC_TPR, 0);
 
     // Logical Destination Mode
-    LocalApicOut(LAPIC_DFR, 0xffffffff);   // Flat mode
-    LocalApicOut(LAPIC_LDR, 0x01000000);   // All cpus use logical id 1
+    lapic_write_register(LAPIC_DFR, 0xffffffff);   // Flat mode
+    lapic_write_register(LAPIC_LDR, 0x01000000);   // All cpus use logical id 1
 
     // Configure Spurious Interrupt Vector Register
-    LocalApicOut(LAPIC_SVR, 0x100 | 0xff);
+    lapic_write_register(LAPIC_SVR, 0x100 | 0xff);
 }
 
 // ------------------------------------------------------------------------------------------------
 uint32_t LocalApicGetId()
 {
-    return LocalApicIn(LAPIC_ID) >> 24;
+    return lapic_read_register(LAPIC_ID) >> 24;
 }
 
 // ------------------------------------------------------------------------------------------------
 void LocalApicSendInit( uint32_t apic_id )
 {
-    LocalApicOut(LAPIC_ICRHI, apic_id << ICR_DESTINATION_SHIFT);
-    LocalApicOut(LAPIC_ICRLO, ICR_INIT | ICR_PHYSICAL
+    lapic_write_register(LAPIC_ICRHI, apic_id << ICR_DESTINATION_SHIFT);
+    lapic_write_register(LAPIC_ICRLO, ICR_INIT | ICR_PHYSICAL
         | ICR_ASSERT | ICR_EDGE | ICR_NO_SHORTHAND);
 
-    while (LocalApicIn(LAPIC_ICRLO) & ICR_SEND_PENDING)
+    while (lapic_read_register(LAPIC_ICRLO) & ICR_SEND_PENDING)
     {
 
     }
@@ -123,12 +124,31 @@ void LocalApicSendInit( uint32_t apic_id )
 // ------------------------------------------------------------------------------------------------
 void LocalApicSendStartup( uint32_t apic_id, uint32_t vector )
 {
-    LocalApicOut(LAPIC_ICRHI, apic_id << ICR_DESTINATION_SHIFT);
-    LocalApicOut(LAPIC_ICRLO, vector | ICR_STARTUP
+    lapic_write_register(LAPIC_ICRHI, apic_id << ICR_DESTINATION_SHIFT);
+    lapic_write_register(LAPIC_ICRLO, vector | ICR_STARTUP
         | ICR_PHYSICAL | ICR_ASSERT | ICR_EDGE | ICR_NO_SHORTHAND);
 
-    while (LocalApicIn(LAPIC_ICRLO) & ICR_SEND_PENDING)
+    while (lapic_read_register(LAPIC_ICRLO) & ICR_SEND_PENDING)
     {
 
     }
 }
+
+
+
+
+    
+// uint32_t IOAPIC::read(void *ioapicaddr, uint32_t reg)
+// {
+//     uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+//     ioapic[0] = (reg & 0xff);
+//     return ioapic[4];
+// }
+
+// void IOAPIC::write(void *ioapicaddr, uint32_t reg, uint32_t value)
+// {
+//     uint32_t volatile *ioapic = (uint32_t volatile *)ioapicaddr;
+//     ioapic[0] = (reg & 0xff);
+//     ioapic[4] = value;
+// }
+

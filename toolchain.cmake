@@ -38,14 +38,15 @@ set(SSE_FLAGS "-mmmx -msse -msse2")
 # add_definitions(-D__libk_sse=true)
 
 
-set(IDKERNEL_C_CXX_FLAGS
+set(CringeOS_C_CXX_FLAGS
     "-O0 -g \
     ${SSE_FLAGS} \
     -fno-inline -fno-tree-vectorize \
-    -Wall -Wextra -Werror -pedantic \
-    -Wno-vexing-parse \
-    -fno-omit-frame-pointer \
+    -Wall -Wextra -Werror \
     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+    -Wno-vexing-parse \
+    -Wno-error=int-to-pointer-cast \
+    -fno-omit-frame-pointer \
     -ggdb -Wno-builtin-declaration-mismatch \
     -ffreestanding \
     -fno-asynchronous-unwind-tables \
@@ -60,34 +61,34 @@ set(IDKERNEL_C_CXX_FLAGS
     -Wno-missing-field-initializers"
 )
 
-# set(IDKERNEL_C_CXX_FLAGS
+# set(CringeOS_C_CXX_FLAGS
 #     "-O3 \
 #     ${SSE_FLAGS} \
 #     -Wall -Wextra -Werror -pedantic \
-#     -ffreestanding \
+#     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
 #     -fno-asynchronous-unwind-tables \
 #     -fno-exceptions \
 #     -funroll-loops \
+#     -ffreestanding \
 #     -fno-PIC \
 #     -fno-PIE \
 #     -mno-80387 \
 #     -z max-page-size=0x1000 -mno-red-zone \
 #     -mcmodel=kernel \
 #     -nostdlib \
-#     -static \
 #     -Wl,--no-relax -Wl,--gc-sections \
 #     -Wno-missing-field-initializers"
 # )
 
 set(CMAKE_C_FLAGS
     "-std=c11 \
-    ${IDKERNEL_C_CXX_FLAGS}"
+    ${CringeOS_C_CXX_FLAGS}"
 )
 
 
 set(CMAKE_CXX_FLAGS
     "-std=c++23 \
-    ${IDKERNEL_C_CXX_FLAGS} \
+    ${CringeOS_C_CXX_FLAGS} \
     -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/new \
     -include ${CMAKE_SOURCE_DIR}/lib/libc++/include/libc++ \
     -fno-rtti"

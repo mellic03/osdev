@@ -9,6 +9,14 @@ typedef __uint128_t uint128_t;
 typedef __int128_t  int128_t;
 typedef __float128  float128_t;
 
+enum YieldReason: uint8_t
+{
+    YldRsn_None  = 0,
+    YldRsn_Sleep = 1,
+    YldRsn_Exit  = 2
+};
+
+
 
 #ifdef __cplusplus
     #define ENUM_DTYPE(__dtype__) : __dtype__

@@ -235,7 +235,7 @@
 //     this->frame.rdi = (uint64_t)fn;
 //     this->frame.rsi = (uint64_t)arg;
 //     this->frame.rbp = 0;
-//     this->frame.iret_flags = 0x202;
+//     this->frame.iret_rflags = 0x202;
 //     this->next = nullptr;
 
 //     kthread::add(this);

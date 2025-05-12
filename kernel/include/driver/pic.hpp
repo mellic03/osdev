@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
+#include <kernel/ioport.hpp>
 
 namespace PIC
 {
@@ -11,8 +11,8 @@ namespace PIC
 
     static constexpr uint16_t PIC1_CMD  = 0x0020;
     static constexpr uint16_t PIC1_DATA = 0x0021;
-    static constexpr uint16_t PIC2_CMD  = 0x00a0;
-    static constexpr uint16_t PIC2_DATA = 0x00a1;
+    static constexpr uint16_t PIC2_CMD  = 0x00A0;
+    static constexpr uint16_t PIC2_DATA = 0x00A1;
     
     static constexpr uint8_t ICW1_ICW4       = 0x01; // ICW4 command word: 0 = not needed, 1 = needed
     static constexpr uint8_t ICW1_SINGLE     = 0x02; // Single mode: 0 = cascade, 1 = single
@@ -30,6 +30,7 @@ namespace PIC
     void setmask(uint8_t IRQline);
     void unmask(uint8_t IRQline);
     void disable();
-    void sendEOI(uint8_t);
+    void sendEOI( uint8_t irq );
+
 
 }

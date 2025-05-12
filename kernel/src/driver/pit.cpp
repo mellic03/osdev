@@ -1,6 +1,7 @@
 #include <driver/pit.hpp>
 #include <driver/pic.hpp>
 #include <kernel/ioport.hpp>
+#include <kernel/interrupt.hpp>
 #include <algorithm>
 
 
@@ -33,76 +34,60 @@
 #define CMD_READBACK                    0xc0
 
 
-uint16_t PIT::HERTZ = 500;
-uint16_t PIT::MILLISECONDS = 2;
+// 500hz  == 2ms
+// 1000hz == 1ms
+// 2000hz == 0.5ms
+
+uint16_t PIT::HERTZ = 2000;
+uint32_t PIT::CurrFrequency = 2000;
 
 
-void PIT::init()
+void PIT::init( uint32_t new_frequency )
 {
-    PIT::set_ms(5);
-    IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);  // Set mode 2
-    PIT::reload();
+    uint32_t divisor = PIT::FREQUENCY / new_frequency;
+    PIT::CurrFrequency = new_frequency;
+    uint8_t lo = (uint8_t)(divisor & 0xFF);
+    uint8_t hi = (uint8_t)((divisor>>8) & 0xFF);
+
+    IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);
+    IO::outb(PIT_COUNTER0, lo);
+    IO::outb(PIT_COUNTER0, hi);
+    PIC::setmask(IrqNo_PIT);
 }
 
 
-void PIT::reload()
-{
-    uint16_t reload_value = PIT::FREQUENCY / PIT::HERTZ;
-    IO::outb(PIT_COUNTER0, reload_value & 0xFF);
-    IO::outb(PIT_COUNTER0, (reload_value >> 8) & 0xFF);
-}
-
-
-void PIT::set_hz( uint16_t hz )
-{
-    PIT::HERTZ = hz;
-    // PIT::MILLISECONDS = (hz/1000) * 1000000;
-}
-
-
-void PIT::set_ms( uint16_t ms )
-{
-    PIT::MILLISECONDS = ms;
-    PIT::set_hz(1000000 / (1000 * ms));
-    // PIT::HERTZ = 1000000 / (1000*ms);
-    // PIT::MILLISECONDS = ms;
-}
-
-uint32_t PIT::sleep( uint64_t ms )
+uint32_t PIT::sleep( uint64_t ms ) 
 {
     uint32_t ticks = 0;
 
-    while (ticks < ((PIT::FREQUENCY / 1000) * ms))
+    while (ticks < (PIT::CurrFrequency / 1000 * ms))
     {
         ticks++;
         __asm__ ("hlt");
     }
-
     return ticks;
 }
 
 
 
+// uint16_t PIT::read()
+// {
+//     IO::outb(PIT_CMD, CMD_LATCH | CMD_COUNTER0); // Latch the current counter value
+//     uint8_t low = IO::inb(PIT_COUNTER0);        // Read the low byte
+//     uint8_t high = IO::inb(PIT_COUNTER0);       // Read the high byte
+//     return (uint16_t(high) << 8) | low;         // Combine high and low bytes
+// }
 
+// bool PIT::edge()
+// {
+//     static uint16_t prev = 0;
+//     uint16_t curr = PIT::read();
 
-uint16_t PIT::read()
-{
-    IO::outb(PIT_CMD, CMD_LATCH | CMD_COUNTER0); // Latch the current counter value
-    uint8_t low = IO::inb(PIT_COUNTER0);        // Read the low byte
-    uint8_t high = IO::inb(PIT_COUNTER0);       // Read the high byte
-    return (uint16_t(high) << 8) | low;         // Combine high and low bytes
-}
+//     bool edge = (curr > prev);
+//     prev = curr;
 
-bool PIT::edge()
-{
-    static uint16_t prev = 0;
-    uint16_t curr = PIT::read();
-
-    bool edge = (curr > prev);
-    prev = curr;
-
-    return edge;
-}
+//     return edge;
+// }
 
 
 

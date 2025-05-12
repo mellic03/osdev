@@ -20,7 +20,7 @@ enum KThread_: uint32_t
 
 struct kthread_t
 {
-    // static constexpr size_t fpreg_size = 512;
+    static constexpr size_t fxsize = 512;
     static constexpr size_t stack_size = 16 * 1024;
     
     char       name[32];
@@ -32,19 +32,22 @@ struct kthread_t
     intframe_t frame;
     uint8_t   *stackTop;
     uint8_t    stack[stack_size]  __attribute__((aligned(16)));
+    uint8_t    fxstate[fxsize]    __attribute__((aligned(16)));
+
     // uint8_t    fxdata[fpreg_size] __attribute__((aligned(16)));
 };
 
 
 namespace kthread
 {
-    void yield();
+    void yield( YieldReason reason );
+    inline void yield() { kthread::yield(YldRsn_None); };
+
     void sleep( uint64_t ms );
     void exit();
     
     kthread_t *create( const char *name, void (*fn)(void*), void *arg );
     void start();
-    void idlemain( void* );
 
     // namespace detail
     // {

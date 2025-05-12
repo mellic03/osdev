@@ -1,12 +1,13 @@
 #pragma once
+#include <stdint.h>
 #include "ustar.hpp"
 
 namespace initrd
 {
-    extern void *tarball;
+    extern uint8_t *tarball;
 
     // bool find( const char *name, void *&addr, size_t &size );
     void *find( const char *name );
-    void init( void *base );
+    void init( void *tar );
 }
 
