@@ -5,6 +5,7 @@
 
 namespace kvideo
 {
+    inline ivec2 *CSR;
     inline int W;
     inline int H;
     inline uint8_t *frontbuffer;
@@ -15,6 +16,8 @@ namespace kvideo
     void (*rect)       (int, int, int, int);
     void (*blit)       (const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
                         const ivec2 &srctl, const ivec2 &srcsp);
+    void (*renderString)(const char*, const ivec2&);
+    void (*cursorString)(const char*);
     void (*swapBuffers)();
 }
 

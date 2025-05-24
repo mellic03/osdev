@@ -2,29 +2,54 @@
 #include <kmemxx.hpp>
 #include <mutex>
 
-static std::mutex mouselock{false};
-static kinput::MsData mousedata;
 
-void kinput::writeMsData( const kinput::MsData *data )
+
+// Mouse
+// using msCallbackFn = void (*)(const knl::MsState&);
+// static msCallbackFn ms_callbacks[32];
+
+static std::mutex          msdataLock{false};
+static std::mutex          msCallbacksLock{false};
+static kinput::MsData      msdata;
+static kinput::MsCallbacks mscallbacks;
+
+void kinput::writeMsData( const kinput::MsData &data )
 {
-    std::lock_guard lock(mouselock);
-    kmemcpy(&mousedata, data, sizeof(kinput::MsData));
-    // kinput::mousedata.x.store(data->x.load());
-    // kinput::mousedata.y.store(data->y.load());
+    std::lock_guard lock(msdataLock);
+    msdata = data;
 }
 
-void kinput::readMsData( kinput::MsData *data )
+void kinput::readMsData( kinput::MsData &data )
 {
-    std::lock_guard lock(mouselock);
-    kmemcpy(data, &mousedata, sizeof(kinput::MsData));
-    // data->x.store(kinput::mousedata.x.load());
-    // data->y.store(kinput::mousedata.y.load());
+    std::lock_guard lock(msdataLock);
+    data = msdata;
+}
+
+void kinput::writeMsCallbacks( const kinput::MsCallbacks &data )
+{
+    std::lock_guard lock(msCallbacksLock);
+    mscallbacks = data;
+}
+
+void kinput::readMsCallbacks( kinput::MsCallbacks &data )
+{
+    std::lock_guard lock(msCallbacksLock);
+    data = mscallbacks;
 }
 
 
-void kinput::triggerMouseEvent( uint32_t btn, uint32_t event )
-{
-    if (btn || event) {  }
-}
+
+
+// Keyboard
+// using kbCallbackFn = void (*)(const knl::KbEvent&);
+// static kbCallbackFn kb_callbacks[256];
+
+// static void kb_example( const knl::KbEvent &event )
+// {
+//     if (event.key == 'f')
+//     {
+//         printf("f in the chat");
+//     }
+// }
 
 

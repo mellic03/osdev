@@ -27,6 +27,13 @@ extern void LimineRes_init();
 extern void kmalloc_init( uintptr_t base, size_t size );
 static void load_mmaps();
 
+extern "C"
+{
+    using  ctor_t = void(*)();
+    extern ctor_t __init_array_start[];
+    extern ctor_t __init_array_end[];
+}
+
 
 void early_init()
 {
@@ -51,6 +58,15 @@ void early_init()
             initrd::init(file->address);
     }
 
+    {
+        syslog log("call_ctors");
+        int i = 0;
+        for (ctor_t *ctor = __init_array_start; ctor < __init_array_end; ctor++)
+        {
+            log("ctor[%d]: 0x%lx", i++, ctor);
+            (*ctor)();
+        }
+    }
 }
 
 

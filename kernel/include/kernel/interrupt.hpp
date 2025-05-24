@@ -33,7 +33,7 @@ enum IntNo_: uint8_t
     IntNo_INVALID_TSS               = 10,
     IntNo_SEGMENT_NOT_PRESENT       = 11,
     IntNo_STACK_SEGFAULT            = 12,
-    IntNo_GENERAL_PROTECTION_FAULT  = 13,
+    IntNo_GEN_FAULT                 = 13,
     IntNo_PAGE_FAULT	  	        = 14,
 
     IntNo_BAD_ALLOC 	  	        = 52,
@@ -41,28 +41,57 @@ enum IntNo_: uint8_t
     IntNo_OUT_OF_MEMORY 	        = 54,
 
     IntNo_KTHREAD_YIELD             = 97,
-    IntNo_SYSCALL 	  	            = 255,
+
+    IntNo_IOAPIC_Base               = 100,
+    IntNo_IOAPIC_End                = IntNo_IOAPIC_Base + 24,
+    IntNo_Spurious                  = IntNo_IOAPIC_End,
+
+    IntNo_LAPIC_TIMER_TEST          = 120,
+
+    IntNo_Syscall 	  	            = 255,
 };
+
 
 enum IrqNo_: uint8_t
 {
-    IrqNo_PIT                   = 0,
-    IrqNo_Keyboard              = 1,
-    IrqNo_Cascade               = 2,
-    IrqNo_COM2                  = 3,
-    IrqNo_COM1                  = 4,
-    IrqNo_LPT2                  = 5,
-    IrqNo_FloppyDisk            = 6,
-    IrqNo_Spurious              = 7,
-    IrqNo_CMOS                  = 8,
-    IrqNo_Free9                 = 9,
-    IrqNo_Free10                = 10,
-    IrqNo_Free11                = 11,
-    IrqNo_Mouse                 = 12,
-    IrqNo_FPU                   = 13,
-    IrqNo_PrimaryATA            = 14,
-    IrqNo_SecondaryATA          = 15,
+    IrqNo_PIT          = 0,
+    IrqNo_Keyboard     = 1,
+    IrqNo_Cascade      = 2,
+    IrqNo_COM2         = 3,
+    IrqNo_COM1         = 4,
+    IrqNo_LPT2         = 5,
+    IrqNo_FloppyDisk   = 6,
+    IrqNo_Spurious     = 7,
+    IrqNo_CMOS         = 8,
+    IrqNo_Free9        = 9,
+    IrqNo_Free10       = 10,
+    IrqNo_Free11       = 11,
+    IrqNo_Mouse        = 12,
+    IrqNo_FPU          = 13,
+    IrqNo_PrimaryATA   = 14,
+    IrqNo_SecondaryATA = 15,
 };
+
+
+// enum IrqNo_: uint8_t
+// {
+//     IrqNo_PIT                   = 0,
+//     IrqNo_Keyboard              = 1,
+//     IrqNo_Cascade               = 2,
+//     IrqNo_COM2                  = 3,
+//     IrqNo_COM1                  = 4,
+//     IrqNo_LPT2                  = 5,
+//     IrqNo_FloppyDisk            = 6,
+//     IrqNo_Spurious              = 7,
+//     IrqNo_CMOS                  = 8,
+//     IrqNo_Free9                 = 9,
+//     IrqNo_Free10                = 10,
+//     IrqNo_Free11                = 11,
+//     IrqNo_Mouse                 = 12,
+//     IrqNo_FPU                   = 13,
+//     IrqNo_PrimaryATA            = 14,
+//     IrqNo_SecondaryATA          = 15,
+// };
 
 
 

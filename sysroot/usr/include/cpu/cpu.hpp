@@ -46,6 +46,9 @@ struct cpu_t
     uint64_t   id;
 
     ThreadScheduler sched;
+    // std::atomic_uint64_t m_ticks{0};
+    std::atomic_uint64_t m_usecs{0};
+    std::atomic_uint64_t m_lapicPeriod{0};
 
     uint8_t    yldrsn;
     uint64_t   syscall_no;
@@ -60,12 +63,17 @@ struct cpu_t
     idt_ptr_t   idtPtr;
 
     cpu_t(): sched(*this) {  };
+    cpu_t( size_t cpuid );
 };
 
 
 namespace SMP
 {
+    extern cpu_t all_cpus[8];
+    extern size_t num_cpus;
+
     bool       is_bsp();
+    uint64_t   bsp_id();
 
     cpu_t     *this_cpu();
     uint64_t   this_cpuid();

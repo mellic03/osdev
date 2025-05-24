@@ -5,8 +5,7 @@ struct limine_mp_info;
 
 namespace SMP
 {
-    extern cpu_t all_cpus[8];
-    void initMulticore( void (*entry)(limine_mp_info*) );
+    void init( void (*entry)(limine_mp_info*) );
     void initSinglecore( void (*entry)(limine_mp_info*) );
 
     cpu_t     *this_cpu();

@@ -23,6 +23,7 @@ namespace ksym
         } libc_sym;
 
         struct {
+            ivec2 *CSR;
             int W, H;
             uint8_t *frontbuffer;
             uint8_t *backbuffer;
@@ -31,6 +32,8 @@ namespace ksym
             void (*fillBuffer) (uint8_t *buffer);
             void (*rect)       (int, int, int, int);
             void (*blit)       (const ivec2&, uint8_t*, int, int, const ivec2&, const ivec2&);
+            void (*renderString)(const char*, const ivec2&);
+            void (*cursorString)(const char*);
             void (*swapBuffers)();
         } video_sym;
 
@@ -41,9 +44,10 @@ namespace ksym
         } thread_sym;
 
         struct {
-            void (*triggerMouseEvent)(uint32_t, uint32_t);
-            void (*writeMsData)(const kinput::MsData*);
-            void (*readMsData)(kinput::MsData*);
+            void (*writeMsData)(const kinput::MsData&);
+            void (*readMsData)(kinput::MsData&);
+            void (*writeMsCallbacks)(const kinput::MsCallbacks&);
+            void (*readMsCallbacks)(kinput::MsCallbacks&);
         } input_sym;
 
         // struct {

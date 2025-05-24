@@ -128,18 +128,25 @@ void driver_main( void* )
 
     while (true)
     {
-        // std::printf("[kboard] rawsize: %lu\n", rawstream.size());
         uint8_t scancode;
-        if (rawstream.pop_front(scancode))
+        while (rawstream.pop_front(scancode))
             driver_update(scancode);
-        // kthread::yield();
     }
 }
 
 
-size_t driver_read( void*, size_t )
+size_t driver_read( void *dstbuf, size_t max_nbytes )
 {
-    return 0;
+    auto *dst = (KeyEvent*)dstbuf;
+    size_t nbytes = 0;
+
+    while (keystream.pop_front(*dst) && (nbytes < max_nbytes))
+    {
+        dst++;
+        nbytes += sizeof(KeyEvent);
+    }
+
+    return nbytes;
 }
 
 size_t driver_write( const void *, size_t  )
@@ -152,7 +159,7 @@ void irq_handler( intframe_t* )
 {
     uint8_t code = IO::inb(0x60);
     rawstream.push_back(code);
-    std::printf("[kboard irq] code=%u\n", code);
+    // std::printf("[kboard irq] code=%u\n", code);
 }
 
 
@@ -175,8 +182,8 @@ ModuleInterface *init( ksym::ksym_t *sym )
         .close    = nullptr,
         .read     = driver_read,
         .write    = driver_write,
-        .isrno    = IrqNo_Keyboard,
-        .isrfn    = irq_handler,
+        .irqno    = IrqNo_Keyboard,
+        .irqfn    = irq_handler,
     };
 
     kmemset<char>(kbdev->signature, '\0', sizeof(kbdev->signature));

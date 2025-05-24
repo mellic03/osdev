@@ -19,6 +19,14 @@ extern "C"
 
 
 
+cpu_t::cpu_t( size_t cpuid )
+:   self(this), id(cpuid), sched(*this)
+{
+    CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)this);
+    CPU::wrmsr(CPU::MSR_KERNEL_GS_BASE, (uint64_t)this);
+};
+
+
 namespace CPU
 {
     void setRSP( uintptr_t rsp )

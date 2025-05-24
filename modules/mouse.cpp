@@ -8,12 +8,13 @@
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <algorithm>
+// #include <functional>
 
 
-kinput::MsData msdata;
-uint8_t MouseCycle = 0;
-uint8_t MousePacket[4];
-bool MousePacketReady = false;
+static kinput::MsData msdata;
+static uint8_t MouseCycle = 0;
+static uint8_t MousePacket[4];
+static bool MousePacketReady = false;
 
 
 #define PS2Leftbutton 0b00000001
@@ -59,8 +60,10 @@ bool ProcessMousePacket()
 
     bool xNegative, yNegative, xOverflow, yOverflow;
 
-    msdata.l = (MousePacket[0] & 0b01);
-    msdata.r = (MousePacket[0] & 0b10);
+    msdata.prevDown   = msdata.currDown;
+    msdata.currDown.l = (MousePacket[0] & PS2Leftbutton);
+    msdata.currDown.m = (MousePacket[0] & PS2Middlebutton);
+    msdata.currDown.r = (MousePacket[0] & PS2Rightbutton);
 
     xNegative = (MousePacket[0] & PS2XSign);
     yNegative = (MousePacket[0] & PS2YSign);
@@ -96,11 +99,7 @@ bool ProcessMousePacket()
     }
 
     msdata.x = std::clamp(msdata.x, 0, kvideo::W-1);
-    msdata.y = std::clamp(msdata.y, 0, kvideo::W-1);
-
-    // msdata.x.store(std::clamp(msdata.x.load(), 0, kvideo::W-1));
-    // msdata.y.store(std::clamp(msdata.y.load(), 0, kvideo::H-1));
-    // kinput::triggerMouseEvent();
+    msdata.y = std::clamp(msdata.y, 0, kvideo::H-1);
 
     MousePacketReady = false;
     return true;
@@ -152,8 +151,6 @@ static void irq_handler( intframe_t* )
             MouseCycle = 0;
             break;
     }
-
-    // PIC::sendEOI(IrqNo_Mouse);
 }
 
 
@@ -162,31 +159,28 @@ static void irq_handler( intframe_t* )
 static void driver_main( void* )
 {
     mouse_init();
+    kinput::MsCallbacks callbacks;
 
     while (true)
     {
         if (ProcessMousePacket())
         {
-            kinput::writeMsData(&msdata);
+            kinput::writeMsData(msdata);
+            kinput::readMsCallbacks(callbacks);
+        
+            if ((msdata.prevDown.l == true) && (msdata.currDown.l == false))
+                for (int i=0; i<4; i++)
+                    if (callbacks.onUp[i].l != nullptr)
+                        callbacks.onUp[i].l();  
+    
+            if ((msdata.prevDown.r == true) && (msdata.currDown.r == false))
+                for (int i=0; i<4; i++)
+                    if (callbacks.onUp[i].r != nullptr)
+                        callbacks.onUp[i].r();  
+
+            kthread::yield();
         }
-        // kthread::yield();
     }
-}
-
-
-static size_t driver_read( void *dstbuf, size_t nbytes )
-{
-    auto *dst = (uint8_t*)dstbuf;
-    auto *src = (uint8_t*)(&msdata);
-    size_t count = 0;
-
-    while ((count < nbytes) && (count < sizeof(kinput::MsData)))
-    {
-        *(dst++) = *(src++);
-        count++;
-    }
-
-    return count;
 }
 
 
@@ -205,10 +199,10 @@ ModuleInterface *init( ksym::ksym_t *sym )
 
         .open     = nullptr,
         .close    = nullptr,
-        .read     = driver_read,
+        .read     = nullptr,
         .write    = nullptr,
-        .isrno    = IrqNo_Mouse,
-        .isrfn    = irq_handler
+        .irqno    = IrqNo_Mouse,
+        .irqfn    = irq_handler
     };
 
     kmemset<char>(msdev->signature, '\0', sizeof(msdev->signature));

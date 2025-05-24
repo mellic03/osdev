@@ -14,7 +14,7 @@ void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res )
     cpu->syscall_req = (uintptr_t)req;
     cpu->syscall_res = (uintptr_t)res;
 
-    KInterrupt<IntNo_SYSCALL>();
+    KInterrupt<IntNo_Syscall>();
 }
 
 

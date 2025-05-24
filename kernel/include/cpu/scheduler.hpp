@@ -18,16 +18,16 @@ private:
 
     void trampoline( intframe_t* );
     void schedule( intframe_t* );
+    void check_sleepers();
 
 public:
     knl::atomic_flag m_startLock;
     knl::atomic_flag m_switchLock;
 
-    // std::vector<kthread_t*> m_threads;
     idk::RoundBuffer<kthread_t*, 64> m_threads;
+    idk::RoundBuffer<kthread_t*, 64> m_sleeping;
     kthread_t *m_idlethread;
     // idk::static_vector<kthread_t*, 64> m_active;
-    // idk::static_vector<kthread_t*, 64> m_sleeping;
     // idk::static_vector<kthread_t*, 64> m_dead;
 
     // static void trampolineISR( intframe_t* );
@@ -35,6 +35,7 @@ public:
 
     ThreadScheduler( cpu_t& );
 
+    kthread_t *currThread() { return m_threads.front(); }
     kthread_t *addThread( const char *name, void (*fn)(void*), void *arg );
     void       releaseThread( kthread_t *thread );
 };

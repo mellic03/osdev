@@ -1,16 +1,78 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
 #include <kernel/input.hpp>
+#include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <cringe/bmp.hpp>
+#include <ctype.h>
+
+
+static CharDevInterface *kbdev;
+static char kbtermbuf[256];
+static char *kbtermend;
+static char *kbtermtop;
+
+
+static kinput::MsData msdata;
+static char mousetext[16][16];
+static ivec2 mousepos[16];
+static int mousecount;
+
+static void reeeee()
+{
+
+    kmemcpy<uint8_t>(mousetext[mousecount], "BitchAss\0", sizeof("BitchAss\0"));
+    mousepos[mousecount] = msdata.pos();
+    mousecount = (mousecount+1) % 16;
+}
+
+
+
+static void sde_keyInput()
+{
+    KeyEvent buf[32];
+
+    size_t nbytes = kbdev->read(buf, sizeof(buf));
+    size_t count  = nbytes / sizeof(KeyEvent);
+
+    for (size_t i=0; i<count; i++)
+    {
+        auto &event = buf[i];
+        if (isalnum(event.key) || event.key == ' ')
+        {
+            *(kbtermtop++) = event.key;
+        }
+    
+        if (kbtermtop >= kbtermend)
+        {
+            kbtermtop = kbtermbuf;
+        }
+    }
+}
+
 
 
 static void sde_main( void* )
 {
     BMP_File bmp(std::fopen("usr/share/img/cursor.bmp"));
-    std::printf("[sde_main] bmp.bpp: %d", bmp.bpp);
+    std::printf("[sde_main] bmp.bpp: %d\n", bmp.bpp);
 
-    kinput::MsData msdata;
+    kbdev = (CharDevInterface*)knl::findModule(ModuleType_Device, DeviceType_Keyboard);
+    kmemset<uint8_t>(kbtermbuf, '\0', sizeof(kbtermbuf));
+    kbtermend = kbtermbuf + sizeof(kbtermbuf);
+    kbtermtop = kbtermbuf;
+    // std::printf("kbdev: %s\n", kbdev->signature);
+
+    kmemset<uint8_t>(mousetext, '\0', sizeof(mousetext));
+    kmemset<uint8_t>(mousepos, 0, sizeof(mousepos));
+    mousecount = 0;
+
+    kinput::MsCallbacks callbacks;
+    kinput::readMsCallbacks(callbacks);
+    callbacks.onUp[0].l = reeeee;
+    kinput::writeMsCallbacks(callbacks);
+
+    // kinput::MsData msdata;
     msdata.x = 50;
     msdata.y = 50;
 
@@ -26,14 +88,20 @@ static void sde_main( void* )
         accum += (curr_time - prev_time);
         prev_time = curr_time;
         // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
+        kinput::readMsData(msdata);
+        sde_keyInput();
 
-        kinput::readMsData(&msdata);
-
-        // if (ready == false)
+        if (ready == false)
         {
-            // kvideo::fillColor(200, 50, 50, 255);
-            // kvideo::rect(msdata.x, msdata.y, 100, 100);
-        
+            *kvideo::CSR = ivec2(50, 50);
+            kvideo::cursorString(kbtermbuf);
+
+            kvideo::fillColor(200, 50, 50, 255);
+            kvideo::rect(msdata.x, msdata.y, 100, 100);
+
+            for (int i=0; i<mousecount; i++)
+                kvideo::renderString(mousetext[i], mousepos[i]);
+
             kvideo::blit(
                 ivec2(msdata.x, msdata.y),
                 (uint8_t*)(bmp.data),
@@ -44,10 +112,10 @@ static void sde_main( void* )
             ready = true;
         }
     
-        if (ready && accum >= 16)
+        if (ready && accum > 16)
         {
             ready = false;
-            accum = 0;
+            accum = (accum-16) % 16;
 
             kvideo::swapBuffers();
             kthread::yield();

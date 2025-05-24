@@ -7,7 +7,7 @@
 #define APIC_REG_VERSION        0x30
 #define APIC_REG_SPURIOUS_INT   0xF0
 #define APIC_REG_EOI            0xB0
-#define APIC_REG_ICR_LOW        0x300
+#define APIC_REG_ICR_LO        0x300
 #define APIC_REG_ICR_HIGH       0x310
 
 #define APIC_SPURIOUS_VECTOR_NUM 0xFF

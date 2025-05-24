@@ -27,8 +27,8 @@ namespace LAPIC
     // static constexpr size_t REG_SPURIOUS    = 0x0F0;
 
     // static constexpr size_t REG_ICR         = 0x300; // Interrupt Command Register
-    // static constexpr size_t REG_ICR0        = 0x300;
-    // static constexpr size_t REG_ICR1        = 0x310;
+    // static constexpr size_t REG_ICR_LO        = 0x300;
+    // static constexpr size_t REG_ICR_HI        = 0x310;
 
     void init();
 }

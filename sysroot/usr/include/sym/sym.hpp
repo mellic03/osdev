@@ -29,16 +29,19 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
 
     {
         auto &lib = sym->video_sym;
-        kvideo::W           = lib.W;
-        kvideo::H           = lib.H;
-        kvideo::frontbuffer = lib.frontbuffer;
-        kvideo::backbuffer  = lib.backbuffer;
-        kvideo::clearBuffer = lib.clearBuffer;
-        kvideo::fillColor   = lib.fillColor;
-        kvideo::fillBuffer  = lib.fillBuffer;
-        kvideo::rect        = lib.rect;
-        kvideo::blit        = lib.blit;
-        kvideo::swapBuffers = lib.swapBuffers;
+        kvideo::CSR          = lib.CSR;
+        kvideo::W            = lib.W;
+        kvideo::H            = lib.H;
+        kvideo::frontbuffer  = lib.frontbuffer;
+        kvideo::backbuffer   = lib.backbuffer;
+        kvideo::clearBuffer  = lib.clearBuffer;
+        kvideo::fillColor    = lib.fillColor;
+        kvideo::fillBuffer   = lib.fillBuffer;
+        kvideo::rect         = lib.rect;
+        kvideo::blit         = lib.blit;
+        kvideo::renderString = lib.renderString;
+        kvideo::cursorString = lib.cursorString;
+        kvideo::swapBuffers  = lib.swapBuffers;
     }
 
     {
@@ -50,9 +53,10 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
 
     {
         auto &lib = sym->input_sym;
-        kinput::triggerMouseEvent = lib.triggerMouseEvent;
         kinput::writeMsData       = lib.writeMsData;
         kinput::readMsData        = lib.readMsData;
+        kinput::writeMsCallbacks  = lib.writeMsCallbacks;
+        kinput::readMsCallbacks   = lib.readMsCallbacks;
     }
 
     // {

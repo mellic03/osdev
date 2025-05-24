@@ -22,6 +22,8 @@
 
 static cringe::Font kvideoFont(0, 0, 0);
 static uint8_t kvideoFillColor[4];
+
+ivec2  kvideo::CSR = ivec2(0, 0);
 int    kvideo::W = 0;
 int    kvideo::H = 0;
 int    kvideo::pitch = 0;
@@ -92,8 +94,10 @@ void kvideo::blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
             int dstidx = 4 * (kvideo::W*dsty + dstx);
             int srcidx = 4 * (imgw*srcy + srcx);
 
+            uint8_t alpha = src[srcidx+3];
             for (int k=0; k<4; k++)
-                dst[dstidx+k] = src[srcidx+k];
+                dst[dstidx+k] = ((255-alpha)*dst[dstidx+k] + alpha*src[srcidx+k]) / 255;
+            // dst[dstidx+k] = src[srcidx+k];
         }
     
     }  
@@ -126,8 +130,26 @@ static void kvideo_blit( int x, int y, uint8_t *img, int imgw, int,
             int dstidx = kvideo::W*4*dsty + 4*dstx;
             int srcidx = imgw*4*srcy + 4*srcx;
 
+            // vec4 dstColor(0.0f);
+            // vec4 srcColor(0.0f);
+
+            uint8_t alpha = src[srcidx+3];
             for (int k=0; k<4; k++)
-                dst[dstidx+k] = src[srcidx+k];
+            {
+                // dst[dstidx+k] = dst[dstidx+k]*(255-alpha) + src[srcidx+k];
+                dst[dstidx+k] = ((255-alpha)*dst[dstidx+k] + alpha*src[srcidx+k]) / 255;
+
+                // dstColor[k] = float(dst[dstidx+k]) / 255.0f;
+                // srcColor[k] = float(src[srcidx+k]) / 255.0f;
+                // dst[dstidx+k] = src[srcidx+k];
+            }
+        
+            // dstColor = srcColor + (dstColor * (1.0f - srcColor.a));
+        
+            // for (int k=0; k<4; k++)
+            // {
+            //     dst[dstidx+k] = uint8_t(255.0f * dstColor[k]);
+            // }
         }
     }
 }
@@ -151,21 +173,57 @@ void kvideo::renderGlyph( char ch, int x, int y )
 }
 
 
-void kvideo::renderString( const char *str, int x, int y )
+void kvideo::renderString( const char *str, const ivec2 &srcpos )
 {
     kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
     auto &font = kvideoFont;
+
+    ivec2 pos = srcpos;
+    int &x = pos.x;
+    int &y = pos.y;
 
     while (*str)
     {
         ivec2 tl = font.getGlyphCorner(*str);
         ivec2 sp = font.getGlyphExtents();
-        kvideo_blit(x, y, font.m_img, font.W, font.H, tl, sp);
+
+        if (x+sp.x >= kvideo::W)
+        {
+            x = 0;
+            y += sp.y;
+        }
+
+        kvideo::blit(pos, font.m_img, font.W, font.H, tl, sp);
 
         x += sp.x;
         str++;
     }
+}
 
+
+void kvideo::cursorString( const char *str )
+{
+    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
+    auto &font = kvideoFont;
+    int  &x = kvideo::CSR.x;
+    int  &y = kvideo::CSR.y;
+
+    while (*str)
+    {
+        ivec2 tl = font.getGlyphCorner(*str);
+        ivec2 sp = font.getGlyphExtents();
+
+        if (x+sp.x >= kvideo::W)
+        {
+            x = 0;
+            y += sp.y;
+        }
+
+        kvideo::blit(kvideo::CSR, font.m_img, font.W, font.H, tl, sp);
+
+        x += sp.x;
+        str++;
+    }
 }
 
 

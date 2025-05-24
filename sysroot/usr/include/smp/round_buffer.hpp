@@ -71,4 +71,5 @@ public:
     inline size_t size() { return m_size; }
     inline bool empty() { return m_size==0; }
 
+    T &operator[] (int i) { return m_data[i]; }
 };

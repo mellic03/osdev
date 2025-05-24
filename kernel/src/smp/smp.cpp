@@ -18,25 +18,6 @@
 
 
 
-// struct KSemaphore
-// {
-//     std::atomic_int value{1};
-
-//     void wait()
-//     {
-//         value--;
-//         while (value.load() < 0)
-//             asm volatile ("nop");
-//     }
-
-//     void signal()
-//     {
-//         value++;
-//     }
-
-// };
-
-
 struct ScheduleLock
 {
     std::atomic_int count{0};
@@ -57,84 +38,61 @@ struct ScheduleLock
 };
 
 
-static ScheduleLock smp_lock;
-// static std::mutex smp_lock{0};
-static uint64_t bsp_id = 99999999999;
+static uint64_t bspID = 99999999999;
 cpu_t SMP::all_cpus[8];
+size_t SMP::num_cpus;
 
-// cpu_t::cpu_t()
-//     : self(this),
-//       id(lapic_id),
-//       sched(*this),
-//       yldrsn(YldRsn_None)
-// {
-//     this->idleThread = nullptr; // sched.addThread("idlemain", kthread::idlemain, nullptr);
-//     this->currThread = nullptr; // this->idleThread;
-// }
 
-// static void SMP_trampoline( limine_mp_info *info )
-// {
-//     cpu_t *cpu = (cpu_t*)(info->extra_argument);
-//     CPU::wrmsr(CPU::MSR_GS_BASE, reinterpret_cast<uint64_t>(cpu));
-//     kthread::create("idlemain", kthread::idlemain, nullptr);
-//     // syslog::println("[SMP_trampoline] cpu=%lu", SMP::this_cpu()->id);
-//     CPU::enableSSE();
-//     CPU::installGDT();
-    
-//     knl::hang();
-// }
-
-void SMP::initMulticore(void (*entry)(limine_mp_info*))
+void SMP::init(void (*entry)(limine_mp_info*))
 {
-    syslog log("SMP::initMulticore");
-    memset(all_cpus, 0, sizeof(all_cpus));
+    syslog log("SMP::init");
 
     auto *mp = limine_res.mp;
     auto count = mp->cpu_count;
-    bsp_id = mp->bsp_lapic_id;
-    limine_mp_info *bsp_info = nullptr;
-
+    num_cpus = count;
+    bspID = mp->bsp_lapic_id;
     for (size_t i=0; i<count; i++)
     {
         auto *info = mp->cpus[i];
         info->extra_argument = (uint64_t)i;
 
-        if (info->lapic_id == bsp_id)
-            bsp_info = info;
-        else
+        if (info->lapic_id != bspID)
             __atomic_store_n(&(info->goto_address), entry, __ATOMIC_RELAXED);
     }
 
-    entry(bsp_info);
+    entry(mp->cpus[bspID]);
 }
 
 
 void SMP::initSinglecore(void (*entry)(limine_mp_info*))
 {
-    syslog log("SMP::initMulticore");
-    memset(all_cpus, 0, sizeof(all_cpus));
-
     auto *mp = limine_res.mp;
-    auto count = mp->cpu_count;
-    bsp_id = mp->bsp_lapic_id;
-    limine_mp_info *bsp_info = nullptr;
 
-    for (size_t i=0; i<count; i++)
     {
-        auto *info = mp->cpus[i];
-        info->extra_argument = (uint64_t)i;
+        syslog log("SMP::initSinglecore");
 
-        if (info->lapic_id == bsp_id)
-            bsp_info = info;
+        auto count = mp->cpu_count;
+        bspID = mp->bsp_lapic_id;
+
+        for (size_t i=0; i<count; i++)
+        {
+            auto *info = mp->cpus[i];
+            info->extra_argument = (uint64_t)i;
+        }
     }
 
-    entry(bsp_info);
+    entry(mp->cpus[bspID]);
 }
 
 
 bool SMP::is_bsp()
 {
-    return SMP::this_cpu()->id == bsp_id;
+    return SMP::this_cpu()->id == bspID;
+}
+
+uint64_t SMP::bsp_id()
+{
+    return bspID;
 }
 
 

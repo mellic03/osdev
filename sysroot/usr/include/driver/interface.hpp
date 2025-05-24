@@ -78,8 +78,8 @@ struct DeviceInterface
     void    (*close)();
     void    *read;
     void    *write;
-    int64_t  isrno;
-    void    (*isrfn)(intframe_t*);
+    int64_t  irqno;
+    void    (*irqfn)(intframe_t*);
 };
 
 struct BlockDevInterface
@@ -89,8 +89,8 @@ struct BlockDevInterface
     void     (*close)();
     size_t   (*read )(void *dst, size_t offset, size_t nbytes);
     size_t   (*write)(const void *src, size_t offset, size_t nbytes);
-    int64_t   isrno;
-    void     (*isrfn)(intframe_t*);
+    int64_t   irqno;
+    void     (*irqfn)(intframe_t*);
 
 };
 
@@ -101,8 +101,8 @@ struct CharDevInterface
     void     (*close)();
     size_t   (*read )(void *dst, size_t nbytes);
     size_t   (*write)(const void *src, size_t nbytes);
-    int64_t   isrno;
-    void     (*isrfn)(intframe_t*);
+    int64_t   irqno;
+    void     (*irqfn)(intframe_t*);
 };
 
 

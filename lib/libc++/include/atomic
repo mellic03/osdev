@@ -55,15 +55,15 @@ private:
     static_assert(__is_trivially_copyable(T), "Bad atomic type, must be trivally copyable");
 
 public:
-    constexpr atomic() noexcept : value{} 
-    {}
+    constexpr atomic() noexcept
+    :   value{} {  };
+
+    constexpr atomic(T initialValue) noexcept
+    :   value(initialValue) {  };
 
     atomic(const atomic&) = delete;
     atomic& operator=(const atomic&) = delete;
     atomic& operator=(const atomic&) volatile = delete;
-
-    constexpr atomic(T initialValue) noexcept : value(initialValue)
-    {}
 
     operator T() const noexcept
     { return load(); }
@@ -71,10 +71,10 @@ public:
     operator T() const volatile noexcept
     { return load(); }
 
-    T operator=(T incoming) noexcept
+    T operator=( T incoming ) noexcept
     { store(incoming); return value; }
 
-    T operator=(T incoming) volatile noexcept
+    T operator=( T incoming ) volatile noexcept
     { store(incoming); return value; }
 
     bool is_lock_free() const

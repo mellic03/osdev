@@ -44,41 +44,13 @@
 static void genfaultISR( intframe_t* );
 static void pagefaultISR( intframe_t* );
 static void outOfMemoryISR( intframe_t* );
+static void spuriousISR( intframe_t* );
 
-
-extern "C"
-{
-    using  ctor_t = void(*)();
-    extern ctor_t __init_array_start[];
-    extern ctor_t __init_array_end[];
-}
-
-void call_ctors()
-{
-    syslog log("call_ctors");
-    int i = 0;
-    for (ctor_t *ctor = __init_array_start; ctor < __init_array_end; ctor++)
-    {
-        log("ctor[%d]: 0x%lx", i++, ctor);
-        (*ctor)();
-    }
-}
-uint64_t clocksPerSec = 1;
 
 static void PIT_IrqHandler( intframe_t *frame )
 {
-    {
-        static uint64_t prev = 0;
-
-        uint64_t curr = CPU::getTSC();
-        uint64_t dTicks = curr - prev;
-        uint64_t dTime  = 4; // 1ms
-        clocksPerSec = dTicks / dTime;
-        prev = curr;
-    }
-
-    kclock::detail::tick(PIT::MicroSeconds);
-    // syslog::println("[PIT_IrqHandler] CPU %u", SMP::this_cpu()->id);
+    // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
+    kclock::detail::tick(CPU::getTSC() / 5000);
     ThreadScheduler::scheduleISR(frame);
 }
 
@@ -87,6 +59,7 @@ static void PIT_IrqHandler( intframe_t *frame )
 extern void LimineRes_init();
 extern void early_init();
 static void smp_main(limine_mp_info*);
+const auto &println = syslog::println;
 
 
 __attribute__((used, section(".limine_requests")))
@@ -96,14 +69,25 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 };
 
 
-// kbarrier_t barrierA{0};
-const auto &println = syslog::println;
+
+
+// static void ipi_test( intframe_t* )
+// {
+//     syslog::println("[ipi_test] cpu=%lu", SMP::this_cpuid());
+// }
+
+// static void mouseclick_callback()
+// {
+//     syslog::println("[mouseclick_callback] cpu=%lu", SMP::this_cpuid());
+//     // syslog::println("[mouseclick_callback] CPU%lu", SMP::this_cpu()->id);
+//     LAPIC::sendIPI(1, IntNo_LAPIC_TIMER_TEST);
+// }
 
 
 extern "C"
 void _start()
 {
-    CPU::cli(); // asm volatile ("cli");
+    CPU::cli();
     CPU::enableSSE();
 
     syslog::enable();
@@ -112,15 +96,21 @@ void _start()
     syslog log("_start");
 
     early_init();
-    call_ctors();
+    CPU::createIDT();
+    PIC::disable();
 
-    ACPI::Response res;
+    CPU::installISR(IntNo_GEN_FAULT,        genfaultISR);
+    CPU::installISR(IntNo_PAGE_FAULT,       pagefaultISR);
+    CPU::installISR(IntNo_OUT_OF_MEMORY,    outOfMemoryISR);
+    CPU::installISR(IntNo_KTHREAD_YIELD,    ThreadScheduler::scheduleISR);
+    CPU::installISR(IntNo_Syscall,          knl::syscallISR);
+    CPU::installISR(IntNo_Spurious,         spuriousISR);
+    CPU::installIRQ(IrqNo_PIT,              PIT_IrqHandler);
+
+    static ACPI::Response res;
     ACPI::init(lim_rsdp_req.response->address, res);
-    // APIC::init(res);
-
-    // barrierA.reset(limine_res.mp->cpu_count);
-    SMP::initMulticore(smp_main);
-    // SMP::initSinglecore(smp_main);
+    APIC::init(res);
+    SMP::init(smp_main);
 
     kassert(false); // Should be unreachable!
 
@@ -128,23 +118,11 @@ void _start()
 }
 
 
-#define CLOCKS_PER_SEC (1000000)
-
-static void thread_test( void* )
-{
-    // auto &msdata = kinput::mousedata;
-
-    while (true)
-    {
-        // syslog::println("CPS: %lu, time: %lu", clocksPerSec, CPU::getTSC() / clocksPerSec);
-        // kvideo::renderString("abc ABC", msdata.x, msdata.y);
-        kthread::yield();
-    }
-}
+std::atomic_uint64_t count{0};
 
 static void smp_main( limine_mp_info *info )
 {
-    CPU::cli(); // asm volatile ("cli");
+    CPU::cli();
     CPU::enableSSE();
 
     uint64_t  this_gdt[7];
@@ -152,67 +130,40 @@ static void smp_main( limine_mp_info *info )
     tss_t     this_tss;
     CPU::createGDT(this_gdt, &this_gdtr, &this_tss);
     CPU::installGDT(&this_gdtr);
-    // CPU::createGDT();
-    // CPU::installGDT();
 
+    size_t cpuid = info->lapic_id;
+    cpu_t *cpu   = new (SMP::all_cpus + cpuid) cpu_t(cpuid);
+    if (!cpu) {  }
 
-    size_t cpuid     = info->lapic_id;
-    cpu_t *cpu       = new (SMP::all_cpus + cpuid) cpu_t();
-           cpu->self = cpu;
-           cpu->id   = cpuid;
-    CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)cpu);
-    CPU::wrmsr(CPU::MSR_KERNEL_GS_BASE, (uint64_t)cpu);
+    while (count.load() != cpuid)
+    {
+        asm volatile ("nop");
+    }
 
-    // syslog::println("lapic id: %lu", cpuid);
-    // syslog::println("this_gdt: 0x%lx", this_gdt);
-
-    PIC::enable();
-    PIC::remap(PIC::IRQ_MASTER, PIC::IRQ_SLAVE);
-    PIC::maskAll();
-    PIT::init(100);
-
-    CPU::createIDT();
     CPU::installIDT();
-    CPU::installISR(IntNo_GENERAL_PROTECTION_FAULT,  genfaultISR);
-    CPU::installISR(IntNo_PAGE_FAULT,                pagefaultISR);
-    CPU::installISR(IntNo_OUT_OF_MEMORY,             outOfMemoryISR);
-    CPU::installISR(IntNo_KTHREAD_YIELD,             ThreadScheduler::scheduleISR);
-    CPU::installISR(IntNo_SYSCALL,                   knl::syscallISR);
-    CPU::installIRQ(IrqNo_PIT,                       PIT_IrqHandler);
+    LAPIC::init(1000);
+
+    count++;
 
     if (SMP::is_bsp())
     {
-        syslog::println("SMP::is_bsp() == true");
+        BMP_File bmp(initrd::fopen("usr/share/font/cutive-w14hf20.bmp"));
+        kvideo::setFont(cringe::Font((uint8_t*)(bmp.data), bmp.w, bmp.h));
+
         knl::loadModules(initrd::find("drv/"));
         knl::loadModules(initrd::find("srv/"));
         knl::initModules();
+    
+        // kinput::MsCallbacks callbacks;
+        // callbacks.onUp[0].r = mouseclick_callback;
+        // kinput::writeMsCallbacks(callbacks);
     }
 
-    // println("\n\naddr: 0x%lx", addr);
-    // println("w, h, bpp: %d, %d, %d", bmp.w, bmp.h, bmp.bpp);
-    uint8_t *addr = (uint8_t*)initrd::find("usr/share/font/cutive-w14hf20.bmp");
-    BMP_File bmp((void*)(addr + ustar::DATA_OFFSET));
-    kvideo::setFont(cringe::Font((uint8_t*)(bmp.data), bmp.w, bmp.h));
-    kthread::create("thread_test", thread_test, nullptr);
+    CPU::sti();
 
-    // IOAPIC::unmaskIRQ(2);
-    // IOAPIC::unmaskIRQ(IrqNo_PIT);
-    PIC::unmask(2);
-    PIC::unmask(IrqNo_PIT);
-    CPU::sti(); // asm volatile ("sti");
-
-    if (cpuid == 1)
-    {
-        while (true)
-        {
-            kthread::yield();
-        }
-    }
-
-    // CPU::hcf();
     while (true)
     {
-        asm volatile ("hlt");
+        CPU::hlt();
     }
     
 }
@@ -248,6 +199,12 @@ static void outOfMemoryISR( intframe_t* )
     syslog::print("Exception OUT_OF_MEMORY");
     CPU::hcf();
 }
+
+static void spuriousISR( intframe_t* )
+{
+    return;
+}
+
 
 
 static std::atomic_int faultCount{0};

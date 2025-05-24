@@ -19,8 +19,9 @@ namespace kinput
         int l, m, r;
     };
     
-    inline void (*triggerMouseEvent)(uint32_t, uint32_t);
-    inline void (*writeMsData)(const kinput::MsData*);
-    inline void (*readMsData)(kinput::MsData*);
+    inline void (*writeMsData)(const kinput::MsData&);
+    inline void (*readMsData)(kinput::MsData&);
+    inline void (*writeMsCallbacks)(const kinput::MsCallbacks&);
+    inline void (*readMsCallbacks)(kinput::MsCallbacks&);
 }
 

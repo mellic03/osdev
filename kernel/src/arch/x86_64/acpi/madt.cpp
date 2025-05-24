@@ -35,8 +35,8 @@ void ACPI::MADT_init( ACPI::MADT_t *madt, ACPI::Response &res )
     res.madt.ioapic_count = 0;
     res.madt.ioapic_iso_count = 0;
 
-    bool prev = syslog::isEnabled();
-    syslog::disable();
+    // bool prev = syslog::isEnabled();
+    // syslog::disable();
 
     while (curr < end)
     {
@@ -54,8 +54,8 @@ void ACPI::MADT_init( ACPI::MADT_t *madt, ACPI::Response &res )
         curr += entry->length;
     }
 
-    if (prev)
-        syslog::enable();
+    // if (prev)
+    //     syslog::enable();
 }
 
 
@@ -63,7 +63,7 @@ void ACPI::MADT_init( ACPI::MADT_t *madt, ACPI::Response &res )
 
 static void LAPIC_init( ACPI::MADT_lapic_t *info, ACPI::Response &res )
 {
-    syslog log("LAPIC_init");
+    syslog log("MADT_LAPIC_init");
     log("processor_id: %u",  info->processor_id);
     log("apic_id:      %u",  info->apic_id);
     log("flags:        %lu", info->flags);
@@ -76,7 +76,7 @@ static void LAPIC_init( ACPI::MADT_lapic_t *info, ACPI::Response &res )
 
 static void IOAPIC_init( ACPI::MADT_ioapic_t *info, ACPI::Response &res )
 {
-    syslog log("IOAPIC_init");
+    syslog log("MADT_IOAPIC_init");
     log("ioapic_id:   %u", info->ioapic_id);
     log("ioapic_addr: 0x%lx", info->ioapic_addr);
     log("gsi_base:    %lu", info->gsi_base);
@@ -91,7 +91,7 @@ static void IOAPIC_init( ACPI::MADT_ioapic_t *info, ACPI::Response &res )
 
 static void IOAPIC_ISO_init( ACPI::MADT_ioapic_iso_t *info, ACPI::Response &res )
 {
-    syslog log("IOAPIC_ISO_init");
+    syslog log("MADT_IOAPIC_ISO_init");
     log("bus_source: %u",    info->bus_source);
     log("irq_source: 0x%lx", info->irq_source);
     log("gsi:        %lu",   info->gsi);

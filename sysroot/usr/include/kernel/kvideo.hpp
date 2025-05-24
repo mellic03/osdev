@@ -13,6 +13,7 @@ namespace cringe
 
 namespace kvideo
 {
+    extern ivec2  CSR;
     extern int    W;
     extern int    H;
     extern int    pitch;
@@ -23,9 +24,14 @@ namespace kvideo
     extern uint8_t *frontbuffer;
     extern uint8_t *backbuffer;
 
+    // void setCursor( const ivec2& );
+    // const ivec2 &getCursor();
+
     void setFont( const cringe::Font& );
     void renderGlyph( char ch, int x, int y );
-    void renderString( const char *str, int x, int y );
+    void renderString( const char *str, const ivec2& );
+    // void cursorGlyph( char ch );
+    void cursorString( const char *ch );
 
     void blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
                const ivec2 &srctl, const ivec2 &srcsp );

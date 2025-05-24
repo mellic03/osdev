@@ -1,4 +1,6 @@
 #include <cpu/cpu.hpp>
+#include <cpu/cpu.hpp>
+
 #include <kernel/interrupt.hpp>
 #include <kthread.hpp>
 
@@ -11,6 +13,7 @@
 #include <string.h>
 
 #include <inplace_vector.hpp>
+
 
 
 void kthread::yield()
@@ -38,8 +41,12 @@ void kthread::exit()
 
 kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 {
-    auto *sd = SMP::this_sched();
-    return sd->addThread(name, fn, arg);
+    static int idx = 0;
+
+    auto &cpu = SMP::all_cpus[idx];
+    idx = (idx+1) % SMP::num_cpus;
+
+    return cpu.sched.addThread(name, fn, arg);
 }
 
 

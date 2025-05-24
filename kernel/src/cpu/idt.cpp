@@ -1,3 +1,4 @@
+#include <arch/apic.hpp>
 #include <cpu/cpu.hpp>
 #include <cpu/idt.hpp>
 
@@ -25,8 +26,11 @@ void isr_dispatch( intframe_t *frame )
     if (usrtab[isrno])
         usrtab[isrno](frame);
 
-    if (PIC::IRQ_MASTER <= isrno && isrno <= PIC::IRQ_SLAVE+12)
-        PIC::sendEOI(isrno - PIC::IRQ_MASTER);
+    // if (PIC::IRQ_MASTER <= isrno && isrno <= PIC::IRQ_SLAVE+12)
+        // PIC::sendEOI(isrno - PIC::IRQ_MASTER);
+
+    if ((IntNo_IOAPIC_Base <= isrno) && (isrno <= IntNo_IOAPIC_End))
+        LAPIC::sendEOI();
 }
 
 
@@ -52,12 +56,7 @@ void CPU::createIDT()
 {
     memset(usrtab, 0, sizeof(usrtab));
     for (size_t i=0; i<NUM_INTERRUPTS; i++)
-    {
-        // if (i >= PIC::IRQ_MASTER && i <= PIC::IRQ_SLAVE+12)
-        //     idt_setdesc(idt_entries[i], (uintptr_t)(isrtab[i]), TRAP_GATE);
-        // else
         idt_setdesc(idt_entries[i], (uintptr_t)(isrtab[i]), INTERRUPT_GATE);
-    }
     idtr.base  = (uint64_t)(&idt_entries[0]);
     idtr.limit = (uint16_t)sizeof(idt_entries) - 1;
 }
@@ -91,6 +90,6 @@ void CPU::installISR( uint8_t isrno, isrHandlerFn handler )
 
 void CPU::installIRQ( uint8_t irqno, irqHandlerFn handler )
 {
-    usrtab[PIC::IRQ_MASTER + irqno] = handler;
+    usrtab[IntNo_IOAPIC_Base + irqno] = handler;
 }
 

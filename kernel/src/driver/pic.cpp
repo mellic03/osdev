@@ -52,8 +52,6 @@ PIC::remap( int offset1, int offset2 )
 
 void PIC::maskAll()
 {
-	kassert(pic_enabled);
-
 	IO::outb(PIC1_DATA, 0xFF);
     IO::outb(PIC2_DATA, 0xFF);
 }

@@ -5,7 +5,7 @@
 #endif
 
 
-
+#include <algorithm>
 #include "cpu/cpu.hpp"
 #include <kernel/interrupt.hpp>
 
@@ -20,6 +20,10 @@ enum KThread_: uint32_t
 
 struct kthread_t
 {
+private:
+    uint8_t m_priority;
+
+public:
     static constexpr size_t stack_size = 16 * 1024;
     static constexpr size_t fxsize = 512;
     
@@ -35,6 +39,10 @@ struct kthread_t
     uint8_t    fxstate[fxsize]    __attribute__((aligned(16)));
 
     // uint8_t    fxdata[fpreg_size] __attribute__((aligned(16)));
+
+    void    setPriority( uint8_t p ) { m_priority = std::clamp(p, (uint8_t)1, (uint8_t)10); };
+    uint8_t getPriority() { return m_priority; };
+
 };
 
 

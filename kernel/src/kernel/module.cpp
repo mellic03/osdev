@@ -13,6 +13,7 @@
 #include <driver/pic.hpp>
 #include <idk_fptr.hpp>
 
+#include <arch/apic.hpp>
 #include <arch/elf.h>
 #include <tuple>
 
@@ -36,10 +37,11 @@ static void init_device( DeviceInterface *dev )
         dev->open();
     }
 
-    if (dev->isrfn && dev->isrno >= 0)
+    if (dev->irqfn && dev->irqno >= 0)
     {
-        CPU::installIRQ(dev->isrno, dev->isrfn);
-        PIC::unmask(dev->isrno);
+        CPU::installIRQ(dev->irqno, dev->irqfn);
+        IOAPIC::mapIRQ(dev->irqno);
+        // PIC::unmask(PIC::IRQ_MASTER + dev->irqno);
     }
 }
 
@@ -102,7 +104,17 @@ void knl::initModules()
         if (I->modtype == ModuleType_Device)
             init_device((DeviceInterface*)I);
         if (I->main)
+        {
             kthread::create(I->signature, I->main, nullptr);
+
+            // auto *th = kthread::create(I->signature, I->main, nullptr);
+            // if (strncmp(I->signature, "mouse", 5) == 0)
+            //     th->setPriority(4);
+            // else if (strncmp(I->signature, "shitde", 6) == 0)
+            //     th->setPriority(5);
+            // else
+            //     th->setPriority(4);
+        }
     }
 }
 

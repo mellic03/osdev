@@ -92,6 +92,7 @@ ThreadScheduler::ThreadScheduler( cpu_t &cpu )
     m_startLock.set();
     m_switchLock.clear();
     m_threads.clear();
+    m_sleeping.clear();
 
     m_idlethread = addThread("idlemain", idlemain, nullptr);
     // kassert("No cpu", cpu != nullptr);
@@ -105,6 +106,7 @@ ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
     m_switchLock.set();
 
     auto *th = (kthread_t*)kmalloc(sizeof(kthread_t));
+          th->setPriority(5);
     m_threads.push_back(th);
 
     memset(th->stack, 0, sizeof(th->stack));
@@ -187,17 +189,56 @@ kthread_t *swap_threads( kthread_t *curr, kthread_t *next, intframe_t *frame )
     return next;
 }
 
+
+
+void
+ThreadScheduler::check_sleepers()
+{
+    size_t size = m_sleeping.size();
+
+    for (size_t i=0; i<size; i++)
+    {
+        if (m_sleeping.empty())
+            return;
+
+        kthread_t *curr = m_sleeping.front();
+        if (kclock::now() >= curr->wakeTime)
+        {
+            curr->status = KThread_READY;
+            curr = m_sleeping.pop_front();
+            m_threads.push_back(curr);
+        }
+
+        else
+        {
+            m_sleeping.rotate(1);
+        }
+    }
+}
+
+
 void
 ThreadScheduler::schedule( intframe_t *frame )
 {
     if (m_switchLock.isset())
         return;
 
-    kthread_t *prev, *next;
 
+    kthread_t *prev, *next;
     prev = m_threads.front();
-    m_threads.rotate(1);
-    next = m_threads.front();
+
+    if (prev->status != KThread_SLEEPING)
+    {
+        m_threads.rotate(1);
+        next = m_threads.front();
+    }
+
+    else
+    {
+        prev = m_threads.pop_front();
+        m_sleeping.push_back(prev);
+        next = m_threads.front();
+    }
 
     if (next == m_idlethread)
     {
@@ -205,9 +246,14 @@ ThreadScheduler::schedule( intframe_t *frame )
         next = m_threads.front();
     }
 
-    // syslog::println("[ThreadScheduler::schedule] %s --> %s", prev->name, next->name);
-    swap_threads(prev, next, frame);
+    check_sleepers();
 
+    // syslog::println(
+    //     "[ThreadScheduler::schedule CPU%lu] %s --> %s",
+    //     SMP::this_cpuid(), prev->name, next->name
+    // );
+
+    swap_threads(prev, next, frame);
 }
 
 
@@ -227,7 +273,7 @@ ThreadScheduler::schedule( intframe_t *frame )
 #include <kernel/log.hpp>
 void ThreadScheduler::scheduleISR( intframe_t *frame )
 {
-    // syslog::println("[scheduleISR] cpu=%lu", SMP::this_cpuid());
+    // syslog::println("[scheduleISR] CPU=%lu", SMP::this_cpuid());
 
     auto *sd = SMP::this_sched();
 
