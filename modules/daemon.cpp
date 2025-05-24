@@ -2,17 +2,13 @@
 #include <sym/sym.hpp>
 #include <kernel/input.hpp>
 #include <kmemxx.hpp>
+#include <cringe/bmp.hpp>
 
 
 static void sde_main( void* )
 {
-    // auto *iface = kernel::findModule(ModuleType_Device, DeviceType_Mouse);
-    // auto *msdev = (CharDevInterface*)iface;
-
-    // std::printf("[sde_main] iface:       0x%lx\n", iface);
-    // std::printf("[sde_main] iface->sig:  %s\n",    iface->signature);
-    // std::printf("[sde_main] msdev->read: 0x%lx\n", msdev->read);
-    // std::printf("[sde_main] mousedev: 0x%lx\n", msdev);
+    BMP_File bmp(std::fopen("usr/share/img/cursor.bmp"));
+    std::printf("[sde_main] bmp.bpp: %d", bmp.bpp);
 
     kinput::MsData msdata;
     msdata.x = 50;
@@ -32,15 +28,27 @@ static void sde_main( void* )
         // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
 
         kinput::readMsData(&msdata);
-    
-        kvideo::fillColor(200, 50, 50, 255);
-        kvideo::rect(msdata.x.load(), msdata.y.load(), 100, 100);
-        ready = true;
-        // kthread::yield();
+
+        // if (ready == false)
+        {
+            // kvideo::fillColor(200, 50, 50, 255);
+            // kvideo::rect(msdata.x, msdata.y, 100, 100);
+        
+            kvideo::blit(
+                ivec2(msdata.x, msdata.y),
+                (uint8_t*)(bmp.data),
+                bmp.w, bmp.h,
+                ivec2(0, 0), ivec2(bmp.w, bmp.h)
+            );
+        
+            ready = true;
+        }
     
         if (ready && accum >= 16)
         {
+            ready = false;
             accum = 0;
+
             kvideo::swapBuffers();
             kthread::yield();
         }

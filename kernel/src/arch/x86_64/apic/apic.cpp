@@ -1,4 +1,7 @@
-#include <arch/x86_64/arch/apic.hpp>
+#include <arch/apic.hpp>
+#include <arch/acpi.hpp>
+#include <driver/pic.hpp>
+#include <kernel/memory/vmm.hpp>
 // #include <arch/apic.hpp>
 
 /*
@@ -11,62 +14,21 @@
     log("apic_base: 0x%lx", apic_base);
 */
 
-static uint32_t *iobase;
-// static uint32_t localbase;
-
 void IOAPIC_setRegister( uint32_t idx, uint32_t value );
 
-void APIC::init( uint64_t ioapic_base, uint64_t )
-{
-    iobase = (uint32_t*)ioapic_base;
 
+void APIC::init( const ACPI::Response &res )
+{
+    PIC::disable();
+
+    LAPIC::init(res);
+    IOAPIC::init(res);
     // IOAPIC_setRegister(0, )
 
 }
 
 
 
-
-
-
-// https://wiki.osdev.org/IOAPIC#Programming_the_I/O_APIC
-#define IOAPICID          0x00
-#define IOAPICVER         0x01
-#define IOAPICARB         0x02
-#define IOAPICREDTBL(n)   (0x10 + 2 * n) // lower-32bits (add +1 for upper 32-bits)
-// ------------------------------------------------------------------------------------------------
-
-// static void IoApicOut(u8 *base, u8 reg, u32 val)
-// {
-//     MmioWrite32(base + IOREGSEL, reg);
-//     MmioWrite32(base + IOWIN, val);
-// }
-// void IoApicSetEntry(u8 *base, u8 index, u64 data)
-// {
-//     IoApicOut(base, IOREDTBL + index * 2, (u32)data);
-//     IoApicOut(base, IOREDTBL + index * 2 + 1, (u32)(data >> 32));
-// }
-
-
-uint32_t IOAPIC::read( uint32_t reg )
-{
-    uint32_t volatile *addr = (uint32_t volatile *)iobase;
-    addr[0] = (reg & 0xff);
-    return addr[4];
-}
-
-void IOAPIC::write( uint32_t reg, uint32_t value )
-{
-    uint32_t volatile *addr = (uint32_t volatile *)iobase;
-    addr[0] = (reg & 0xff);
-    addr[4] = value;
-}
-
-void IOAPIC_setRegister( uint32_t idx, uint32_t value )
-{
-    IOAPIC::write(0x10 + 2*idx+0, value);
-    IOAPIC::write(0x10 + 2*idx+1, uint32_t(uint64_t(value) >> 32));
-}
 
 
 
@@ -83,8 +45,31 @@ void IOAPIC_setRegister( uint32_t idx, uint32_t value )
     At 0x310 there is one field at bits 24-27, which is local APIC ID of the target processor
     (for a physical destination mode).
 */
-void LAPIC::init()
+static uintptr_t g_lapicBase;
+
+
+void lapic_write_reg( uint32_t reg, uint32_t data )
 {
-    
+    *((volatile uint32_t*)(g_lapicBase + reg)) = data;
 }
+
+uint32_t lapic_read_reg( uint32_t reg )
+{
+    return *((volatile uint32_t*)(g_lapicBase + reg));
+}
+
+
+void LAPIC::init( const ACPI::Response &res )
+{
+    syslog log("LAPIC::init");
+    g_lapicBase = res.lapic_base;
+    VMM::mapPage(g_lapicBase, g_lapicBase);
+    // log("g_lapicBase: 0x%lx", g_lapicBase);
+    lapic_write_reg(APIC::REG_SPURIOUS, APIC::ENABLE | APIC::SPURIOUS_INT);
+    log("Done!");
+}
+
+
+
+
 

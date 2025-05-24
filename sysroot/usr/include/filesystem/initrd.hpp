@@ -8,6 +8,7 @@ namespace initrd
 
     // bool find( const char *name, void *&addr, size_t &size );
     void *find( const char *name );
+    void *fopen( const char *name );
     void init( void *tar );
 }
 

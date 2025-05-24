@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <static_vector.hpp>
 #include <atomic>
+#include <cringe/vec.hpp>
 
 
 
@@ -15,11 +16,12 @@ namespace kinput
 {
     struct MsData
     {
-        std::atomic_int x, y;
+        // std::atomic_int x, y;
+        ivec2 pos;
+        int &x, &y;
         int l, m, r;
+        MsData(): pos(0, 0), x(pos.x), y(pos.y) {  };
     };
-
-    extern MsData mousedata;
 
     enum MsBtn_: uint32_t
     {

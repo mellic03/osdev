@@ -6,6 +6,7 @@
 #include <kernel/kvideo.hpp>
 #include <kernel/module.hpp>
 #include <kernel/input.hpp>
+#include <filesystem/initrd.hpp>
 #include <kassert.h>
 #include <kmalloc.h>
 #include <kthread.hpp>
@@ -23,6 +24,7 @@ ksym::ksym_t *ksym::getsym()
         lib.realloc = krealloc;
         lib.free    = kfree;
         lib.clock   = kclock::now;
+        lib.fopen   = initrd::fopen;
     }
 
     {
@@ -35,6 +37,7 @@ ksym::ksym_t *ksym::getsym()
         lib.fillColor   = kvideo::fillColor;
         lib.fillBuffer  = kvideo::fillBuffer;
         lib.rect        = kvideo::rect;
+        lib.blit        = kvideo::blit;
         lib.swapBuffers = kvideo::swapBuffers;
     }
 

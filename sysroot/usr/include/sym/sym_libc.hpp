@@ -14,6 +14,8 @@ namespace std
     FPTR <void (void*)>             free;
 
     FPTR <uint64_t()>               clock;
+
+    FPTR <void*(const char*)>       fopen;
 }
 
 #undef FPTR

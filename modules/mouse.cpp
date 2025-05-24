@@ -10,7 +10,7 @@
 #include <algorithm>
 
 
-kinput::MsData msdata = {0, 0, 0, 0, 0};
+kinput::MsData msdata;
 uint8_t MouseCycle = 0;
 uint8_t MousePacket[4];
 bool MousePacketReady = false;
@@ -95,8 +95,11 @@ bool ProcessMousePacket()
         }
     }
 
-    msdata.x.store(std::clamp(msdata.x.load(), 0, kvideo::W-1));
-    msdata.y.store(std::clamp(msdata.y.load(), 0, kvideo::H-1));
+    msdata.x = std::clamp(msdata.x, 0, kvideo::W-1);
+    msdata.y = std::clamp(msdata.y, 0, kvideo::W-1);
+
+    // msdata.x.store(std::clamp(msdata.x.load(), 0, kvideo::W-1));
+    // msdata.y.store(std::clamp(msdata.y.load(), 0, kvideo::H-1));
     // kinput::triggerMouseEvent();
 
     MousePacketReady = false;

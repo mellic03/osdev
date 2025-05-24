@@ -116,11 +116,11 @@ void _start()
 
     ACPI::Response res;
     ACPI::init(lim_rsdp_req.response->address, res);
-    APIC::init(res.ioapic_base, 0);
+    // APIC::init(res);
 
     // barrierA.reset(limine_res.mp->cpu_count);
-    // SMP::initMulticore(smp_main);
-    SMP::initSinglecore(smp_main);
+    SMP::initMulticore(smp_main);
+    // SMP::initSinglecore(smp_main);
 
     kassert(false); // Should be unreachable!
 
@@ -132,12 +132,12 @@ void _start()
 
 static void thread_test( void* )
 {
-    auto &msdata = kinput::mousedata;
+    // auto &msdata = kinput::mousedata;
 
     while (true)
     {
         // syslog::println("CPS: %lu, time: %lu", clocksPerSec, CPU::getTSC() / clocksPerSec);
-        kvideo::renderString("abc ABC", msdata.x.load(), msdata.y.load());
+        // kvideo::renderString("abc ABC", msdata.x, msdata.y);
         kthread::yield();
     }
 }
@@ -147,13 +147,13 @@ static void smp_main( limine_mp_info *info )
     CPU::cli(); // asm volatile ("cli");
     CPU::enableSSE();
 
-    // uint64_t  this_gdt[7];
-    // gdt_ptr_t this_gdtr;
-    // tss_t     this_tss;
-    // CPU::createGDT(this_gdt, &this_gdtr, &this_tss);
-    // CPU::installGDT(&this_gdtr);
-    CPU::createGDT();
-    CPU::installGDT();
+    uint64_t  this_gdt[7];
+    gdt_ptr_t this_gdtr;
+    tss_t     this_tss;
+    CPU::createGDT(this_gdt, &this_gdtr, &this_tss);
+    CPU::installGDT(&this_gdtr);
+    // CPU::createGDT();
+    // CPU::installGDT();
 
 
     size_t cpuid     = info->lapic_id;
@@ -195,9 +195,19 @@ static void smp_main( limine_mp_info *info )
     kvideo::setFont(cringe::Font((uint8_t*)(bmp.data), bmp.w, bmp.h));
     kthread::create("thread_test", thread_test, nullptr);
 
+    // IOAPIC::unmaskIRQ(2);
+    // IOAPIC::unmaskIRQ(IrqNo_PIT);
     PIC::unmask(2);
     PIC::unmask(IrqNo_PIT);
     CPU::sti(); // asm volatile ("sti");
+
+    if (cpuid == 1)
+    {
+        while (true)
+        {
+            kthread::yield();
+        }
+    }
 
     // CPU::hcf();
     while (true)

@@ -73,6 +73,32 @@ void kvideo::initBackbuffer( uintptr_t )
 }
 
 
+void kvideo::blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
+                   const ivec2 &srctl, const ivec2 &sp )
+{
+    uint8_t *dst = kvideo::backbuffer;
+    uint8_t *src = img;
+
+    for (int i=0; i<sp.y; i++)
+    {
+        int dsty = (dsttl.y + i) % kvideo::H;
+        int srcy = (srctl.y + i) % imgh;
+
+        for (int j=0; j<sp.x; j++)
+        {
+            int dstx = (dsttl.x + j) % kvideo::W;
+            int srcx = (srctl.x + j) % imgw;
+
+            int dstidx = 4 * (kvideo::W*dsty + dstx);
+            int srcidx = 4 * (imgw*srcy + srcx);
+
+            for (int k=0; k<4; k++)
+                dst[dstidx+k] = src[srcidx+k];
+        }
+    
+    }  
+}
+
 
 static void kvideo_blit( int x, int y, uint8_t *img, int imgw, int,
                          const ivec2 &tl, const ivec2 &sp )

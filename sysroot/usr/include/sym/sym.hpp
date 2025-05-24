@@ -24,6 +24,7 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         std::realloc = lib.realloc;
         std::free    = lib.free;
         std::clock   = lib.clock;
+        std::fopen   = lib.fopen;
     }
 
     {
@@ -36,6 +37,7 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         kvideo::fillColor   = lib.fillColor;
         kvideo::fillBuffer  = lib.fillBuffer;
         kvideo::rect        = lib.rect;
+        kvideo::blit        = lib.blit;
         kvideo::swapBuffers = lib.swapBuffers;
     }
 

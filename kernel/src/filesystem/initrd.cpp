@@ -10,6 +10,14 @@ void *initrd::find( const char *name )
     return ustar::find(initrd::tarball, name);
 }
 
+void *initrd::fopen( const char *name )
+{
+    void *base = ustar::find(initrd::tarball, name);
+    if (!base)
+        return nullptr;
+    return (void*)((uintptr_t)base + ustar::DATA_OFFSET);
+}
+
 
 void initrd::init( void *tar )
 {

@@ -12,6 +12,7 @@ private:
 
 
 public:
+    static bool isEnabled() { return enabled; };
     static void enable() { enabled = true; };
     static void disable() { enabled = false; };
     static void pushIndent( int n=4 );

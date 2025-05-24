@@ -3,6 +3,7 @@
 #include <functional>
 #include <kernel/interrupt.hpp>
 #include <kernel/input.hpp>
+#include <cringe/vec.hpp>
 
 struct ModuleInterface;
 
@@ -18,6 +19,7 @@ namespace ksym
             void *(*realloc)(void*, size_t);
             void  (*free)(void*);
             uint64_t (*clock)();
+            void *(*fopen)(const char*);
         } libc_sym;
 
         struct {
@@ -28,6 +30,7 @@ namespace ksym
             void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
             void (*fillBuffer) (uint8_t *buffer);
             void (*rect)       (int, int, int, int);
+            void (*blit)       (const ivec2&, uint8_t*, int, int, const ivec2&, const ivec2&);
             void (*swapBuffers)();
         } video_sym;
 

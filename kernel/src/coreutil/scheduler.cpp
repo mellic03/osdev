@@ -227,6 +227,8 @@ ThreadScheduler::schedule( intframe_t *frame )
 #include <kernel/log.hpp>
 void ThreadScheduler::scheduleISR( intframe_t *frame )
 {
+    // syslog::println("[scheduleISR] cpu=%lu", SMP::this_cpuid());
+
     auto *sd = SMP::this_sched();
 
     if (sd->m_startLock.isset())

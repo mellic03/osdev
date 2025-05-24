@@ -55,7 +55,6 @@ void PIT::init( uint64_t us )
     IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);
     IO::outb(PIT_COUNTER0, lo);
     IO::outb(PIT_COUNTER0, hi);
-    PIC::setmask(IrqNo_PIT);
 }
 
 

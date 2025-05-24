@@ -1,5 +1,4 @@
-#include "acpi.hpp"
-#include "madt.hpp"
+#include <arch/acpi.hpp>
 
 #include <kernel/log.hpp>
 #include <kmalloc.h>

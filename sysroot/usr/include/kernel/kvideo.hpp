@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <cringe/vec.hpp>
+
 
 namespace cringe
 {
@@ -24,8 +26,11 @@ namespace kvideo
     void setFont( const cringe::Font& );
     void renderGlyph( char ch, int x, int y );
     void renderString( const char *str, int x, int y );
-    void clearBuffer( uint8_t *buffer );
 
+    void blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
+               const ivec2 &srctl, const ivec2 &srcsp );
+
+    void clearBuffer( uint8_t *buffer );
     void fillColor( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
     void fillBuffer( uint8_t *buffer );
     

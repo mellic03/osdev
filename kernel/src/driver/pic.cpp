@@ -91,7 +91,7 @@ void PIC::unmask( uint8_t IRQline )
 
 void PIC::sendEOI( uint8_t irqno )
 {
-	kassert(pic_enabled);
+	// kassert(pic_enabled);
 	if (irqno >= 8)
 		IO::outb(PIC2_CMD, 0x20);
 	IO::outb(PIC1_CMD, 0x20);
