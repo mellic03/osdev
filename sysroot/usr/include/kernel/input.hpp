@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <static_vector.hpp>
-#include <functional>
+#include <atomic>
 
 
 
@@ -15,7 +15,7 @@ namespace kinput
 {
     struct MsData
     {
-        int x, y;
+        std::atomic_int x, y;
         int l, m, r;
     };
 

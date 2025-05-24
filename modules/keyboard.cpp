@@ -2,7 +2,7 @@
 #include <sym/sym.hpp>
 
 #include <kernel/log.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 #include <kernel/input.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
@@ -132,7 +132,7 @@ void driver_main( void* )
         uint8_t scancode;
         if (rawstream.pop_front(scancode))
             driver_update(scancode);
-        kthread::yield();
+        // kthread::yield();
     }
 }
 

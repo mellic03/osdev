@@ -5,7 +5,7 @@
 // #include <driver/keyboard.hpp>
 // #include <driver/pic.hpp>
 
-// #include <kernel/ioport.hpp>
+// #include <arch/io.hpp>
 // #include <kernel/log.hpp>
 // #include <kernel/kscancode.h>
 // #include <filesystem/vfs2.hpp>
@@ -55,7 +55,7 @@
 
 //     if (rawfh)
 //     {
-//         syslog::printf("[keyboard] YEEE\n");
+//         syslog::print("[keyboard] YEEE\n");
 //         rawfh->write(&code, 1);
 //     }
 // }

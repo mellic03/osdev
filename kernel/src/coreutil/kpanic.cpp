@@ -1,7 +1,7 @@
 #include <kpanic.h>
 #include <kernel/log.hpp>
 #include <kernel/kvideo.hpp>
-#include <khang.h>
+#include <cpu/cpu.hpp>
 
 
 void kpanic( const char *msg )
@@ -11,6 +11,6 @@ void kpanic( const char *msg )
 
     kvideo::fillColor(50, 75, 200, 255);
     kvideo::fillBuffer(kvideo::frontbuffer);
-    kernel::hang();
+    CPU::hcf();
 }
 

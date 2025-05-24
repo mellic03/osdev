@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 
 namespace PIC
 {
@@ -25,12 +25,13 @@ namespace PIC
     static constexpr uint8_t ICW4_BUF_SLAVE  = 0x04; // Buffered mode/slave
     static constexpr uint8_t ICW4_BUF_MASTER = 0x0C; // Buffered mode/master
     static constexpr uint8_t ICW4_SFNM       = 0x10; // Special fully nested is programmed
-    
+
+    void enable();
+    void disable();
     void remap( int master_offset, int slave_offset );
+    void maskAll();
     void setmask(uint8_t IRQline);
     void unmask(uint8_t IRQline);
-    void disable();
     void sendEOI( uint8_t irq );
-
 
 }

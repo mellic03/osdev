@@ -1,3 +1,4 @@
+#pragma once
 #include <atomic>
     
 template <bool scoped=false>
@@ -37,4 +38,33 @@ struct kspinlock
         m_lock.store(false, std::memory_order_release);
     }
 };
+
+
+
+namespace knl
+{
+    struct dummy_lock
+    {
+        void lock() {  };
+        void unlock() {  };
+    };
+
+    struct atomic_flag
+    {
+    private:
+        std::atomic_bool m_locked;
+
+    public:
+        atomic_flag() { m_locked.store(false); }
+        void set() { m_locked.store(true); }
+        void clear() { m_locked.store(false); }
+        bool test() { return m_locked.load(); }
+
+        bool isset()   { return m_locked.load(); }
+        bool isclear() { return !m_locked.load(); }
+
+        void lock() { set(); };
+        void unlock() { clear(); };
+    };
+}
 

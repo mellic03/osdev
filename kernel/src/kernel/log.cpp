@@ -1,39 +1,30 @@
 #include <kernel/log.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 #include <stdio.h>
 
-static int  indent  = 0;
-static char buf[256];
+#define LOG_BUFLEN 1024
+
+static int indent = 0;
+static char buf[LOG_BUFLEN];
 
 void syslog::pushIndent( int n ) { indent += n; }
 void syslog::popIndent ( int n ) { indent -= n; }
 
 
 void
-syslog::printf( const char *fmt, ... )
+syslog::_putIndent()
 {
-    va_list args;
-    va_start(args, fmt);
-    int n = vsprintf(buf, fmt, args);
-    va_end(args);
-
-    for (int i=0; i<n; i++)
-        IO::outb(IO::COM1, buf[i]);
+    for (int i=0; i<indent; i++)
+        IO::outb(IO::COM1, ' ');
 }
 
-
 void
-syslog::println( const char *fmt, ... )
+syslog::putIndent()
 {
+    if (!enabled)
+        return;
     m_mutex.lock();
-    va_list args;
-    va_start(args, fmt);
-    int n = vsprintf(buf, fmt, args);
-    va_end(args);
-
-    for (int i=0; i<n; i++)
-        IO::outb(IO::COM1, buf[i]);
-    IO::outb(IO::COM1, '\n');
+    syslog::_putIndent();
     m_mutex.unlock();
 }
 
@@ -41,45 +32,58 @@ syslog::println( const char *fmt, ... )
 void
 syslog::print( const char *fmt, ... )
 {
+    if (!enabled)
+        return;
+
     va_list args;
     va_start(args, fmt);
     int n = vsprintf(buf, fmt, args);
     va_end(args);
 
-    for (int i=0; i<indent; i++)
-    {
-        IO::outb(IO::COM1, ' ');
-    }
-
-    for (int i=0; i<n; i++)
-    {
+    for (int i=0; i<n&&i<LOG_BUFLEN; i++)
         IO::outb(IO::COM1, buf[i]);
-    }
+}
 
-    // IO::outb(IO::COM1, '\0');
+
+void
+syslog::println( const char *fmt, ... )
+{
+    if (!enabled)
+        return;
+    m_mutex.lock();
+
+    va_list args;
+    va_start(args, fmt);
+    int n = vsprintf(buf, fmt, args);
+    va_end(args);
+
+    for (int i=0; i<n&&i<LOG_BUFLEN; i++)
+        IO::outb(IO::COM1, buf[i]);
+    IO::outb(IO::COM1, '\n');
+
+    m_mutex.unlock();
 }
 
 
 void
 syslog::operator()( const char *fmt, ... )
 {
-    std::lock_guard lock(m_mutex);
+    if (!enabled)
+        return;
+    // std::lock_guard lock(m_mutex);
+    m_mutex.lock();
 
     va_list args;
     va_start(args, fmt);
     int n = vsprintf(buf, fmt, args);
     va_end(args);
-    
+
     for (int i=0; i<indent; i++)
-    {
         IO::outb(IO::COM1, ' ');
-    }
 
     for (int i=0; i<n; i++)
-    {
         IO::outb(IO::COM1, buf[i]);
-    }
-
     IO::outb(IO::COM1, '\n');
-    // IO::outb(IO::COM1, '\0');
+
+    m_mutex.unlock();
 }

@@ -50,7 +50,7 @@ namespace ksym
 
         struct {
             void (*panic)(const char*);
-            void (*hang)();
+            void (*hcf)();
             ModuleInterface *(*findModule)(uint64_t, uint64_t);
         } kernel_sym;
     };

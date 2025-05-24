@@ -3,10 +3,11 @@
 #include <kernel/log.hpp>
 #include <kernel/kvideo.hpp>
 #include "kernel/kvideo.hpp"
-#include <khang.h>
+#include <cpu/cpu.hpp>
 
 
-void kernel_assert( const char *msg, bool cond, const char *file, int line, const char *func )
+void kernel_assert( bool cond, const char *msg, const char *file,
+                    const char *func, int line )
 {
     if (!cond)
     {
@@ -17,6 +18,6 @@ void kernel_assert( const char *msg, bool cond, const char *file, int line, cons
 
         kvideo::fillColor(50, 75, 200, 255);
         kvideo::fillBuffer(kvideo::frontbuffer);
-        kernel::hang();
+        CPU::hcf();
     }
 }

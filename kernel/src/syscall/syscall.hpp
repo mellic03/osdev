@@ -2,7 +2,7 @@
 #include <kernel/syscall.h>
 #include <kernel/interrupt.hpp>
 
-namespace kernel
+namespace knl
 {
     void syscallISR( intframe_t* );
 }

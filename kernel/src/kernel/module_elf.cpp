@@ -4,8 +4,7 @@
 #include <filesystem/ustar.hpp>
 #include <kernel/kstring.h>
 #include <kmalloc.h>
-
-#include <kernel/elf.h>
+#include <arch/elf.h>
 
 
 static const char *Elf64_etypeStr( uint32_t );
@@ -113,7 +112,7 @@ static void loadShdrs( uint8_t *base, Elf64_Shdr *shdrs, size_t shnum )
 
 void loadElf64( void *data, size_t size )
 {
-    syslog log("kernel::loadModuleElf");
+    syslog log("knl::loadModuleElf");
 
     void *addr = kmalloc(size);
     memcpy(addr, data, size);

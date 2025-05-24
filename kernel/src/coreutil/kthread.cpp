@@ -13,14 +13,8 @@
 #include <inplace_vector.hpp>
 
 
-void kthread::yield( YieldReason )
+void kthread::yield()
 {
-    // cpu_t *cpu = SMP::this_cpu();
-    // syslog::println(
-    //     "[kthread::yield] cpu=0x%lx, clock=%lu, reason=%u",
-    //     cpu, kclock::now(), (uint32_t)reason
-    // );
-    // cpu->yldrsn = reason;
     KInterrupt<IntNo_KTHREAD_YIELD>();
 }
 
@@ -29,31 +23,32 @@ void kthread::sleep( uint64_t ms )
 {
     auto *th = SMP::this_thread();
     th->wakeTime = kclock::now() + ms;
-    kthread::yield(YldRsn_Sleep);
+    th->status   = KThread_SLEEPING;
+    kthread::yield();
 }
 
 
 void kthread::exit()
 {
-    // auto *th = SMP::this_thread();
-    // auto *sd = SMP::this_sched();
-    kthread::yield(YldRsn_Exit);
+    auto *th = SMP::this_thread();
+    th->status = KThread_DEAD;
+    kthread::yield();
 }
 
 
 kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 {
-    auto *cpu = SMP::this_cpu();
-    if (cpu) return cpu->sched.addThread(name, fn, arg);
-    return nullptr;
+    auto *sd = SMP::this_sched();
+    return sd->addThread(name, fn, arg);
 }
 
 
-void kthread::start()
-{
-    auto *cpu = SMP::this_cpu();
-    if (cpu) cpu->sched.start();
-}
+// void kthread::start()
+// {
+//     auto *cpu = SMP::this_cpu();
+//     syslog::println("[kthread::start] cpu=0x%lx", cpu);
+//     if (cpu) cpu->sched.start();
+// }
 
 
 // void kthread::yield()

@@ -5,7 +5,7 @@
 
 // #include <kthread.hpp>
 // #include <kernel/log.hpp>
-// #include <kernel/ioport.hpp>
+// #include <arch/io.hpp>
 // #include <kernel/interrupt.hpp>
 // #include <kernel/kscancode.h>
 

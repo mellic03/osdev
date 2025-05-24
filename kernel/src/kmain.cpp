@@ -4,7 +4,6 @@
 
 #include <kassert.h>
 #include <kpanic.h>
-#include <khang.h>
 #include <kthread.hpp>
 #include <new>
 
@@ -20,11 +19,14 @@
 
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
+#include <cringe/bmp.hpp>
+#include <cringe/font.hpp>
 
 #include <string.h>
 #include <stdio.h>
 
-#include <sys/acpi.hpp>
+#include <arch/acpi.hpp>
+#include <arch/apic.hpp>
 #include <driver/pic.hpp>
 #include <driver/pci.hpp>
 #include <driver/pit.hpp>
@@ -36,6 +38,7 @@
 
 #include "syscall/syscall.hpp"
 #include "smp/smp.hpp"
+#include <smp/barrier.hpp>
 
 
 static void genfaultISR( intframe_t* );
@@ -60,90 +63,30 @@ void call_ctors()
         (*ctor)();
     }
 }
-
+uint64_t clocksPerSec = 1;
 
 static void PIT_IrqHandler( intframe_t *frame )
 {
-    kclock::detail::tick(1);
-    // syslog::println("[PIT_IrqHandler]");
+    {
+        static uint64_t prev = 0;
+
+        uint64_t curr = CPU::getTSC();
+        uint64_t dTicks = curr - prev;
+        uint64_t dTime  = 4; // 1ms
+        clocksPerSec = dTicks / dTime;
+        prev = curr;
+    }
+
+    kclock::detail::tick(PIT::MicroSeconds);
     // syslog::println("[PIT_IrqHandler] CPU %u", SMP::this_cpu()->id);
-
-    if (SMP::this_sched()->m_isRunning.load() == true)
-        ThreadScheduler::scheduleISR(frame);
-
+    ThreadScheduler::scheduleISR(frame);
 }
 
 
 // external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/plugin/include
 extern void LimineRes_init();
 extern void early_init();
-extern void late_init();
 static void smp_main(limine_mp_info*);
-
-
-
-// #include <atomic2>
-// #include <smp/barrier.hpp>
-std::atomic_int barrierA{4};
-// sl::Atomic<int> barrierB(4);
-
-
-// The volatile storage class was originally meant for memory-mapped I/O
-// registers.  Within the kernel, register accesses, too, should be protected
-// by locks, but one also does not want the compiler "optimizing" register
-// accesses within a critical section.  But, within the kernel, I/O memory
-// accesses are always done through accessor functions; accessing I/O memory
-// directly through pointers is frowned upon and does not work on all
-// architectures.  Those accessors are written to prevent unwanted
-// optimization, so, once again, volatile is unnecessary.
-
-// Another situation where one might be tempted to use volatile is
-// when the processor is busy-waiting on the value of a variable.  The right
-// way to perform a busy wait is::
-
-//     while (my_variable != what_i_want)
-//         cpu_relax();
-
-// asm volatile ("" ::: "memory")
-
-/*
-    https://stackoverflow.com/questions/67943540/why-can-asm-volatile-memory-serve-as-a-compiler-barrier
-
-    If a variable is potentially read or written, it matters what order that happens in.
-    The point of a "memory" clobber is to make sure the reads and/or writes in an asm statement
-    happen at the right point in the program's execution.
-*/
-
-void BarrierWait( std::atomic_int &barrier )
-{
-    barrier.fetch_sub(1, std::memory_order_seq_cst);
-
-    while (barrier.load(std::memory_order_seq_cst) > 0)
-    {
-        // lol does not work in loop
-        // asm volatile ("" ::: "memory");
-        asm volatile ("nop");
-    }
-}
-
-
-
-// std::atomic_int IRQ_disable_counter{0};
-
-// void lock_scheduler(void)
-// {
-//     CPU::cli();
-//     IRQ_disable_counter++;
-// }
-
-// void unlock_scheduler(void)
-// {
-//     if (IRQ_disable_counter-- == 0)
-//         CPU::sti();
-// }
-
-
-
 
 
 __attribute__((used, section(".limine_requests")))
@@ -153,62 +96,66 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 };
 
 
+// kbarrier_t barrierA{0};
+const auto &println = syslog::println;
+
 
 extern "C"
 void _start()
 {
-    asm volatile ("cli");
+    CPU::cli(); // asm volatile ("cli");
     CPU::enableSSE();
-    serial::init();
+
+    syslog::enable();
+    if (!serial::init())
+        syslog::disable();
     syslog log("_start");
 
     early_init();
     call_ctors();
 
-    CPU::clearIDT();
-    ACPI::init((void*)(lim_rsdp_req.response->address));
+    ACPI::Response res;
+    ACPI::init(lim_rsdp_req.response->address, res);
+    APIC::init(res.ioapic_base, 0);
 
-    barrierA.store(4);
-    SMP::initMulticore(smp_main);
+    // barrierA.reset(limine_res.mp->cpu_count);
+    // SMP::initMulticore(smp_main);
+    SMP::initSinglecore(smp_main);
 
     kassert(false); // Should be unreachable!
 
-    kernel::halt();
+    CPU::hcf();
 }
 
 
+#define CLOCKS_PER_SEC (1000000)
 
+static void thread_test( void* )
+{
+    auto &msdata = kinput::mousedata;
 
-
-
-
-
-
-
-
-
-
-// https://forum.osdev.org/viewtopic.php?t=57471
-// static kthread_t      *task_list[64];
-// static std::atomic_int task_count{0};
-const auto &println = syslog::println;
-
-
-// static void smp_hell( limine_mp_info* )
-// {
-//     while (true)
-//     {
-//         asm volatile ("cli; hlt");
-//     }
-// }
-
+    while (true)
+    {
+        // syslog::println("CPS: %lu, time: %lu", clocksPerSec, CPU::getTSC() / clocksPerSec);
+        kvideo::renderString("abc ABC", msdata.x.load(), msdata.y.load());
+        kthread::yield();
+    }
+}
 
 static void smp_main( limine_mp_info *info )
 {
-    asm volatile ("cli");
+    CPU::cli(); // asm volatile ("cli");
     CPU::enableSSE();
+
+    // uint64_t  this_gdt[7];
+    // gdt_ptr_t this_gdtr;
+    // tss_t     this_tss;
+    // CPU::createGDT(this_gdt, &this_gdtr, &this_tss);
+    // CPU::installGDT(&this_gdtr);
     CPU::createGDT();
     CPU::installGDT();
+
+
     size_t cpuid     = info->lapic_id;
     cpu_t *cpu       = new (SMP::all_cpus + cpuid) cpu_t();
            cpu->self = cpu;
@@ -216,89 +163,49 @@ static void smp_main( limine_mp_info *info )
     CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)cpu);
     CPU::wrmsr(CPU::MSR_KERNEL_GS_BASE, (uint64_t)cpu);
 
-    println("[CPU%u] BarrierA 0", cpuid);
-    BarrierWait(barrierA);
-    println("[CPU%u] BarrierA 1", cpuid);
+    // syslog::println("lapic id: %lu", cpuid);
+    // syslog::println("this_gdt: 0x%lx", this_gdt);
 
-    if (cpuid > 0)
-    {
-        kernel::hang();
-    }
-
+    PIC::enable();
     PIC::remap(PIC::IRQ_MASTER, PIC::IRQ_SLAVE);
-    PIC::disable();
-    PIT::init(500);
+    PIC::maskAll();
+    PIT::init(100);
 
     CPU::createIDT();
     CPU::installIDT();
     CPU::installISR(IntNo_GENERAL_PROTECTION_FAULT,  genfaultISR);
     CPU::installISR(IntNo_PAGE_FAULT,                pagefaultISR);
     CPU::installISR(IntNo_OUT_OF_MEMORY,             outOfMemoryISR);
-    CPU::installISR(IntNo_KTHREAD_START,             ThreadScheduler::trampolineISR);
     CPU::installISR(IntNo_KTHREAD_YIELD,             ThreadScheduler::scheduleISR);
-    CPU::installISR(IntNo_SYSCALL,                   kernel::syscallISR);
+    CPU::installISR(IntNo_SYSCALL,                   knl::syscallISR);
     CPU::installIRQ(IrqNo_PIT,                       PIT_IrqHandler);
-    PIC::unmask(2);
 
-
-    // https://github.com/jjwang/HanOS/blob/mainline/kernel/sys/acpi.c
-    // https://github.com/jteerice/FrazzOS/blob/3e5492db5f8201a426807466153f9dbb2df7fdb3/kernel/src/firmware/acpi.c#L130
-    // https://github.com/pdoane/osdev/blob/master/acpi/acpi.c
-
-    // kthread::create("cullmain", kthread::cullmain, nullptr);
-
-    if (cpuid == 0)
+    if (SMP::is_bsp())
     {
-        kernel::loadModules(initrd::find("drv/"));
-        kernel::loadModules(initrd::find("srv/"));
-        kernel::initModules();
+        syslog::println("SMP::is_bsp() == true");
+        knl::loadModules(initrd::find("drv/"));
+        knl::loadModules(initrd::find("srv/"));
+        knl::initModules();
     }
 
-    asm volatile ("sti");
+    // println("\n\naddr: 0x%lx", addr);
+    // println("w, h, bpp: %d, %d, %d", bmp.w, bmp.h, bmp.bpp);
+    uint8_t *addr = (uint8_t*)initrd::find("usr/share/font/cutive-w14hf20.bmp");
+    BMP_File bmp((void*)(addr + ustar::DATA_OFFSET));
+    kvideo::setFont(cringe::Font((uint8_t*)(bmp.data), bmp.w, bmp.h));
+    kthread::create("thread_test", thread_test, nullptr);
+
+    PIC::unmask(2);
     PIC::unmask(IrqNo_PIT);
+    CPU::sti(); // asm volatile ("sti");
 
-    // println("[CPU%u] APIC check: %u", cpuid, APIC::check());
-    kthread::create("idlemain", kthread::idlemain, nullptr);
-    kthread::start();
-
-    kernel::halt();
+    // CPU::hcf();
+    while (true)
+    {
+        asm volatile ("hlt");
+    }
+    
 }
-
-
-
-
-
-
-
-// // Code A https://forum.osdev.org/viewtopic.php?t=57326
-// // --------------------------------------------------
-// struct CPU_t
-// {
-//     struct CPU_t *self;
-//     int nr;
-// };
-
-// static CPU_t *cpu_self()
-// {
-//     CPU_t *r;
-//     __asm__("mov %%gs:0, %0" : "=r"(r));
-//     return r;
-// }
-// // --------------------------------------------------
-
-
-// // Code B
-// // --------------------------------------------------
-// static CPU_t *cpu_self(void)
-// {
-//     return ((__seg_gs struct CPU_t *)0)->self;
-// }
-// // --------------------------------------------------
-
-
-
-
-
 
 
 
@@ -319,14 +226,17 @@ void stacktrace( intframe_t *frame )
 
 static void genfaultISR( intframe_t* )
 {
-    syslog::printf("Exception GENERAL_PROTECTION_FAULT");
-    kernel::hang();
+    syslog log("Exception GENERAL_PROTECTION_FAULT");
+    auto *th = SMP::this_thread();
+    if (th) log("thread %d (%s)", th, th->name);
+
+    CPU::hcf();
 }
 
 static void outOfMemoryISR( intframe_t* )
 {
-    syslog::printf("Exception OUT_OF_MEMORY");
-    kernel::hang();
+    syslog::print("Exception OUT_OF_MEMORY");
+    CPU::hcf();
 }
 
 
@@ -339,8 +249,8 @@ static void pagefaultISR( intframe_t *frame )
     // auto *cpu = SMP::this_cpu();
     // if (cpu) log("cpu %d", cpu->id);
 
-    // auto *th = SMP::this_thread();
-    // if (th) log("thread %d (%s)", th, th->name);
+    auto *th = SMP::this_thread();
+    if (th) log("thread %d (%s)", th, th->name);
 
     log("rip:   0x%lx", frame->rip);
     log("rsp:   0x%lx", frame->rsp);

@@ -8,10 +8,9 @@ extern "C" {
 #endif
 
 
-
 struct intframe_t
 {
-    uint64_t r11, r12, r13, r14, r15;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
     uint64_t rax, rbx, rcx, rdx;
     uint64_t rdi, rsi, rbp;
     uint64_t isrno, errno;
@@ -41,9 +40,8 @@ enum IntNo_: uint8_t
     IntNo_BAD_FREE  	  	        = 53,
     IntNo_OUT_OF_MEMORY 	        = 54,
 
-    IntNo_KTHREAD_START             = 96,
     IntNo_KTHREAD_YIELD             = 97,
-    IntNo_SYSCALL 	  	            = 110,
+    IntNo_SYSCALL 	  	            = 255,
 };
 
 enum IrqNo_: uint8_t

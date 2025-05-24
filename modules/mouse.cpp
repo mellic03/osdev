@@ -2,7 +2,7 @@
 #include <sym/sym.hpp>
 
 #include <kernel/log.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 #include <kernel/input.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
@@ -95,8 +95,8 @@ bool ProcessMousePacket()
         }
     }
 
-    msdata.x = std::clamp(msdata.x, 0, kvideo::W-1);
-    msdata.y = std::clamp(msdata.y, 0, kvideo::H-1);
+    msdata.x.store(std::clamp(msdata.x.load(), 0, kvideo::W-1));
+    msdata.y.store(std::clamp(msdata.y.load(), 0, kvideo::H-1));
     // kinput::triggerMouseEvent();
 
     MousePacketReady = false;
@@ -166,7 +166,7 @@ static void driver_main( void* )
         {
             kinput::writeMsData(&msdata);
         }
-        kthread::yield();
+        // kthread::yield();
     }
 }
 

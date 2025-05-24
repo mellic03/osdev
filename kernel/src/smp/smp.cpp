@@ -8,7 +8,6 @@
 #include <kernel/log.hpp>
 #include <kthread.hpp>
 #include <kmalloc.h>
-#include <khang.h>
 #include <string.h>
 
 #include <stack_vector.hpp>
@@ -44,21 +43,23 @@ struct ScheduleLock
 
     void lock()
     {
-        CPU::cli();
+        // CPU::cli();
+        asm volatile ("cli");
         count++;
     }
 
     void unlock()
     {
         if ((--count) == 0)
-            CPU::sti();
+            // CPU::sti();
+            asm volatile ("sti");
     }
 };
 
 
 static ScheduleLock smp_lock;
 // static std::mutex smp_lock{0};
-// static cpu_t *bsp_cpu;
+static uint64_t bsp_id = 99999999999;
 cpu_t SMP::all_cpus[8];
 
 // cpu_t::cpu_t()
@@ -80,7 +81,7 @@ cpu_t SMP::all_cpus[8];
 //     CPU::enableSSE();
 //     CPU::installGDT();
     
-//     kernel::hang();
+//     knl::hang();
 // }
 
 void SMP::initMulticore(void (*entry)(limine_mp_info*))
@@ -90,35 +91,51 @@ void SMP::initMulticore(void (*entry)(limine_mp_info*))
 
     auto *mp = limine_res.mp;
     auto count = mp->cpu_count;
-    auto bsp_id = mp->bsp_lapic_id;
+    bsp_id = mp->bsp_lapic_id;
     limine_mp_info *bsp_info = nullptr;
-
-    // log("cpu_count: %u", count);
-    // log("bsp_id:    %u", bsp_id);
 
     for (size_t i=0; i<count; i++)
     {
         auto *info = mp->cpus[i];
         info->extra_argument = (uint64_t)i;
-        // log("cpus[%d].lapic_id: %u", i, info->lapic_id);
 
         if (info->lapic_id == bsp_id)
-        {
             bsp_info = info;
-        }
         else
-        {
-            info->goto_address = entry;
-            // __atomic_store_n(&(info->goto_address), &entry, __ATOMIC_RELAXED);
-        }
+            __atomic_store_n(&(info->goto_address), entry, __ATOMIC_RELAXED);
     }
-
-    // log("bsp_info:     0x%lx", bsp_info);
-    // log("bsp_info->id: %u", bsp_info->lapic_id);
 
     entry(bsp_info);
 }
 
+
+void SMP::initSinglecore(void (*entry)(limine_mp_info*))
+{
+    syslog log("SMP::initMulticore");
+    memset(all_cpus, 0, sizeof(all_cpus));
+
+    auto *mp = limine_res.mp;
+    auto count = mp->cpu_count;
+    bsp_id = mp->bsp_lapic_id;
+    limine_mp_info *bsp_info = nullptr;
+
+    for (size_t i=0; i<count; i++)
+    {
+        auto *info = mp->cpus[i];
+        info->extra_argument = (uint64_t)i;
+
+        if (info->lapic_id == bsp_id)
+            bsp_info = info;
+    }
+
+    entry(bsp_info);
+}
+
+
+bool SMP::is_bsp()
+{
+    return SMP::this_cpu()->id == bsp_id;
+}
 
 
 cpu_t *SMP::this_cpu()

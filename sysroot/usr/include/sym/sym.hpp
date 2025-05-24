@@ -61,9 +61,9 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
 
     {
         auto &lib = sym->kernel_sym;
-        kernel::panic = lib.panic;
-        kernel::hang  = lib.hang;
-        kernel::findModule = lib.findModule;
+        knl::panic      = lib.panic;
+        knl::hcf        = lib.hcf;
+        knl::findModule = lib.findModule;
     }
 }
 

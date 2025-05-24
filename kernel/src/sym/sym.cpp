@@ -1,5 +1,6 @@
 #include <sym/sym_t.hpp>
 
+#include <cpu/cpu.hpp>
 #include <kernel/log.hpp>
 #include <kernel/clock.hpp>
 #include <kernel/kvideo.hpp>
@@ -7,7 +8,6 @@
 #include <kernel/input.hpp>
 #include <kassert.h>
 #include <kmalloc.h>
-#include <khang.h>
 #include <kthread.hpp>
 
 
@@ -18,7 +18,7 @@ ksym::ksym_t *ksym::getsym()
     {
         auto &lib = kernel_sym.libc_sym;
         lib.assert  = nullptr;
-        lib.printf  = syslog::printf;
+        lib.printf  = syslog::print;
         lib.malloc  = kmalloc;
         lib.realloc = krealloc;
         lib.free    = kfree;
@@ -62,8 +62,8 @@ ksym::ksym_t *ksym::getsym()
     {
         auto &lib = kernel_sym.kernel_sym;
         lib.panic = kpanic;
-        lib.hang  = kernel::hang;
-        lib.findModule = kernel::findModule;
+        lib.hcf   = CPU::hcf;
+        lib.findModule = knl::findModule;
     }
 
 

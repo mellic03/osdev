@@ -64,7 +64,7 @@ static vfs2Entry *createEntry( const char *name, uint64_t size, void *data )
 
     T *entry = (T*)kmalloc(obj_size);
        entry = new (entry) T(name, obj_size, data);
-    // syslog::printf("[createEntry] \"%s\" at 0x%lx\n", name, entry->sof);
+    // syslog::print("[createEntry] \"%s\" at 0x%lx\n", name, entry->sof);
 
     return (vfs2Entry*)entry;
 }

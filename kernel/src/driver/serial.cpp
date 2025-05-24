@@ -1,11 +1,11 @@
 #include <driver/serial.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 #include <kernel/log.hpp>
 #include <stdio.h>
 #include <string.h>
 
 
-void serial::init()
+bool serial::init()
 {
     using namespace IO;
 
@@ -23,12 +23,14 @@ void serial::init()
     if (IO::inb(COM1 + 0) != 0xAE)
     {
         // syslog::disable();
-        return;
+        return false;
     }
  
     // If serial is not faulty set it in normal operation mode
     // (not-loopback with IRQs enabled and OUT#1 and OUT#2 bits enabled)
     IO::outb(COM1 + 4, 0x0F);
+
+    return true;
 }
 
 

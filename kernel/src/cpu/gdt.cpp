@@ -3,14 +3,14 @@
 
 extern "C"
 {
-    // extern void GDT64_Install( gdt_ptr_t* );
-    extern void cpu_load_gdt( gdt_ptr_t* );
-    extern void cpu_flush_gdt( void );
+    extern void GDT64_Install( gdt_ptr_t* );
+    // extern void cpu_load_gdt( gdt_ptr_t* );
+    // extern void cpu_flush_gdt( void );
 }
 
-static uint64_t  globalDescriptors[5];
-static gdt_ptr_t globalDescPointer;
-static tss_t     defaultTSS;
+static uint64_t  default_GDT[5];
+static gdt_ptr_t default_GDTR;
+// static tss_t     default_TSS;
 
 
 static void
@@ -38,7 +38,7 @@ fill_entry( uint64_t *gdtbase, int idx, uint64_t base, uint64_t limit, uint8_t a
 
 
 
-void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS )
+void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t* )
 {
     // https://wiki.osdev.org/GDT_Tutorial#How_to_Set_Up_The_GDT
     fill_entry(gdtbase, 0, 0, 0, 0, 0);
@@ -47,11 +47,11 @@ void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS )
     fill_entry(gdtbase, 3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
     fill_entry(gdtbase, 4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
 
-    uint64_t tssBase = (uint64_t)TSS; // Address of your TSS structure
-    uint32_t tssLimit = sizeof(tss_t) - 1;
-    fill_entry(globalDescriptors, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
-    fill_entry(globalDescriptors, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
-    size_t numDescriptors = 7;
+    // uint64_t tssBase = (uint64_t)TSS; // Address of your TSS structure
+    // uint32_t tssLimit = sizeof(tss_t) - 1;
+    // fill_entry(default_GDT, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
+    // fill_entry(default_GDT, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
+    size_t numDescriptors = 5;
 
     *gdtr = {
         .limit = (uint16_t)(numDescriptors * sizeof(uint64_t) - 1),
@@ -63,22 +63,22 @@ void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS )
 void CPU::createGDT()
 {
     // https://wiki.osdev.org/GDT_Tutorial#How_to_Set_Up_The_GDT
-    fill_entry(globalDescriptors, 0, 0, 0, 0, 0);
-    fill_entry(globalDescriptors, 1, 0, 0xFFFFF, 0x9A, 0xA); // Kernel mode code segment
-    fill_entry(globalDescriptors, 2, 0, 0xFFFFF, 0x92, 0xC); // Kernel mode data segment
-    fill_entry(globalDescriptors, 3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
-    fill_entry(globalDescriptors, 4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
+    fill_entry(default_GDT, 0, 0, 0, 0, 0);
+    fill_entry(default_GDT, 1, 0, 0xFFFFF, 0x9A, 0xA); // Kernel mode code segment
+    fill_entry(default_GDT, 2, 0, 0xFFFFF, 0x92, 0xC); // Kernel mode data segment
+    fill_entry(default_GDT, 3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
+    fill_entry(default_GDT, 4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
 
 
-    uint64_t tssBase = (uint64_t)(&defaultTSS); // Address of your TSS structure
-    uint32_t tssLimit = sizeof(tss_t) - 1;
-    fill_entry(globalDescriptors, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
-    fill_entry(globalDescriptors, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
-    size_t numDescriptors = 7;
+    // uint64_t tssBase = (uint64_t)(&default_TSS); // Address of your TSS structure
+    // uint32_t tssLimit = sizeof(tss_t) - 1;
+    // fill_entry(default_GDT, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
+    // fill_entry(default_GDT, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
+    size_t numDescriptors = 5;
 
-    globalDescPointer = {
+    default_GDTR = {
         .limit = (uint16_t)(numDescriptors * sizeof(uint64_t) - 1),
-        .base  = (uint64_t)(globalDescriptors)
+        .base  = (uint64_t)(default_GDT)
     };
 
 }
@@ -86,14 +86,12 @@ void CPU::createGDT()
 
 void CPU::installGDT()
 {
-    cpu_load_gdt(&globalDescPointer);
-    cpu_flush_gdt();
+    GDT64_Install(&default_GDTR);
 }
 
 
 void CPU::installGDT( gdt_ptr_t *gdtr )
 {
-    cpu_load_gdt(gdtr);
-    cpu_flush_gdt();
+    GDT64_Install(gdtr);
 }
 

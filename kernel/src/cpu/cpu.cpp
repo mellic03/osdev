@@ -8,6 +8,8 @@ extern "C"
     // extern void cpu_fxsave( uint8_t* );
     // extern void cpu_fxrstor( uint8_t* );
 
+    extern void cpu_set_rsp( uintptr_t );
+
     extern uint64_t cpu_get_cr3( void );
     extern void cpu_set_cr3( uint64_t );
     
@@ -19,6 +21,11 @@ extern "C"
 
 namespace CPU
 {
+    void setRSP( uintptr_t rsp )
+    {
+        cpu_set_rsp(rsp);
+    }
+
     uint64_t getCR3()
     {
         return cpu_get_cr3();

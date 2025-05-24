@@ -17,7 +17,7 @@
 // //     while (dead.size() > 0)
 // //     {
 // //         auto *th = dead.back(); dead.pop_back();
-// //         // syslog::printf("[threadManager_UpdateDead] \"%s\"\n", th->name);
+// //         // syslog::print("[threadManager_UpdateDead] \"%s\"\n", th->name);
 // //         vec_remove(sd->m_threads, th);
 // //         sd->releaseThread(th);
 // //     }
@@ -84,9 +84,9 @@
 
 // static void kthread_wrapper( void (*fn)(void*), void *arg )
 // {
-//     // syslog::printf("[kthread_wrapper] entry\n");
+//     // syslog::print("[kthread_wrapper] entry\n");
 //     fn(arg);
-//     // syslog::printf("[kthread_wrapper] exit\n");
+//     // syslog::print("[kthread_wrapper] exit\n");
 
 //     auto *th = SMP::this_thread();
 //     th->status = KThread_DEAD;

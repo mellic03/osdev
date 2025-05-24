@@ -28,15 +28,12 @@ extern void kmalloc_init( uintptr_t base, size_t size );
 static void load_mmaps();
 
 
-
-
 void early_init()
 {
     LimineRes_init();
 
     syslog log("early_init");
     kvideo::initFrontbuffer((uintptr_t)(limine_res.fb));
-    // kpanic("Test panic");
 
     for (size_t i=0; i<32; i++)
         pmm_mmaps[i] = {0, 0};

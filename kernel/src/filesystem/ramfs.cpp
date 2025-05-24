@@ -461,7 +461,7 @@ rfsEntry *RamFS::open( const char *path )
 
 
 #ifndef KERNEL_TOOLING
-    #define INDENT for (int i=0; i<indent; i++) syslog::printf(" ")
+    #define INDENT for (int i=0; i<indent; i++) syslog::print(" ")
 #else
     #define INDENT for (int i=0; i<indent; i++) std::print(" ")
 #endif
@@ -481,7 +481,7 @@ void RamFS::walk( int32_t entry_id, int depth )
     {
         INDENT;
         #ifndef KERNEL_TOOLING
-            syslog::printf("- %s (%u KB)\n", entry->name, fsize(entry)/1024);
+            syslog::print("- %s (%u KB)\n", entry->name, fsize(entry)/1024);
         #else
             std::print("- {} ({} KB)\n", entry->name, fsize(entry)/1024);
         #endif
@@ -491,7 +491,7 @@ void RamFS::walk( int32_t entry_id, int depth )
     INDENT;
 
     #ifndef KERNEL_TOOLING
-        syslog::printf("/%s\n", entry->name);
+        syslog::print("/%s\n", entry->name);
     #else
         std::print("/{}\n", entry->name);
     #endif

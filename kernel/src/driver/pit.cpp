@@ -1,6 +1,6 @@
 #include <driver/pit.hpp>
 #include <driver/pic.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
 #include <kernel/interrupt.hpp>
 #include <algorithm>
 
@@ -34,18 +34,21 @@
 #define CMD_READBACK                    0xc0
 
 
-// 500hz  == 2ms
-// 1000hz == 1ms
-// 2000hz == 0.5ms
+// // 500hz  == 2ms
+// // 1000hz == 1ms
+// // 2000hz == 0.5ms
 
-uint16_t PIT::HERTZ = 2000;
-uint32_t PIT::CurrFrequency = 2000;
+uint16_t PIT::HERTZ         = 500;
+uint32_t PIT::CurrFrequency = 500;
+uint64_t PIT::MicroSeconds  = 2 * 1000; // 2 * 1000 milliseconds
 
 
-void PIT::init( uint32_t new_frequency )
+void PIT::init( uint64_t us )
 {
-    uint32_t divisor = PIT::FREQUENCY / new_frequency;
-    PIT::CurrFrequency = new_frequency;
+    PIT::MicroSeconds  = us; // Hz = 1000000 / (1000*ms) == 1000000 / (1*us)
+    PIT::CurrFrequency = 1000000 / PIT::MicroSeconds;
+
+    uint32_t divisor = PIT::FREQUENCY / PIT::CurrFrequency;
     uint8_t lo = (uint8_t)(divisor & 0xFF);
     uint8_t hi = (uint8_t)((divisor>>8) & 0xFF);
 
@@ -68,63 +71,6 @@ uint32_t PIT::sleep( uint64_t ms )
     return ticks;
 }
 
-
-
-// uint16_t PIT::read()
-// {
-//     IO::outb(PIT_CMD, CMD_LATCH | CMD_COUNTER0); // Latch the current counter value
-//     uint8_t low = IO::inb(PIT_COUNTER0);        // Read the low byte
-//     uint8_t high = IO::inb(PIT_COUNTER0);       // Read the high byte
-//     return (uint16_t(high) << 8) | low;         // Combine high and low bytes
-// }
-
-// bool PIT::edge()
-// {
-//     static uint16_t prev = 0;
-//     uint16_t curr = PIT::read();
-
-//     bool edge = (curr > prev);
-//     prev = curr;
-
-//     return edge;
-// }
-
-
-
-
-// #include <cpu/scheduler.hpp>
-// #include <kernel/interrupt.hpp>
-// #include <kernel/clock.hpp>
-// #include <kthread.hpp>
-
-
-// static void PIT_IrqHandler( intframe_t *frame )
-// {
-//     kclock::detail::tick(hwdi_PIT::timer_ms);
-//     ThreadScheduler::scheduleISR(frame);
-//     PIT::reload();
-// }
-
-
-// hwdi_PIT::hwdi_PIT( uint16_t ms )
-// :   hwDriverInterface("PIT Controller")
-// {
-//     hwdi_PIT::timer_ms = ms;
-//     PIT::init();
-//     PIT::set_ms(hwdi_PIT::timer_ms);
-
-//     this->irqno    = 0;
-//     this->handler  = PIT_IrqHandler;
-//     this->entry    = nullptr;
-// }
-
-
-// void
-// hwdi_PIT::loadIrqHandler()
-// {
-//     CPU::installIRQ(this->irqno, this->handler);
-//     PIC::unmask(this->irqno);
-// }
 
 
 

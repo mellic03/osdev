@@ -18,25 +18,32 @@ static void sde_main( void* )
     msdata.x = 50;
     msdata.y = 50;
 
-    // uint64_t prev_time;
-    // uint64_t curr_time;
-    // uint64_t accum = 0;
+    uint64_t prev_time;
+    uint64_t curr_time;
+    uint64_t accum = 0;
+
+    bool ready = false;
 
     while (true)
     {
-        // curr_time = std::clock();
-        // accum += (curr_time - prev_time);
-        // prev_time = curr_time;
+        curr_time = std::clock();
+        accum += (curr_time - prev_time);
+        prev_time = curr_time;
         // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
 
         kinput::readMsData(&msdata);
-
-        kvideo::fillColor(200, 50, 50, 255);
-        kvideo::rect(msdata.x, msdata.y, 100, 100);
-        kthread::yield();
     
-        kvideo::swapBuffers();
-        kthread::yield();
+        kvideo::fillColor(200, 50, 50, 255);
+        kvideo::rect(msdata.x.load(), msdata.y.load(), 100, 100);
+        ready = true;
+        // kthread::yield();
+    
+        if (ready && accum >= 16)
+        {
+            accum = 0;
+            kvideo::swapBuffers();
+            kthread::yield();
+        }
     }
 }
 

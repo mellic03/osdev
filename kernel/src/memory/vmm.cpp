@@ -47,7 +47,6 @@ inline static constexpr
 uintptr_t PhysToHHDM( uintptr_t addr ) { return addr + PMM::hhdm; }
 
 
-
 uint64_t *get_entry( uint64_t *table, size_t idx, uint64_t flags )
 {
     uint64_t *entry;
@@ -135,10 +134,6 @@ void VMM::mapPage( uintptr_t phys, uintptr_t virt )
     asm volatile ("sti");
 }
 
-// void VMM::mapPage( uintptr_t virt )
-// {
-//     VMM::mapPage(PMM::alloc(), virt);
-// }
 
 void
 VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes )
@@ -146,6 +141,7 @@ VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes )
     asm volatile ("cli");
     uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
 
+    nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
     for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
     {
         VMM_mapPage(pml4, phys+offset, virt+offset);

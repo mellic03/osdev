@@ -3,10 +3,10 @@
 #include <idk_fptr.hpp>
 #include <kernel/input.hpp>
 
-namespace kernel
+namespace knl
 {
     inline void (*panic)(const char*);
-    inline void (*hang)();
+    inline void (*hcf)();
     inline ModuleInterface *(*findModule)(uint64_t, uint64_t);
 }
 

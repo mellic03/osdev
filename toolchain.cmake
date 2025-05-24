@@ -38,38 +38,19 @@ set(SSE_FLAGS "-mmmx -msse -msse2")
 # add_definitions(-D__libk_sse=true)
 
 
-set(CringeOS_C_CXX_FLAGS
-    "-O0 -g \
-    ${SSE_FLAGS} \
-    -fno-inline -fno-tree-vectorize \
-    -Wall -Wextra -Werror \
-    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
-    -Wno-vexing-parse \
-    -Wno-error=int-to-pointer-cast \
-    -fno-omit-frame-pointer \
-    -ggdb -Wno-builtin-declaration-mismatch \
-    -ffreestanding \
-    -fno-asynchronous-unwind-tables \
-    -fno-exceptions \
-    -fno-PIC \
-    -fno-PIE \
-    -mno-80387 \
-    -z max-page-size=0x1000 -mno-red-zone \
-    -mcmodel=kernel \
-    -nostdlib \
-    -Wl,--no-relax -Wl,--gc-sections \
-    -Wno-missing-field-initializers"
-)
-
 # set(CringeOS_C_CXX_FLAGS
-#     "-O3 \
+#     "-O0 -g \
 #     ${SSE_FLAGS} \
-#     -Wall -Wextra -Werror -pedantic \
+#     -fno-inline -fno-tree-vectorize \
+#     -Wall -Wextra -Werror \
 #     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+#     -Wno-vexing-parse \
+#     -Wno-error=int-to-pointer-cast \
+#     -fno-omit-frame-pointer \
+#     -ggdb -Wno-builtin-declaration-mismatch \
+#     -ffreestanding \
 #     -fno-asynchronous-unwind-tables \
 #     -fno-exceptions \
-#     -funroll-loops \
-#     -ffreestanding \
 #     -fno-PIC \
 #     -fno-PIE \
 #     -mno-80387 \
@@ -79,6 +60,25 @@ set(CringeOS_C_CXX_FLAGS
 #     -Wl,--no-relax -Wl,--gc-sections \
 #     -Wno-missing-field-initializers"
 # )
+
+set(CringeOS_C_CXX_FLAGS
+    "-O3 \
+    ${SSE_FLAGS} \
+    -Wall -Wextra -Werror \
+    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+    -fno-omit-frame-pointer \
+    -fno-asynchronous-unwind-tables \
+    -fno-exceptions \
+    -ffreestanding \
+    -fno-PIC \
+    -fno-PIE \
+    -mno-80387 \
+    -z max-page-size=0x1000 -mno-red-zone \
+    -mcmodel=kernel \
+    -nostdlib \
+    -Wl,--no-relax -Wl,--gc-sections \
+    -Wno-missing-field-initializers"
+)
 
 set(CMAKE_C_FLAGS
     "-std=c11 \

@@ -14,20 +14,21 @@ if [[ "$TYPE" == "" ]] ; then
     exit
 fi
 
+# -mno-sse -mno-sse2 -mno-avx \
 
 CXX_FLAGS="
     -std=c++23 \
     -I ../include \
     -I ../sysroot/usr/include \
+    -I ../sysroot/usr/include/arch/x86_64 \
     -include ../sysroot/usr/include/new \
     -include ../sysroot/usr/include/libc++ \
-    -mno-sse -mno-sse2 -mno-avx \
+    -msse -msse2 -mavx \
     -fno-exceptions \
     -fno-rtti \
     -ffreestanding \
     -nostdlib \
     -fPIE -pie \
-    -mcmodel=large \
     -mno-red-zone \
     -z max-page-size=0x1000 \
     -ffunction-sections \
@@ -48,7 +49,7 @@ COMPILER_EXE=../external/x86_64-elf-tools-linux/bin/x86_64-elf-g++
 
 $COMPILER_EXE -o temp/$NAME.elf ./$NAME.cpp $CXX_FLAGS
 mv temp/$NAME.elf $TYPE/$NAME.elf
-objcopy -O binary $TYPE/$NAME.elf $TYPE/$NAME.bin
+# objcopy -O binary $TYPE/$NAME.elf $TYPE/$NAME.bin
 
 
 rm dump/$NAME.txt

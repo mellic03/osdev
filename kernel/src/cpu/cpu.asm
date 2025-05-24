@@ -3,6 +3,8 @@
 global cpu_fxsave
 global cpu_fxrstor
 
+global cpu_set_rsp
+
 global cpu_get_cr3
 global cpu_set_cr3
 
@@ -12,8 +14,9 @@ global cpu_get_rflags
 global cpu_enable_sse
 global cpu_enable_avx
 
-global cpu_load_gdt
-global cpu_flush_gdt
+global GDT64_Install
+; global cpu_load_gdt
+; global cpu_flush_gdt
 
 
 
@@ -30,6 +33,10 @@ section .text
         fxrstor64 [rdi]
         ret
 
+    align 16
+    cpu_set_rsp:
+        mov rsp, rdi
+        ret
 
     align 16
     cpu_get_cr3:        ; uint64_t cpu_get_cr3( void )
@@ -68,27 +75,27 @@ section .text
         pop rax
         ret
 
-    align 16
-    cpu_load_gdt:
-        lgdt [rdi]
-        ret
+    ; align 16
+    ; cpu_load_gdt:
+    ;     lgdt [rdi]
+    ;     ret
 
-    align 16
-    cpu_flush_gdt:
-        ; Reload CS register:
-        push  0x08                  ; Push code segment to stack, 0x08 is a stand-in for your code segment
-        lea   rax, [rel .reload_cs] ; Load address of .reload_CS into rax
-        push  rax                   ; Push this value to the stack
-        retfq                       ; Perform a far return, RETFQ or LRETQ depending on syntax
-    .reload_cs:
-        ; Reload data segment registers
-        mov   ax, 0x10 ; 0x10 is a stand-in for your data segment
-        mov   ds, ax
-        mov   es, ax
-        mov   fs, ax
-        mov   gs, ax
-        mov   ss, ax
-        ret
+    ; align 16
+    ; cpu_flush_gdt:
+    ;     ; Reload CS register:
+    ;     push  0x08                  ; Push code segment to stack, 0x08 is a stand-in for your code segment
+    ;     lea   rax, [rel .reload_cs] ; Load address of .reload_CS into rax
+    ;     push  rax                   ; Push this value to the stack
+    ;     retfq                       ; Perform a far return, RETFQ or LRETQ depending on syntax
+    ; .reload_cs:
+    ;     ; Reload data segment registers
+    ;     mov   ax, 0x10 ; 0x10 is a stand-in for your data segment
+    ;     mov   ds, ax
+    ;     mov   es, ax
+    ;     mov   fs, ax
+    ;     mov   gs, ax
+    ;     mov   ss, ax
+    ;     ret
     
 
     align 16
@@ -102,7 +109,6 @@ section .text
         push 0x8
         push .cont
         iretq
-
     .cont:
         mov ax,  0x10 ; 0x10 is a stand-in for your data segment
         mov ds,  ax

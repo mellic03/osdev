@@ -13,10 +13,10 @@
 #include <driver/pic.hpp>
 #include <idk_fptr.hpp>
 
-#include <kernel/elf.h>
+#include <arch/elf.h>
 #include <tuple>
 
-idk::static_vector<ModuleInterface*, 64> kernel::modules;
+idk::static_vector<ModuleInterface*, 64> knl::modules;
 
 template <typename ret_type, typename... Args>
 static ret_type fncall( void *addr, Args... args )
@@ -47,7 +47,7 @@ static void init_device( DeviceInterface *dev )
 
 static void load_module( uint8_t *tar, size_t size )
 {
-    syslog log("kernel::loadModule");
+    syslog log("knl::loadModule");
 
     auto *data = tar + ustar::DATA_OFFSET;
     auto *base = (uint8_t*)(PMM::alloc() + PMM::hhdm);
@@ -57,30 +57,28 @@ static void load_module( uint8_t *tar, size_t size )
     void *entry = (uint8_t*)base + ehdr->e_entry;
     auto *iface = fncall<ModuleInterface*>(entry, ksym::getsym());
 
-    log("base:     0x%lx",   base);
-    // log("end:      0x%lx",   (uint8_t*)base + PMM::PAGE_SIZE);
-    log("entry:    0x%lx",   entry);
-    // log("size:     %lu KiB", size/1024);
-    log("modtype:  %s",      ModuleTypeStr(iface->modtype));
-    log("basetype: %s",      ModuleBaseTypeStr(iface->modtype, iface->basetype));
-    // log("name:     %s",      iface->signature);
+    log("base:     0x%lx", base);
+    log("entry:    0x%lx", entry);
+    log("end:      0x%lx", (uint8_t*)base + std::max(size, PMM::PAGE_SIZE));
+    log("modtype:  %s",    ModuleTypeStr(iface->modtype));
+    log("basetype: %s",    ModuleBaseTypeStr(iface->modtype, iface->basetype));
     
     iface->baseAddress = base;
     iface->pageSize    = PMM::PAGE_SIZE;
     iface->pageCount   = 1;
 
-    kernel::modules.push_back(iface);
+    knl::modules.push_back(iface);
 }
 
 extern void loadElf64( void *data, size_t size );
 
 
-void kernel::loadModules( void *tar )
+void knl::loadModules( void *tar )
 {
-    syslog log("kernel::loadModules");
+    syslog log("knl::loadModules");
 
     if (tar == nullptr)
-        kpanic("[kernel::loadModules] cannot find modules");
+        kpanic("[knl::loadModules] cannot find modules");
     // ustar::listChilren(tar);
 
     ustar::forEach(tar, [&log](void *ctar, size_t fsize)
@@ -97,9 +95,9 @@ void kernel::loadModules( void *tar )
 
 
 
-void kernel::initModules()
+void knl::initModules()
 {
-    for (auto *I: kernel::modules)
+    for (auto *I: knl::modules)
     {
         if (I->modtype == ModuleType_Device)
             init_device((DeviceInterface*)I);
@@ -109,9 +107,9 @@ void kernel::initModules()
 }
 
 
-ModuleInterface *kernel::findModule( uint64_t mt, uint64_t bt )
+ModuleInterface *knl::findModule( uint64_t mt, uint64_t bt )
 {
-    for (auto *I: kernel::modules)
+    for (auto *I: knl::modules)
         if ((I->modtype==mt) && (I->basetype==bt))
             return I;
     return nullptr;

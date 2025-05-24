@@ -11,14 +11,14 @@ ELF Header:
   Version:                           0x1
   Entry point address:               0x1000
   Start of program headers:          64 (bytes into file)
-  Start of section headers:          14192 (bytes into file)
+  Start of section headers:          14376 (bytes into file)
   Flags:                             0x0
   Size of this header:               64 (bytes)
   Size of program headers:           56 (bytes)
   Number of program headers:         5
   Size of section headers:           64 (bytes)
-  Number of section headers:         15
-  Section header string table index: 14
+  Number of section headers:         14
+  Section header string table index: 13
 
 Section Headers:
   [Nr] Name              Type             Address           Offset
@@ -26,33 +26,31 @@ Section Headers:
   [ 0]                   NULL             0000000000000000  00000000
        0000000000000000  0000000000000000           0     0     0
   [ 1] .text             PROGBITS         0000000000001000  00001000
-       00000000000004fd  0000000000000000  AX       0     0     1
+       00000000000004c4  0000000000000000  AX       0     0     2
   [ 2] .rodata           PROGBITS         0000000000002000  00002000
        0000000000000007  0000000000000000   A       0     0     1
   [ 3] .eh_frame         PROGBITS         0000000000002008  00002008
-       00000000000000b8  0000000000000000   A       0     0     8
-  [ 4] .interp           PROGBITS         00000000000020c0  000020c0
+       0000000000000158  0000000000000000   A       0     0     8
+  [ 4] .interp           PROGBITS         0000000000002160  00002160
        000000000000000f  0000000000000000   A       0     0     1
-  [ 5] .dynsym           DYNSYM           00000000000020d0  000020d0
+  [ 5] .dynsym           DYNSYM           0000000000002170  00002170
        0000000000000018  0000000000000018   A       6     1     8
-  [ 6] .dynstr           STRTAB           00000000000020e8  000020e8
+  [ 6] .dynstr           STRTAB           0000000000002188  00002188
        0000000000000001  0000000000000000   A       0     0     1
-  [ 7] .hash             HASH             00000000000020f0  000020f0
+  [ 7] .hash             HASH             0000000000002190  00002190
        0000000000000010  0000000000000004   A       5     0     8
   [ 8] .dynamic          DYNAMIC          0000000000003000  00003000
        00000000000000d0  0000000000000010  WA       6     0     8
-  [ 9] .got.plt          PROGBITS         00000000000030d0  000030d0
-       0000000000000018  0000000000000008  WA       0     0     8
-  [10] .bss              NOBITS           00000000000030e8  000030e8
+  [ 9] .bss              NOBITS           00000000000030d0  000030d0
        00000000000000c8  0000000000000000  WA       0     0     8
-  [11] .comment          PROGBITS         0000000000000000  000030e8
+  [10] .comment          PROGBITS         0000000000000000  000030d0
        0000000000000012  0000000000000001  MS       0     0     1
-  [12] .symtab           SYMTAB           0000000000000000  00003100
-       0000000000000378  0000000000000018          13     7     8
-  [13] .strtab           STRTAB           0000000000000000  00003478
-       0000000000000280  0000000000000000           0     0     1
-  [14] .shstrtab         STRTAB           0000000000000000  000036f8
-       0000000000000071  0000000000000000           0     0     1
+  [11] .symtab           SYMTAB           0000000000000000  000030e8
+       00000000000003d8  0000000000000018          12     5     8
+  [12] .strtab           STRTAB           0000000000000000  000034c0
+       00000000000002fe  0000000000000000           0     0     1
+  [13] .shstrtab         STRTAB           0000000000000000  000037be
+       0000000000000068  0000000000000000           0     0     1
 Key to Flags:
   W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
   L (link order), O (extra OS processing required), G (group), T (TLS),
@@ -66,13 +64,13 @@ Program Headers:
                  FileSiz            MemSiz              Flags  Align
   PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
                  0x0000000000000118 0x0000000000000118  R      0x8
-  INTERP         0x00000000000020c0 0x00000000000020c0 0x00000000000020c0
+  INTERP         0x0000000000002160 0x0000000000002160 0x0000000000002160
                  0x000000000000000f 0x000000000000000f  R      0x1
       [Requesting program interpreter: /lib/ld64.so.1]
   LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
-                 0x0000000000002100 0x0000000000002100  R E    0x1000
+                 0x00000000000021a0 0x00000000000021a0  R E    0x1000
   LOAD           0x0000000000003000 0x0000000000003000 0x0000000000003000
-                 0x00000000000000e8 0x00000000000001b0  RW     0x1000
+                 0x00000000000000d0 0x0000000000000198  RW     0x1000
   DYNAMIC        0x0000000000003000 0x0000000000003000 0x0000000000003000
                  0x00000000000000d0 0x00000000000000d0  RW     0x8
 
@@ -81,14 +79,14 @@ Program Headers:
    00     
    01     .interp 
    02     .text .rodata .eh_frame .interp .dynsym .dynstr .hash 
-   03     .dynamic .got.plt .bss 
+   03     .dynamic .bss 
    04     .dynamic 
 
 Dynamic section at offset 0x3000 contains 8 entries:
   Tag        Type                         Name/Value
- 0x0000000000000004 (HASH)               0x20f0
- 0x0000000000000005 (STRTAB)             0x20e8
- 0x0000000000000006 (SYMTAB)             0x20d0
+ 0x0000000000000004 (HASH)               0x2190
+ 0x0000000000000005 (STRTAB)             0x2188
+ 0x0000000000000006 (SYMTAB)             0x2170
  0x000000000000000a (STRSZ)              1 (bytes)
  0x000000000000000b (SYMENT)             24 (bytes)
  0x0000000000000015 (DEBUG)              0x0
@@ -102,45 +100,49 @@ Symbol table '.dynsym' contains 1 entry:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
 
-Symbol table '.symtab' contains 37 entries:
+Symbol table '.symtab' contains 41 entries:
    Num:    Value          Size Type    Bind   Vis      Ndx Name
      0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND 
      1: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS daemon.cpp
-     2: 0000000000001361   194 FUNC    LOCAL  DEFAULT    1 _ZL8sde_mainPv
-     3: 0000000000002000     0 NOTYPE  LOCAL  DEFAULT    2 .LC0
-     4: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
-     5: 0000000000003000     0 OBJECT  LOCAL  DEFAULT    8 _DYNAMIC
-     6: 00000000000030d0     0 OBJECT  LOCAL  DEFAULT    9 _GLOBAL_OFFSET_TABLE_
-     7: 00000000000030f8     8 OBJECT  GLOBAL DEFAULT   10 _ZN6kvideo11clea[...]
-     8: 0000000000003178     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo10back[...]
-     9: 0000000000003198     8 OBJECT  WEAK   DEFAULT   10 _ZSt7realloc
-    10: 0000000000003100     8 OBJECT  GLOBAL DEFAULT   10 _ZN6kvideo9fillColorE
-    11: 00000000000031a8     8 OBJECT  WEAK   DEFAULT   10 _ZSt5clock
-    12: 0000000000003150     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread5yieldE
-    13: 0000000000001423   100 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
-    14: 000000000000316c     4 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo1HE
-    15: 00000000000031a0     8 OBJECT  WEAK   DEFAULT   10 _ZSt4free
-    16: 00000000000030e8     8 OBJECT  GLOBAL DEFAULT   10 _ZN3CPU10installISRE
-    17: 00000000000010f9   616 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
-    18: 0000000000003188     8 OBJECT  WEAK   DEFAULT   10 _ZSt6printf
-    19: 0000000000003110     8 OBJECT  GLOBAL DEFAULT   10 _ZN6kvideo4rectE
-    20: 0000000000003130     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel10find[...]
-    21: 00000000000030f0     8 OBJECT  GLOBAL DEFAULT   10 _ZN3CPU10installIRQE
-    22: 0000000000003170     8 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo11fron[...]
-    23: 0000000000003160     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread4exitE
-    24: 0000000000001000   249 FUNC    GLOBAL DEFAULT    1 init
-    25: 0000000000003148     8 OBJECT  WEAK   DEFAULT   10 _ZN6kinput10read[...]
-    26: 0000000000003108     8 OBJECT  GLOBAL DEFAULT   10 _ZN6kvideo10fill[...]
-    27: 0000000000003138     8 OBJECT  WEAK   DEFAULT   10 _ZN6kinput17trig[...]
-    28: 0000000000003128     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel4hangE
-    29: 0000000000003180     8 OBJECT  WEAK   DEFAULT   10 _ZSt6assert
-    30: 0000000000003140     8 OBJECT  WEAK   DEFAULT   10 _ZN6kinput11writ[...]
-    31: 0000000000003118     8 OBJECT  GLOBAL DEFAULT   10 _ZN6kvideo11swap[...]
-    32: 0000000000001487   118 FUNC    WEAK   DEFAULT    1 _Z7kmemcpyIcEPvS[...]
-    33: 0000000000003190     8 OBJECT  WEAK   DEFAULT   10 _ZSt6malloc
-    34: 0000000000003120     8 OBJECT  WEAK   DEFAULT   10 _ZN6kernel5panicE
-    35: 0000000000003158     8 OBJECT  WEAK   DEFAULT   10 _ZN7kthread5sleepE
-    36: 0000000000003168     4 OBJECT  WEAK   DEFAULT   10 _ZN6kvideo1WE
+     2: 0000000000001299   276 FUNC    LOCAL  DEFAULT    1 _ZL8sde_mainPv
+     3: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
+     4: 0000000000003000     0 OBJECT  LOCAL  DEFAULT    8 _DYNAMIC
+     5: 00000000000030e0     8 OBJECT  GLOBAL DEFAULT    9 _ZN6kvideo11clea[...]
+     6: 0000000000003160     8 OBJECT  WEAK   DEFAULT    9 _ZN6kvideo10back[...]
+     7: 0000000000003180     8 OBJECT  WEAK   DEFAULT    9 _ZSt7realloc
+     8: 0000000000001280    25 FUNC    WEAK   DEFAULT    1 _ZNSt6atomicIiEC1Ev
+     9: 00000000000030e8     8 OBJECT  GLOBAL DEFAULT    9 _ZN6kvideo9fillColorE
+    10: 0000000000003190     8 OBJECT  WEAK   DEFAULT    9 _ZSt5clock
+    11: 0000000000003138     8 OBJECT  WEAK   DEFAULT    9 _ZN7kthread5yieldE
+    12: 00000000000013f3    80 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
+    13: 0000000000003154     4 OBJECT  WEAK   DEFAULT    9 _ZN6kvideo1HE
+    14: 0000000000003110     8 OBJECT  WEAK   DEFAULT    9 _ZN3knl3hcfE
+    15: 0000000000003188     8 OBJECT  WEAK   DEFAULT    9 _ZSt4free
+    16: 00000000000030d0     8 OBJECT  GLOBAL DEFAULT    9 _ZN3CPU10installISRE
+    17: 00000000000010aa   426 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
+    18: 0000000000003170     8 OBJECT  WEAK   DEFAULT    9 _ZSt6printf
+    19: 00000000000030f8     8 OBJECT  GLOBAL DEFAULT    9 _ZN6kvideo4rectE
+    20: 00000000000030d8     8 OBJECT  GLOBAL DEFAULT    9 _ZN3CPU10installIRQE
+    21: 00000000000013ae    45 FUNC    WEAK   DEFAULT    1 _ZNSt6atomicIiEaSEi
+    22: 0000000000003158     8 OBJECT  WEAK   DEFAULT    9 _ZN6kvideo11fron[...]
+    23: 0000000000003148     8 OBJECT  WEAK   DEFAULT    9 _ZN7kthread4exitE
+    24: 0000000000001000   170 FUNC    GLOBAL DEFAULT    1 init
+    25: 0000000000003130     8 OBJECT  WEAK   DEFAULT    9 _ZN6kinput10read[...]
+    26: 00000000000030f0     8 OBJECT  GLOBAL DEFAULT    9 _ZN6kvideo10fill[...]
+    27: 0000000000003120     8 OBJECT  WEAK   DEFAULT    9 _ZN6kinput17trig[...]
+    28: 0000000000003108     8 OBJECT  WEAK   DEFAULT    9 _ZN3knl5panicE
+    29: 00000000000013dc    23 FUNC    WEAK   DEFAULT    1 _ZNKSt6atomicIiE[...]
+    30: 0000000000003168     8 OBJECT  WEAK   DEFAULT    9 _ZSt6assert
+    31: 0000000000003128     8 OBJECT  WEAK   DEFAULT    9 _ZN6kinput11writ[...]
+    32: 00000000000014a6    30 FUNC    WEAK   DEFAULT    1 _ZNSt6atomicIiE5[...]
+    33: 0000000000001254    43 FUNC    WEAK   DEFAULT    1 _ZN6kinput6MsDataC2Ev
+    34: 0000000000003100     8 OBJECT  GLOBAL DEFAULT    9 _ZN6kvideo11swap[...]
+    35: 0000000000003118     8 OBJECT  WEAK   DEFAULT    9 _ZN3knl10findModuleE
+    36: 0000000000001443    98 FUNC    WEAK   DEFAULT    1 _Z7kmemcpyIcEPvS[...]
+    37: 0000000000003178     8 OBJECT  WEAK   DEFAULT    9 _ZSt6malloc
+    38: 0000000000001254    43 FUNC    WEAK   DEFAULT    1 _ZN6kinput6MsDataC1Ev
+    39: 0000000000003140     8 OBJECT  WEAK   DEFAULT    9 _ZN7kthread5sleepE
+    40: 0000000000003150     4 OBJECT  WEAK   DEFAULT    9 _ZN6kvideo1WE
 
 Histogram for bucket list length (total of 1 bucket):
  Length  Number     % of total  Coverage
@@ -163,330 +165,342 @@ Disassembly of section .text:
 0000000000001000 <init>:
     1000:	55                   	push   %rbp
     1001:	48 89 e5             	mov    %rsp,%rbp
-    1004:	53                   	push   %rbx
-    1005:	48 83 ec 28          	sub    $0x28,%rsp
-    1009:	48 8d 1d f9 ff ff ff 	lea    -0x7(%rip),%rbx        # 1009 <init+0x9>
-    1010:	49 bb c7 20 00 00 00 	movabs $0x20c7,%r11
-    1017:	00 00 00 
-    101a:	4c 01 db             	add    %r11,%rbx
-    101d:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
-    1021:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    1025:	48 89 c7             	mov    %rax,%rdi
-    1028:	48 b8 29 e0 ff ff ff 	movabs $0xffffffffffffe029,%rax
-    102f:	ff ff ff 
-    1032:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    1036:	ff d0                	call   *%rax
-    1038:	48 b8 c0 00 00 00 00 	movabs $0xc0,%rax
-    103f:	00 00 00 
-    1042:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    1046:	bf 58 00 00 00       	mov    $0x58,%edi
-    104b:	ff d0                	call   *%rax
-    104d:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
-    1051:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1055:	48 89 c6             	mov    %rax,%rsi
-    1058:	b8 00 00 00 00       	mov    $0x0,%eax
-    105d:	ba 0b 00 00 00       	mov    $0xb,%edx
-    1062:	48 89 f7             	mov    %rsi,%rdi
-    1065:	48 89 d1             	mov    %rdx,%rcx
-    1068:	f3 48 ab             	rep stos %rax,%es:(%rdi)
-    106b:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    106f:	48 c7 40 18 02 00 00 	movq   $0x2,0x18(%rax)
-    1076:	00 
-    1077:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    107b:	48 c7 40 20 01 00 00 	movq   $0x1,0x20(%rax)
-    1082:	00 
-    1083:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1087:	48 ba 91 e2 ff ff ff 	movabs $0xffffffffffffe291,%rdx
-    108e:	ff ff ff 
-    1091:	48 8d 14 13          	lea    (%rbx,%rdx,1),%rdx
-    1095:	48 89 50 30          	mov    %rdx,0x30(%rax)
-    1099:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    109d:	48 83 c0 28          	add    $0x28,%rax
-    10a1:	ba 08 00 00 00       	mov    $0x8,%edx
-    10a6:	be 00 00 00 00       	mov    $0x0,%esi
-    10ab:	48 89 c7             	mov    %rax,%rdi
-    10ae:	48 b8 53 e3 ff ff ff 	movabs $0xffffffffffffe353,%rax
-    10b5:	ff ff ff 
-    10b8:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10bc:	ff d0                	call   *%rax
-    10be:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    10c2:	48 8d 48 28          	lea    0x28(%rax),%rcx
-    10c6:	ba 06 00 00 00       	mov    $0x6,%edx
-    10cb:	48 b8 30 ef ff ff ff 	movabs $0xffffffffffffef30,%rax
-    10d2:	ff ff ff 
-    10d5:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10d9:	48 89 c6             	mov    %rax,%rsi
-    10dc:	48 89 cf             	mov    %rcx,%rdi
-    10df:	48 b8 b7 e3 ff ff ff 	movabs $0xffffffffffffe3b7,%rax
-    10e6:	ff ff ff 
-    10e9:	48 8d 04 03          	lea    (%rbx,%rax,1),%rax
-    10ed:	ff d0                	call   *%rax
-    10ef:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    10f3:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
-    10f7:	c9                   	leave
-    10f8:	c3                   	ret
+    1004:	48 83 ec 20          	sub    $0x20,%rsp
+    1008:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    100c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1010:	48 89 c7             	mov    %rax,%rdi
+    1013:	e8 92 00 00 00       	call   10aa <_ZN4ksym7loadsymEPNS_6ksym_tE>
+    1018:	48 8b 05 59 21 00 00 	mov    0x2159(%rip),%rax        # 3178 <_ZSt6malloc>
+    101f:	bf 58 00 00 00       	mov    $0x58,%edi
+    1024:	ff d0                	call   *%rax
+    1026:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    102a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    102e:	48 89 c6             	mov    %rax,%rsi
+    1031:	b8 00 00 00 00       	mov    $0x0,%eax
+    1036:	ba 0b 00 00 00       	mov    $0xb,%edx
+    103b:	48 89 f7             	mov    %rsi,%rdi
+    103e:	48 89 d1             	mov    %rdx,%rcx
+    1041:	f3 48 ab             	rep stos %rax,%es:(%rdi)
+    1044:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1048:	48 c7 40 18 02 00 00 	movq   $0x2,0x18(%rax)
+    104f:	00 
+    1050:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1054:	48 c7 40 20 01 00 00 	movq   $0x1,0x20(%rax)
+    105b:	00 
+    105c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1060:	48 8d 15 32 02 00 00 	lea    0x232(%rip),%rdx        # 1299 <_ZL8sde_mainPv>
+    1067:	48 89 50 30          	mov    %rdx,0x30(%rax)
+    106b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    106f:	48 83 c0 28          	add    $0x28,%rax
+    1073:	ba 08 00 00 00       	mov    $0x8,%edx
+    1078:	be 00 00 00 00       	mov    $0x0,%esi
+    107d:	48 89 c7             	mov    %rax,%rdi
+    1080:	e8 6e 03 00 00       	call   13f3 <_Z7kmemsetIcEPvS0_T_m>
+    1085:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1089:	48 83 c0 28          	add    $0x28,%rax
+    108d:	ba 06 00 00 00       	mov    $0x6,%edx
+    1092:	48 8d 0d 67 0f 00 00 	lea    0xf67(%rip),%rcx        # 2000 <_ZNSt6atomicIiE5storeEiSt12memory_order+0xb5a>
+    1099:	48 89 ce             	mov    %rcx,%rsi
+    109c:	48 89 c7             	mov    %rax,%rdi
+    109f:	e8 9f 03 00 00       	call   1443 <_Z7kmemcpyIcEPvS0_PKvm>
+    10a4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10a8:	c9                   	leave
+    10a9:	c3                   	ret
 
-00000000000010f9 <_ZN4ksym7loadsymEPNS_6ksym_tE>:
-    10f9:	55                   	push   %rbp
-    10fa:	48 89 e5             	mov    %rsp,%rbp
-    10fd:	48 83 ec 38          	sub    $0x38,%rsp
-    1101:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 1101 <_ZN4ksym7loadsymEPNS_6ksym_tE+0x8>
-    1108:	49 bb cf 1f 00 00 00 	movabs $0x1fcf,%r11
-    110f:	00 00 00 
-    1112:	4c 01 d8             	add    %r11,%rax
-    1115:	48 89 7d c8          	mov    %rdi,-0x38(%rbp)
-    1119:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
-    111d:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
-    1121:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    1125:	48 8b 12             	mov    (%rdx),%rdx
-    1128:	48 b9 b0 00 00 00 00 	movabs $0xb0,%rcx
-    112f:	00 00 00 
-    1132:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1136:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    113a:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    113e:	48 b9 b8 00 00 00 00 	movabs $0xb8,%rcx
-    1145:	00 00 00 
-    1148:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    114c:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    1150:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    1154:	48 b9 c0 00 00 00 00 	movabs $0xc0,%rcx
-    115b:	00 00 00 
-    115e:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1162:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    1166:	48 8b 52 18          	mov    0x18(%rdx),%rdx
-    116a:	48 b9 c8 00 00 00 00 	movabs $0xc8,%rcx
-    1171:	00 00 00 
-    1174:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1178:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    117c:	48 8b 52 20          	mov    0x20(%rdx),%rdx
-    1180:	48 b9 d0 00 00 00 00 	movabs $0xd0,%rcx
-    1187:	00 00 00 
-    118a:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    118e:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
-    1192:	48 8b 52 28          	mov    0x28(%rdx),%rdx
-    1196:	48 b9 d8 00 00 00 00 	movabs $0xd8,%rcx
-    119d:	00 00 00 
-    11a0:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    11a4:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
-    11a8:	48 83 c2 30          	add    $0x30,%rdx
-    11ac:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
-    11b0:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    11b4:	8b 12                	mov    (%rdx),%edx
-    11b6:	48 b9 98 00 00 00 00 	movabs $0x98,%rcx
-    11bd:	00 00 00 
-    11c0:	89 14 08             	mov    %edx,(%rax,%rcx,1)
-    11c3:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    11c7:	8b 52 04             	mov    0x4(%rdx),%edx
-    11ca:	48 b9 9c 00 00 00 00 	movabs $0x9c,%rcx
-    11d1:	00 00 00 
-    11d4:	89 14 08             	mov    %edx,(%rax,%rcx,1)
-    11d7:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    11db:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    11df:	48 b9 a0 00 00 00 00 	movabs $0xa0,%rcx
-    11e6:	00 00 00 
-    11e9:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    11ed:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    11f1:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    11f5:	48 b9 a8 00 00 00 00 	movabs $0xa8,%rcx
-    11fc:	00 00 00 
-    11ff:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1203:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    1207:	48 8b 52 18          	mov    0x18(%rdx),%rdx
-    120b:	48 b9 28 00 00 00 00 	movabs $0x28,%rcx
-    1212:	00 00 00 
-    1215:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1219:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    121d:	48 8b 52 20          	mov    0x20(%rdx),%rdx
-    1221:	48 b9 30 00 00 00 00 	movabs $0x30,%rcx
-    1228:	00 00 00 
-    122b:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    122f:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    1233:	48 8b 52 28          	mov    0x28(%rdx),%rdx
-    1237:	48 b9 38 00 00 00 00 	movabs $0x38,%rcx
-    123e:	00 00 00 
-    1241:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1245:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    1249:	48 8b 52 30          	mov    0x30(%rdx),%rdx
-    124d:	48 b9 40 00 00 00 00 	movabs $0x40,%rcx
-    1254:	00 00 00 
-    1257:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    125b:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
-    125f:	48 8b 52 38          	mov    0x38(%rdx),%rdx
-    1263:	48 b9 48 00 00 00 00 	movabs $0x48,%rcx
-    126a:	00 00 00 
-    126d:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1271:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
-    1275:	48 83 c2 70          	add    $0x70,%rdx
-    1279:	48 89 55 e8          	mov    %rdx,-0x18(%rbp)
-    127d:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    1281:	48 8b 12             	mov    (%rdx),%rdx
-    1284:	48 b9 80 00 00 00 00 	movabs $0x80,%rcx
-    128b:	00 00 00 
-    128e:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1292:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    1296:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    129a:	48 b9 88 00 00 00 00 	movabs $0x88,%rcx
-    12a1:	00 00 00 
-    12a4:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    12a8:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    12ac:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    12b0:	48 b9 90 00 00 00 00 	movabs $0x90,%rcx
-    12b7:	00 00 00 
-    12ba:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    12be:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
-    12c2:	48 81 c2 88 00 00 00 	add    $0x88,%rdx
-    12c9:	48 89 55 e0          	mov    %rdx,-0x20(%rbp)
-    12cd:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
-    12d1:	48 8b 12             	mov    (%rdx),%rdx
-    12d4:	48 b9 68 00 00 00 00 	movabs $0x68,%rcx
-    12db:	00 00 00 
-    12de:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    12e2:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
-    12e6:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    12ea:	48 b9 70 00 00 00 00 	movabs $0x70,%rcx
-    12f1:	00 00 00 
-    12f4:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    12f8:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
-    12fc:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    1300:	48 b9 78 00 00 00 00 	movabs $0x78,%rcx
-    1307:	00 00 00 
-    130a:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    130e:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
-    1312:	48 81 c2 a0 00 00 00 	add    $0xa0,%rdx
-    1319:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
-    131d:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
-    1321:	48 8b 12             	mov    (%rdx),%rdx
-    1324:	48 b9 50 00 00 00 00 	movabs $0x50,%rcx
-    132b:	00 00 00 
-    132e:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1332:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
-    1336:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-    133a:	48 b9 58 00 00 00 00 	movabs $0x58,%rcx
-    1341:	00 00 00 
-    1344:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    1348:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
-    134c:	48 8b 52 10          	mov    0x10(%rdx),%rdx
-    1350:	48 b9 60 00 00 00 00 	movabs $0x60,%rcx
-    1357:	00 00 00 
-    135a:	48 89 14 08          	mov    %rdx,(%rax,%rcx,1)
-    135e:	90                   	nop
-    135f:	c9                   	leave
-    1360:	c3                   	ret
+00000000000010aa <_ZN4ksym7loadsymEPNS_6ksym_tE>:
+    10aa:	55                   	push   %rbp
+    10ab:	48 89 e5             	mov    %rsp,%rbp
+    10ae:	48 83 ec 38          	sub    $0x38,%rsp
+    10b2:	48 89 7d c8          	mov    %rdi,-0x38(%rbp)
+    10b6:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    10ba:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    10be:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10c2:	48 8b 00             	mov    (%rax),%rax
+    10c5:	48 89 05 9c 20 00 00 	mov    %rax,0x209c(%rip)        # 3168 <_ZSt6assert>
+    10cc:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10d0:	48 8b 40 08          	mov    0x8(%rax),%rax
+    10d4:	48 89 05 95 20 00 00 	mov    %rax,0x2095(%rip)        # 3170 <_ZSt6printf>
+    10db:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10df:	48 8b 40 10          	mov    0x10(%rax),%rax
+    10e3:	48 89 05 8e 20 00 00 	mov    %rax,0x208e(%rip)        # 3178 <_ZSt6malloc>
+    10ea:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10ee:	48 8b 40 18          	mov    0x18(%rax),%rax
+    10f2:	48 89 05 87 20 00 00 	mov    %rax,0x2087(%rip)        # 3180 <_ZSt7realloc>
+    10f9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10fd:	48 8b 40 20          	mov    0x20(%rax),%rax
+    1101:	48 89 05 80 20 00 00 	mov    %rax,0x2080(%rip)        # 3188 <_ZSt4free>
+    1108:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    110c:	48 8b 40 28          	mov    0x28(%rax),%rax
+    1110:	48 89 05 79 20 00 00 	mov    %rax,0x2079(%rip)        # 3190 <_ZSt5clock>
+    1117:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    111b:	48 83 c0 30          	add    $0x30,%rax
+    111f:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1123:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    1127:	8b 00                	mov    (%rax),%eax
+    1129:	89 05 21 20 00 00    	mov    %eax,0x2021(%rip)        # 3150 <_ZN6kvideo1WE>
+    112f:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    1133:	8b 40 04             	mov    0x4(%rax),%eax
+    1136:	89 05 18 20 00 00    	mov    %eax,0x2018(%rip)        # 3154 <_ZN6kvideo1HE>
+    113c:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    1140:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1144:	48 89 05 0d 20 00 00 	mov    %rax,0x200d(%rip)        # 3158 <_ZN6kvideo11frontbufferE>
+    114b:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    114f:	48 8b 40 10          	mov    0x10(%rax),%rax
+    1153:	48 89 05 06 20 00 00 	mov    %rax,0x2006(%rip)        # 3160 <_ZN6kvideo10backbufferE>
+    115a:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    115e:	48 8b 40 18          	mov    0x18(%rax),%rax
+    1162:	48 89 05 77 1f 00 00 	mov    %rax,0x1f77(%rip)        # 30e0 <_ZN6kvideo11clearBufferE>
+    1169:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    116d:	48 8b 40 20          	mov    0x20(%rax),%rax
+    1171:	48 89 05 70 1f 00 00 	mov    %rax,0x1f70(%rip)        # 30e8 <_ZN6kvideo9fillColorE>
+    1178:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    117c:	48 8b 40 28          	mov    0x28(%rax),%rax
+    1180:	48 89 05 69 1f 00 00 	mov    %rax,0x1f69(%rip)        # 30f0 <_ZN6kvideo10fillBufferE>
+    1187:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    118b:	48 8b 40 30          	mov    0x30(%rax),%rax
+    118f:	48 89 05 62 1f 00 00 	mov    %rax,0x1f62(%rip)        # 30f8 <_ZN6kvideo4rectE>
+    1196:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    119a:	48 8b 40 38          	mov    0x38(%rax),%rax
+    119e:	48 89 05 5b 1f 00 00 	mov    %rax,0x1f5b(%rip)        # 3100 <_ZN6kvideo11swapBuffersE>
+    11a5:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    11a9:	48 83 c0 70          	add    $0x70,%rax
+    11ad:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    11b1:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11b5:	48 8b 00             	mov    (%rax),%rax
+    11b8:	48 89 05 79 1f 00 00 	mov    %rax,0x1f79(%rip)        # 3138 <_ZN7kthread5yieldE>
+    11bf:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11c3:	48 8b 40 08          	mov    0x8(%rax),%rax
+    11c7:	48 89 05 72 1f 00 00 	mov    %rax,0x1f72(%rip)        # 3140 <_ZN7kthread5sleepE>
+    11ce:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11d2:	48 8b 40 10          	mov    0x10(%rax),%rax
+    11d6:	48 89 05 6b 1f 00 00 	mov    %rax,0x1f6b(%rip)        # 3148 <_ZN7kthread4exitE>
+    11dd:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    11e1:	48 05 88 00 00 00    	add    $0x88,%rax
+    11e7:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    11eb:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    11ef:	48 8b 00             	mov    (%rax),%rax
+    11f2:	48 89 05 27 1f 00 00 	mov    %rax,0x1f27(%rip)        # 3120 <_ZN6kinput17triggerMouseEventE>
+    11f9:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    11fd:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1201:	48 89 05 20 1f 00 00 	mov    %rax,0x1f20(%rip)        # 3128 <_ZN6kinput11writeMsDataE>
+    1208:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    120c:	48 8b 40 10          	mov    0x10(%rax),%rax
+    1210:	48 89 05 19 1f 00 00 	mov    %rax,0x1f19(%rip)        # 3130 <_ZN6kinput10readMsDataE>
+    1217:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    121b:	48 05 a0 00 00 00    	add    $0xa0,%rax
+    1221:	48 89 45 d8          	mov    %rax,-0x28(%rbp)
+    1225:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1229:	48 8b 00             	mov    (%rax),%rax
+    122c:	48 89 05 d5 1e 00 00 	mov    %rax,0x1ed5(%rip)        # 3108 <_ZN3knl5panicE>
+    1233:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1237:	48 8b 40 08          	mov    0x8(%rax),%rax
+    123b:	48 89 05 ce 1e 00 00 	mov    %rax,0x1ece(%rip)        # 3110 <_ZN3knl3hcfE>
+    1242:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1246:	48 8b 40 10          	mov    0x10(%rax),%rax
+    124a:	48 89 05 c7 1e 00 00 	mov    %rax,0x1ec7(%rip)        # 3118 <_ZN3knl10findModuleE>
+    1251:	90                   	nop
+    1252:	c9                   	leave
+    1253:	c3                   	ret
 
-0000000000001361 <_ZL8sde_mainPv>:
-    1361:	55                   	push   %rbp
-    1362:	48 89 e5             	mov    %rsp,%rbp
-    1365:	53                   	push   %rbx
-    1366:	48 83 ec 38          	sub    $0x38,%rsp
-    136a:	48 8d 1d f9 ff ff ff 	lea    -0x7(%rip),%rbx        # 136a <_ZL8sde_mainPv+0x9>
-    1371:	49 bb 66 1d 00 00 00 	movabs $0x1d66,%r11
-    1378:	00 00 00 
-    137b:	4c 01 db             	add    %r11,%rbx
-    137e:	48 89 7d c8          	mov    %rdi,-0x38(%rbp)
-    1382:	c7 45 dc 32 00 00 00 	movl   $0x32,-0x24(%rbp)
-    1389:	c7 45 e0 32 00 00 00 	movl   $0x32,-0x20(%rbp)
-    1390:	48 b8 78 00 00 00 00 	movabs $0x78,%rax
-    1397:	00 00 00 
-    139a:	48 8b 14 03          	mov    (%rbx,%rax,1),%rdx
-    139e:	48 8d 45 dc          	lea    -0x24(%rbp),%rax
-    13a2:	48 89 c7             	mov    %rax,%rdi
-    13a5:	ff d2                	call   *%rdx
-    13a7:	48 b8 30 00 00 00 00 	movabs $0x30,%rax
-    13ae:	00 00 00 
-    13b1:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    13b5:	b9 ff 00 00 00       	mov    $0xff,%ecx
-    13ba:	ba 32 00 00 00       	mov    $0x32,%edx
-    13bf:	be 32 00 00 00       	mov    $0x32,%esi
-    13c4:	bf c8 00 00 00       	mov    $0xc8,%edi
-    13c9:	ff d0                	call   *%rax
-    13cb:	48 b8 40 00 00 00 00 	movabs $0x40,%rax
-    13d2:	00 00 00 
-    13d5:	4c 8b 04 03          	mov    (%rbx,%rax,1),%r8
-    13d9:	8b 75 e0             	mov    -0x20(%rbp),%esi
-    13dc:	8b 45 dc             	mov    -0x24(%rbp),%eax
-    13df:	b9 64 00 00 00       	mov    $0x64,%ecx
-    13e4:	ba 64 00 00 00       	mov    $0x64,%edx
-    13e9:	89 c7                	mov    %eax,%edi
-    13eb:	41 ff d0             	call   *%r8
-    13ee:	48 b8 80 00 00 00 00 	movabs $0x80,%rax
-    13f5:	00 00 00 
-    13f8:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    13fc:	ff d0                	call   *%rax
-    13fe:	48 b8 48 00 00 00 00 	movabs $0x48,%rax
-    1405:	00 00 00 
-    1408:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    140c:	ff d0                	call   *%rax
-    140e:	48 b8 80 00 00 00 00 	movabs $0x80,%rax
-    1415:	00 00 00 
-    1418:	48 8b 04 03          	mov    (%rbx,%rax,1),%rax
-    141c:	ff d0                	call   *%rax
-    141e:	e9 6d ff ff ff       	jmp    1390 <_ZL8sde_mainPv+0x2f>
+0000000000001254 <_ZN6kinput6MsDataC1Ev>:
+    1254:	55                   	push   %rbp
+    1255:	48 89 e5             	mov    %rsp,%rbp
+    1258:	48 83 ec 10          	sub    $0x10,%rsp
+    125c:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1260:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1264:	48 89 c7             	mov    %rax,%rdi
+    1267:	e8 14 00 00 00       	call   1280 <_ZNSt6atomicIiEC1Ev>
+    126c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1270:	48 83 c0 04          	add    $0x4,%rax
+    1274:	48 89 c7             	mov    %rax,%rdi
+    1277:	e8 04 00 00 00       	call   1280 <_ZNSt6atomicIiEC1Ev>
+    127c:	90                   	nop
+    127d:	c9                   	leave
+    127e:	c3                   	ret
+    127f:	90                   	nop
 
-0000000000001423 <_Z7kmemsetIcEPvS0_T_m>:
-    1423:	55                   	push   %rbp
-    1424:	48 89 e5             	mov    %rsp,%rbp
-    1427:	48 83 ec 28          	sub    $0x28,%rsp
-    142b:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 142b <_Z7kmemsetIcEPvS0_T_m+0x8>
-    1432:	49 bb a5 1c 00 00 00 	movabs $0x1ca5,%r11
-    1439:	00 00 00 
-    143c:	4c 01 d8             	add    %r11,%rax
-    143f:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
-    1443:	89 f0                	mov    %esi,%eax
-    1445:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
-    1449:	88 45 e4             	mov    %al,-0x1c(%rbp)
-    144c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1450:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
-    1454:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
-    1458:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    145c:	48 01 d0             	add    %rdx,%rax
-    145f:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
-    1463:	eb 12                	jmp    1477 <_Z7kmemsetIcEPvS0_T_m+0x54>
-    1465:	0f b6 55 e4          	movzbl -0x1c(%rbp),%edx
-    1469:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    146d:	48 8d 48 01          	lea    0x1(%rax),%rcx
-    1471:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
-    1475:	88 10                	mov    %dl,(%rax)
-    1477:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    147b:	48 3b 45 f0          	cmp    -0x10(%rbp),%rax
-    147f:	72 e4                	jb     1465 <_Z7kmemsetIcEPvS0_T_m+0x42>
-    1481:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
-    1485:	c9                   	leave
-    1486:	c3                   	ret
+0000000000001280 <_ZNSt6atomicIiEC1Ev>:
+    1280:	55                   	push   %rbp
+    1281:	48 89 e5             	mov    %rsp,%rbp
+    1284:	48 83 ec 08          	sub    $0x8,%rsp
+    1288:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    128c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1290:	c7 00 00 00 00 00    	movl   $0x0,(%rax)
+    1296:	90                   	nop
+    1297:	c9                   	leave
+    1298:	c3                   	ret
 
-0000000000001487 <_Z7kmemcpyIcEPvS0_PKvm>:
-    1487:	55                   	push   %rbp
-    1488:	48 89 e5             	mov    %rsp,%rbp
-    148b:	48 83 ec 38          	sub    $0x38,%rsp
-    148f:	48 8d 05 f9 ff ff ff 	lea    -0x7(%rip),%rax        # 148f <_Z7kmemcpyIcEPvS0_PKvm+0x8>
-    1496:	49 bb 41 1c 00 00 00 	movabs $0x1c41,%r11
-    149d:	00 00 00 
-    14a0:	4c 01 d8             	add    %r11,%rax
-    14a3:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
-    14a7:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
-    14ab:	48 89 55 c8          	mov    %rdx,-0x38(%rbp)
-    14af:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    14b3:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
-    14b7:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
-    14bb:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
-    14bf:	48 01 d0             	add    %rdx,%rax
-    14c2:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
-    14c6:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
-    14ca:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
-    14ce:	eb 1d                	jmp    14ed <_Z7kmemcpyIcEPvS0_PKvm+0x66>
-    14d0:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
-    14d4:	48 8d 50 01          	lea    0x1(%rax),%rdx
-    14d8:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
-    14dc:	0f b6 10             	movzbl (%rax),%edx
-    14df:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    14e3:	48 8d 48 01          	lea    0x1(%rax),%rcx
-    14e7:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
-    14eb:	88 10                	mov    %dl,(%rax)
-    14ed:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    14f1:	48 3b 45 e8          	cmp    -0x18(%rbp),%rax
-    14f5:	72 d9                	jb     14d0 <_Z7kmemcpyIcEPvS0_PKvm+0x49>
-    14f7:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
-    14fb:	c9                   	leave
-    14fc:	c3                   	ret
+0000000000001299 <_ZL8sde_mainPv>:
+    1299:	55                   	push   %rbp
+    129a:	48 89 e5             	mov    %rsp,%rbp
+    129d:	41 54                	push   %r12
+    129f:	53                   	push   %rbx
+    12a0:	48 83 ec 50          	sub    $0x50,%rsp
+    12a4:	48 89 7d a8          	mov    %rdi,-0x58(%rbp)
+    12a8:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    12ac:	48 89 c7             	mov    %rax,%rdi
+    12af:	e8 a0 ff ff ff       	call   1254 <_ZN6kinput6MsDataC1Ev>
+    12b4:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    12b8:	be 32 00 00 00       	mov    $0x32,%esi
+    12bd:	48 89 c7             	mov    %rax,%rdi
+    12c0:	e8 e9 00 00 00       	call   13ae <_ZNSt6atomicIiEaSEi>
+    12c5:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    12c9:	48 83 c0 04          	add    $0x4,%rax
+    12cd:	be 32 00 00 00       	mov    $0x32,%esi
+    12d2:	48 89 c7             	mov    %rax,%rdi
+    12d5:	e8 d4 00 00 00       	call   13ae <_ZNSt6atomicIiEaSEi>
+    12da:	48 c7 45 e0 00 00 00 	movq   $0x0,-0x20(%rbp)
+    12e1:	00 
+    12e2:	c6 45 df 00          	movb   $0x0,-0x21(%rbp)
+    12e6:	48 8b 05 a3 1e 00 00 	mov    0x1ea3(%rip),%rax        # 3190 <_ZSt5clock>
+    12ed:	ff d0                	call   *%rax
+    12ef:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+    12f3:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    12f7:	48 2b 45 e8          	sub    -0x18(%rbp),%rax
+    12fb:	48 01 45 e0          	add    %rax,-0x20(%rbp)
+    12ff:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    1303:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1307:	48 8b 15 22 1e 00 00 	mov    0x1e22(%rip),%rdx        # 3130 <_ZN6kinput10readMsDataE>
+    130e:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    1312:	48 89 c7             	mov    %rax,%rdi
+    1315:	ff d2                	call   *%rdx
+    1317:	48 8b 05 ca 1d 00 00 	mov    0x1dca(%rip),%rax        # 30e8 <_ZN6kvideo9fillColorE>
+    131e:	b9 ff 00 00 00       	mov    $0xff,%ecx
+    1323:	ba 32 00 00 00       	mov    $0x32,%edx
+    1328:	be 32 00 00 00       	mov    $0x32,%esi
+    132d:	bf c8 00 00 00       	mov    $0xc8,%edi
+    1332:	ff d0                	call   *%rax
+    1334:	48 8b 1d bd 1d 00 00 	mov    0x1dbd(%rip),%rbx        # 30f8 <_ZN6kvideo4rectE>
+    133b:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    133f:	48 83 c0 04          	add    $0x4,%rax
+    1343:	be 05 00 00 00       	mov    $0x5,%esi
+    1348:	48 89 c7             	mov    %rax,%rdi
+    134b:	e8 8c 00 00 00       	call   13dc <_ZNKSt6atomicIiE4loadESt12memory_order>
+    1350:	41 89 c4             	mov    %eax,%r12d
+    1353:	48 8d 45 b0          	lea    -0x50(%rbp),%rax
+    1357:	be 05 00 00 00       	mov    $0x5,%esi
+    135c:	48 89 c7             	mov    %rax,%rdi
+    135f:	e8 78 00 00 00       	call   13dc <_ZNKSt6atomicIiE4loadESt12memory_order>
+    1364:	b9 64 00 00 00       	mov    $0x64,%ecx
+    1369:	ba 64 00 00 00       	mov    $0x64,%edx
+    136e:	44 89 e6             	mov    %r12d,%esi
+    1371:	89 c7                	mov    %eax,%edi
+    1373:	ff d3                	call   *%rbx
+    1375:	c6 45 df 01          	movb   $0x1,-0x21(%rbp)
+    1379:	80 7d df 00          	cmpb   $0x0,-0x21(%rbp)
+    137d:	0f 84 63 ff ff ff    	je     12e6 <_ZL8sde_mainPv+0x4d>
+    1383:	48 83 7d e0 0f       	cmpq   $0xf,-0x20(%rbp)
+    1388:	0f 86 58 ff ff ff    	jbe    12e6 <_ZL8sde_mainPv+0x4d>
+    138e:	48 c7 45 e0 00 00 00 	movq   $0x0,-0x20(%rbp)
+    1395:	00 
+    1396:	48 8b 05 63 1d 00 00 	mov    0x1d63(%rip),%rax        # 3100 <_ZN6kvideo11swapBuffersE>
+    139d:	ff d0                	call   *%rax
+    139f:	48 8b 05 92 1d 00 00 	mov    0x1d92(%rip),%rax        # 3138 <_ZN7kthread5yieldE>
+    13a6:	ff d0                	call   *%rax
+    13a8:	e9 39 ff ff ff       	jmp    12e6 <_ZL8sde_mainPv+0x4d>
+    13ad:	90                   	nop
+
+00000000000013ae <_ZNSt6atomicIiEaSEi>:
+    13ae:	55                   	push   %rbp
+    13af:	48 89 e5             	mov    %rsp,%rbp
+    13b2:	48 83 ec 10          	sub    $0x10,%rsp
+    13b6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    13ba:	89 75 f4             	mov    %esi,-0xc(%rbp)
+    13bd:	8b 4d f4             	mov    -0xc(%rbp),%ecx
+    13c0:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13c4:	ba 05 00 00 00       	mov    $0x5,%edx
+    13c9:	89 ce                	mov    %ecx,%esi
+    13cb:	48 89 c7             	mov    %rax,%rdi
+    13ce:	e8 d3 00 00 00       	call   14a6 <_ZNSt6atomicIiE5storeEiSt12memory_order>
+    13d3:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13d7:	8b 00                	mov    (%rax),%eax
+    13d9:	c9                   	leave
+    13da:	c3                   	ret
+    13db:	90                   	nop
+
+00000000000013dc <_ZNKSt6atomicIiE4loadESt12memory_order>:
+    13dc:	55                   	push   %rbp
+    13dd:	48 89 e5             	mov    %rsp,%rbp
+    13e0:	48 83 ec 10          	sub    $0x10,%rsp
+    13e4:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    13e8:	89 75 f4             	mov    %esi,-0xc(%rbp)
+    13eb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13ef:	8b 00                	mov    (%rax),%eax
+    13f1:	c9                   	leave
+    13f2:	c3                   	ret
+
+00000000000013f3 <_Z7kmemsetIcEPvS0_T_m>:
+    13f3:	55                   	push   %rbp
+    13f4:	48 89 e5             	mov    %rsp,%rbp
+    13f7:	48 83 ec 28          	sub    $0x28,%rsp
+    13fb:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    13ff:	89 f0                	mov    %esi,%eax
+    1401:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    1405:	88 45 e4             	mov    %al,-0x1c(%rbp)
+    1408:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    140c:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    1410:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    1414:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1418:	48 01 d0             	add    %rdx,%rax
+    141b:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    141f:	eb 12                	jmp    1433 <_Z7kmemsetIcEPvS0_T_m+0x40>
+    1421:	0f b6 55 e4          	movzbl -0x1c(%rbp),%edx
+    1425:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1429:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    142d:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    1431:	88 10                	mov    %dl,(%rax)
+    1433:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1437:	48 3b 45 f0          	cmp    -0x10(%rbp),%rax
+    143b:	72 e4                	jb     1421 <_Z7kmemsetIcEPvS0_T_m+0x2e>
+    143d:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1441:	c9                   	leave
+    1442:	c3                   	ret
+
+0000000000001443 <_Z7kmemcpyIcEPvS0_PKvm>:
+    1443:	55                   	push   %rbp
+    1444:	48 89 e5             	mov    %rsp,%rbp
+    1447:	48 83 ec 38          	sub    $0x38,%rsp
+    144b:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    144f:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    1453:	48 89 55 c8          	mov    %rdx,-0x38(%rbp)
+    1457:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    145b:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    145f:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    1463:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1467:	48 01 d0             	add    %rdx,%rax
+    146a:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    146e:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    1472:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1476:	eb 1d                	jmp    1495 <_Z7kmemcpyIcEPvS0_PKvm+0x52>
+    1478:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    147c:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    1480:	48 89 55 f0          	mov    %rdx,-0x10(%rbp)
+    1484:	0f b6 10             	movzbl (%rax),%edx
+    1487:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    148b:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    148f:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    1493:	88 10                	mov    %dl,(%rax)
+    1495:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1499:	48 3b 45 e8          	cmp    -0x18(%rbp),%rax
+    149d:	72 d9                	jb     1478 <_Z7kmemcpyIcEPvS0_PKvm+0x35>
+    149f:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    14a3:	c9                   	leave
+    14a4:	c3                   	ret
+    14a5:	90                   	nop
+
+00000000000014a6 <_ZNSt6atomicIiE5storeEiSt12memory_order>:
+    14a6:	55                   	push   %rbp
+    14a7:	48 89 e5             	mov    %rsp,%rbp
+    14aa:	48 83 ec 10          	sub    $0x10,%rsp
+    14ae:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    14b2:	89 75 f4             	mov    %esi,-0xc(%rbp)
+    14b5:	89 55 f0             	mov    %edx,-0x10(%rbp)
+    14b8:	8b 55 f4             	mov    -0xc(%rbp),%edx
+    14bb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14bf:	87 10                	xchg   %edx,(%rax)
+    14c1:	90                   	nop
+    14c2:	c9                   	leave
+    14c3:	c3                   	ret
 
 
 

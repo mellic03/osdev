@@ -35,7 +35,7 @@ static void handle_MemAlloc( sysreq_t *arg, sysres_t *res )
 
 
 
-void kernel::syscallISR( intframe_t* )
+void knl::syscallISR( intframe_t* )
 {
     cpu_t *cpu = SMP::this_cpu();
 

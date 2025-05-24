@@ -19,7 +19,7 @@
 //     while (dead.size() > 0)
 //     {
 //         auto *th = dead.back(); dead.pop_back();
-//         // syslog::printf("[threadManager_UpdateDead] \"%s\"\n", th->name);
+//         // syslog::print("[threadManager_UpdateDead] \"%s\"\n", th->name);
 //         vec_remove(sd->m_threads, th);
 //         sd->releaseThread(th);
 //     }
@@ -50,7 +50,7 @@
 //     while (true)
 //     {
 //         // auto *cpu = SMP::this_cpu();
-//         // syslog::printf("[CPU%u threadManager]\n", cpu->id);
+//         // syslog::print("[CPU%u threadManager]\n", cpu->id);
         
 //         auto *sd = SMP::this_sched();
 //         threadManager_UpdateDead(sd);
@@ -60,81 +60,41 @@
 // }
 
 
-void kthread::cullmain( void* )
-{
-    while (true)
-    {
-        asm volatile ("hlt");
-    }
-}
-
-void kthread::idlemain( void* )
-{
-    while (true)
-    {
-        asm volatile ("hlt");
-    }
-}
-
+// static void cullmain( void* )
+// {
+//     while (true)
+//     {
+//         asm volatile ("hlt");
+//     }
+// }
 
 
 static void kthread_wrapper( void (*threadmain)(void*), void *arg )
 {
+    asm volatile ("sti");
     threadmain(arg);
-    kthread::yield(YldRsn_Exit);
-    while (true) { asm volatile ("hlt"); }
+    kthread::yield();
+    while (true) { CPU::hlt(); }
 }
 
+static void idlemain( void* )
+{
+    while (true)
+    {
+        asm volatile ("hlt");
+    }
+}
 
 
 ThreadScheduler::ThreadScheduler( cpu_t &cpu )
-:   m_cpu(cpu), m_isRunning{false}, m_lock{false}
+:   m_cpu(cpu)
 {
-    m_isRunning.store(false);
+    m_startLock.set();
+    m_switchLock.clear();
     m_threads.clear();
+
+    m_idlethread = addThread("idlemain", idlemain, nullptr);
     // kassert("No cpu", cpu != nullptr);
-}
-
-
-
-void
-ThreadScheduler::start()
-{
-    // kassert(m_threads.size() > 0);
-    addThread("idlemain", kthread::idlemain, nullptr);
-    KInterrupt<IntNo_KTHREAD_START>();
-}
-
-
-
-
-kthread_t*
-ThreadScheduler::allocateThread( const char *name, void (*fn)(void*), void *arg )
-{
-    // std::lock_guard lock(m_lock);
-    // global_sched_lock.lock();
-    auto *th = (kthread_t*)kmalloc(sizeof(kthread_t));
-
-    memset(th->stack, 0, sizeof(th->stack));
-    memset(&(th->frame), 0, sizeof(intframe_t));
-    memset(th->name, '\0', sizeof(th->name));
-    strncpy(th->name, name, sizeof(th->name));
-
-    th->cpu              = &m_cpu;
-    th->tid              = m_thread_tid++;
-    th->status           = KThread_READY;
-    th->wakeTime         = 0;
-    th->stackTop         = th->stack + sizeof(th->stack) - 16;
-
-    th->frame.rsp    = (uint64_t)(th->stackTop);
-    th->frame.rip    = (uint64_t)kthread_wrapper;
-    th->frame.rdi    = (uint64_t)fn;
-    th->frame.rsi    = (uint64_t)arg;
-    th->frame.rbp    = 0;
-    th->frame.rflags = CPU::getRFLAGS(); // 0x202;
-    // CPU::fxsave(th->fxstate);
-
-    return th;
 }
 
 
@@ -142,8 +102,32 @@ ThreadScheduler::allocateThread( const char *name, void (*fn)(void*), void *arg 
 kthread_t*
 ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
 {
-    kthread_t *th = allocateThread(name, fn, arg);
+    m_switchLock.set();
+
+    auto *th = (kthread_t*)kmalloc(sizeof(kthread_t));
     m_threads.push_back(th);
+
+    memset(th->stack, 0, sizeof(th->stack));
+    memset(&(th->frame), 0, sizeof(intframe_t));
+    memset(th->name, '\0', sizeof(th->name));
+    strncpy(th->name, name, sizeof(th->name));
+
+    th->cpu          = &m_cpu;
+    th->tid          = m_thread_tid++;
+    th->status       = KThread_READY;
+    th->wakeTime     = 0;
+    th->stackTop     = th->stack + sizeof(th->stack) - 16;
+
+    th->frame.rsp    = (uint64_t)(th->stackTop);
+    th->frame.rip    = (uint64_t)kthread_wrapper;
+    th->frame.rdi    = (uint64_t)fn;
+    th->frame.rsi    = (uint64_t)arg;
+    th->frame.rbp    = 0;
+    th->frame.rflags = CPU::getRFLAGS(); // 0x202;
+    CPU::fxsave(th->fxstate);
+
+    m_switchLock.clear();
+
     return th;
 }
 
@@ -152,6 +136,29 @@ void
 ThreadScheduler::releaseThread( kthread_t *th )
 {
     kfree(th);
+}
+
+
+
+
+void
+ThreadScheduler::trampoline( intframe_t *frame )
+{
+    syslog log("ThreadScheduler::trampoline");
+
+    uint64_t frame_cs = frame->cs;
+    uint64_t frame_ss = frame->ss;
+
+    auto *curr = m_threads.front();
+    log("curr name: %s", curr->name);
+    // CPU::fxsave(curr->fxstate);
+    // asm volatile("fxsave %0 " : : "m"(curr->fxstate));
+
+    *frame = curr->frame;
+    frame->cs = frame_cs;
+    frame->ss = frame_ss;
+
+    m_startLock.clear();
 }
 
 
@@ -180,52 +187,27 @@ kthread_t *swap_threads( kthread_t *curr, kthread_t *next, intframe_t *frame )
     return next;
 }
 
-
-
-void
-ThreadScheduler::trampoline( intframe_t *frame )
-{
-    uint64_t frame_cs = frame->cs;
-    uint64_t frame_ss = frame->ss;
-
-    if (m_threads.empty())
-    {
-        addThread("idlemain", kthread::idlemain, nullptr);
-    }
-
-    auto *curr = m_threads.front();
-    // CPU::fxsave(curr->fxstate);
-    // asm volatile("fxsave %0 " : : "m"(curr->fxstate));
-
-    *frame = curr->frame;
-    frame->cs = frame_cs;
-    frame->ss = frame_ss;
-
-    m_isRunning.store(true);
-}
-
-
 void
 ThreadScheduler::schedule( intframe_t *frame )
 {
-    if (m_isRunning.load() == false)
+    if (m_switchLock.isset())
         return;
-    kassert(m_threads.size() > 0);
-        
-    kthread_t *prev = m_threads.pop_front(); m_threads.push_back(prev);
-    kthread_t *next = m_threads.front();
 
-    // while (next != prev)
-    // {
-    //     if (next->status != KThread_SLEEPING)
-    //         break;
-    //     next = m_threads.pop_front(); m_threads.push_back(next);
-    // }
+    kthread_t *prev, *next;
 
-    // CPU::fxsave(prev->fxstate);
+    prev = m_threads.front();
+    m_threads.rotate(1);
+    next = m_threads.front();
 
+    if (next == m_idlethread)
+    {
+        m_threads.rotate(1);
+        next = m_threads.front();
+    }
+
+    // syslog::println("[ThreadScheduler::schedule] %s --> %s", prev->name, next->name);
     swap_threads(prev, next, frame);
-    // CPU::fxrstor(next->fxstate);
+
 }
 
 
@@ -234,17 +216,29 @@ ThreadScheduler::schedule( intframe_t *frame )
 
 
 
-void ThreadScheduler::trampolineISR( intframe_t *frame )
-{
-    // syslog::println("[CPU%lu trampolineISR]", SMP::this_cpu()->id);
-    SMP::this_sched()->trampoline(frame);
-}
+// void ThreadScheduler::trampolineISR( intframe_t *frame )
+// {
+//     syslog::println("[trampolineISR] cpu=0x%lx", SMP::this_cpu());
+//     // syslog::println("[CPU%lu trampolineISR]", SMP::this_cpu()->id);
+//     SMP::this_sched()->trampoline(frame);
+// }
 
 
 #include <kernel/log.hpp>
 void ThreadScheduler::scheduleISR( intframe_t *frame )
 {
-    // syslog::println("[CPU%lu scheduleISR]", SMP::this_cpu()->id);
-    SMP::this_sched()->schedule(frame);
+    auto *sd = SMP::this_sched();
+
+    if (sd->m_startLock.isset())
+    {
+        sd->trampoline(frame);
+    }
+
+    else
+    {
+        CPU::fxsave(sd->m_threads.front()->fxstate);
+        sd->schedule(frame);
+        CPU::fxrstor(sd->m_threads.front()->fxstate);
+    }
 }
 

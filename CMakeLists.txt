@@ -10,12 +10,14 @@ ENABLE_LANGUAGE(ASM_NASM)
 set(CringeOS_LIBRARIES "")
 # set(CringeOS_SOURCES "")
 
+set(__x86_64__, "")
 set(KERNEL_SYSROOT_DIR ${CMAKE_SOURCE_DIR}/sysroot)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${KERNEL_SYSROOT_DIR}/usr/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${KERNEL_SYSROOT_DIR}/usr/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${KERNEL_SYSROOT_DIR}/usr/bin)
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
 
 include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
 
@@ -24,7 +26,9 @@ include_directories("${CMAKE_SOURCE_DIR}/lib/libc/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libc++/include/")
 
 include_directories("${CMAKE_SOURCE_DIR}/kernel/include/")
+include_directories("${CMAKE_SOURCE_DIR}/kernel/include/arch/x86_64/")
 include_directories("${CMAKE_SOURCE_DIR}/include/")
+
 
 # add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")

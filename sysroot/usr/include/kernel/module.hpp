@@ -4,7 +4,7 @@
 #include <static_vector.hpp>
 
 
-namespace kernel
+namespace knl
 {
     extern idk::static_vector<ModuleInterface*, 64> modules;
 

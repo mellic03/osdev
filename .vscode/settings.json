@@ -186,7 +186,8 @@
         "${workspaceFolder}/include/",
         "${workspaceFolder}/lib/libc/include/",
         "${workspaceFolder}/lib/libc++/include/",
-        "${workspaceFolder}/kernel/include/"
+        "${workspaceFolder}/kernel/include/",
+        "${workspaceFolder}/kernel/include/arch/x86_64"
 
     ],
     "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true

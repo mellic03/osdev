@@ -1,11 +1,22 @@
 [bits 64]
 
+section .data
+    align 16
+    qtemp dq 0
+
+
 section .text
     align 16
     extern isr_dispatch
 
 
     %macro ctx_push 0
+        ; ; cr3 -------------
+        ; mov [qtemp], rax
+        ;     mov rax, cr3
+        ;     push rax
+        ; mov rax, [qtemp]
+        ; ; -----------------
         push rbp
         push rsi
         push rdi
@@ -18,10 +29,16 @@ section .text
         push r13
         push r12
         push r11
+        push r10
+        push r9
+        push r8
     %endmacro
 
 
     %macro ctx_pop 0
+        pop r8
+        pop r9
+        pop r10
         pop r11
         pop r12
         pop r13
@@ -34,17 +51,25 @@ section .text
         pop rdi
         pop rsi
         pop rbp
+        ; ; cr3 -------------
+        ; mov [qtemp], rax
+        ;     pop rax
+        ;     mov cr3, rax
+        ; mov rax, [qtemp]
+        ; ; -----------------
     %endmacro
 
 
     %macro _err_stub 1
     isr_stub_%+%1:
+        ; cli
         push qword %1
         isr_stub_common
     %endmacro
 
     %macro _noerr_stub 1
     isr_stub_%+%1:
+        ; cli
         push 0 ; Dummy error code
         push qword %1
         isr_stub_common
@@ -56,6 +81,7 @@ section .text
         call isr_dispatch
         ctx_pop
         add rsp, 16
+        ; sti
         iretq
     %endmacro
 

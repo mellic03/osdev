@@ -3,19 +3,24 @@
 #endif
 
 #include <kernel/kvideo.hpp>
+#include <kernel/bitmanip.hpp>
 #include "kvideo.hpp"
 
+#include <cringe/font.hpp>
+#include <cringe/bmp.hpp>
+
+
+#include <cpu/cpu.hpp>
 #include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
 #include <kmalloc.h>
-#include <khang.h>
 #include <kthread.hpp>
 #include <kmemxx.hpp>
 #include <string.h>
 #include <algorithm>
 
 
-
+static cringe::Font kvideoFont(0, 0, 0);
 static uint8_t kvideoFillColor[4];
 int    kvideo::W = 0;
 int    kvideo::H = 0;
@@ -32,7 +37,7 @@ void kvideo::initFrontbuffer( uintptr_t fbres )
 {
     auto *res = (limine_framebuffer_response*)fbres;
 
-    syslog log("kvideo::init");
+    syslog log("kvideo::initFrontbuffer");
     auto *fb = res->framebuffers[0];
 
     log("fb count:    %u", res->framebuffer_count);
@@ -68,6 +73,77 @@ void kvideo::initBackbuffer( uintptr_t )
 }
 
 
+
+static void kvideo_blit( int x, int y, uint8_t *img, int imgw, int,
+                         const ivec2 &tl, const ivec2 &sp )
+{
+    uint8_t *dst = kvideo::backbuffer;
+    uint8_t *src = img;
+
+    int xmin = x;
+    int xmax = x + sp.x;
+
+    int ymin = y;
+    int ymax = y + sp.y;
+
+
+    for (int i=0; i<ymax-ymin; i++)
+    {
+        int dsty = y + i;
+        int srcy = tl.y + i;
+
+        for (int j=0; j<xmax-xmin; j++)
+        {
+            int dstx = x + j;
+            int srcx = tl.x + j;
+
+            int dstidx = kvideo::W*4*dsty + 4*dstx;
+            int srcidx = imgw*4*srcy + 4*srcx;
+
+            for (int k=0; k<4; k++)
+                dst[dstidx+k] = src[srcidx+k];
+        }
+    }
+}
+
+
+void kvideo::setFont( const cringe::Font &font )
+{
+    kvideoFont = font;
+}
+
+
+void kvideo::renderGlyph( char ch, int x, int y )
+{
+    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
+    auto &font = kvideoFont;
+
+    ivec2 tl = font.getGlyphCorner(ch);
+    ivec2 sp = font.getGlyphExtents();
+
+    kvideo_blit(x, y, font.m_img, font.W, font.H, tl, sp);
+}
+
+
+void kvideo::renderString( const char *str, int x, int y )
+{
+    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
+    auto &font = kvideoFont;
+
+    while (*str)
+    {
+        ivec2 tl = font.getGlyphCorner(*str);
+        ivec2 sp = font.getGlyphExtents();
+        kvideo_blit(x, y, font.m_img, font.W, font.H, tl, sp);
+
+        x += sp.x;
+        str++;
+    }
+
+}
+
+
+
 void kvideo::swapBuffers()
 {
     kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
@@ -76,13 +152,12 @@ void kvideo::swapBuffers()
 
 
 
-
 static void bufferCheck( uint8_t *buffer )
 {
     if ((buffer != kvideo::backbuffer) && (buffer != kvideo::frontbuffer))
     {
         syslog::println("[kvideo::clearBuffer] wtf??");
-        kernel::hang();
+        CPU::hcf();
     }
 }
 

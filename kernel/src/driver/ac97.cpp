@@ -10,7 +10,7 @@
 // */
 
 // #include "ac97.hpp"
-// #include <kernel/ioport.hpp>
+// #include <arch/io.hpp>
 
 // void ac97_add_new_pci_device( pci_device device )
 // {

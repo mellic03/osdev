@@ -29,6 +29,13 @@ public:
         m_size = 0;
     }
 
+    inline void rotate( int n )
+    {
+        kassert(m_size > 0);
+        for (int i=0; i<n; i++)
+            push_back(pop_front());
+    }
+
     inline T &front()
     {
         kassert(m_size > 0);

@@ -14,13 +14,11 @@ struct kthread_t;
 struct ThreadScheduler;
 
 
-static constexpr uint64_t MSR_PAT =   0x0277;
-
-static constexpr uint64_t MSR_FS_BASE       =   0xC0000100;
-static constexpr uint64_t MSR_GS_BASE       =   0xC0000101;
-static constexpr uint64_t MSR_KERN_GS_BASE  =   0xC0000102;
-
-static constexpr uint64_t MSR_EFER =   0xC0000080;
+static constexpr uint64_t MSR_PAT          = 0x0277;
+static constexpr uint64_t MSR_FS_BASE      = 0xC0000100;
+static constexpr uint64_t MSR_GS_BASE      = 0xC0000101;
+static constexpr uint64_t MSR_KERN_GS_BASE = 0xC0000102;
+static constexpr uint64_t MSR_EFER         = 0xC0000080;
 
 /* @see https://wiki.osdev.org/SYSCALL#AMD:_SYSCALL.2FSYSRET */
 /* Ring 0 and Ring 3 Segment bases, as well as SYSCALL EIP.
@@ -67,6 +65,8 @@ struct cpu_t
 
 namespace SMP
 {
+    bool       is_bsp();
+
     cpu_t     *this_cpu();
     uint64_t   this_cpuid();
     ksched_t  *this_sched();
@@ -88,7 +88,6 @@ namespace CPU
     void createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS );
     void installGDT( gdt_ptr_t *gdtr );
 
-    void clearIDT();
     void createIDT();
     void installIDT();
     void createIDT( idt_entry_t *idtbase, idt_ptr_t *idtptr );
@@ -114,6 +113,11 @@ namespace CPU
     static constexpr uint32_t MSR_FS_BASE        = 0xC0000100;
     static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
     static constexpr uint32_t MSR_KERNEL_GS_BASE = 0xC0000102;
+        
+    inline void cli() { asm volatile ("cli"); }
+    inline void sti() { asm volatile ("sti"); }
+    inline void hlt() { asm volatile ("hlt"); }
+    inline void hcf() { while (true) { asm volatile ("cli; hlt"); } }
 
     inline uint64_t rdmsr( uint32_t msr )
     {
@@ -127,41 +131,11 @@ namespace CPU
         asm volatile ("wrmsr" : : "c"(msr), "a"(value & 0xFFFFFFFF), "d"(value >> 32));
     }
 
+    void     setRSP( uintptr_t );
+
     uint64_t getCR3();
     void     setCR3( uint64_t );
 
-    /**
-     * Install a new pagetable by changing the CR3 value. Address must be divisable
-     * by pagesize. The address must be physical.
-     */
-    static inline void setPML4( uint64_t pagetable_address )
-    {
-        __asm__ volatile("mov cr3, rax"
-                        :
-                        : "a"(pagetable_address & 0xFFFFFFFFFFFFF000ULL));
-    }
-    
-    /**
-     * Gets the physical address of installed current page table.
-     */
-    static inline uint64_t getPML4()
-    {
-        uint64_t cr3;
-        __asm__ volatile("mov rax, cr3" : "=a"(cr3));
-        return cr3 & 0xFFFFFFFFFFFFF000ULL;
-    }
-
-
-    // inline uint64_t getRFLAGS()
-    // {
-    //     uint64_t rflags;
-    //     __asm__ volatile (
-    //         "pushfq\n"          // Push the RFLAGS register onto the stack
-    //         "popq %0\n"         // Pop the value from the stack into rflags
-    //         : "=r"(rflags)      // Output operand
-    //     );
-    //     return rflags;
-    // }
     inline uint64_t getRFLAGS()
     {
         uint64_t flags;
@@ -171,18 +145,14 @@ namespace CPU
         return flags;
     }
 
-    // inline void setRFLAGS( uint64_t rflags )
-    // {
-    //     asm volatile (
-    //         "pushfq\n\t"
-    //         "pop %0"
-    //         : "=r"(rflags)
-    //     );
-    // }
-    
-    inline void cli() { asm volatile ("cli"); }
-    inline void sti() { asm volatile ("sti"); }
-
+    inline void setRFLAGS( uint64_t rflags )
+    {
+        asm volatile (
+            "pushfq\n\t"
+            "pop %0"
+            : "=r"(rflags)
+        );
+    }
 
     __attribute__((always_inline))
     inline bool checkInterrupts()
@@ -195,32 +165,10 @@ namespace CPU
     }
 
 
-    static inline uint64_t getTCS()
+    static inline uint64_t getTSC()
     {
         uint32_t timestamp_low, timestamp_high;
         asm volatile("rdtsc" : "=a"(timestamp_low), "=d"(timestamp_high));
         return ((uint64_t)timestamp_high << 32) | ((uint64_t)timestamp_low);
-    }
-
-
-    inline void setLocal( cpu_t *val )
-    {
-        val->self = val;
-        asm volatile("wrmsr" ::"a"((uintptr_t)val & 0xFFFFFFFF) /*Value low*/,
-                    "d"(((uintptr_t)val >> 32) & 0xFFFFFFFF) /*Value high*/, "c"(0xC0000102) /*Set Kernel GS Base*/);
-        asm volatile("wrmsr" ::"a"((uintptr_t)val & 0xFFFFFFFF) /*Value low*/,
-                    "d"(((uintptr_t)val >> 32) & 0xFFFFFFFF) /*Value high*/, "c"(0xC0000101) /*Set Kernel GS Base*/);
-    }
-
-    inline cpu_t *getLocal()
-    {
-        cpu_t *ret;
-        int intEnable = checkInterrupts();
-        asm("cli");
-        asm volatile("swapgs; movq %%gs:0, %0; swapgs;"
-                    : "=r"(ret)); // CPU info is 16-byte aligned as per liballoc alignment
-        if (intEnable)
-            asm("sti");
-        return ret;
     }
 }

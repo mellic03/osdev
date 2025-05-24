@@ -1,5 +1,3 @@
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-
 file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
@@ -7,6 +5,7 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/coreutil/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/*.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/cringe/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/driver/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/driver/*.asm
     ${CMAKE_CURRENT_SOURCE_DIR}/src/filesystem/*.cpp
@@ -16,8 +15,9 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/syscall/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/sym/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/sys/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/sys/acpi/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/x86_64/acpi/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/arch/x86_64/apic/*.cpp
+
 )
 
 set(CringeOS_SOURCES ${SOURCES} PARENT_SCOPE)

@@ -1,11 +1,29 @@
 #include <driver/pic.hpp>
-#include <kernel/ioport.hpp>
+#include <arch/io.hpp>
+#include <kassert.h>
 
 // https://wiki.osdev.org/Inline_Assembly/Examples#I/O_access
+
+static bool pic_enabled = true;
+
+void PIC::enable()
+{
+	pic_enabled = true;
+}
+
+
+void PIC::disable()
+{
+	PIC::maskAll();
+	pic_enabled = false;
+}
+
 
 void
 PIC::remap( int offset1, int offset2 )
 {
+	kassert(pic_enabled);
+
 	IO::outb(PIC1_CMD, ICW1_INIT | ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
 	IO::wait();
 
@@ -29,14 +47,22 @@ PIC::remap( int offset1, int offset2 )
 
 	IO::outb(PIC2_DATA, ICW4_8086);
 	IO::wait();
-
-	PIC::disable();
 }
 
+
+void PIC::maskAll()
+{
+	kassert(pic_enabled);
+
+	IO::outb(PIC1_DATA, 0xFF);
+    IO::outb(PIC2_DATA, 0xFF);
+}
 
 
 void PIC::setmask( uint8_t IRQline )
 {
+	kassert(pic_enabled);
+
 	uint16_t port;
 	uint8_t value;
 
@@ -50,6 +76,8 @@ void PIC::setmask( uint8_t IRQline )
 
 void PIC::unmask( uint8_t IRQline )
 {
+	kassert(pic_enabled);
+
 	uint16_t port;
 	uint8_t value;
 
@@ -61,20 +89,11 @@ void PIC::unmask( uint8_t IRQline )
 }
 
 
-void PIC::disable()
-{
-    IO::outb(PIC1_DATA, 0xFF);
-    IO::outb(PIC2_DATA, 0xFF);
-}
-
-
 void PIC::sendEOI( uint8_t irqno )
 {
+	kassert(pic_enabled);
 	if (irqno >= 8)
-	{
 		IO::outb(PIC2_CMD, 0x20);
-	}
-		
 	IO::outb(PIC1_CMD, 0x20);
 }
 

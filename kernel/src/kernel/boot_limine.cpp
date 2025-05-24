@@ -1,7 +1,7 @@
 #include <kernel/boot_limine.hpp>
 
 __attribute__((used, section(".limine_requests")))
-static volatile LIMINE_BASE_REVISION(1);
+static volatile LIMINE_BASE_REVISION(3);
 
 
 __attribute__((used, section(".limine_requests")))
@@ -15,7 +15,6 @@ static volatile struct limine_framebuffer_request lim_fb_req = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 3
 };
-
 
 __attribute__((used, section(".limine_requests")))
 volatile struct limine_module_request lim_module_req = {
@@ -34,7 +33,6 @@ static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
     .revision = 3
 };
-
 
 
 __attribute__((used, section(".limine_requests_start")))

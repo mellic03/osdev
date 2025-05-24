@@ -6,6 +6,9 @@
 
 namespace serial
 {
-    void init();
+    /**
+     * @return false if faulty
+     */
+    bool init();
 }
 
