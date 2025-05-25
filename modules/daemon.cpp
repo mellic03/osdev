@@ -13,6 +13,7 @@ static char *kbtermend;
 static char *kbtermtop;
 
 
+static CharDevInterface *msdev;
 static kinput::MsData msdata;
 static char mousetext[16][16];
 static ivec2 mousepos[16];
@@ -37,15 +38,14 @@ static void sde_keyInput()
     for (size_t i=0; i<count; i++)
     {
         auto &event = buf[i];
-        if (isalnum(event.key) || event.key == ' ')
-        {
-            *(kbtermtop++) = event.key;
-        }
-    
+        uint8_t key = event.key;
+
+        if (key == '\b')
+            *(--kbtermtop) = '\0';
+        else if (isalnum(key) || key == ' ')
+            *(kbtermtop++) = key;
         if (kbtermtop >= kbtermend)
-        {
             kbtermtop = kbtermbuf;
-        }
     }
 }
 
@@ -61,6 +61,7 @@ static void sde_main( void* )
     kbtermtop = kbtermbuf;
     // std::printf("kbdev: %s\n", kbdev->signature);
 
+    msdev = (CharDevInterface*)knl::findModule(ModuleType_Device, DeviceType_Mouse);
     kmemset<uint8_t>(mousetext, '\0', sizeof(mousetext));
     kmemset<uint8_t>(mousepos, 0, sizeof(mousepos));
     mousecount = 0;
@@ -70,14 +71,9 @@ static void sde_main( void* )
     callbacks.onUp[0].l = reeeee;
     kinput::writeMsCallbacks(callbacks);
 
-    // kinput::MsData msdata;
-    msdata.x = 50;
-    msdata.y = 50;
-
     uint64_t prev_time;
     uint64_t curr_time;
     uint64_t accum = 0;
-
     bool ready = false;
 
     while (true)
@@ -85,9 +81,8 @@ static void sde_main( void* )
         curr_time = std::clock();
         accum += (curr_time - prev_time);
         prev_time = curr_time;
-        // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
-        std::printf("[daemon.cpp] cpu=%lu\n", kthread::this_cpuid());
-        kinput::readMsData(msdata);
+        // std::printf("[daemon.cpp] cpu=%lu, clock=%lu\n", kthread::this_cpuid(), std::clock());
+        // std::printf("[daemon.cpp] cpu=%lu\n", kthread::this_cpuid());
         sde_keyInput();
 
         if (ready == false)
@@ -95,8 +90,9 @@ static void sde_main( void* )
             *kvideo::CSR = ivec2(50, 50);
             kvideo::cursorString(kbtermbuf);
 
-            kvideo::fillColor(200, 50, 50, 255);
-            kvideo::rect(msdata.x, msdata.y, 100, 100);
+            msdev->read(&msdata, sizeof(msdata));
+            // kvideo::fillColor(200, 50, 50, 255);
+            // kvideo::rect(msdata.x, msdata.y, 100, 100);
 
             for (int i=0; i<mousecount; i++)
                 kvideo::renderString(mousetext[i], mousepos[i]);
@@ -124,7 +120,6 @@ static void sde_main( void* )
 
 
 
-
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
@@ -143,8 +138,6 @@ ModuleInterface *init( ksym::ksym_t *sym )
 
     kmemset<char>(daemon->signature, '\0', sizeof(daemon->signature));
     kmemcpy<char>(daemon->signature, "shitde", 6);
-
-    // std::printf("[daemon.cpp] daemon: 0x%lx\n", daemon);
 
     return (ModuleInterface*)daemon;
 }

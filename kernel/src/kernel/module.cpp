@@ -9,7 +9,7 @@
 #include <kpanic.h>
 
 #include <cpu/cpu.hpp>
-#include "../smp/smp.hpp"
+#include "../cpu/smp.hpp"
 #include <driver/pic.hpp>
 #include <idk_fptr.hpp>
 

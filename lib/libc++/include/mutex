@@ -1,11 +1,10 @@
 #pragma once
-
-#include <kernel/lock.hpp>
+#include <smp/lock.hpp>
 
 
 namespace std
 {
-    class mutex: public kspinlock<false> {  };
+    class mutex: public knl::SpinLock<false> {  };
 
     template <typename lock_type = std::mutex>
     class lock_guard;

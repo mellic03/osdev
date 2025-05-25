@@ -45,8 +45,6 @@ size_t SMP::num_cpus;
 
 void SMP::init(void (*entry)(limine_mp_info*))
 {
-    syslog log("SMP::init");
-
     auto *mp = limine_res.mp;
     auto count = mp->cpu_count;
     num_cpus = count;
@@ -63,26 +61,6 @@ void SMP::init(void (*entry)(limine_mp_info*))
     entry(mp->cpus[bspID]);
 }
 
-
-void SMP::initSinglecore(void (*entry)(limine_mp_info*))
-{
-    auto *mp = limine_res.mp;
-
-    {
-        syslog log("SMP::initSinglecore");
-
-        auto count = mp->cpu_count;
-        bspID = mp->bsp_lapic_id;
-
-        for (size_t i=0; i<count; i++)
-        {
-            auto *info = mp->cpus[i];
-            info->extra_argument = (uint64_t)i;
-        }
-    }
-
-    entry(mp->cpus[bspID]);
-}
 
 
 bool SMP::is_bsp()

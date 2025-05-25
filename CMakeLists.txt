@@ -29,12 +29,9 @@ include_directories("${CMAKE_SOURCE_DIR}/kernel/include/")
 include_directories("${CMAKE_SOURCE_DIR}/kernel/include/arch/x86_64/")
 include_directories("${CMAKE_SOURCE_DIR}/include/")
 
-
-# add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libk/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
 
-# add_subdirectory(${CMAKE_SOURCE_DIR}/src/kernel/)
 add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
 

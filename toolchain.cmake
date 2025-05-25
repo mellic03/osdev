@@ -44,19 +44,17 @@ set(SSE_FLAGS "-mmmx -msse -msse2")
 #     -fno-inline -fno-tree-vectorize \
 #     -Wall -Wextra -Werror \
 #     -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
-#     -Wno-vexing-parse \
-#     -Wno-error=int-to-pointer-cast \
 #     -fno-omit-frame-pointer \
-#     -ggdb -Wno-builtin-declaration-mismatch \
-#     -ffreestanding \
-#     -fno-asynchronous-unwind-tables \
+#     -ggdb \
 #     -fno-exceptions \
+#     -fno-asynchronous-unwind-tables \
+#     -ffreestanding \
+#     -nostdlib \
 #     -fno-PIC \
 #     -fno-PIE \
 #     -mno-80387 \
 #     -z max-page-size=0x1000 -mno-red-zone \
 #     -mcmodel=kernel \
-#     -nostdlib \
 #     -Wl,--no-relax -Wl,--gc-sections \
 #     -Wno-missing-field-initializers"
 # )
@@ -70,12 +68,12 @@ set(CringeOS_C_CXX_FLAGS
     -fno-asynchronous-unwind-tables \
     -fno-exceptions \
     -ffreestanding \
+    -nostdlib \
     -fno-PIC \
     -fno-PIE \
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
     -mcmodel=kernel \
-    -nostdlib \
     -Wl,--no-relax -Wl,--gc-sections \
     -Wno-missing-field-initializers"
 )

@@ -1,7 +1,7 @@
 #pragma once
 #include <kernel/ringbuffer.hpp>
 #include <kernel/interrupt.hpp>
-#include <kernel/lock.hpp>
+#include <smp/lock.hpp>
 #include <vector>
 #include <algorithm>
 #include <mutex>
@@ -21,7 +21,7 @@ private:
     void check_sleepers();
 
 public:
-    knl::atomic_flag m_startLock;
+    knl::AtomicFlag m_startLock;
     std::atomic_int m_switchCount{0};
 
     knl::RingBuffer<kthread_t*, 64> m_threads;

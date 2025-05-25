@@ -14,7 +14,7 @@
 #include <filesystem/initrd.hpp>
 #include <filesystem/vfs2.hpp>
 
-#include "coreutil/kmalloc.hpp"
+#include "kernel/kmalloc.hpp"
 #include <string.h>
 
 

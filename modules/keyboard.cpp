@@ -135,7 +135,7 @@ void driver_main( void* )
 }
 
 
-size_t driver_read( void *dstbuf, size_t max_nbytes )
+static size_t driver_read( void *dstbuf, size_t max_nbytes )
 {
     auto *dst = (KeyEvent*)dstbuf;
     size_t nbytes = 0;
@@ -149,7 +149,8 @@ size_t driver_read( void *dstbuf, size_t max_nbytes )
     return nbytes;
 }
 
-size_t driver_write( const void *, size_t  )
+
+static size_t driver_write( const void *, size_t  )
 {
     return 0;
 }
@@ -160,7 +161,6 @@ void irq_handler( intframe_t* )
     uint8_t code = IO::inb(0x60);
     rawstream.push_back(code);
     std::printf("[kboard irq] cpu=%lu, code=%u\n", kthread::this_cpuid(), code);
-
     // std::printf("[kboard irq] code=%u\n", code);
 }
 

@@ -52,10 +52,10 @@ Section Headers:
   [13] .comment          PROGBITS         0000000000000000  00004138
        0000000000000012  0000000000000001  MS       0     0     1
   [14] .symtab           SYMTAB           0000000000000000  00004150
-       0000000000000900  0000000000000018          15    25     8
+       0000000000000900  0000000000000018          15    27     8
   [15] .strtab           STRTAB           0000000000000000  00004a50
-       00000000000007d4  0000000000000000           0     0     1
-  [16] .shstrtab         STRTAB           0000000000000000  00005224
+       00000000000007d6  0000000000000000           0     0     1
+  [16] .shstrtab         STRTAB           0000000000000000  00005226
        000000000000007f  0000000000000000           0     0     1
 Key to Flags:
   W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
@@ -141,57 +141,57 @@ Symbol table '.symtab' contains 96 entries:
     18: 0000000000004520   256 OBJECT  LOCAL  DEFAULT   12 _ZL11shift_table
     19: 0000000000004620     1 OBJECT  LOCAL  DEFAULT   12 _ZZ13driver_upda[...]
     20: 0000000000004621     1 OBJECT  LOCAL  DEFAULT   12 _ZZ13driver_upda[...]
-    21: 00000000000020e6    37 FUNC    LOCAL  DEFAULT    1 _Z41__static_ini[...]
-    22: 000000000000210b    11 FUNC    LOCAL  DEFAULT    1 _GLOBAL__sub_I__[...]
-    23: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
-    24: 0000000000004038     0 OBJECT  LOCAL  DEFAULT   11 _DYNAMIC
-    25: 0000000000001c8c   151 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    26: 0000000000004150     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo11clea[...]
-    27: 0000000000004698     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo10back[...]
-    28: 00000000000046b8     8 OBJECT  WEAK   DEFAULT   12 _ZSt7realloc
-    29: 0000000000002006    74 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
-    30: 0000000000004158     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo9fillColorE
-    31: 0000000000004650     8 OBJECT  WEAK   DEFAULT   12 _ZN6kinput16writ[...]
-    32: 0000000000004178     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo12rend[...]
-    33: 0000000000002006    74 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
-    34: 00000000000020c4    34 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
-    35: 00000000000046c8     8 OBJECT  WEAK   DEFAULT   12 _ZSt5clock
-    36: 000000000000174e   727 FUNC    GLOBAL DEFAULT    1 _Z13driver_updateh
-    37: 0000000000004660     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread5yieldE
-    38: 0000000000004678     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread10thi[...]
-    39: 0000000000004180     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo12curs[...]
-    40: 0000000000001db2   142 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    41: 0000000000004680     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo3CSRE
-    42: 0000000000001377    30 FUNC    WEAK   DEFAULT    1 _ZN2IO3inbEt
-    43: 0000000000001f53    80 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
-    44: 0000000000001a62   102 FUNC    GLOBAL DEFAULT    1 _Z11driver_readPvm
-    45: 0000000000001b4a    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    46: 0000000000002050    77 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayI8Key[...]
-    47: 00000000000046d0     8 OBJECT  WEAK   DEFAULT   12 _ZSt5fopen
-    48: 0000000000001b4a    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    49: 000000000000468c     4 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo1HE
-    50: 00000000000013d2    31 FUNC    WEAK   DEFAULT    1 _ZN2IO4outbEth
-    51: 0000000000004630     8 OBJECT  WEAK   DEFAULT   12 _ZN3knl3hcfE
-    52: 00000000000046c0     8 OBJECT  WEAK   DEFAULT   12 _ZSt4free
-    53: 0000000000004140     8 OBJECT  GLOBAL DEFAULT   12 _ZN3CPU10installISRE
-    54: 0000000000001162   533 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
-    55: 00000000000046a8     8 OBJECT  WEAK   DEFAULT   12 _ZSt6printf
-    56: 0000000000001b92    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    57: 0000000000004168     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo4rectE
-    58: 0000000000004148     8 OBJECT  GLOBAL DEFAULT   12 _ZN3CPU10installIRQE
-    59: 00000000000015e8    52 FUNC    WEAK   DEFAULT    1 _Z7isalphai
-    60: 0000000000001d24   141 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    61: 0000000000004690     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo11fron[...]
-    62: 000000000000161c    40 FUNC    WEAK   DEFAULT    1 _Z7isupperi
-    63: 0000000000001644    38 FUNC    WEAK   DEFAULT    1 _Z7toupperi
-    64: 0000000000004670     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread4exitE
-    65: 0000000000001000   354 FUNC    GLOBAL DEFAULT    1 init
-    66: 0000000000004648     8 OBJECT  WEAK   DEFAULT   12 _ZN6kinput10read[...]
-    67: 00000000000013f1    33 FUNC    WEAK   DEFAULT    1 _ZN2IO4outwEtt
-    68: 0000000000004160     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo10fill[...]
-    69: 000000000000166a   228 FUNC    GLOBAL DEFAULT    1 _Z18create_shift[...]
-    70: 0000000000001b92    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
-    71: 0000000000001ac8    23 FUNC    GLOBAL DEFAULT    1 _Z12driver_writePKvm
+    21: 0000000000001a62   102 FUNC    LOCAL  DEFAULT    1 _ZL11driver_readPvm
+    22: 0000000000001ac8    23 FUNC    LOCAL  DEFAULT    1 _ZL12driver_writePKvm
+    23: 00000000000020e6    37 FUNC    LOCAL  DEFAULT    1 _Z41__static_ini[...]
+    24: 000000000000210b    11 FUNC    LOCAL  DEFAULT    1 _GLOBAL__sub_I__[...]
+    25: 0000000000000000     0 FILE    LOCAL  DEFAULT  ABS 
+    26: 0000000000004038     0 OBJECT  LOCAL  DEFAULT   11 _DYNAMIC
+    27: 0000000000001c8c   151 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    28: 0000000000004150     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo11clea[...]
+    29: 0000000000004698     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo10back[...]
+    30: 00000000000046b8     8 OBJECT  WEAK   DEFAULT   12 _ZSt7realloc
+    31: 0000000000002006    74 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
+    32: 0000000000004158     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo9fillColorE
+    33: 0000000000004650     8 OBJECT  WEAK   DEFAULT   12 _ZN6kinput16writ[...]
+    34: 0000000000004178     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo12rend[...]
+    35: 0000000000002006    74 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
+    36: 00000000000020c4    34 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayIhLm2[...]
+    37: 00000000000046c8     8 OBJECT  WEAK   DEFAULT   12 _ZSt5clock
+    38: 000000000000174e   727 FUNC    GLOBAL DEFAULT    1 _Z13driver_updateh
+    39: 0000000000004660     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread5yieldE
+    40: 0000000000004678     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread10thi[...]
+    41: 0000000000004180     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo12curs[...]
+    42: 0000000000001db2   142 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    43: 0000000000004680     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo3CSRE
+    44: 0000000000001377    30 FUNC    WEAK   DEFAULT    1 _ZN2IO3inbEt
+    45: 0000000000001f53    80 FUNC    WEAK   DEFAULT    1 _Z7kmemsetIcEPvS0_T_m
+    46: 0000000000001b4a    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    47: 0000000000002050    77 FUNC    WEAK   DEFAULT    1 _ZNSt5arrayI8Key[...]
+    48: 00000000000046d0     8 OBJECT  WEAK   DEFAULT   12 _ZSt5fopen
+    49: 0000000000001b4a    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    50: 000000000000468c     4 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo1HE
+    51: 00000000000013d2    31 FUNC    WEAK   DEFAULT    1 _ZN2IO4outbEth
+    52: 0000000000004630     8 OBJECT  WEAK   DEFAULT   12 _ZN3knl3hcfE
+    53: 00000000000046c0     8 OBJECT  WEAK   DEFAULT   12 _ZSt4free
+    54: 0000000000004140     8 OBJECT  GLOBAL DEFAULT   12 _ZN3CPU10installISRE
+    55: 0000000000001162   533 FUNC    WEAK   DEFAULT    1 _ZN4ksym7loadsym[...]
+    56: 00000000000046a8     8 OBJECT  WEAK   DEFAULT   12 _ZSt6printf
+    57: 0000000000001b92    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    58: 0000000000004168     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo4rectE
+    59: 0000000000004148     8 OBJECT  GLOBAL DEFAULT   12 _ZN3CPU10installIRQE
+    60: 00000000000015e8    52 FUNC    WEAK   DEFAULT    1 _Z7isalphai
+    61: 0000000000001d24   141 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
+    62: 0000000000004690     8 OBJECT  WEAK   DEFAULT   12 _ZN6kvideo11fron[...]
+    63: 000000000000161c    40 FUNC    WEAK   DEFAULT    1 _Z7isupperi
+    64: 0000000000001644    38 FUNC    WEAK   DEFAULT    1 _Z7toupperi
+    65: 0000000000004670     8 OBJECT  WEAK   DEFAULT   12 _ZN7kthread4exitE
+    66: 0000000000001000   354 FUNC    GLOBAL DEFAULT    1 init
+    67: 0000000000004648     8 OBJECT  WEAK   DEFAULT   12 _ZN6kinput10read[...]
+    68: 00000000000013f1    33 FUNC    WEAK   DEFAULT    1 _ZN2IO4outwEtt
+    69: 0000000000004160     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo10fill[...]
+    70: 000000000000166a   228 FUNC    GLOBAL DEFAULT    1 _Z18create_shift[...]
+    71: 0000000000001b92    71 FUNC    WEAK   DEFAULT    1 _ZN3idk10RingBuf[...]
     72: 0000000000001adf   106 FUNC    GLOBAL DEFAULT    1 _Z11irq_handlerP[...]
     73: 0000000000004170     8 OBJECT  GLOBAL DEFAULT   12 _ZN6kvideo4blitE
     74: 0000000000001a25    61 FUNC    GLOBAL DEFAULT    1 _Z11driver_mainPv
@@ -293,10 +293,10 @@ Disassembly of section .text:
     10e2:	48 c7 40 40 00 00 00 	movq   $0x0,0x40(%rax)
     10e9:	00 
     10ea:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    10ee:	48 8d 15 6d 09 00 00 	lea    0x96d(%rip),%rdx        # 1a62 <_Z11driver_readPvm>
+    10ee:	48 8d 15 6d 09 00 00 	lea    0x96d(%rip),%rdx        # 1a62 <_ZL11driver_readPvm>
     10f5:	48 89 50 48          	mov    %rdx,0x48(%rax)
     10f9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
-    10fd:	48 8d 15 c4 09 00 00 	lea    0x9c4(%rip),%rdx        # 1ac8 <_Z12driver_writePKvm>
+    10fd:	48 8d 15 c4 09 00 00 	lea    0x9c4(%rip),%rdx        # 1ac8 <_ZL12driver_writePKvm>
     1104:	48 89 50 50          	mov    %rdx,0x50(%rax)
     1108:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
     110c:	48 c7 40 58 01 00 00 	movq   $0x1,0x58(%rax)
@@ -941,7 +941,7 @@ Disassembly of section .text:
     1a5e:	75 d8                	jne    1a38 <_Z11driver_mainPv+0x13>
     1a60:	eb d4                	jmp    1a36 <_Z11driver_mainPv+0x11>
 
-0000000000001a62 <_Z11driver_readPvm>:
+0000000000001a62 <_ZL11driver_readPvm>:
     1a62:	55                   	push   %rbp
     1a63:	48 89 e5             	mov    %rsp,%rbp
     1a66:	48 83 ec 20          	sub    $0x20,%rsp
@@ -951,7 +951,7 @@ Disassembly of section .text:
     1a76:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
     1a7a:	48 c7 45 f0 00 00 00 	movq   $0x0,-0x10(%rbp)
     1a81:	00 
-    1a82:	eb 0a                	jmp    1a8e <_Z11driver_readPvm+0x2c>
+    1a82:	eb 0a                	jmp    1a8e <_ZL11driver_readPvm+0x2c>
     1a84:	48 83 45 f8 02       	addq   $0x2,-0x8(%rbp)
     1a89:	48 83 45 f0 02       	addq   $0x2,-0x10(%rbp)
     1a8e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
@@ -960,20 +960,20 @@ Disassembly of section .text:
     1a9c:	48 89 c7             	mov    %rax,%rdi
     1a9f:	e8 0e 03 00 00       	call   1db2 <_ZN3idk10RingBufferI8KeyEventLm256EE9pop_frontERS1_>
     1aa4:	84 c0                	test   %al,%al
-    1aa6:	74 11                	je     1ab9 <_Z11driver_readPvm+0x57>
+    1aa6:	74 11                	je     1ab9 <_ZL11driver_readPvm+0x57>
     1aa8:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
     1aac:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
-    1ab0:	73 07                	jae    1ab9 <_Z11driver_readPvm+0x57>
+    1ab0:	73 07                	jae    1ab9 <_ZL11driver_readPvm+0x57>
     1ab2:	b8 01 00 00 00       	mov    $0x1,%eax
-    1ab7:	eb 05                	jmp    1abe <_Z11driver_readPvm+0x5c>
+    1ab7:	eb 05                	jmp    1abe <_ZL11driver_readPvm+0x5c>
     1ab9:	b8 00 00 00 00       	mov    $0x0,%eax
     1abe:	84 c0                	test   %al,%al
-    1ac0:	75 c2                	jne    1a84 <_Z11driver_readPvm+0x22>
+    1ac0:	75 c2                	jne    1a84 <_ZL11driver_readPvm+0x22>
     1ac2:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
     1ac6:	c9                   	leave
     1ac7:	c3                   	ret
 
-0000000000001ac8 <_Z12driver_writePKvm>:
+0000000000001ac8 <_ZL12driver_writePKvm>:
     1ac8:	55                   	push   %rbp
     1ac9:	48 89 e5             	mov    %rsp,%rbp
     1acc:	48 83 ec 10          	sub    $0x10,%rsp

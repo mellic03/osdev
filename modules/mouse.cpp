@@ -184,6 +184,15 @@ static void driver_main( void* )
 }
 
 
+static size_t driver_read( void *dst, size_t max_nbytes )
+{
+    if (sizeof(msdata) > max_nbytes)
+        return 0;
+    *(kinput::MsData*)dst = msdata;
+    return sizeof(msdata);
+}
+
+
 
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
@@ -199,7 +208,7 @@ ModuleInterface *init( ksym::ksym_t *sym )
 
         .open     = nullptr,
         .close    = nullptr,
-        .read     = nullptr,
+        .read     = driver_read,
         .write    = nullptr,
         .irqno    = IrqNo_Mouse,
         .irqfn    = irq_handler

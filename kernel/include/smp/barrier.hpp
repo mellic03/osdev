@@ -27,44 +27,46 @@
     happen at the right point in the program's execution.
 */
 
-void BarrierWait( std::atomic_int &barrier )
+// void BarrierWait( std::atomic_int &barrier )
+// {
+//     barrier.fetch_sub(1, std::memory_order_seq_cst);
+
+//     while (barrier.load(std::memory_order_seq_cst) > 0)
+//     {
+//         // lol does not work in loop
+//         // asm volatile ("" ::: "memory");
+//         asm volatile ("nop");
+//     }
+// }
+
+
+namespace knl
 {
-    barrier.fetch_sub(1, std::memory_order_seq_cst);
-
-    while (barrier.load(std::memory_order_seq_cst) > 0)
+    struct Barrier
     {
-        // lol does not work in loop
-        // asm volatile ("" ::: "memory");
-        asm volatile ("nop");
-    }
-}
+        std::atomic_int value{0};
 
-
-struct kbarrier_t
-{
-    std::atomic_int value{0};
-
-    explicit
-    kbarrier_t( int count )
-    {
-        reset(count);
-    }
-
-    void reset( int count )
-    {
-        value.store(count);
-    }
-
-    void wait()
-    {
-        value.fetch_sub(1, std::memory_order_seq_cst);
-    
-        while (value.load(std::memory_order_seq_cst) > 0)
+        explicit
+        Barrier( int count )
         {
-            asm volatile ("nop");
+            reset(count);
         }
-    }
-};
+
+        void reset( int count )
+        {
+            value.store(count);
+        }
+
+        void wait()
+        {
+            value--;
+            while (value.load() > 0)
+            {
+                asm volatile ("nop");
+            }
+        }
+    };
+}
 
 
 

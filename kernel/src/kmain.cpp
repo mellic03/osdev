@@ -19,6 +19,7 @@
 
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
+#include "cpu/smp.hpp"
 #include <cringe/bmp.hpp>
 #include <cringe/font.hpp>
 
@@ -37,7 +38,6 @@
 #include <filesystem/initrd.hpp>
 
 #include "syscall/syscall.hpp"
-#include "smp/smp.hpp"
 #include <smp/barrier.hpp>
 
 
@@ -136,10 +136,7 @@ static void smp_main( limine_mp_info *info )
     cpu_t *cpu   = new (SMP::all_cpus + cpuid) cpu_t(cpuid);
 
     while (count.load() != cpu->id)
-    {
         asm volatile ("nop");
-    }
-
     CPU::installIDT();
     LAPIC::init(1000);
     count++;
@@ -152,7 +149,7 @@ static void smp_main( limine_mp_info *info )
         knl::loadModules(initrd::find("drv/"));
         knl::loadModules(initrd::find("srv/"));
         knl::initModules();
-    
+
         // kinput::MsCallbacks callbacks;
         // callbacks.onUp[0].r = mouseclick_callback;
         // kinput::writeMsCallbacks(callbacks);
