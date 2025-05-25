@@ -40,7 +40,7 @@ enum IntNo_: uint8_t
     IntNo_BAD_FREE  	  	        = 53,
     IntNo_OUT_OF_MEMORY 	        = 54,
 
-    IntNo_KTHREAD_YIELD             = 97,
+    IntNo_KThreadYield              = 97,
 
     IntNo_IOAPIC_Base               = 100,
     IntNo_IOAPIC_End                = IntNo_IOAPIC_Base + 24,

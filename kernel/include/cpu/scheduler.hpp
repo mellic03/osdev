@@ -1,5 +1,5 @@
 #pragma once
-#include "../smp/round_buffer.hpp"
+#include <kernel/ringbuffer.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/lock.hpp>
 #include <vector>
@@ -22,10 +22,10 @@ private:
 
 public:
     knl::atomic_flag m_startLock;
-    knl::atomic_flag m_switchLock;
+    std::atomic_int m_switchCount{0};
 
-    idk::RoundBuffer<kthread_t*, 64> m_threads;
-    idk::RoundBuffer<kthread_t*, 64> m_sleeping;
+    knl::RingBuffer<kthread_t*, 64> m_threads;
+    knl::RingBuffer<kthread_t*, 64> m_sleeping;
     kthread_t *m_idlethread;
     // idk::static_vector<kthread_t*, 64> m_active;
     // idk::static_vector<kthread_t*, 64> m_dead;

@@ -1,6 +1,7 @@
 #include <arch/apic.hpp>
 #include <cpu/cpu.hpp>
 #include <cpu/idt.hpp>
+#include <kthread.hpp>
 
 #include <kernel/interrupt.hpp>
 #include <kernel/log.hpp>

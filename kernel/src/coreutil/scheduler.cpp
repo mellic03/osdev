@@ -90,7 +90,7 @@ ThreadScheduler::ThreadScheduler( cpu_t &cpu )
 :   m_cpu(cpu)
 {
     m_startLock.set();
-    m_switchLock.clear();
+    m_switchCount.store(0);
     m_threads.clear();
     m_sleeping.clear();
 
@@ -103,8 +103,6 @@ ThreadScheduler::ThreadScheduler( cpu_t &cpu )
 kthread_t*
 ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
 {
-    m_switchLock.set();
-
     auto *th = (kthread_t*)kmalloc(sizeof(kthread_t));
           th->setPriority(5);
     m_threads.push_back(th);
@@ -126,9 +124,9 @@ ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
     th->frame.rsi    = (uint64_t)arg;
     th->frame.rbp    = 0;
     th->frame.rflags = CPU::getRFLAGS(); // 0x202;
-    CPU::fxsave(th->fxstate);
+    // CPU::fxsave(th->fxstate);
+    asm volatile("fxsave %0 " : : "m"(th->fxstate));
 
-    m_switchLock.clear();
 
     return th;
 }
@@ -146,15 +144,11 @@ ThreadScheduler::releaseThread( kthread_t *th )
 void
 ThreadScheduler::trampoline( intframe_t *frame )
 {
-    syslog log("ThreadScheduler::trampoline");
-
     uint64_t frame_cs = frame->cs;
     uint64_t frame_ss = frame->ss;
 
     auto *curr = m_threads.front();
-    log("curr name: %s", curr->name);
-    // CPU::fxsave(curr->fxstate);
-    // asm volatile("fxsave %0 " : : "m"(curr->fxstate));
+    asm volatile("fxsave %0 " : : "m"(curr->fxstate));
 
     *frame = curr->frame;
     frame->cs = frame_cs;
@@ -173,8 +167,6 @@ kthread_t *swap_threads( kthread_t *curr, kthread_t *next, intframe_t *frame )
     uint64_t tmp_cs = frame->cs;
     uint64_t tmp_ss = frame->ss;
 
-    // asm volatile("fxsave %0 " : : "m"(curr->fxstate));
-
     curr->status = KThread_READY;
     next->status = KThread_RUNNING;
 
@@ -183,8 +175,6 @@ kthread_t *swap_threads( kthread_t *curr, kthread_t *next, intframe_t *frame )
 
     frame->cs = tmp_cs;
     frame->ss = tmp_ss;
-
-    // asm volatile("fxrstor %0 " : : "m"(next->fxstate));
 
     return next;
 }
@@ -220,9 +210,11 @@ ThreadScheduler::check_sleepers()
 void
 ThreadScheduler::schedule( intframe_t *frame )
 {
-    if (m_switchLock.isset())
+    if (m_switchCount++ > 0)
+    {
+        m_switchCount--;
         return;
-
+    }
 
     kthread_t *prev, *next;
     prev = m_threads.front();
@@ -254,6 +246,8 @@ ThreadScheduler::schedule( intframe_t *frame )
     // );
 
     swap_threads(prev, next, frame);
+
+    m_switchCount--;
 }
 
 
@@ -276,17 +270,16 @@ void ThreadScheduler::scheduleISR( intframe_t *frame )
     // syslog::println("[scheduleISR] CPU=%lu", SMP::this_cpuid());
 
     auto *sd = SMP::this_sched();
+    // CPU::fxsave(SMP::this_thread()->fxstate);
+    asm volatile("fxsave %0 " : : "m"(SMP::this_thread()->fxstate));
 
     if (sd->m_startLock.isset())
-    {
         sd->trampoline(frame);
-    }
-
     else
-    {
-        CPU::fxsave(sd->m_threads.front()->fxstate);
         sd->schedule(frame);
-        CPU::fxrstor(sd->m_threads.front()->fxstate);
-    }
+
+    // CPU::fxrstor(SMP::this_thread()->fxstate);
+    asm volatile("fxrstor %0 " : : "m"(SMP::this_thread()->fxstate));
+
 }
 

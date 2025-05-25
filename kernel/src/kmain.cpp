@@ -50,12 +50,13 @@ static void spuriousISR( intframe_t* );
 static void PIT_IrqHandler( intframe_t *frame )
 {
     // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
-    kclock::detail::tick(CPU::getTSC() / 5000);
+    auto *cpu = SMP::this_cpu();
+    cpu->m_usecs += cpu->m_lapicPeriod;
+
     ThreadScheduler::scheduleISR(frame);
 }
 
 
-// external/x86_64-elf-tools-linux/lib/gcc/x86_64-elf/13.2.0/plugin/include
 extern void LimineRes_init();
 extern void early_init();
 static void smp_main(limine_mp_info*);
@@ -99,13 +100,13 @@ void _start()
     CPU::createIDT();
     PIC::disable();
 
-    CPU::installISR(IntNo_GEN_FAULT,        genfaultISR);
-    CPU::installISR(IntNo_PAGE_FAULT,       pagefaultISR);
-    CPU::installISR(IntNo_OUT_OF_MEMORY,    outOfMemoryISR);
-    CPU::installISR(IntNo_KTHREAD_YIELD,    ThreadScheduler::scheduleISR);
-    CPU::installISR(IntNo_Syscall,          knl::syscallISR);
-    CPU::installISR(IntNo_Spurious,         spuriousISR);
-    CPU::installIRQ(IrqNo_PIT,              PIT_IrqHandler);
+    CPU::installISR(IntNo_GEN_FAULT,     genfaultISR);
+    CPU::installISR(IntNo_PAGE_FAULT,    pagefaultISR);
+    CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
+    CPU::installISR(IntNo_KThreadYield,  ThreadScheduler::scheduleISR);
+    CPU::installISR(IntNo_Syscall,       knl::syscallISR);
+    CPU::installISR(IntNo_Spurious,      spuriousISR);
+    CPU::installIRQ(IrqNo_PIT,           PIT_IrqHandler);
 
     static ACPI::Response res;
     ACPI::init(lim_rsdp_req.response->address, res);
@@ -133,9 +134,8 @@ static void smp_main( limine_mp_info *info )
 
     size_t cpuid = info->lapic_id;
     cpu_t *cpu   = new (SMP::all_cpus + cpuid) cpu_t(cpuid);
-    if (!cpu) {  }
 
-    while (count.load() != cpuid)
+    while (count.load() != cpu->id)
     {
         asm volatile ("nop");
     }
@@ -165,7 +165,6 @@ static void smp_main( limine_mp_info *info )
     {
         CPU::hlt();
     }
-    
 }
 
 
@@ -212,6 +211,11 @@ static std::atomic_int faultCount{0};
 static void pagefaultISR( intframe_t *frame )
 {
     syslog log("Exception PAGE_FAULT");
+
+    if (faultCount++ > 0)
+    {
+        kpanic("faultCount++ > 0");
+    }
 
     // auto *cpu = SMP::this_cpu();
     // if (cpu) log("cpu %d", cpu->id);

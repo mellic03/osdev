@@ -1,18 +1,22 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
-#include <kassert.h>
 #include <array>
 
-namespace idk
+#ifndef kassert
+    #include <kassert.h>
+#endif
+
+
+namespace knl
 {
     template <typename T, size_t N>
-    class RoundBuffer;
+    class RingBuffer;
 }
 
 
 template <typename T, size_t N>
-class idk::RoundBuffer
+class knl::RingBuffer
 {
 private:
     std::array<T, N> m_data;

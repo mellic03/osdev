@@ -26,27 +26,30 @@ static void Write64( uint32_t reg, uint64_t data )
 
 
 
-void ioapic_writeRedirEntry( uint8_t irqno, IOAPIC::RedirEntry entry )
-{
-    union {
-        struct {
-            uint32_t lo;
-            uint32_t hi;
-        } split;
+// void ioapic_writeRedirEntry( uint8_t irqno, IOAPIC::RedirEntry entry )
+// {
+//     union {
+//         struct {
+//             uint32_t lo;
+//             uint32_t hi;
+//         } split;
 
-        IOAPIC::RedirEntry rdentry;
-    } woopee;
+//         IOAPIC::RedirEntry rdentry;
+//     } woopee;
 
-    woopee.rdentry = entry;
+//     woopee.rdentry = entry;
 
-    ioapic_write_reg(0x10 + 2*irqno+0, woopee.split.lo);
-    ioapic_write_reg(0x10 + 2*irqno+1, woopee.split.hi);
-}
+//     ioapic_write_reg(0x10 + 2*irqno+0, woopee.split.lo);
+//     ioapic_write_reg(0x10 + 2*irqno+1, woopee.split.hi);
+// }
 
 
 void IOAPIC::init()
 {
+    uint8_t redirEntry = (uint8_t)(ioapic_read_reg(IOAPICVER) >> 16) + 1;
+
     syslog log("IOAPIC::init");
+    log("redirEntry: %u", redirEntry);
 
     // size_t count = res.madt.ioapic_count;
     // auto  &table = res.madt.ioapic;
@@ -58,11 +61,26 @@ void IOAPIC::init()
 
 }
 
-void IOAPIC::mapIRQ( uint8_t irqno )
+void IOAPIC::mapIRQ( uint8_t lapic_id, uint8_t irqno )
 {
-    uint32_t delivery = 0;
-    uint8_t  isrno    = IntNo_IOAPIC_Base + irqno;
-    Write64(IOAPICREDTBL(irqno), delivery|isrno);
+    uint8_t isrno = IntNo_IOAPIC_Base + irqno;
+
+    RedirEntry entry = {
+        .vector        = isrno,
+        .delivery_m    = 0,
+        .destination_m = 0,
+        .status_m      = 0,
+        .polarity      = 0,
+        .irr           = 0,
+        .trigger       = 0,
+        .mask          = 0,
+        // .reserved      = ,
+        .destination   = lapic_id,
+    };
+
+    uint64_t data = *(uint64_t*)(&entry);
+
+    Write64(IOAPICREDTBL(irqno), data);
 }
 
 

@@ -17,7 +17,7 @@
 // void kthread::yield( YieldReason reason )
 // {
 //     SMP::this_cpu()->setYldRsn(reason);
-//     KInterrupt<IntNo_KTHREAD_YIELD>();
+//     KInterrupt<IntNo_KThreadYield>();
 // }
 
 
@@ -53,7 +53,7 @@
 
 // // void kthread::yield()
 // // {
-// //     KInterrupt<IntNo_KTHREAD_YIELD>();
+// //     KInterrupt<IntNo_KThreadYield>();
 // // }
 
 // // void kthread::exit()

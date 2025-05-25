@@ -18,7 +18,7 @@
 
 void kthread::yield()
 {
-    KInterrupt<IntNo_KTHREAD_YIELD>();
+    KInterrupt<IntNo_KThreadYield>();
 }
 
 
@@ -60,7 +60,7 @@ kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 
 // void kthread::yield()
 // {
-//     KInterrupt<IntNo_KTHREAD_YIELD>();
+//     KInterrupt<IntNo_KThreadYield>();
 // }
 
 // void kthread::exit()

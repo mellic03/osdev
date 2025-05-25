@@ -20,7 +20,6 @@ static int mousecount;
 
 static void reeeee()
 {
-
     kmemcpy<uint8_t>(mousetext[mousecount], "BitchAss\0", sizeof("BitchAss\0"));
     mousepos[mousecount] = msdata.pos();
     mousecount = (mousecount+1) % 16;
@@ -55,7 +54,6 @@ static void sde_keyInput()
 static void sde_main( void* )
 {
     BMP_File bmp(std::fopen("usr/share/img/cursor.bmp"));
-    std::printf("[sde_main] bmp.bpp: %d\n", bmp.bpp);
 
     kbdev = (CharDevInterface*)knl::findModule(ModuleType_Device, DeviceType_Keyboard);
     kmemset<uint8_t>(kbtermbuf, '\0', sizeof(kbtermbuf));

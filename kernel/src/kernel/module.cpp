@@ -40,8 +40,7 @@ static void init_device( DeviceInterface *dev )
     if (dev->irqfn && dev->irqno >= 0)
     {
         CPU::installIRQ(dev->irqno, dev->irqfn);
-        IOAPIC::mapIRQ(dev->irqno);
-        // PIC::unmask(PIC::IRQ_MASTER + dev->irqno);
+        IOAPIC::mapIRQ(SMP::this_cpuid(), dev->irqno);
     }
 }
 

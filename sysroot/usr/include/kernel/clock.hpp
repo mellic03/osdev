@@ -10,9 +10,9 @@ namespace kclock
      */
     uint64_t now();
 
-    namespace detail
-    {
-        void tick( uint64_t microseconds );
-    }
+    // namespace detail
+    // {
+    //     void tick( uint64_t microseconds );
+    // }
 };
 

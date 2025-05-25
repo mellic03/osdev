@@ -16,8 +16,6 @@ namespace APIC
     extern uintptr_t ioapicBase;
     extern uintptr_t gsiBase;
 
-    static constexpr uint8_t IRQ_BASE    = 100;
-
     static constexpr size_t ENABLE       = (1 << 8);
     static constexpr size_t SPURIOUS_INT = 0xff;
 
@@ -52,6 +50,9 @@ namespace APIC
     static constexpr size_t REG_TIMER_CURR  = 0x390; // Current count register (timer)
     static constexpr size_t REG_TIMER_DIV   = 0x3E0; // Divide config register (timer)
 
+    static constexpr size_t TMR_ONESHOT  = 00000;
+    static constexpr size_t TMR_PERIODIC = (1<<17);
+    
     void init( const ACPI::Response& );
     void write( uint32_t reg, uint32_t data );
     uint32_t read( uint32_t reg );
@@ -108,7 +109,7 @@ namespace IOAPIC
     static constexpr uint32_t REG_IOAPICVER = 0x1;
 
     void     init();
-    void     mapIRQ( uint8_t irqno );
+    void     mapIRQ( uint8_t lapic_id, uint8_t irqno );
     void     maskIRQ( uint8_t irqno );
     void     unmaskIRQ( uint8_t irqno );
     uint32_t read( uint32_t reg );
