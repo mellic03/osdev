@@ -64,7 +64,7 @@ public:
 	{
         OVERFLOW_CHECK;
 
-        if (m_size+1 >= capacity)
+        if (size_t(m_size)+1 >= capacity)
             return false;
 
         m_data[m_tail++] = item;

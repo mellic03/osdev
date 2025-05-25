@@ -17,6 +17,7 @@ fi
 # -mno-sse -mno-sse2 -mno-avx \
 
 CXX_FLAGS="
+    ../kernel/src/tinyubsan.cpp \
     -std=c++23 \
     -I ../include \
     -I ../sysroot/usr/include \
@@ -24,13 +25,20 @@ CXX_FLAGS="
     -include ../sysroot/usr/include/new \
     -include ../sysroot/usr/include/libc++ \
     -msse -msse2 -mavx \
+    -Wall -Wextra -Werror \
+    -fstack-protector-strong -fno-strict-aliasing \
+    -fno-omit-frame-pointer \
+    -fno-asynchronous-unwind-tables \
     -fno-exceptions \
-    -fno-rtti \
     -ffreestanding \
+    -fno-rtti \
     -nostdlib \
     -fPIE -pie \
     -mno-red-zone \
-    -z max-page-size=0x1000 \
+    -mno-80387 \
+    -z max-page-size=0x1000 -mno-red-zone \
+    -Wl,--no-relax -Wl,--gc-sections \
+    -Wno-missing-field-initializers \
     -ffunction-sections \
     -T ./linker.ld \
     -MMD \

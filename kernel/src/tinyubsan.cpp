@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <kpanic.h>
+// #include <kpanic.h>
 #include <kernel/log.hpp>
 
 
@@ -16,7 +16,7 @@ extern "C"
     __attribute__((noreturn))
     void __stack_chk_fail(void)
     {
-        kpanic("Stack smashing detected");
+        // kpanic("Stack smashing detected");
         while (true) {  };
     }
 }

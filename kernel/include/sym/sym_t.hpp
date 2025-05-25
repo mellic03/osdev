@@ -2,10 +2,18 @@
 #include <kdef.h>
 #include <functional>
 #include <kernel/interrupt.hpp>
-#include <kernel/input.hpp>
 #include <cringe/vec.hpp>
 
 struct ModuleInterface;
+
+namespace knl
+{
+    struct MsState;
+    struct MsEvent;
+    struct KbEvent;
+}
+
+
 
 
 namespace ksym
@@ -45,11 +53,19 @@ namespace ksym
         } thread_sym;
 
         struct {
-            void (*writeMsData)(const kinput::MsData&);
-            void (*readMsData)(kinput::MsData&);
-            void (*writeMsCallbacks)(const kinput::MsCallbacks&);
-            void (*readMsCallbacks)(kinput::MsCallbacks&);
-        } input_sym;
+            bool (*readMsState)(knl::MsState&);
+            void (*writeMsState)(const knl::MsState&);
+            bool (*readMsEvent)(knl::MsEvent&);
+            void (*writeMsEvent)(const knl::MsEvent&);
+            bool (*readKbEvent)(knl::KbEvent&);
+            void (*writeKbEvent)(const knl::KbEvent&);
+            int (*listenMsEvent)( void (*)(const knl::MsEvent&) );
+            int (*listenKbEvent)( void (*)(const knl::KbEvent&) );
+            void (*emitMsEvent)( const knl::MsEvent& );
+            void (*emitKbEvent)( const knl::KbEvent& );
+            void (*forgetMsEvent)( int );
+            void (*forgetKbEvent)( int );
+        } event_sym;
 
         // struct {
         //     void (*installISR)(uint8_t, isrHandlerFn);

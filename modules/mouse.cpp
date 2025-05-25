@@ -3,15 +3,14 @@
 
 #include <kernel/log.hpp>
 #include <arch/io.hpp>
-#include <kernel/input.hpp>
+#include <kernel/event.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <algorithm>
-// #include <functional>
 
 
-static kinput::MsData msdata;
+static knl::MsState msdata;
 static uint8_t MouseCycle = 0;
 static uint8_t MousePacket[4];
 static bool MousePacketReady = false;
@@ -64,6 +63,12 @@ bool ProcessMousePacket()
     msdata.currDown.l = (MousePacket[0] & PS2Leftbutton);
     msdata.currDown.m = (MousePacket[0] & PS2Middlebutton);
     msdata.currDown.r = (MousePacket[0] & PS2Rightbutton);
+
+    // if (msdata.prevDown.l != msdata.currDown.l)
+    // {
+    //     knl::MsEvent event = { knl::MsBtn_Left, knl::BtnAction_Up };
+    //     knl::writeMsEvent(event);
+    // }
 
     xNegative = (MousePacket[0] & PS2XSign);
     yNegative = (MousePacket[0] & PS2YSign);
@@ -159,24 +164,26 @@ static void irq_handler( intframe_t* )
 static void driver_main( void* )
 {
     mouse_init();
-    kinput::MsCallbacks callbacks;
+    // kinput::MsCallbacks callbacks;
 
     while (true)
     {
         if (ProcessMousePacket())
         {
-            kinput::writeMsData(msdata);
-            kinput::readMsCallbacks(callbacks);
+            // kinput::writeMsData(msdata);
+            // kinput::readMsCallbacks(callbacks);
         
-            if ((msdata.prevDown.l == true) && (msdata.currDown.l == false))
-                for (int i=0; i<4; i++)
-                    if (callbacks.onUp[i].l != nullptr)
-                        callbacks.onUp[i].l();  
+            // if ((msdata.prevDown.l == true) && (msdata.currDown.l == false))
+            //     for (int i=0; i<4; i++)
+            //         if (callbacks.onUp[i].l != nullptr)
+            //             callbacks.onUp[i].l();  
     
-            if ((msdata.prevDown.r == true) && (msdata.currDown.r == false))
-                for (int i=0; i<4; i++)
-                    if (callbacks.onUp[i].r != nullptr)
-                        callbacks.onUp[i].r();  
+            // if ((msdata.prevDown.r == true) && (msdata.currDown.r == false))
+            //     for (int i=0; i<4; i++)
+            //         if (callbacks.onUp[i].r != nullptr)
+            //             callbacks.onUp[i].r();  
+
+            // knl::writeMsState(msdata);
 
             kthread::yield();
         }
@@ -188,7 +195,7 @@ static size_t driver_read( void *dst, size_t max_nbytes )
 {
     if (sizeof(msdata) > max_nbytes)
         return 0;
-    *(kinput::MsData*)dst = msdata;
+    *(knl::MsState*)dst = msdata;
     return sizeof(msdata);
 }
 

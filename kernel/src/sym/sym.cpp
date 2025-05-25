@@ -5,7 +5,7 @@
 #include <kernel/clock.hpp>
 #include <kernel/kvideo.hpp>
 #include <kernel/module.hpp>
-#include <kernel/input.hpp>
+#include <kernel/event.hpp>
 #include <filesystem/initrd.hpp>
 #include <kassert.h>
 #include <kmalloc.h>
@@ -53,11 +53,19 @@ ksym::ksym_t *ksym::getsym()
     }
 
     {
-        auto &lib = kernel_sym.input_sym;
-        lib.writeMsData       = kinput::writeMsData;
-        lib.readMsData        = kinput::readMsData;
-        lib.writeMsCallbacks  = kinput::writeMsCallbacks;
-        lib.readMsCallbacks   = kinput::readMsCallbacks;
+        auto &lib = kernel_sym.event_sym;
+        lib.readMsState  = knl::readMsState;
+        lib.writeMsState = knl::writeMsState;
+        lib.readMsEvent  = knl::readMsEvent;
+        lib.writeMsEvent = knl::writeMsEvent;
+        lib.readKbEvent  = knl::readKbEvent;
+        lib.writeKbEvent = knl::writeKbEvent;
+        lib.listenMsEvent = knl::listenMsEvent;
+        lib.listenKbEvent = knl::listenKbEvent;
+        lib.emitMsEvent   = knl::emitMsEvent;
+        lib.emitKbEvent   = knl::emitKbEvent;
+        lib.forgetMsEvent = knl::forgetMsEvent;
+        lib.forgetKbEvent = knl::forgetKbEvent;
     }
 
     {

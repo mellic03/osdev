@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <array>
 
-#ifndef kassert
-    #include <kassert.h>
-#endif
+// #ifndef kassert
+//     #include <kassert.h>
+// #endif
 
 
 namespace knl
@@ -35,26 +35,26 @@ public:
 
     inline void rotate( int n )
     {
-        kassert(m_size > 0);
+        // kassert(m_size > 0);
         for (int i=0; i<n; i++)
             push_back(pop_front());
     }
 
     inline T &front()
     {
-        kassert(m_size > 0);
+        // kassert(m_size > 0);
         return m_data[m_head];
     }
 
     inline T &back()
     {
-        kassert(m_size > 0);
+        // kassert(m_size > 0);
         return m_data[(m_tail-1) % N];
     }
 
-	inline void push_back( const T& item )
+	inline void push_back( const T &item )
 	{
-        kassert(m_size+1 < int(N));
+        // kassert(m_size+1 < int(N));
         m_data[m_tail++] = item;
         m_tail %= N;
         m_size++;
@@ -62,7 +62,7 @@ public:
 
 	inline T pop_front()
 	{
-        kassert(m_size > 0);
+        // kassert(m_size > 0);
 
         T value = front();
         m_head = (m_head+1) % N;
@@ -73,7 +73,9 @@ public:
 
 
     inline size_t size() { return m_size; }
+    inline size_t capacity() { return N; }
     inline bool empty() { return m_size==0; }
+    inline bool full() { return size() < capacity(); }
 
     T &operator[] (int i) { return m_data[i]; }
 };

@@ -2,9 +2,9 @@
     #define __is_kernel
 #endif
 
+#include <kassert.h>
 #include <kernel/kvideo.hpp>
 #include <kernel/bitmanip.hpp>
-#include "kvideo.hpp"
 
 #include <cringe/font.hpp>
 #include <cringe/bmp.hpp>
@@ -173,30 +173,40 @@ void kvideo::renderGlyph( char ch, int x, int y )
 }
 
 
+static void nextLine( int &x, int &y, const ivec2 &sp )
+{
+    x = 0;
+    y += sp.y;
+}
+
+
 void kvideo::renderString( const char *str, const ivec2 &srcpos )
 {
     kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
     auto &font = kvideoFont;
 
+    ivec2 sp  = font.getGlyphExtents();
     ivec2 pos = srcpos;
     int &x = pos.x;
     int &y = pos.y;
 
     while (*str)
     {
-        ivec2 tl = font.getGlyphCorner(*str);
-        ivec2 sp = font.getGlyphExtents();
+        char ch = *(str++);
+
+        if (ch == '\n')
+            nextLine(x, y, sp);
 
         if (x+sp.x >= kvideo::W)
-        {
-            x = 0;
-            y += sp.y;
-        }
+            nextLine(x, y, sp);
+
+        ivec2 tl = font.getGlyphCorner(ch);
+        if (tl.x == -1)
+            continue;
 
         kvideo::blit(pos, font.m_img, font.W, font.H, tl, sp);
 
         x += sp.x;
-        str++;
     }
 }
 

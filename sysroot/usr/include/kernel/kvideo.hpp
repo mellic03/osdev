@@ -26,6 +26,8 @@ namespace kvideo
 
     // void setCursor( const ivec2& );
     // const ivec2 &getCursor();
+    void initFrontbuffer( uintptr_t fb_res );
+    void initBackbuffer( uintptr_t fb_res );
 
     void setFont( const cringe::Font& );
     void renderGlyph( char ch, int x, int y );

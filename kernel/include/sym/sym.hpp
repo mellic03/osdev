@@ -53,11 +53,19 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
     }
 
     {
-        auto &lib = sym->input_sym;
-        kinput::writeMsData       = lib.writeMsData;
-        kinput::readMsData        = lib.readMsData;
-        kinput::writeMsCallbacks  = lib.writeMsCallbacks;
-        kinput::readMsCallbacks   = lib.readMsCallbacks;
+        auto &lib = sym->event_sym;
+        usrknl::readMsState  = lib.readMsState;
+        usrknl::writeMsState = lib.writeMsState;
+        usrknl::readMsEvent  = lib.readMsEvent;
+        usrknl::writeMsEvent = lib.writeMsEvent;
+        usrknl::readKbEvent  = lib.readKbEvent;
+        usrknl::writeKbEvent = lib.writeKbEvent;
+        usrknl::listenMsEvent = lib.listenMsEvent;
+        usrknl::listenKbEvent = lib.listenKbEvent;
+        usrknl::emitMsEvent   = lib.emitMsEvent;
+        usrknl::emitKbEvent   = lib.emitKbEvent;
+        usrknl::forgetMsEvent = lib.forgetMsEvent;
+        usrknl::forgetKbEvent = lib.forgetKbEvent;
     }
 
     // {
@@ -68,9 +76,9 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
 
     {
         auto &lib = sym->kernel_sym;
-        knl::panic      = lib.panic;
-        knl::hcf        = lib.hcf;
-        knl::findModule = lib.findModule;
+        usrknl::panic      = lib.panic;
+        usrknl::hcf        = lib.hcf;
+        usrknl::findModule = lib.findModule;
     }
 }
 

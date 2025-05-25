@@ -8,7 +8,7 @@ uint64_t kclock::now()
 {
 //     auto *cpu = SMP::this_cpu();
 //     return cpu->m_usecs.load() / 1000;
-    return CPU::getTSC() / 5000000;
+    return CPU::getTSC() / 5000;
 }
 
 // void kclock::detail::tick( uint64_t us )

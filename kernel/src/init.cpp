@@ -7,7 +7,7 @@
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/log.hpp>
-#include "kernel/kvideo.hpp"
+#include <kernel/kvideo.hpp>
 #include <kpanic.h>
 
 #include <kernel/module.hpp>

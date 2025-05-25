@@ -3,7 +3,7 @@
 
 #include <kernel/log.hpp>
 #include <arch/io.hpp>
-#include <kernel/input.hpp>
+#include <kernel/event.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
@@ -130,7 +130,15 @@ void driver_main( void* )
     {
         uint8_t scancode;
         while (rawstream.pop_front(scancode))
+        {    
             driver_update(scancode);
+        }
+    
+        // KeyEvent event;
+        // while (keystream.pop_front(event))
+        // {
+        //     usrknl::emitKbEvent({event.mask, event.key});
+        // }
     }
 }
 

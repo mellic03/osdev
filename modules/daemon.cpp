@@ -1,30 +1,30 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
-#include <kernel/input.hpp>
+
+#include <functional>
+#include <tuple>
+#include <kernel/event.hpp>
+#include <kernel/ringbuffer.hpp>
+
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <cringe/bmp.hpp>
 #include <ctype.h>
 
 
+// using MsCallback = void (*)(const kevent::MsEvent&);
+// static knl::RingBuffer<MsCallback, 32> mouseCallbacks;
+// // using KbCallback = std::function<void(const kevent::KbEvent&)>; // void (*)(void);
+// // static knl::RingBuffer<KbCallback, 32> kboardCallbacks;
+
+
+static CharDevInterface *msdev;
+static knl::MsState msdata;
+
 static CharDevInterface *kbdev;
 static char kbtermbuf[256];
 static char *kbtermend;
 static char *kbtermtop;
-
-
-static CharDevInterface *msdev;
-static kinput::MsData msdata;
-static char mousetext[16][16];
-static ivec2 mousepos[16];
-static int mousecount;
-
-static void reeeee()
-{
-    kmemcpy<uint8_t>(mousetext[mousecount], "BitchAss\0", sizeof("BitchAss\0"));
-    mousepos[mousecount] = msdata.pos();
-    mousecount = (mousecount+1) % 16;
-}
 
 
 
@@ -42,8 +42,9 @@ static void sde_keyInput()
 
         if (key == '\b')
             *(--kbtermtop) = '\0';
-        else if (isalnum(key) || key == ' ')
+        else if ((' ' <= key && key <= '~') || key == '\n')
             *(kbtermtop++) = key;
+
         if (kbtermtop >= kbtermend)
             kbtermtop = kbtermbuf;
     }
@@ -51,28 +52,43 @@ static void sde_keyInput()
 
 
 
+// static void testCallback( const knl::KbEvent &event )
+// {
+//     uint8_t key = event.key;
+
+//     if (key == '\b')
+//         *(--kbtermtop) = '\0';
+//     else if ((' ' <= key && key <= '~') || key == '\n')
+//         *(kbtermtop++) = key;
+
+//     if (kbtermtop >= kbtermend)
+//         kbtermtop = kbtermbuf;
+// }
+
+// static void registerCallbacks()
+// {
+//     // static int id0 = usrknl::listenKbEvent(testCallback);
+//     usrknl::listenKbEvent(testCallback);
+
+// }
+
+
+
 static void sde_main( void* )
 {
+    // registerCallbacks();
+
     BMP_File bmp(std::fopen("usr/share/img/cursor.bmp"));
 
-    kbdev = (CharDevInterface*)knl::findModule(ModuleType_Device, DeviceType_Keyboard);
+    kbdev = (CharDevInterface*)usrknl::findModule(ModuleType_Device, DeviceType_Keyboard);
+    msdev = (CharDevInterface*)usrknl::findModule(ModuleType_Device, DeviceType_Mouse);
+
     kmemset<uint8_t>(kbtermbuf, '\0', sizeof(kbtermbuf));
     kbtermend = kbtermbuf + sizeof(kbtermbuf);
     kbtermtop = kbtermbuf;
-    // std::printf("kbdev: %s\n", kbdev->signature);
 
-    msdev = (CharDevInterface*)knl::findModule(ModuleType_Device, DeviceType_Mouse);
-    kmemset<uint8_t>(mousetext, '\0', sizeof(mousetext));
-    kmemset<uint8_t>(mousepos, 0, sizeof(mousepos));
-    mousecount = 0;
-
-    kinput::MsCallbacks callbacks;
-    kinput::readMsCallbacks(callbacks);
-    callbacks.onUp[0].l = reeeee;
-    kinput::writeMsCallbacks(callbacks);
-
-    uint64_t prev_time;
-    uint64_t curr_time;
+    uint64_t prev_time = 0;
+    uint64_t curr_time = 0;
     uint64_t accum = 0;
     bool ready = false;
 
@@ -83,19 +99,14 @@ static void sde_main( void* )
         prev_time = curr_time;
         // std::printf("[daemon.cpp] cpu=%lu, clock=%lu\n", kthread::this_cpuid(), std::clock());
         // std::printf("[daemon.cpp] cpu=%lu\n", kthread::this_cpuid());
-        sde_keyInput();
 
+        sde_keyInput();
+        msdev->read(&msdata, sizeof(msdata));
+    
         if (ready == false)
         {
             *kvideo::CSR = ivec2(50, 50);
             kvideo::cursorString(kbtermbuf);
-
-            msdev->read(&msdata, sizeof(msdata));
-            // kvideo::fillColor(200, 50, 50, 255);
-            // kvideo::rect(msdata.x, msdata.y, 100, 100);
-
-            for (int i=0; i<mousecount; i++)
-                kvideo::renderString(mousetext[i], mousepos[i]);
 
             kvideo::blit(
                 ivec2(msdata.x, msdata.y),
@@ -107,10 +118,13 @@ static void sde_main( void* )
             ready = true;
         }
     
-        if (ready && accum > 16)
+        if (ready && accum > 16667)
         {
             ready = false;
+
+            accum /= 1000;
             accum = (accum-16) % 16;
+            accum *= 1000;
 
             kvideo::swapBuffers();
             kthread::yield();

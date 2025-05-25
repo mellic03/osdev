@@ -7,6 +7,7 @@ private:
     inline static std::mutex m_mutex;
     inline static bool enabled;
     static void _putIndent();
+    static void _print( const char *fmt, ... );
 
 public:
     static bool isEnabled() { return enabled; };
@@ -27,11 +28,11 @@ public:
         m_mutex.lock();
 
         syslog::_putIndent();
-        syslog::print("[");
-        syslog::print(fmt, args...);
-        syslog::print("]\n");
+        syslog::_print("[");
+        syslog::_print(fmt, args...);
+        syslog::_print("]\n");
         syslog::_putIndent();
-        syslog::print("{\n");
+        syslog::_print("{\n");
         pushIndent();
     
         m_mutex.unlock();
@@ -44,7 +45,7 @@ public:
         std::lock_guard lock(m_mutex);
         popIndent();
         syslog::_putIndent();
-        syslog::print("}\n");
+        syslog::_print("}\n");
     }
 
     void operator()( const char *fmt, ... );

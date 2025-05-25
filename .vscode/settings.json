@@ -178,7 +178,8 @@
         "memory.h": "c",
         "atomic2": "cpp",
         "barrier": "cpp",
-        "atomic-old": "cpp"
+        "atomic-old": "cpp",
+        "cxxabi": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${default}",

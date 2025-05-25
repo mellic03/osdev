@@ -28,9 +28,8 @@ syslog::putIndent()
     m_mutex.unlock();
 }
 
-
 void
-syslog::print( const char *fmt, ... )
+syslog::_print( const char *fmt, ... )
 {
     if (!enabled)
         return;
@@ -42,6 +41,26 @@ syslog::print( const char *fmt, ... )
 
     for (int i=0; i<n&&i<LOG_BUFLEN; i++)
         IO::outb(IO::COM1, buf[i]);
+}
+
+
+
+void
+syslog::print( const char *fmt, ... )
+{
+    if (!enabled)
+        return;
+    m_mutex.lock();
+
+    va_list args;
+    va_start(args, fmt);
+    int n = vsprintf(buf, fmt, args);
+    va_end(args);
+
+    for (int i=0; i<n&&i<LOG_BUFLEN; i++)
+        IO::outb(IO::COM1, buf[i]);
+
+    m_mutex.unlock();
 }
 
 
