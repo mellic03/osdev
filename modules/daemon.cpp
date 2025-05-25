@@ -86,6 +86,7 @@ static void sde_main( void* )
         accum += (curr_time - prev_time);
         prev_time = curr_time;
         // std::printf("[daemon.cpp] clock: %lu\n", std::clock());
+        std::printf("[daemon.cpp] cpu=%lu\n", kthread::this_cpuid());
         kinput::readMsData(msdata);
         sde_keyInput();
 

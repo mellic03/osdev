@@ -41,6 +41,7 @@ namespace ksym
             void (*yield)();
             void (*sleep)(uint64_t);
             void (*exit)();
+            uint64_t (*this_cpuid)();
         } thread_sym;
 
         struct {

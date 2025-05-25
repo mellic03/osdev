@@ -49,6 +49,7 @@ ksym::ksym_t *ksym::getsym()
         lib.yield  = kthread::yield;
         lib.sleep  = kthread::sleep;
         lib.exit   = kthread::exit;
+        lib.this_cpuid = SMP::this_cpuid;
     }
 
     {

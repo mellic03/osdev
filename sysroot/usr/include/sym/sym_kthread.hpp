@@ -9,6 +9,7 @@ namespace kthread
     FPTR <void()>         yield;
     FPTR <void(uint64_t)> sleep;
     FPTR <void()>         exit;
+    FPTR <uint64_t()>     this_cpuid;
 }
 
 #undef FPTR

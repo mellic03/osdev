@@ -142,7 +142,6 @@ static void smp_main( limine_mp_info *info )
 
     CPU::installIDT();
     LAPIC::init(1000);
-
     count++;
 
     if (SMP::is_bsp())

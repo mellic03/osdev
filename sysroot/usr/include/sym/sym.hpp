@@ -49,6 +49,7 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         kthread::yield = lib.yield;
         kthread::sleep = lib.sleep;
         kthread::exit  = lib.exit;
+        kthread::this_cpuid = lib.this_cpuid;
     }
 
     {

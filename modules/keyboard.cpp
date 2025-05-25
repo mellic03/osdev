@@ -159,6 +159,8 @@ void irq_handler( intframe_t* )
 {
     uint8_t code = IO::inb(0x60);
     rawstream.push_back(code);
+    std::printf("[kboard irq] cpu=%lu, code=%u\n", kthread::this_cpuid(), code);
+
     // std::printf("[kboard irq] code=%u\n", code);
 }
 

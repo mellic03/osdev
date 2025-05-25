@@ -55,13 +55,6 @@ struct cpu_t
     uintptr_t  syscall_req;
     uintptr_t  syscall_res;
 
-    tss_t       tss __attribute__((aligned(16)));
-    uint64_t    gdt[5];
-    gdt_ptr_t   gdtPtr;
-
-    idt_entry_t idtentries[256];
-    idt_ptr_t   idtPtr;
-
     cpu_t(): sched(*this) {  };
     cpu_t( size_t cpuid );
 };
