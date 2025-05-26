@@ -4,22 +4,11 @@
 #include <driver/pic.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/interrupt.hpp>
-// #include <arch/apic.hpp>
 
-/*
-    #define IA32_APIC_BASE_MSR 0x1B
-    #define IA32_APIC_BASE_MSR_ENABLE 0x800
-    #define IA32_APIC_BASE_MSR_BSP 0x100
-
-    // Possible way of accessing apic_base without MADT (Unsure if stable).
-    uintptr_t apic_base = CPU::rdmsr(IA32_APIC_BASE_MSR) & 0xfffff000;
-    log("apic_base: 0x%lx", apic_base);
-*/
 
 uintptr_t APIC::lapicBase  = 0;
 uintptr_t APIC::ioapicBase = 0;
 uintptr_t APIC::gsiBase    = 0;
-
 
 void APIC::init( const ACPI::Response &res )
 {

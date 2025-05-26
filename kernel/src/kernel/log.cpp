@@ -23,9 +23,8 @@ syslog::putIndent()
 {
     if (!enabled)
         return;
-    m_mutex.lock();
+    std::lock_guard lock(m_mutex);
     syslog::_putIndent();
-    m_mutex.unlock();
 }
 
 void
@@ -50,7 +49,7 @@ syslog::print( const char *fmt, ... )
 {
     if (!enabled)
         return;
-    m_mutex.lock();
+    std::lock_guard lock(m_mutex);
 
     va_list args;
     va_start(args, fmt);
@@ -59,8 +58,6 @@ syslog::print( const char *fmt, ... )
 
     for (int i=0; i<n&&i<LOG_BUFLEN; i++)
         IO::outb(IO::COM1, buf[i]);
-
-    m_mutex.unlock();
 }
 
 
@@ -69,7 +66,7 @@ syslog::println( const char *fmt, ... )
 {
     if (!enabled)
         return;
-    m_mutex.lock();
+    std::lock_guard lock(m_mutex);
 
     va_list args;
     va_start(args, fmt);
@@ -79,18 +76,14 @@ syslog::println( const char *fmt, ... )
     for (int i=0; i<n&&i<LOG_BUFLEN; i++)
         IO::outb(IO::COM1, buf[i]);
     IO::outb(IO::COM1, '\n');
-
-    m_mutex.unlock();
 }
-
 
 void
 syslog::operator()( const char *fmt, ... )
 {
     if (!enabled)
         return;
-    // std::lock_guard lock(m_mutex);
-    m_mutex.lock();
+    std::lock_guard lock(m_mutex);
 
     va_list args;
     va_start(args, fmt);
@@ -104,5 +97,4 @@ syslog::operator()( const char *fmt, ... )
         IO::outb(IO::COM1, buf[i]);
     IO::outb(IO::COM1, '\n');
 
-    m_mutex.unlock();
 }

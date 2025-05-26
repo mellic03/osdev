@@ -18,24 +18,24 @@
 
 
 
-struct ScheduleLock
-{
-    std::atomic_int count{0};
+// struct ScheduleLock
+// {
+//     std::atomic_int count{0};
 
-    void lock()
-    {
-        // CPU::cli();
-        asm volatile ("cli");
-        count++;
-    }
+//     void lock()
+//     {
+//         // CPU::cli();
+//         asm volatile ("cli");
+//         count++;
+//     }
 
-    void unlock()
-    {
-        if ((--count) == 0)
-            // CPU::sti();
-            asm volatile ("sti");
-    }
-};
+//     void unlock()
+//     {
+//         if ((--count) == 0)
+//             // CPU::sti();
+//             asm volatile ("sti");
+//     }
+// };
 
 
 static uint64_t bspID = 99999999999;

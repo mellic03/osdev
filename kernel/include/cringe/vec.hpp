@@ -94,7 +94,7 @@ vec_OPERATOR_VEC_SCALAR(/)
 
 
 template <typename T>
-struct vec<1, T>
+struct alignas(T) vec<1, T>
 {
     using value_type = T;
 
@@ -118,7 +118,7 @@ struct vec<1, T>
 
 
 template <typename T>
-struct vec<2, T>
+struct alignas(T) vec<2, T>
 {
     using value_type = T;
 
@@ -148,7 +148,7 @@ struct vec<2, T>
 
 
 template <typename T>
-struct vec<3, T>
+struct alignas(T) vec<3, T>
 {
     using value_type = T;
 
@@ -179,7 +179,7 @@ struct vec<3, T>
 
 
 template <typename T>
-struct vec<4, T>
+struct alignas(T) vec<4, T>
 {
     using value_type = T;
 

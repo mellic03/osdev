@@ -164,27 +164,11 @@ static void irq_handler( intframe_t* )
 static void driver_main( void* )
 {
     mouse_init();
-    // kinput::MsCallbacks callbacks;
 
     while (true)
     {
         if (ProcessMousePacket())
         {
-            // kinput::writeMsData(msdata);
-            // kinput::readMsCallbacks(callbacks);
-        
-            // if ((msdata.prevDown.l == true) && (msdata.currDown.l == false))
-            //     for (int i=0; i<4; i++)
-            //         if (callbacks.onUp[i].l != nullptr)
-            //             callbacks.onUp[i].l();  
-    
-            // if ((msdata.prevDown.r == true) && (msdata.currDown.r == false))
-            //     for (int i=0; i<4; i++)
-            //         if (callbacks.onUp[i].r != nullptr)
-            //             callbacks.onUp[i].r();  
-
-            // knl::writeMsState(msdata);
-
             kthread::yield();
         }
     }

@@ -7,6 +7,7 @@
 #include <kthread.hpp>
 #include <kmalloc.h>
 #include <kpanic.h>
+#include <kprintf.hpp>
 
 #include <cpu/cpu.hpp>
 #include "../cpu/smp.hpp"
@@ -71,8 +72,6 @@ static void load_module( uint8_t *tar, size_t size )
     knl::modules.push_back(iface);
 }
 
-extern void loadElf64( void *data, size_t size );
-
 
 void knl::loadModules( void *tar )
 {
@@ -89,6 +88,7 @@ void knl::loadModules( void *tar )
         {
             log("File \"%s\"", (const char*)ctar + ustar::NAME_OFFSET);
             load_module((uint8_t*)ctar, fsize);
+            kprintf("Loaded module \"%s\"\n", (const char*)ctar + ustar::NAME_OFFSET);
         }
     });
 
@@ -115,6 +115,8 @@ void knl::initModules()
             //     th->setPriority(4);
         }
     }
+
+    kprintf("Modules initialised\n");
 }
 
 

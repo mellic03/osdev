@@ -5,18 +5,18 @@
 #include <arch/io.hpp>
 #include <kernel/event.hpp>
 #include <kernel/interrupt.hpp>
+#include <kernel/ringbuffer.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
 #include <algorithm>
 #include <ctype.h>
-#include <ringbuffer.hpp>
 
 
 #define STATE_NORMAL 0
 #define STATE_PREFIX 1
 
-static idk::RingBuffer<uint8_t, 256>  rawstream;
-static idk::RingBuffer<KeyEvent, 256> keystream;
+static knl::RingBuffer<uint8_t, 256>      rawstream;
+static knl::RingBuffer<knl::KbEvent, 256> keystream;
 static char shift_table[256];
 
 void create_shift_table()
@@ -51,7 +51,7 @@ void create_shift_table()
 void driver_update( uint8_t scancode )
 {
     static uint8_t state = STATE_NORMAL;
-    static uint8_t mask = 0;
+    static uint8_t mask = 0 & ~KeyEvent_SHIFT;
 
     uint8_t key  = scode_getchar(scancode);
 
@@ -80,7 +80,7 @@ void driver_update( uint8_t scancode )
             case 0xD0:  mask &= ~KeyEvent_D; break;
         }
  
-        KeyEvent event = {
+        knl::KbEvent event = {
             .mask = mask,
             .key  = 0
         };
@@ -113,7 +113,7 @@ void driver_update( uint8_t scancode )
         key = isalpha(key) ? toupper(key) : shift_table[key];
     }
 
-    KeyEvent event = {
+    knl::KbEvent event = {
         .mask = mask,
         .key  = key
     };
@@ -121,46 +121,18 @@ void driver_update( uint8_t scancode )
     keystream.push_back(event);
 }
 
-
-void driver_main( void* )
+static size_t kbdev_read( void *dstbuf, size_t max_nbytes )
 {
-    create_shift_table();
-
-    while (true)
-    {
-        uint8_t scancode;
-        while (rawstream.pop_front(scancode))
-        {    
-            driver_update(scancode);
-        }
-    
-        // KeyEvent event;
-        // while (keystream.pop_front(event))
-        // {
-        //     usrknl::emitKbEvent({event.mask, event.key});
-        // }
-    }
-}
-
-
-static size_t driver_read( void *dstbuf, size_t max_nbytes )
-{
-    auto *dst = (KeyEvent*)dstbuf;
+    auto *dst = (knl::KbEvent*)dstbuf;
     size_t nbytes = 0;
 
-    while (keystream.pop_front(*dst) && (nbytes < max_nbytes))
+    while (!keystream.empty() && (nbytes < max_nbytes))
     {
-        dst++;
-        nbytes += sizeof(KeyEvent);
+        *(dst++) = keystream.pop_front();
+        nbytes += sizeof(knl::KbEvent);
     }
 
     return nbytes;
-}
-
-
-static size_t driver_write( const void *, size_t  )
-{
-    return 0;
 }
 
 
@@ -168,8 +140,21 @@ void irq_handler( intframe_t* )
 {
     uint8_t code = IO::inb(0x60);
     rawstream.push_back(code);
-    std::printf("[kboard irq] cpu=%lu, code=%u\n", kthread::this_cpuid(), code);
-    // std::printf("[kboard irq] code=%u\n", code);
+}
+
+
+void kbdev_main( void* )
+{
+    create_shift_table();
+
+    while (true)
+    {
+        while (!rawstream.empty())
+        {   
+            uint8_t scancode = rawstream.pop_front(); 
+            driver_update(scancode);
+        }
+    }
 }
 
 
@@ -186,12 +171,12 @@ ModuleInterface *init( ksym::ksym_t *sym )
     *kbdev = {
         .modtype  = ModuleType_Device,
         .basetype = DeviceType_Keyboard,
-        .main     = driver_main,
+        .main     = kbdev_main,
 
         .open     = nullptr,
         .close    = nullptr,
-        .read     = driver_read,
-        .write    = driver_write,
+        .read     = kbdev_read,
+        .write    = nullptr,
         .irqno    = IrqNo_Keyboard,
         .irqfn    = irq_handler,
     };

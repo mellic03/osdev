@@ -5,10 +5,12 @@
 #include <kassert.h>
 #include <kpanic.h>
 #include <kthread.hpp>
+#include <kprintf.hpp>
 #include <new>
 
 #include <kernel/boot_limine.hpp>
 #include <kernel/clock.hpp>
+#include <kernel/event.hpp>
 #include <kernel/log.hpp>
 #include <kernel/interrupt.hpp>
 #include <kernel/input.hpp>
@@ -16,12 +18,11 @@
 #include <kernel/memory/vmm.hpp>
 #include <kernel/module.hpp>
 #include <kernel/kvideo.hpp>
+#include <kernel/tty.hpp>
 
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
 #include "cpu/smp.hpp"
-#include <cringe/bmp.hpp>
-#include <cringe/font.hpp>
 
 #include <string.h>
 #include <stdio.h>
@@ -51,7 +52,7 @@ static void PIT_IrqHandler( intframe_t *frame )
 {
     // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
     auto *cpu = SMP::this_cpu();
-    cpu->m_usecs += cpu->m_lapicPeriod;
+    cpu->m_msecs += cpu->m_lapicPeriod;
 
     ThreadScheduler::scheduleISR(frame);
 }
@@ -72,18 +73,38 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 
 
 
-// static void ipi_test( intframe_t* )
-// {
-//     syslog::println("[ipi_test] cpu=%lu", SMP::this_cpuid());
-// }
 
-// static void mouseclick_callback()
-// {
-//     syslog::println("[mouseclick_callback] cpu=%lu", SMP::this_cpuid());
-//     // syslog::println("[mouseclick_callback] CPU%lu", SMP::this_cpu()->id);
-//     LAPIC::sendIPI(1, IntNo_LAPIC_TIMER_TEST);
-// }
 
+#include <gui/gui.hpp>
+static knlTTY kTTY;
+static guiTextArea textarea({100, 100}, {250, 250});
+
+static void reeeeeee( void* )
+{
+    auto *gfxDaemon = (DaemonInterface*)knl::findModule(DaemonModule, DaemonSystem);
+    auto *kbdev     = (CharDevInterface*)knl::findModule(DeviceModule, DeviceKeyboard);
+    int callback_id = gfxDaemon->listen(kprintf_redraw);
+    knl::KbEvent buf[8];
+
+    while (true)
+    {
+        size_t nbytes = kbdev->read(buf, sizeof(buf));
+        size_t count  = nbytes / sizeof(knl::KbEvent);
+    
+        for (size_t i=0; i<count; i++)
+        {
+            textarea.putch(buf[i].key);
+        }
+    }
+
+    gfxDaemon->forget(callback_id);
+}
+
+
+#include <arch/mmio.hpp>
+
+static knl::Barrier smpBarrier{4};
+std::atomic_uint64_t smpCount{0};
 
 extern "C"
 void _start()
@@ -97,8 +118,10 @@ void _start()
     syslog log("_start");
 
     early_init();
+    kprintf_init(&kTTY, &textarea);
     CPU::createIDT();
     PIC::disable();
+    // PCI::init();
 
     CPU::installISR(IntNo_GEN_FAULT,     genfaultISR);
     CPU::installISR(IntNo_PAGE_FAULT,    pagefaultISR);
@@ -111,6 +134,8 @@ void _start()
     static ACPI::Response res;
     ACPI::init(lim_rsdp_req.response->address, res);
     APIC::init(res);
+
+    smpBarrier.reset(4);
     SMP::init(smp_main);
 
     kassert(false); // Should be unreachable!
@@ -119,47 +144,39 @@ void _start()
 }
 
 
-std::atomic_uint64_t count{0};
-
 static void smp_main( limine_mp_info *info )
 {
     CPU::cli();
     CPU::enableSSE();
 
-    uint64_t  this_gdt[7];
+    uint64_t  this_gdt[5];
     gdt_ptr_t this_gdtr;
-    tss_t     this_tss;
-    CPU::createGDT(this_gdt, &this_gdtr, &this_tss);
+    CPU::createGDT(this_gdt, &this_gdtr);
     CPU::installGDT(&this_gdtr);
 
     size_t cpuid = info->lapic_id;
     cpu_t *cpu   = new (SMP::all_cpus + cpuid) cpu_t(cpuid);
-
-    while (count.load() != cpu->id)
+    
+    while (smpCount.load() != cpu->id)
         asm volatile ("nop");
     CPU::installIDT();
-    LAPIC::init(1000);
-    count++;
+    LAPIC::init();
+    smpCount++;
 
     if (SMP::is_bsp())
     {
-        BMP_File bmp(initrd::fopen("usr/share/font/cutive-w14hf20.bmp"));
-        kvideo::setFont(cringe::Font((uint8_t*)(bmp.data), bmp.w, bmp.h));
-
         knl::loadModules(initrd::find("drv/"));
         knl::loadModules(initrd::find("srv/"));
         knl::initModules();
-
-        // kinput::MsCallbacks callbacks;
-        // callbacks.onUp[0].r = mouseclick_callback;
-        // kinput::writeMsCallbacks(callbacks);
+        kthread::create("reeeeeee", reeeeeee, nullptr);
     }
 
+    smpBarrier.wait();
     CPU::sti();
 
     while (true)
     {
-        CPU::hlt();
+        CPU::cli_hlt();
     }
 }
 

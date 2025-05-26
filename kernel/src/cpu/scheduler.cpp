@@ -124,9 +124,8 @@ ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
     th->frame.rsi    = (uint64_t)arg;
     th->frame.rbp    = 0;
     th->frame.rflags = CPU::getRFLAGS(); // 0x202;
-    // CPU::fxsave(th->fxstate);
-    asm volatile("fxsave %0 " : : "m"(th->fxstate));
-
+    CPU::fxsave(th->fxstate);
+    // asm volatile("fxsave %0 " : : "m"(th->fxstate));
 
     return th;
 }
@@ -148,7 +147,7 @@ ThreadScheduler::trampoline( intframe_t *frame )
     uint64_t frame_ss = frame->ss;
 
     auto *curr = m_threads.front();
-    asm volatile("fxsave %0 " : : "m"(curr->fxstate));
+    CPU::fxsave(curr->fxstate);
 
     *frame = curr->frame;
     frame->cs = frame_cs;
@@ -270,16 +269,14 @@ void ThreadScheduler::scheduleISR( intframe_t *frame )
     // syslog::println("[scheduleISR] CPU=%lu", SMP::this_cpuid());
 
     auto *sd = SMP::this_sched();
-    // CPU::fxsave(SMP::this_thread()->fxstate);
-    asm volatile("fxsave %0 " : : "m"(SMP::this_thread()->fxstate));
+    CPU::fxsave(SMP::this_thread()->fxstate);
 
     if (sd->m_startLock.isset())
         sd->trampoline(frame);
     else
         sd->schedule(frame);
 
-    // CPU::fxrstor(SMP::this_thread()->fxstate);
-    asm volatile("fxrstor %0 " : : "m"(SMP::this_thread()->fxstate));
+    CPU::fxrstor(SMP::this_thread()->fxstate);
 
 }
 

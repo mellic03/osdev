@@ -35,14 +35,15 @@ static uint32_t pci_read_dword( int bus, int slot, int fn, int off )
     return IO::in32(PCI_CONFIG_DATA);
 }
 
-// static void pci_write16( int bus, int slot, int fn, int off, uint16_t data )
-// {
-//     uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
-//     IO::out32(PCI_CONFIG_ADDRESS, addr);
-//     IO::out32(PCI_CONFIG_DATA + (off & 0x03), data);
-// }
+void pci_write16( int bus, int slot, int fn, int off, uint16_t data )
+{
+    uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
+    IO::out32(PCI_CONFIG_ADDRESS, addr);
+    IO::out32(PCI_CONFIG_DATA + (off & 0x03), data);
+}
 
-void pci_write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t data) {
+void pci_write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t data)
+{
     uint32_t address = (uint32_t)((bus << 16) | (slot << 11) | (func << 8) | (offset & 0xfc) | 0x80000000);
 
     IO::out32(0xCF8, address);
@@ -206,22 +207,23 @@ void PCI::init()
 
 }
 
+#include <kernel/memory/pmm.hpp>
 
-// PCI_dev PCI::findDevice( uint16_t vendor_id, uint16_t device_id )
-// {
-//     for (auto &dev: PCI_Devices)
-//     {
-//         if ((dev.vendor_id == vendor_id) && (dev.device_id == device_id))
-//         {
-//             return dev;
-//         }
-//     }
+PCI_Device PCI::findDevice( uint16_t vendor_id, uint16_t device_id )
+{
+    for (auto &dev: PCI_devices)
+    {
+        if ((dev.vendor_id == vendor_id) && (dev.device_id == device_id))
+        {
+            return dev;
+        }
+    }
 
-//     PCI_dev dummy;
-//     dummy.vendor_id = PCI_NONE;
-//     dummy.device_id = PCI_NONE;
-//     return dummy;
-// }
+    PCI_Device dummy;
+    dummy.vendor_id = PCI_NONE;
+    dummy.device_id = PCI_NONE;
+    return dummy;
+}
 
 
 
@@ -308,6 +310,7 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
         };
     
         bar = pci_read_dword(bs, st, fn, PCI_BAR0 + 4*i);
+        this->bars[i] = bar;
 
         if (bar == 0)
         {
@@ -317,7 +320,7 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
         syslog lg("bar%d", i);
 
         if (binfo.is_iospace)
-        {
+        {            
             auto &info = binfo.iospace;
             lg("- iospace");
             lg("- addr:  0x%lx", info.address);

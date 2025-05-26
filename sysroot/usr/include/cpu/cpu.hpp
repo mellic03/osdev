@@ -47,7 +47,7 @@ struct cpu_t
 
     ThreadScheduler sched;
     // std::atomic_uint64_t m_ticks{0};
-    std::atomic_uint64_t m_usecs{0};
+    std::atomic_uint64_t m_msecs{0};
     uint64_t m_lapicPeriod{0};
 
     uint8_t    yldrsn;
@@ -86,7 +86,7 @@ namespace CPU
 
     void createGDT();
     void installGDT();
-    void createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t *TSS );
+    void createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr );
     void installGDT( gdt_ptr_t *gdtr );
 
     void createIDT();
@@ -118,6 +118,7 @@ namespace CPU
     inline void cli() { asm volatile ("cli"); }
     inline void sti() { asm volatile ("sti"); }
     inline void hlt() { asm volatile ("hlt"); }
+    inline void cli_hlt() { asm volatile ("cli; hlt"); }
     inline void hcf() { while (true) { asm volatile ("cli; hlt"); } }
 
     inline uint64_t rdmsr( uint32_t msr )
@@ -133,7 +134,6 @@ namespace CPU
     }
 
     void     setRSP( uintptr_t );
-
     uint64_t getCR3();
     void     setCR3( uint64_t );
 
@@ -160,13 +160,13 @@ namespace CPU
     {
         volatile unsigned long flags;
         asm volatile("pushfq;"
-                    "pop %0;"
+                     "pop %0;"
                     : "=rm"(flags)::"memory", "cc");
         return (flags & 0x200) != 0;
     }
 
 
-    static inline uint64_t getTSC()
+    inline uint64_t getTSC()
     {
         uint32_t timestamp_low, timestamp_high;
         asm volatile("rdtsc" : "=a"(timestamp_low), "=d"(timestamp_high));

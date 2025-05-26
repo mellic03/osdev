@@ -3,22 +3,15 @@
 global cpu_fxsave
 global cpu_fxrstor
 
-global cpu_set_rsp
-
-global cpu_get_cr3
-global cpu_set_cr3
+global CPU_GetCR3
+global CPU_SetCR3
 
 global cpu_get_rflags
-; global cpu_set_rflags
 
 global cpu_enable_sse
 global cpu_enable_avx
 
 global GDT64_Install
-; global cpu_load_gdt
-; global cpu_flush_gdt
-
-
 
 
 section .text
@@ -34,19 +27,32 @@ section .text
         ret
 
     align 16
-    cpu_set_rsp:
-        mov rsp, rdi
-        ret
-
-    align 16
-    cpu_get_cr3:        ; uint64_t cpu_get_cr3( void )
+    CPU_GetCR3:        ; uint64_t CPU_GetCR3( void )
         mov rax, cr3
         ret
 
     align 16
-    cpu_set_cr3:       ; void cpu_set_cr3( uint64_t )
+    CPU_SetCR3:       ; void CPU_SetCR3( uint64_t )
         mov cr3, rdi
         ret
+
+
+    ; align 16
+    ; cpu_enable_sse:
+    ;     mov rax, cr0
+    ;     bts rax, 1		; Set Monitor co-processor (Bit 1)
+    ;     btr rax, 2		; Clear Emulation (Bit 2)
+    ;     bts rax, 5		; Set Native Exception (Bit 5)
+    ;     btr rax, 3		; Clear TS
+    ;     mov cr0, rax
+    ;     finit
+    ;     mov rax, cr4
+    ;     bts rax, 9		; Set Operating System Support for FXSAVE and FXSTOR instructions (Bit 9)
+    ;     bts rax, 10		; Set Operating System Support for Unmasked SIMD Floating-Point Exceptions (Bit 10)
+    ;     mov cr4, rax
+    ;     ret 
+
+
 
     align 16
     cpu_enable_sse:
@@ -59,44 +65,6 @@ section .text
         mov cr4, rax
         ret
 
-    align 16
-    cpu_enable_avx:
-        push rax
-        push rcx
-        push rdx
-
-        xor  rcx, rcx
-        xgetbv          ; load XCR0 register
-        or eax, 7       ; set AVX, SSE, X87 bits
-        xsetbv          ; save back to XCR0
-
-        pop rdx
-        pop rcx
-        pop rax
-        ret
-
-    ; align 16
-    ; cpu_load_gdt:
-    ;     lgdt [rdi]
-    ;     ret
-
-    ; align 16
-    ; cpu_flush_gdt:
-    ;     ; Reload CS register:
-    ;     push  0x08                  ; Push code segment to stack, 0x08 is a stand-in for your code segment
-    ;     lea   rax, [rel .reload_cs] ; Load address of .reload_CS into rax
-    ;     push  rax                   ; Push this value to the stack
-    ;     retfq                       ; Perform a far return, RETFQ or LRETQ depending on syntax
-    ; .reload_cs:
-    ;     ; Reload data segment registers
-    ;     mov   ax, 0x10 ; 0x10 is a stand-in for your data segment
-    ;     mov   ds, ax
-    ;     mov   es, ax
-    ;     mov   fs, ax
-    ;     mov   gs, ax
-    ;     mov   ss, ax
-    ;     ret
-    
 
     align 16
     global GDT64_Install
@@ -110,26 +78,10 @@ section .text
         push .cont
         iretq
     .cont:
-        mov ax,  0x10 ; 0x10 is a stand-in for your data segment
-        mov ds,  ax
-        mov es,  ax
-        mov fs,  ax
-        mov gs,  ax
-        mov ss,  ax
-        ret
-
-
-    align 16
-    global cpuid_proc_feat_info
-    cpuid_proc_feat_info:
-        push rbp
-        mov rbp, rsp
-        mov eax, 1
-        cpuid
-        mov dword [rdi], eax
-        mov dword [rdi + 4], edx
-        mov dword [rdi + 8], ecx
-        mov dword [rdi + 12], ebx
-        mov rsp, rbp
-        pop rbp
+        mov ax, 0x10 ; 0x10 is a stand-in for your data segment
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
+        mov ss, ax
         ret

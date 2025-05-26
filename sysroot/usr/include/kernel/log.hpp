@@ -4,7 +4,8 @@
 class syslog
 {
 private:
-    inline static std::mutex m_mutex;
+    // inline static std::mutex m_mutex;
+    inline static knl::DummyLock m_mutex;
     inline static bool enabled;
     static void _putIndent();
     static void _print( const char *fmt, ... );
@@ -24,9 +25,7 @@ public:
     {
         if (!enabled)
             return;
-        // std::lock_guard lock(m_mutex);
-        m_mutex.lock();
-
+        std::lock_guard lock(m_mutex);
         syslog::_putIndent();
         syslog::_print("[");
         syslog::_print(fmt, args...);
@@ -34,8 +33,6 @@ public:
         syslog::_putIndent();
         syslog::_print("{\n");
         pushIndent();
-    
-        m_mutex.unlock();
     }
 
     ~syslog()

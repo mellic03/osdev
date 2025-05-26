@@ -28,10 +28,10 @@ cp -r lib/libc++/include/* sysroot/usr/include/.
 # Build modules
 # ---------------------------------------------------------
 cd ./modules
-./build.sh keyboard ../sysroot/drv
-./build.sh mouse    ../sysroot/drv
-./build.sh daemon   ../sysroot/srv
-cd ../
+mkdir -p build && cd build
+cmake ..
+make
+cd ../../
 # ---------------------------------------------------------
 
 
@@ -46,9 +46,8 @@ cd ../
 
 # Compile kernel
 # ---------------------------------------------------------
-mkdir -p ./build
-cd ./build
-cmake ../
+mkdir -p build && cd build
+cmake ..
 make -j8
 cd ../
 # ---------------------------------------------------------

@@ -21,7 +21,7 @@ namespace PIT
     extern uint32_t CurrFrequency;
     extern uint64_t MicroSeconds;
 
-    void init( uint64_t microseconds  );
+    void init( uint64_t microseconds );
     // void set_hz( uint16_t hz );
     // void set_ms( uint16_t ms );
     uint32_t sleep( uint64_t ms );

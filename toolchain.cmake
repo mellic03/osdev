@@ -33,8 +33,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 # set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/linker.ld")
 # set(KPROGRAM_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/programs/linker.ld")
-set(SSE_FLAGS "-mmmx -msse -msse2")
-# set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
+# set(SSE_FLAGS "-mmmx -msse -msse2")
+set(SSE_FLAGS "-mno-mmx -mno-sse -mno-sse2")
 # add_definitions(-D__libk_sse=true)
 
 
@@ -63,7 +63,7 @@ set(CringeOS_C_CXX_FLAGS
     "-O3 \
     ${SSE_FLAGS} \
     -Wall -Wextra -Werror \
-    -fsanitize=undefined -fstack-protector-strong -fno-strict-aliasing \
+    -fsanitize=undefined -fno-stack-protector -fno-strict-aliasing \
     -fno-omit-frame-pointer \
     -fno-asynchronous-unwind-tables \
     -fno-exceptions \
@@ -74,6 +74,7 @@ set(CringeOS_C_CXX_FLAGS
     -mno-80387 \
     -z max-page-size=0x1000 -mno-red-zone \
     -mcmodel=kernel \
+    -T ${CMAKE_SOURCE_DIR}/kernel/linker.ld \
     -Wl,--no-relax -Wl,--gc-sections \
     -Wno-missing-field-initializers"
 )
@@ -110,15 +111,15 @@ set(
 )
 
 
-# set(
-#     CMAKE_EXE_LINKER_FLAGS
-#     "-Wl,-m,elf_x86_64 \
-#     -Wl,--build-id=none \
-#     -nostdlib \
-#     -static \
-#     -mgeneral-regs-only \
-#     -z max-page-size=0x1000  -mno-red-zone"
-# )
+set(
+    CMAKE_EXE_LINKER_FLAGS
+    "-Wl,-m,elf_x86_64 \
+    -Wl,--build-id=none \
+    -nostdlib \
+    -static \
+    -mgeneral-regs-only \
+    -z max-page-size=0x1000  -mno-red-zone"
+)
 
 
 # include_directories(

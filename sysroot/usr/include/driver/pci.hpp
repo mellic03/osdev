@@ -158,7 +158,7 @@ struct PCI_Device
 namespace PCI
 {
     void init();
-    // PCI_dev findDevice( uint16_t vendor_id, uint16_t device_id );
+    PCI_Device findDevice( uint16_t vendor_id, uint16_t device_id );
     
 
     // Bridge type

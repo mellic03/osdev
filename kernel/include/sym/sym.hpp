@@ -32,23 +32,25 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         kvideo::CSR          = lib.CSR;
         kvideo::W            = lib.W;
         kvideo::H            = lib.H;
+        kvideo::pitch        = lib.pitch;
+        kvideo::BPP          = lib.BPP;
         kvideo::frontbuffer  = lib.frontbuffer;
         kvideo::backbuffer   = lib.backbuffer;
-        kvideo::clearBuffer  = lib.clearBuffer;
-        kvideo::fillColor    = lib.fillColor;
-        kvideo::fillBuffer   = lib.fillBuffer;
-        kvideo::rect         = lib.rect;
+        // kvideo::clearBuffer  = lib.clearBuffer;
+        // kvideo::fillColor    = lib.fillColor;
+        // kvideo::fillBuffer   = lib.fillBuffer;
+        // kvideo::rect         = lib.rect;
         kvideo::blit         = lib.blit;
-        kvideo::renderString = lib.renderString;
-        kvideo::cursorString = lib.cursorString;
+        // kvideo::renderString = lib.renderString;
         kvideo::swapBuffers  = lib.swapBuffers;
     }
 
     {
         auto &lib = sym->thread_sym;
-        kthread::yield = lib.yield;
-        kthread::sleep = lib.sleep;
-        kthread::exit  = lib.exit;
+        kthread::create = lib.create;
+        kthread::yield  = lib.yield;
+        kthread::sleep  = lib.sleep;
+        kthread::exit   = lib.exit;
         kthread::this_cpuid = lib.this_cpuid;
     }
 

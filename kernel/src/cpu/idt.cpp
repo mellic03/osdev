@@ -2,6 +2,7 @@
 #include <cpu/cpu.hpp>
 #include <cpu/idt.hpp>
 #include <kthread.hpp>
+#include <kprintf.hpp>
 
 #include <kernel/interrupt.hpp>
 #include <kernel/log.hpp>
@@ -54,6 +55,8 @@ void CPU::createIDT()
         idt_setdesc(idt_entries[i], (uintptr_t)(isrtab[i]), INTERRUPT_GATE);
     idtr.base  = (uint64_t)(&idt_entries[0]);
     idtr.limit = (uint16_t)sizeof(idt_entries) - 1;
+
+    kprintf("[CPU::createIDT] base=0x%lx, limit=%lu\n", idtr.base, idtr.limit);
 }
 
 void CPU::installIDT()

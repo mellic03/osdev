@@ -20,7 +20,7 @@
 #include <algorithm>
 
 
-static cringe::Font kvideoFont(0, 0, 0);
+static guiFont kvideoFont(0, 0, 0, 0);
 static uint8_t kvideoFillColor[4];
 
 ivec2  kvideo::CSR = ivec2(0, 0);
@@ -155,7 +155,7 @@ static void kvideo_blit( int x, int y, uint8_t *img, int imgw, int,
 }
 
 
-void kvideo::setFont( const cringe::Font &font )
+void kvideo::setFont( const guiFont &font )
 {
     kvideoFont = font;
 }
@@ -163,85 +163,119 @@ void kvideo::setFont( const cringe::Font &font )
 
 void kvideo::renderGlyph( char ch, int x, int y )
 {
-    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
+    kassert(kvideoFont.w != 0 && kvideoFont.h != 0);
     auto &font = kvideoFont;
 
     ivec2 tl = font.getGlyphCorner(ch);
     ivec2 sp = font.getGlyphExtents();
 
-    kvideo_blit(x, y, font.m_img, font.W, font.H, tl, sp);
+    kvideo_blit(x, y, font.pixels, font.w, font.h, tl, sp);
 }
 
 
-static void nextLine( int &x, int &y, const ivec2 &sp )
+static void nextLine( const guiContainer &bounds, int &x, int &y, const ivec2 &sp )
 {
-    x = 0;
+    int xmin = bounds.xmin();
+    int ymin = bounds.ymin();
+    int ymax = bounds.ymax();
+
+
+    x = xmin;
     y += sp.y;
+
+    if (y >= ymax)
+        y = ymin;
 }
 
 
-void kvideo::renderString( const char *str, const ivec2 &srcpos )
+ivec2 kvideo::renderString( const guiContainer &bounds, const char *str, ivec2 csr )
 {
-    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
-    auto &font = kvideoFont;
+    kassert(kvideoFont.w != 0 && kvideoFont.h != 0);
 
+    auto &font = kvideoFont;
     ivec2 sp  = font.getGlyphExtents();
-    ivec2 pos = srcpos;
-    int &x = pos.x;
-    int &y = pos.y;
+    int   &x   = csr.x;
+    int   &y   = csr.y;
+
+    int xmin = bounds.xmin();
+    int xmax = bounds.xmax();
+    int ymin = bounds.ymin();
+    int ymax = bounds.ymax();
+
+    x = std::clamp(x, xmin, xmax);
+    y = std::clamp(y, ymin, ymax);
 
     while (*str)
     {
         char ch = *(str++);
 
         if (ch == '\n')
-            nextLine(x, y, sp);
+            nextLine(bounds, x, y, sp);
 
-        if (x+sp.x >= kvideo::W)
-            nextLine(x, y, sp);
+        if (x+sp.x >= xmax)
+            nextLine(bounds, x, y, sp);
 
         ivec2 tl = font.getGlyphCorner(ch);
         if (tl.x == -1)
             continue;
 
-        kvideo::blit(pos, font.m_img, font.W, font.H, tl, sp);
+        kvideo::blit(csr, font.pixels, font.w, font.h, tl, sp);
 
         x += sp.x;
     }
+
+    return ivec2(x, y);
 }
 
 
-void kvideo::cursorString( const char *str )
+ivec2 kvideo::renderString( const char *str, ivec2 csr )
 {
-    kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
-    auto &font = kvideoFont;
-    int  &x = kvideo::CSR.x;
-    int  &y = kvideo::CSR.y;
-
-    while (*str)
-    {
-        ivec2 tl = font.getGlyphCorner(*str);
-        ivec2 sp = font.getGlyphExtents();
-
-        if (x+sp.x >= kvideo::W)
-        {
-            x = 0;
-            y += sp.y;
-        }
-
-        kvideo::blit(kvideo::CSR, font.m_img, font.W, font.H, tl, sp);
-
-        x += sp.x;
-        str++;
-    }
+    return kvideo::renderString({ivec2(0), ivec2(kvideo::W, kvideo::H)}, str, csr);
 }
+
+
+// void kvideo::cursorString( const char *str )
+// {
+//     kassert(kvideoFont.W != 0 && kvideoFont.H != 0);
+//     auto &font = kvideoFont;
+
+//     ivec2 sp  = font.getGlyphExtents();
+//     int  &x = kvideo::CSR.x;
+//     int  &y = kvideo::CSR.y;
+
+//     while (*str)
+//     {
+//         char ch = *(str++);
+
+//         if (ch == '\n')
+//             nextLine(x, y, sp);
+
+//         if (x+sp.x >= kvideo::W)
+//             nextLine(x, y, sp);
+
+//         ivec2 tl = font.getGlyphCorner(ch);
+//         if (tl.x == -1)
+//             continue;
+
+//         kvideo::blit(ivec2(x, y), font.m_img, font.W, font.H, tl, sp);
+
+//         x += sp.x;
+//     }
+// }
 
 
 
 void kvideo::swapBuffers()
 {
-    kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
-    kmemset<uint8_t>(backbuffer, 0, nbytes);
+    // kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
+    // kmemset<uint8_t>(backbuffer, 0, nbytes);
+    uint8_t *A = idk::align_up(frontbuffer, 16);\
+    uint8_t *B = idk::align_up(backbuffer, 16);
+
+    kmemcpy<uint128_t>(A, B, nbytes);
+    kmemset<uint128_t>(B, 0, nbytes);
+
+
 }
 
 

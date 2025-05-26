@@ -1,4 +1,6 @@
 #include <arch/apic.hpp>
+#include <driver/pit.hpp>
+#include <driver/pic.hpp>
 #include <cpu/cpu.hpp>
 #include <kernel/interrupt.hpp>
 
@@ -31,55 +33,59 @@ enum APIC_TIMER_DIVIDE_CONFIG
 //     APIC::write(APIC::REG_LVT_TIMER, config);
 //     APIC::write(APIC::REG_TIMER_INIT, 1000000/us);
 // }
+#include <kprintf.hpp>
+
+void LAPIC::startTimer()
+{
+    APIC::write(APIC::REG_TIMER_DIV, 0x03);
+    // PIT::init(1000000); // sleep for 10ms
+    APIC::write(APIC::REG_TIMER_INIT, 0xFFFFFFFF);
+    // PIT::sleep(10); // sleep
+    APIC::write(APIC::REG_LVT_TIMER, (1<<16)); // stop apic timer
+
+    // Now we know how often the APIC timer has ticked in 10ms
+    uint32_t ticksIn10ms = 0xFFFFFFFF - APIC::read(APIC::REG_TIMER_CURR);
+    kprintf("ticksIn10ms: %u\n", ticksIn10ms);
+
+
+    // Start timer as periodic on IRQ 0, divider 16,
+    // with the number of ticks we counted
+    uint8_t irqno = IrqNo_PIT;
+    uint8_t isrno = IntNo_IOAPIC_Base + irqno;
+
+    auto *cpu = SMP::this_cpu();
+    cpu->m_lapicPeriod = ticksIn10ms;
+
+    APIC::write(APIC::REG_LVT_TIMER, isrno | APIC::TIMER_PERIODIC);
+    APIC::write(APIC::REG_TIMER_DIV, 0x03);
+    APIC::write(APIC::REG_TIMER_INIT, ticksIn10ms);
+}
+
 
 void LAPIC::resetTimer( uint32_t us )
 {
-    uint8_t  irqno  = IrqNo_PIT;
-    uint8_t  isrno  = IntNo_IOAPIC_Base + irqno;
-    // uint32_t config = isrno | (1 << 17);
-    APIC::write(APIC::REG_LVT_TIMER, isrno | APIC::TMR_PERIODIC);
+    uint8_t irqno = IrqNo_PIT;
+    uint8_t isrno = IntNo_IOAPIC_Base + irqno;
+    APIC::write(APIC::REG_LVT_TIMER, isrno | APIC::TIMER_PERIODIC);
     APIC::write(APIC::REG_TIMER_INIT, 1000000/us);
 }
 
 
-void LAPIC::init( uint32_t usecs )
+void LAPIC::init()
 {
-    auto *cpu = SMP::this_cpu();
-    cpu->m_lapicPeriod = usecs;
     APIC::write(APIC::REG_SPURIOUS, APIC::ENABLE | IntNo_Spurious);
-    LAPIC::resetTimer(usecs);
+    LAPIC::startTimer();
+    // LAPIC::resetTimer(usecs);
 }
 
 
-#define ICR_VECTOR(x) (x & 0xFF)
-#define ICR_MESSAGE_TYPE_FIXED 0
-#define ICR_MESSAGE_TYPE_LOW_PRIORITY (1 << 8)
-#define ICR_MESSAGE_TYPE_SMI (2 << 8)
-#define ICR_MESSAGE_TYPE_REMOTE_READ (3 << 8)
-#define ICR_MESSAGE_TYPE_NMI (4 << 8)
-#define ICR_MESSAGE_TYPE_INIT (5 << 8)
-#define ICR_MESSAGE_TYPE_STARTUP (6 << 8)
-#define ICR_MESSAGE_TYPE_EXTERNAL (7 << 8)
-
-#define ICR_DSH_DEST 0          // Use destination field
-#define ICR_DSH_SELF (1 << 18)  // Send to self
-#define ICR_DSH_ALL (2 << 18)   // Send to ALL APICs
-#define ICR_DSH_OTHER (3 << 18) // Send to all OTHER APICs 
-
-
-void SendIPI( uint8_t dst_apicid, uint32_t dsh /* Destination Shorthand*/,
-              uint32_t type, uint8_t isrno )
+void LAPIC::sendIPI( uint32_t dstid, uint8_t isrno, uint32_t dsh, uint32_t type )
 {
-    uint32_t high = ((uint32_t)dst_apicid) << 24;
+    uint32_t high = ((uint32_t)dstid) << 24;
     uint32_t low = dsh | type | ICR_VECTOR(isrno);
 
     APIC::write(APIC::REG_ICR_HI, high);
     APIC::write(APIC::REG_ICR_LO, low);
-}
-
-void LAPIC::sendIPI( uint32_t lapic_id, uint8_t isrno )
-{
-    SendIPI(lapic_id, ICR_DSH_DEST, ICR_MESSAGE_TYPE_FIXED, isrno);
 }
 
 

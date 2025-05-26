@@ -34,21 +34,22 @@ ksym::ksym_t *ksym::getsym()
         lib.H            = kvideo::H;
         lib.frontbuffer  = kvideo::frontbuffer;
         lib.backbuffer   = kvideo::backbuffer;
-        lib.clearBuffer  = kvideo::clearBuffer;
-        lib.fillColor    = kvideo::fillColor;
-        lib.fillBuffer   = kvideo::fillBuffer;
-        lib.rect         = kvideo::rect;
+        // lib.clearBuffer  = kvideo::clearBuffer;
+        // lib.fillColor    = kvideo::fillColor;
+        // lib.fillBuffer   = kvideo::fillBuffer;
+        // lib.rect         = kvideo::rect;
         lib.blit         = kvideo::blit;
-        lib.renderString = kvideo::renderString;
-        lib.cursorString = kvideo::cursorString;
+        // lib.renderString = kvideo::renderString;
+        // lib.cursorString = kvideo::cursorString;
         lib.swapBuffers  = kvideo::swapBuffers;
     }
 
     {
         auto &lib = kernel_sym.thread_sym;
-        lib.yield  = kthread::yield;
-        lib.sleep  = kthread::sleep;
-        lib.exit   = kthread::exit;
+        lib.create  = kthread::create;
+        lib.yield   = kthread::yield;
+        lib.sleep   = kthread::sleep;
+        lib.exit    = kthread::exit;
         lib.this_cpuid = SMP::this_cpuid;
     }
 

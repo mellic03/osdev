@@ -62,14 +62,14 @@ section .text
 
     %macro _err_stub 1
     isr_stub_%+%1:
-        ; cli
+        cli
         push qword %1
         isr_stub_common
     %endmacro
 
     %macro _noerr_stub 1
     isr_stub_%+%1:
-        ; cli
+        cli
         push 0 ; Dummy error code
         push qword %1
         isr_stub_common
@@ -81,7 +81,7 @@ section .text
         call isr_dispatch
         ctx_pop
         add rsp, 16
-        ; sti
+        sti
         iretq
     %endmacro
 

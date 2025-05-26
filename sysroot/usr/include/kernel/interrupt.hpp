@@ -44,10 +44,8 @@ enum IntNo_: uint8_t
 
     IntNo_IOAPIC_Base               = 100,
     IntNo_IOAPIC_End                = IntNo_IOAPIC_Base + 24,
-    IntNo_Spurious                  = IntNo_IOAPIC_End,
 
-    IntNo_LAPIC_TIMER_TEST          = 120,
-
+    IntNo_Spurious                  = 254,
     IntNo_Syscall 	  	            = 255,
 };
 

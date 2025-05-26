@@ -3,16 +3,22 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <cringe/vec.hpp>
-
-
-namespace cringe
-{
-    class Font;
-}
-
+#include <gui/gui.hpp>
 
 namespace kvideo
 {
+    struct gfxContainer
+    {
+        ivec2 tl, sp;
+        ivec4 margin = ivec4(15);
+    
+        int xmin() const { return tl.x        + margin[0]; }
+        int xmax() const { return tl.x + sp.x - margin[1]; }
+        int ymin() const { return tl.y        + margin[2]; }
+        int ymax() const { return tl.y + sp.y - margin[3]; }
+    };
+
+
     extern ivec2  CSR;
     extern int    W;
     extern int    H;
@@ -29,11 +35,12 @@ namespace kvideo
     void initFrontbuffer( uintptr_t fb_res );
     void initBackbuffer( uintptr_t fb_res );
 
-    void setFont( const cringe::Font& );
+    void setFont( const guiFont& );
     void renderGlyph( char ch, int x, int y );
-    void renderString( const char *str, const ivec2& );
+    ivec2 renderString( const char *str, ivec2 csr );
+    ivec2 renderString( const guiContainer &bounds, const char *str, ivec2 csr );
     // void cursorGlyph( char ch );
-    void cursorString( const char *ch );
+    // void cursorString( const char *ch );
 
     void blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
                const ivec2 &srctl, const ivec2 &srcsp );

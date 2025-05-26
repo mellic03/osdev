@@ -25,7 +25,11 @@ enum ModuleType_: uint64_t
 {
     ModuleType_Invalid = 0,
     ModuleType_Device,
-    ModuleType_Daemon
+    ModuleType_Daemon,
+
+    DeviceModule = ModuleType_Device,
+    DaemonModule = ModuleType_Daemon,
+
 };
 
 // enum ModuleFlag_: uint64_t
@@ -44,6 +48,12 @@ enum DeviceType_: uint64_t
     DeviceType_Mouse,
     DeviceType_Block   = 1<<15,
     DeviceType_Char    = 1<<16,
+
+    DeviceStorage  = DeviceType_Storage,
+    DeviceAudio    = DeviceType_Audio,
+    DeviceVideo    = DeviceType_Video,
+    DeviceKeyboard = DeviceType_Keyboard,
+    DeviceMouse    = DeviceType_Mouse,
 };
 
 enum DaemonType_: uint64_t
@@ -51,6 +61,9 @@ enum DaemonType_: uint64_t
     DaemonType_Invalid = 0,
     DaemonType_System,
     DaemonType_User,
+
+    DaemonSystem = DaemonType_System,
+    DaemonUser   = DaemonType_User,
 };
 
 
@@ -105,14 +118,15 @@ struct CharDevInterface
     void     (*irqfn)(intframe_t*);
 };
 
-
 struct DaemonInterface
 {
     MODULE_INTERFACE_HEADER
     void (*start )();
     void (*stop  )();
     void (*reload)();
-    int  (*status)(); // write status to stdout and return status code
+    int  (*status)();
+    int  (*listen)(void(*)(void*));
+    int  (*forget)(int);
 };
 
 

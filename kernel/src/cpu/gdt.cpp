@@ -38,7 +38,7 @@ fill_entry( uint64_t *gdtbase, int idx, uint64_t base, uint64_t limit, uint8_t a
 
 
 
-void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr, tss_t* )
+void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr)
 {
     // https://wiki.osdev.org/GDT_Tutorial#How_to_Set_Up_The_GDT
     fill_entry(gdtbase, 0, 0, 0, 0, 0);

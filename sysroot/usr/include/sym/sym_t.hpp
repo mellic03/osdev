@@ -1,10 +1,10 @@
 #pragma once
 #include <kdef.h>
-#include <functional>
-#include <kernel/interrupt.hpp>
 #include <cringe/vec.hpp>
 
 struct ModuleInterface;
+struct kthread_t;
+
 
 namespace knl
 {
@@ -33,19 +33,22 @@ namespace ksym
         struct {
             ivec2 *CSR;
             int W, H;
+            int pitch;
+            size_t BPP;
             uint8_t *frontbuffer;
             uint8_t *backbuffer;
-            void (*clearBuffer)(uint8_t *buffer);
-            void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
-            void (*fillBuffer) (uint8_t *buffer);
-            void (*rect)       (int, int, int, int);
+            // void (*clearBuffer)(uint8_t *buffer);
+            // void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
+            // void (*fillBuffer) (uint8_t *buffer);
+            // void (*rect)       (int, int, int, int);
             void (*blit)       (const ivec2&, uint8_t*, int, int, const ivec2&, const ivec2&);
-            void (*renderString)(const char*, const ivec2&);
-            void (*cursorString)(const char*);
+            // ivec2 (*renderString)(const ivec4&, const char*, const ivec2&);
+            // void (*cursorString)(const char*);
             void (*swapBuffers)();
         } video_sym;
 
         struct {
+            kthread_t *(*create)( const char*, void(*)(void*), void* );
             void (*yield)();
             void (*sleep)(uint64_t);
             void (*exit)();
