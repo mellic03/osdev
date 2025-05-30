@@ -4,7 +4,7 @@ file(
 )
 
 add_executable(
-    keyboard.elf
+    keyboard
     ${SOURCES}
 )
 

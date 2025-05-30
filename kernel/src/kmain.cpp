@@ -3,6 +3,7 @@
 #endif
 
 #include <kassert.h>
+#include <kmalloc.h>
 #include <kpanic.h>
 #include <kthread.hpp>
 #include <kprintf.hpp>
@@ -12,13 +13,15 @@
 #include <kernel/clock.hpp>
 #include <kernel/event.hpp>
 #include <kernel/log.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kernel/input.hpp>
 #include <kernel/syscall.h>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/module.hpp>
 #include <kernel/kvideo.hpp>
-#include <kernel/tty.hpp>
+#include <kprintf.hpp>
+
+#include <wm/wm.hpp>
 
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
@@ -35,7 +38,7 @@
 #include <driver/serial.hpp>
 
 #include <filesystem/ramfs.hpp>
-#include <filesystem/vfs2.hpp>
+#include <filesystem/vfs.hpp>
 #include <filesystem/initrd.hpp>
 
 #include "syscall/syscall.hpp"
@@ -45,6 +48,7 @@
 static void genfaultISR( intframe_t* );
 static void pagefaultISR( intframe_t* );
 static void outOfMemoryISR( intframe_t* );
+static void syscallISR( intframe_t* );
 static void spuriousISR( intframe_t* );
 
 
@@ -54,7 +58,9 @@ static void PIT_IrqHandler( intframe_t *frame )
     auto *cpu = SMP::this_cpu();
     cpu->m_msecs += cpu->m_lapicPeriod;
 
+    CPU_fxsave(SMP::this_thread()->fxstate);
     ThreadScheduler::scheduleISR(frame);
+    CPU_fxrstor(SMP::this_thread()->fxstate);
 }
 
 
@@ -74,43 +80,33 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 
 
 
-
-#include <gui/gui.hpp>
-static knlTTY kTTY;
-static guiTextArea textarea({100, 100}, {250, 250});
-
-static void reeeeeee( void* )
+enum KeyEvent_
 {
-    auto *gfxDaemon = (DaemonInterface*)knl::findModule(DaemonModule, DaemonSystem);
-    auto *kbdev     = (CharDevInterface*)knl::findModule(DeviceModule, DeviceKeyboard);
-    int callback_id = gfxDaemon->listen(kprintf_redraw);
-    knl::KbEvent buf[8];
-
-    while (true)
-    {
-        size_t nbytes = kbdev->read(buf, sizeof(buf));
-        size_t count  = nbytes / sizeof(knl::KbEvent);
-    
-        for (size_t i=0; i<count; i++)
-        {
-            textarea.putch(buf[i].key);
-        }
-    }
-
-    gfxDaemon->forget(callback_id);
-}
+    KeyEvent_UP     = 1<<0,
+    KeyEvent_SHIFT  = 1<<1,
+    KeyEvent_CTRL   = 1<<2,
+    KeyEvent_ALT    = 1<<3,
+    KeyEvent_L      = 1<<4,
+    KeyEvent_R      = 1<<5,
+    KeyEvent_U      = 1<<6,
+    KeyEvent_D      = 1<<7,
+};
 
 
+
+#include <ipc/pipe.hpp>
 #include <arch/mmio.hpp>
 
 static knl::Barrier smpBarrier{4};
-std::atomic_uint64_t smpCount{0};
+// std::atomic_uint64_t smpCount{0};
+
+extern uintptr_t endkernel;
 
 extern "C"
 void _start()
 {
     CPU::cli();
-    CPU::enableSSE();
+    CPU_enableSSE();
 
     syslog::enable();
     if (!serial::init())
@@ -118,7 +114,7 @@ void _start()
     syslog log("_start");
 
     early_init();
-    kprintf_init(&kTTY, &textarea);
+    kprintf_init();
     CPU::createIDT();
     PIC::disable();
     // PCI::init();
@@ -127,13 +123,21 @@ void _start()
     CPU::installISR(IntNo_PAGE_FAULT,    pagefaultISR);
     CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
     CPU::installISR(IntNo_KThreadYield,  ThreadScheduler::scheduleISR);
-    CPU::installISR(IntNo_Syscall,       knl::syscallISR);
+    CPU::installISR(IntNo_Syscall,       syscallISR);
     CPU::installISR(IntNo_Spurious,      spuriousISR);
     CPU::installIRQ(IrqNo_PIT,           PIT_IrqHandler);
 
     static ACPI::Response res;
     ACPI::init(lim_rsdp_req.response->address, res);
     APIC::init(res);
+
+    // VMM::mapPage(0x3000, 0xFFFFFFFFFFF30000);
+    // uint64_t *buf = (uint64_t*)0xFFFFFFFFFFF30000;
+    // buf[4] = 1234321;
+    // log("buf[4]: %lu", buf[4]);
+    // VMM::unmapPage(0xFFFFFFFFFFF30000);
+    // buf[4] = 8765678;
+    // log("buf[4]: %lu", buf[4]);
 
     smpBarrier.reset(4);
     SMP::init(smp_main);
@@ -144,31 +148,34 @@ void _start()
 }
 
 
+extern void sde_main(void*);
+
 static void smp_main( limine_mp_info *info )
 {
     CPU::cli();
-    CPU::enableSSE();
+    CPU_enableSSE();
 
     uint64_t  this_gdt[5];
     gdt_ptr_t this_gdtr;
     CPU::createGDT(this_gdt, &this_gdtr);
     CPU::installGDT(&this_gdtr);
-
-    size_t cpuid = info->lapic_id;
-    cpu_t *cpu   = new (SMP::all_cpus + cpuid) cpu_t(cpuid);
-    
-    while (smpCount.load() != cpu->id)
-        asm volatile ("nop");
     CPU::installIDT();
-    LAPIC::init();
-    smpCount++;
+    
+    size_t cpuid = info->lapic_id;
+    cpu_t *cpu = new (SMP::get_cpu(cpuid)) cpu_t(cpuid);
 
-    if (SMP::is_bsp())
+    // while (smpCount.load() != cpu->id)
+        // asm volatile ("nop");
+
+    LAPIC::init();
+    // smpCount++;
+
+    if (cpu->id == SMP::bsp_id())
     {
         knl::loadModules(initrd::find("drv/"));
         knl::loadModules(initrd::find("srv/"));
         knl::initModules();
-        kthread::create("reeeeeee", reeeeeee, nullptr);
+        kthread::create("wm::main", wm::main, nullptr);
     }
 
     smpBarrier.wait();
@@ -196,10 +203,12 @@ void stacktrace( intframe_t *frame )
     }
 }
 
-
 static void genfaultISR( intframe_t* )
 {
     syslog log("Exception GENERAL_PROTECTION_FAULT");
+    auto *cpu = SMP::this_cpu();
+    if (cpu) log("cpu %d", cpu->id);
+
     auto *th = SMP::this_thread();
     if (th) log("thread %d (%s)", th, th->name);
 
@@ -212,6 +221,12 @@ static void outOfMemoryISR( intframe_t* )
     CPU::hcf();
 }
 
+static void syscallISR( intframe_t* )
+{
+    syslog::print("Exception SYSCALL");
+    CPU::hcf();
+}
+
 static void spuriousISR( intframe_t* )
 {
     return;
@@ -219,19 +234,19 @@ static void spuriousISR( intframe_t* )
 
 
 
-static std::atomic_int faultCount{0};
+// static std::atomic_int faultCount{0};
 
 static void pagefaultISR( intframe_t *frame )
 {
     syslog log("Exception PAGE_FAULT");
 
-    if (faultCount++ > 0)
-    {
-        kpanic("faultCount++ > 0");
-    }
+    // if (faultCount++ > 0)
+    // {
+    //     kpanic("faultCount++ > 0");
+    // }
 
-    // auto *cpu = SMP::this_cpu();
-    // if (cpu) log("cpu %d", cpu->id);
+    auto *cpu = SMP::this_cpu();
+    if (cpu) log("cpu %d", cpu->id);
 
     auto *th = SMP::this_thread();
     if (th) log("thread %d (%s)", th, th->name);

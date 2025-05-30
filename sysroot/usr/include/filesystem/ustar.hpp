@@ -1,6 +1,6 @@
 #pragma once
 #include <stddef.h>
-#include <functional>
+// #include <functional>
 
 namespace ustar
 {
@@ -8,8 +8,8 @@ namespace ustar
     static constexpr size_t MAGIC_OFFSET = 257;
     static constexpr size_t DATA_OFFSET  = 512;
 
-    void forEach( void *tar, std::function<void(void*, size_t)> );
-    void listChilren( void *tar );
+    void forEach( void *tar, void(*)(void*, size_t) );
+    // void listChilren( void *tar );
     void listAll( void *tar );
     void *find( void *tar, const char *filename );
 }

@@ -55,15 +55,17 @@ struct cpu_t
     uintptr_t  syscall_req;
     uintptr_t  syscall_res;
 
-    cpu_t(): sched(*this) {  };
+    cpu_t(): sched() {  };
     cpu_t( size_t cpuid );
 };
 
 
 namespace SMP
 {
-    extern cpu_t all_cpus[8];
+    // extern uint8_t all_cpus[];
     extern size_t num_cpus;
+
+    cpu_t     *get_cpu( uint32_t id );
 
     bool       is_bsp();
     uint64_t   bsp_id();
@@ -78,6 +80,23 @@ namespace SMP
 
 
 
+extern "C" void cpu_enable_fpu(void);
+extern "C" void cpu_enable_sse(void);
+extern "C" void cpu_enable_xsave(void);
+extern "C" void cpu_enable_avx(void);
+
+#if defined(__SSE__)
+    #define CPU_enableSSE() {\
+        cpu_enable_fpu(); cpu_enable_sse();\
+    }
+
+    #define CPU_fxsave(dst_) asm volatile("fxsave (%0)" ::"r"(dst_) : "memory")
+    #define CPU_fxrstor(src_) asm volatile("fxrstor (%0)" ::"r"(src_) : "memory");
+#else
+    #define CPU_enableSSE()
+    #define CPU_fxsave(dst_)
+    #define CPU_fxrstor(src_)
+#endif
 
 namespace CPU
 {
@@ -103,13 +122,13 @@ namespace CPU
 
 
 
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 namespace CPU
 {
-    void enableSSE();
-    void fxsave( uint8_t *dst );
-    void fxrstor( uint8_t *src );
+    // void enableSSE();
+    // void fxsave( uint8_t *dst );
+    // void fxrstor( uint8_t *src );
 
     static constexpr uint32_t MSR_FS_BASE        = 0xC0000100;
     static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
@@ -155,16 +174,15 @@ namespace CPU
         );
     }
 
-    __attribute__((always_inline))
-    inline bool checkInterrupts()
-    {
-        volatile unsigned long flags;
-        asm volatile("pushfq;"
-                     "pop %0;"
-                    : "=rm"(flags)::"memory", "cc");
-        return (flags & 0x200) != 0;
-    }
-
+    // __attribute__((always_inline))
+    // inline bool checknl::interrupts()
+    // {
+    //     volatile unsigned long flags;
+    //     asm volatile("pushfq;"
+    //                  "pop %0;"
+    //                 : "=rm"(flags)::"memory", "cc");
+    //     return (flags & 0x200) != 0;
+    // }
 
     inline uint64_t getTSC()
     {

@@ -31,6 +31,7 @@ include_directories("${CMAKE_SOURCE_DIR}/include/")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
+# add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libcxxrt/")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
@@ -49,6 +50,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     libc_k
     libc++_k
+    # cxxrt-static
     ${CringeOS_LIBRARIES} 
 )
 

@@ -1,10 +1,10 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
 
-#include <kernel/log.hpp>
 #include <arch/io.hpp>
+#include <kernel/log.hpp>
 #include <kernel/event.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kernel/ringbuffer.hpp>
 #include <kernel/kscancode.h>
 #include <kmemxx.hpp>
@@ -16,7 +16,10 @@
 #define STATE_PREFIX 1
 
 static knl::RingBuffer<uint8_t, 256>      rawstream;
-static knl::RingBuffer<knl::KbEvent, 256> keystream;
+// static knl::RingBuffer<knl::KbEvent, 256> keystream;
+static vfsNode *kbfile;
+
+
 static char shift_table[256];
 
 void create_shift_table()
@@ -51,8 +54,7 @@ void create_shift_table()
 void driver_update( uint8_t scancode )
 {
     static uint8_t state = STATE_NORMAL;
-    static uint8_t mask = 0 & ~KeyEvent_SHIFT;
-
+    static uint8_t mask = 0;
     uint8_t key  = scode_getchar(scancode);
 
     if (scancode == 0xE0)
@@ -84,8 +86,7 @@ void driver_update( uint8_t scancode )
             .mask = mask,
             .key  = 0
         };
-
-        keystream.push_back(event);
+        uvfs::write(kbfile, &event, 0, sizeof(event));
 
         state = STATE_NORMAL;
         return;
@@ -118,22 +119,9 @@ void driver_update( uint8_t scancode )
         .key  = key
     };
 
-    keystream.push_back(event);
+    uvfs::write(kbfile, &event, 0, sizeof(event));
 }
 
-static size_t kbdev_read( void *dstbuf, size_t max_nbytes )
-{
-    auto *dst = (knl::KbEvent*)dstbuf;
-    size_t nbytes = 0;
-
-    while (!keystream.empty() && (nbytes < max_nbytes))
-    {
-        *(dst++) = keystream.pop_front();
-        nbytes += sizeof(knl::KbEvent);
-    }
-
-    return nbytes;
-}
 
 
 void irq_handler( intframe_t* )
@@ -142,6 +130,18 @@ void irq_handler( intframe_t* )
     rawstream.push_back(code);
 }
 
+
+#include <filesystem/ramfs.hpp>
+
+static void kbev_open()
+{
+    kbfile = usrknl::popen("/dev/kbevent", sizeof(knl::KbEvent));
+}
+
+static void kbev_close()
+{
+    // kbfile = uvfs::close("/dev/kbevent", sizeof(knl::KbEvent));
+}
 
 void kbdev_main( void* )
 {
@@ -164,18 +164,17 @@ ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
     rawstream.clear();
-    keystream.clear();
+    // keystream.clear();
 
     auto *kbdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
-
     *kbdev = {
         .modtype  = ModuleType_Device,
         .basetype = DeviceType_Keyboard,
         .main     = kbdev_main,
 
-        .open     = nullptr,
-        .close    = nullptr,
-        .read     = kbdev_read,
+        .open     = kbev_open,
+        .close    = kbev_close,
+        .read     = nullptr,
         .write    = nullptr,
         .irqno    = IrqNo_Keyboard,
         .irqfn    = irq_handler,

@@ -16,8 +16,7 @@ void kernel_assert( bool cond, const char *msg, const char *file,
             msg, file, line, func
         );
 
-        kvideo::fillColor(50, 75, 200, 255);
-        kvideo::fillBuffer(kvideo::frontbuffer);
+        kvideo::fill(50, 75, 200, 255);
         CPU::hcf();
     }
 }

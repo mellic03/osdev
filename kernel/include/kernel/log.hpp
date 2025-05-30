@@ -4,8 +4,8 @@
 class syslog
 {
 private:
-    // inline static std::mutex m_mutex;
-    inline static knl::DummyLock m_mutex;
+    inline static std::mutex m_mutex;
+    // inline static knl::DummyLock m_mutex;
     inline static bool enabled;
     static void _putIndent();
     static void _print( const char *fmt, ... );

@@ -8,12 +8,13 @@ extern "C"
     extern uint64_t CPU_GetCR3( void );
     extern void CPU_SetCR3( uint64_t );
     extern void cpu_enable_sse( void );
+    extern void cpu_enable_avx( void );
 }
 
 
 
 cpu_t::cpu_t( size_t cpuid )
-:   self(this), id(cpuid), sched(*this)
+:   self(this), id(cpuid), sched()
 {
     CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)this);
     CPU::wrmsr(CPU::MSR_KERNEL_GS_BASE, (uint64_t)this);
@@ -35,26 +36,31 @@ namespace CPU
 }
 
 
-// #ifdef __SSE__
-    void CPU::enableSSE()
-    {
-        cpu_enable_sse();
-    }
+// static uint8_t temp_fxdata[512];
+//  || defined(__AVX__)
 
-    void CPU::fxsave( uint8_t *ptr )
-    {
-        asm volatile("fxsave64 (%0)" ::"r"(ptr) : "memory");
-    }
+#if defined(__SSE__)
+    // void CPU::enableSSE()
+    // {
+    //     cpu_enable_sse();
+    //     cpu_enable_avx();
+    //     CPU_fxsave(temp_fxdata);
+    // }
 
-    void CPU::fxrstor( uint8_t *ptr )
-    {
-        asm volatile("fxrstor64 (%0)" ::"r"(ptr) : "memory");
-    }
+    // void CPU_fxsave( uint8_t *ptr )
+    // {
+    //     asm volatile("fxsave64 (%0)" ::"r"(ptr) : "memory");
+    // }
 
-// #else
+    // void CPU_fxrstor( uint8_t *ptr )
+    // {
+    //     asm volatile("fxrstor64 (%0)" ::"r"(ptr) : "memory");
+    // }
+
+#else
     // void CPU::enableSSE() {  }
-    // void CPU::fxsave( uint8_t* ) {  }
-    // void CPU::fxrstor( uint8_t* ) {  }
+    // void CPU_fxsave( uint8_t* ) {  }
+    // void CPU_fxrstor( uint8_t* ) {  }
 
-// #endif
+#endif
 

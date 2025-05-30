@@ -1,7 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 struct ksym_t;
 

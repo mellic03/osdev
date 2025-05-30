@@ -1,5 +1,5 @@
 #pragma once
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 
 using kstackframe = intframe_t;

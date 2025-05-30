@@ -2,7 +2,7 @@
 #include <arch/acpi.hpp>
 #include <driver/pic.hpp>
 #include <kernel/memory/vmm.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 
 #define IOAPICID        0x00

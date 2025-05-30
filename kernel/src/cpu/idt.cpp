@@ -4,7 +4,7 @@
 #include <kthread.hpp>
 #include <kprintf.hpp>
 
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kernel/log.hpp>
 #include <driver/pic.hpp>
 
@@ -26,6 +26,12 @@ void isr_dispatch( intframe_t *frame )
 
     if (usrtab[isrno])
         usrtab[isrno](frame);
+
+    else if (!usrtab[isrno] && isrno <= 31)
+    {
+        syslog::println("[isr_dispatch] unhandled expction type %u", isrno);
+        while (true) { asm volatile ("cli; hlt"); }
+    }
 
     if ((IntNo_IOAPIC_Base <= isrno) && (isrno <= IntNo_IOAPIC_End))
         LAPIC::sendEOI();
@@ -55,7 +61,6 @@ void CPU::createIDT()
         idt_setdesc(idt_entries[i], (uintptr_t)(isrtab[i]), INTERRUPT_GATE);
     idtr.base  = (uint64_t)(&idt_entries[0]);
     idtr.limit = (uint16_t)sizeof(idt_entries) - 1;
-
     kprintf("[CPU::createIDT] base=0x%lx, limit=%lu\n", idtr.base, idtr.limit);
 }
 

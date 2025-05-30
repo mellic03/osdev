@@ -27,6 +27,14 @@ void *malloc( size_t size )
 }
 
 
+void *calloc( size_t num, size_t size )
+{
+    void *ptr = malloc(num*size);
+    memset(ptr, 0, num*size);
+    return ptr;
+}
+
+
 void *realloc( void *ptr, size_t size )
 {
     #ifdef __is_kernel

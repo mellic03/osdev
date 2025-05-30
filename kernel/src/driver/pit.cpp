@@ -1,7 +1,7 @@
 #include <driver/pit.hpp>
 #include <driver/pic.hpp>
 #include <arch/io.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <algorithm>
 
 

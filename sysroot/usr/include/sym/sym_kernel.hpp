@@ -2,6 +2,8 @@
 #include <kdef.h>
 #include <idk_fptr.hpp>
 
+struct vfsNode;
+
 namespace knl
 {
     struct MsState;
@@ -11,23 +13,15 @@ namespace knl
 
 namespace usrknl
 {
-    inline void (*panic)(const char*);
-    inline void (*hcf)();
+    inline void   (*panic)(const char*);
+    inline void   (*hcf)();
+
+    inline vfsNode* (*popen)(const char*, size_t stride);
+    inline void*  (*fopen)(const char*);
+    inline size_t (*fread)(void *fh, void *dst, size_t nbytes);
+    inline size_t (*fwrite)(void *fh, const void *src, size_t nbytes);
+
     inline ModuleInterface *(*findModule)(uint64_t, uint64_t);
-
-    inline bool (*readMsState)(knl::MsState&);
-    inline void (*writeMsState)(const knl::MsState&);
-    inline bool (*readMsEvent)(knl::MsEvent&);
-    inline void (*writeMsEvent)(const knl::MsEvent&);
-    inline bool (*readKbEvent)(knl::KbEvent&);
-    inline void (*writeKbEvent)(const knl::KbEvent&);
-
-    inline int (*listenMsEvent)( void (*)(const knl::MsEvent&) );
-    inline int (*listenKbEvent)( void (*)(const knl::KbEvent&) );
-    inline void (*emitMsEvent)( const knl::MsEvent& );
-    inline void (*emitKbEvent)( const knl::KbEvent& );
-    inline void (*forgetMsEvent)( int );
-    inline void (*forgetKbEvent)( int );
 
 }
 

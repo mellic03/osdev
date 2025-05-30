@@ -1,7 +1,7 @@
 #pragma once
 #include <kdef.h>
 #include <idk_fptr.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 
 namespace CPU

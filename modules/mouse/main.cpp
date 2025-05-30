@@ -1,19 +1,25 @@
 #include <driver/interface.hpp>
 #include <sym/sym.hpp>
 
-#include <kernel/log.hpp>
 #include <arch/io.hpp>
+#include <kernel/log.hpp>
 #include <kernel/event.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kernel/kscancode.h>
+// #include <filesystem/vfs.hpp>
+#include <kernel/ringbuffer.hpp>
+
 #include <kmemxx.hpp>
 #include <algorithm>
 
 
-static knl::MsState msdata;
-static uint8_t MouseCycle = 0;
-static uint8_t MousePacket[4];
-static bool MousePacketReady = false;
+static vfsNode *msstate;
+static knl::MsState mscurr;
+
+struct MousePacket { uint8_t b0, b1, b2, b3; };
+static knl::RingBuffer<MousePacket, 32> msbuf;
+// static uint8_t MousePacket[4];
+// static bool MousePacketReady = false;
 
 
 #define PS2Leftbutton 0b00000001
@@ -50,64 +56,25 @@ uint8_t MouseRead()
     return IO::inb(0x60);
 }
 
-bool ProcessMousePacket()
+
+void ProcessMousePacket( const MousePacket &P )
 {
-    if (!MousePacketReady)
-    {
-        return false;
-    }
+    mscurr.l = (P.b0 & PS2Leftbutton);
+    mscurr.m = (P.b0 & PS2Middlebutton);
+    mscurr.r = (P.b0 & PS2Rightbutton);
 
-    bool xNegative, yNegative, xOverflow, yOverflow;
+    int xsign = (P.b0 & (1<<4)) ? -1 : +1;
+    int ysign = (P.b0 & (1<<5)) ? -1 : +1;
+    int xover = (P.b0 & (1<<6)) ? 255 : 0;
+    int yover = (P.b0 & (1<<7)) ? 255 : 0;
 
-    msdata.prevDown   = msdata.currDown;
-    msdata.currDown.l = (MousePacket[0] & PS2Leftbutton);
-    msdata.currDown.m = (MousePacket[0] & PS2Middlebutton);
-    msdata.currDown.r = (MousePacket[0] & PS2Rightbutton);
-
-    // if (msdata.prevDown.l != msdata.currDown.l)
-    // {
-    //     knl::MsEvent event = { knl::MsBtn_Left, knl::BtnAction_Up };
-    //     knl::writeMsEvent(event);
-    // }
-
-    xNegative = (MousePacket[0] & PS2XSign);
-    yNegative = (MousePacket[0] & PS2YSign);
-    xOverflow = (MousePacket[0] & PS2XOverflow);
-    yOverflow = (MousePacket[0] & PS2YOverflow);
-
-    if (!xNegative){
-        msdata.x += MousePacket[1];
-        if (xOverflow){
-            msdata.x += 255;
-        }
-    } else
-    {
-        MousePacket[1] = 256 - MousePacket[1];
-        msdata.x -= MousePacket[1];
-        if (xOverflow){
-            msdata.x -= 255;
-        }
-    }
-
-    if (!yNegative){
-        msdata.y -= MousePacket[2];
-        if (yOverflow){
-            msdata.y -= 255;
-        }
-    } else
-    {
-        MousePacket[2] = 256 - MousePacket[2];
-        msdata.y += MousePacket[2];
-        if (yOverflow){
-            msdata.y += 255;
-        }
-    }
-
-    msdata.x = std::clamp(msdata.x, 0, kvideo::W-1);
-    msdata.y = std::clamp(msdata.y, 0, kvideo::H-1);
-
-    MousePacketReady = false;
-    return true;
+    int dx = (xsign==1) ? P.b1 : 256-P.b1;
+        dx = xsign * (dx - xover);
+    int dy = (ysign==1) ? P.b2 : 256-P.b2;
+        dy = ysign * (dy - yover);
+    
+    mscurr.x = std::clamp(mscurr.x + dx, 0, kvideo::W-1);
+    mscurr.y = std::clamp(mscurr.y - dy, 0, kvideo::H-1);
 }
 
 
@@ -136,24 +103,26 @@ static void mouse_init()
 
 static void irq_handler( intframe_t* )
 {
+    static int count = 0;
+    static MousePacket packet;
     uint8_t data = IO::inb(0x60);
-    switch(MouseCycle){
+
+    switch (count)
+    {
         case 0:
-            if (MousePacketReady) break;
             if ((data & 0b00001000) == 0) break;
-            MousePacket[0] = data;
-            MouseCycle++;
+            packet.b0 = data;
+            count++;
             break;
         case 1:
-            if (MousePacketReady) break;
-            MousePacket[1] = data;
-            MouseCycle++;
+            packet.b1 = data;
+            count++;
             break;
         case 2:
-            if (MousePacketReady) break;
-            MousePacket[2] = data;
-            MousePacketReady = true;
-            MouseCycle = 0;
+            packet.b2 = data;
+            count = 0;
+            if (msbuf.size() < msbuf.capacity())
+                msbuf.push_back(packet);
             break;
     }
 }
@@ -163,24 +132,29 @@ static void irq_handler( intframe_t* )
 
 static void driver_main( void* )
 {
+    using namespace knl;
     mouse_init();
+    msbuf.clear();
 
     while (true)
     {
-        if (ProcessMousePacket())
+        while (!msbuf.empty())
         {
-            kthread::yield();
+            ProcessMousePacket(msbuf.front());
+            msbuf.pop_front();
+            uvfs::write(msstate, &mscurr, 0, sizeof(mscurr));
         }
+
+        kthread::yield();
     }
 }
 
 
-static size_t driver_read( void *dst, size_t max_nbytes )
+static void msdev_open()
 {
-    if (sizeof(msdata) > max_nbytes)
-        return 0;
-    *(knl::MsState*)dst = msdata;
-    return sizeof(msdata);
+    // mousepipe = usrknl::popen("/dev/ms0", sizeof(msdata));
+    msstate = uvfs::open("/dev/msstate");
+    // msevents = usrknl::popen("/dev/msevent", sizeof(knl::MsEvent));
 }
 
 
@@ -191,15 +165,14 @@ ModuleInterface *init( ksym::ksym_t *sym )
     ksym::loadsym(sym);
 
     auto *msdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
-
     *msdev = {
         .modtype  = ModuleType_Device,
         .basetype = DeviceType_Mouse,
         .main     = driver_main,
 
-        .open     = nullptr,
+        .open     = msdev_open,
         .close    = nullptr,
-        .read     = driver_read,
+        .read     = nullptr,
         .write    = nullptr,
         .irqno    = IrqNo_Mouse,
         .irqfn    = irq_handler

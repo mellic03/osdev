@@ -2,7 +2,7 @@
 #include <driver/pit.hpp>
 #include <driver/pic.hpp>
 #include <cpu/cpu.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 
 /*
@@ -45,7 +45,7 @@ void LAPIC::startTimer()
 
     // Now we know how often the APIC timer has ticked in 10ms
     uint32_t ticksIn10ms = 0xFFFFFFFF - APIC::read(APIC::REG_TIMER_CURR);
-    kprintf("ticksIn10ms: %u\n", ticksIn10ms);
+    // kprintf("ticksIn10ms: %u\n", ticksIn10ms);
 
 
     // Start timer as periodic on IRQ 0, divider 16,

@@ -5,3 +5,10 @@ inline void *operator new  ( size_t, void *p ) throw() { return p; }
 inline void *operator new[]( size_t, void *p ) throw() { return p; }
 inline void  operator delete   ( void*, void* ) throw() {  };
 inline void  operator delete[] ( void*, void* ) throw() {  };
+
+extern void *operator new  ( size_t );
+extern void *operator new[]( size_t );
+extern void  operator delete  ( void* );
+extern void  operator delete[]( void* );
+extern void  operator delete  ( void*, size_t );
+extern void  operator delete[]( void*, size_t );

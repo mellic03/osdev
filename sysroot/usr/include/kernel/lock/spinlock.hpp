@@ -17,7 +17,7 @@
 //     #define acquireLockIntDisable(lock)                                                                                    \
 //         ({                                                                                                                 \
 //             unsigned i = 0;                                                                                                \
-//             assert(CheckInterrupts());                                                                                     \
+//             assert(Checknl::interrupts());                                                                                     \
 //             asm volatile("cli");                                                                                           \
 //             while (__atomic_exchange_n(lock, 1, __ATOMIC_ACQUIRE) && ++i < 0x2FFFFFFF)                                     \
 //                 asm volatile("sti; pause; cli");                                                                           \
@@ -57,7 +57,7 @@
 //     ALWAYS_INLINE ScopedSpinLock(lock_t& lock) : m_lock(lock) {
 //         if constexpr (disableInterrupts)
 //         {
-//             m_irq = CheckInterrupts();
+//             m_irq = Checknl::interrupts();
 //             if (m_irq)  acquireLockIntDisable(&m_lock);
 //             else        acquireLock(&m_lock);
 //         }

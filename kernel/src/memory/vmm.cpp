@@ -1,5 +1,6 @@
 #include <kernel/memory/vmm.hpp>
 #include <kernel/memory/pmm.hpp>
+#include <kassert.h>
 #include <cpu/cpu.hpp>
 
 #include <stdio.h>
@@ -9,155 +10,99 @@
 #include <kernel/bitmanip.hpp>
 
 
-
-static inline void flush_tlb(unsigned long addr) {
+static inline void flush_tlb(unsigned long addr)
+{
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
 }
 
-
-static constexpr uint64_t MASK_PRESENT    = 1 << 0;
-static constexpr uint64_t MASK_WRITE      = 1 << 1;
-static constexpr uint64_t MASK_SUPERVISOR = 1 << 2;
-static constexpr uint64_t MASK_PWT        = 1 << 3;
-static constexpr uint64_t MASK_PCD        = 1 << 4;
-static constexpr uint64_t MASK_ACCESSED   = 1 << 5;
-static constexpr uint64_t MASK_PAGESIZE   = 1 << 7;
-static constexpr uint64_t MASK_ADDRESS    = 0x000FFFFFFFFFF000;
-static constexpr uint64_t MASK_EXECUTE    = uint64_t(1) << uint64_t(63);
-
-
-#define PML4_INDEX(va) (((va) >> 39) & 0x1FF)
-#define PDP_INDEX(va) (((va) >> 30) & 0x1FF)
-#define PD_INDEX(va) (((va) >> 21) & 0x1FF)
-#define PT_INDEX(va) (((va) >> 12) & 0x1FF)
-
-#define KERNEL_VIRT_BASE 0xFFFFFFFF80000000
-#define HHDM_BASE 0xFFFF800000000000
-#define PAGE_PRESENT 0x1
-#define PAGE_WRITE 0x2
-#define PAGE_HUGE 0x80
-// #define PhysToHHDM(addr) (uintptr_t(addr) + HHDM_BASE)
-
-#define PAGE_PRESENT 0x1
-#define PAGE_WRITE   0x2
-#define PAGE_EXECUTE (uint64_t(1)<<63)  // Optional: Usually 0 since x86 uses NX (bit 63)
+constexpr uint64_t PML4_INDEX( uint64_t va ) { return (va>>39) & 0x1FF; }
+constexpr uint64_t PDP_INDEX ( uint64_t va ) { return (va>>30) & 0x1FF; }
+constexpr uint64_t PD_INDEX  ( uint64_t va ) { return (va>>21) & 0x1FF; }
+constexpr uint64_t PT_INDEX  ( uint64_t va ) { return (va>>12) & 0x1FF; }
 
 
 inline static constexpr
 uintptr_t PhysToHHDM( uintptr_t addr ) { return addr + PMM::hhdm; }
 
 
-uint64_t *get_entry( uint64_t *table, size_t idx, uint64_t flags )
+
+void VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt, uint64_t flags )
 {
-    uint64_t *entry;
+    uint64_t *pdp, *pd;
 
-    if (!(table[idx] & PAGE_PRESENT))
-    {
-        uint64_t phys = PMM::alloc();
-        entry = (uint64_t *)PhysToHHDM(phys);
-        table[idx] = phys | flags;
-    }
+    if (!(pml4[PML4_INDEX(virt)] & VMM::PAGE_PRESENT))
+        pml4[PML4_INDEX(virt)] = PMM::allocFrame() | flags;
+    pdp = (uint64_t*)PhysToHHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
 
-    else
-    {
-        entry = (uint64_t *)PhysToHHDM(table[idx] & ~0xFFF);
-    }
+    if (!(pdp[PDP_INDEX(virt)] & VMM::PAGE_PRESENT))
+        pdp[PDP_INDEX(virt)] = PMM::allocFrame() | flags;
+    pd = (uint64_t*)PhysToHHDM(pdp[PDP_INDEX(virt)] & ~0xFFF);
 
-    return entry;
-}
-
-void map_page( uint64_t *pml4, uint64_t phys, uint64_t virt, uint64_t flags )
-{
-    // Traverse or allocate PDP
-    uint64_t *pdp = get_entry(pml4, PML4_INDEX(virt), flags);
-    uint64_t *pd  = get_entry(pdp, PDP_INDEX(virt), flags);
 
     #ifdef PMM_2MB_PAGES
-        pd[PD_INDEX(virt)] = (phys & ~0x1FFFFF) | flags | MASK_PAGESIZE;
+        pd[PD_INDEX(virt)] = (phys & ~0x1FFFFF) | flags | VMM::PAGE_PAGESIZE;
 
     #else
-        uint64_t *pt = get_entry(pdt, PT_INDEX(virt), flags);
-        pt[PT_INDEX(virt)] = phys | flags;
+        // uint64_t *pt = get_entry(pdt, PT_INDEX(virt), flags);
+        // pt[PT_INDEX(virt)] = phys | flags;
 
     #endif
 }
 
-
+void VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
+{
+    uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
+    VMM_mapPage(pml4, phys, virt, flags);
+}
 
 void
-VMM_unmapPage( uint64_t *pml4, uint64_t virt )
+VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes, uint64_t flags )
 {
-    // Walk to the PDP
-    if (!(pml4[PML4_INDEX(virt)] & PAGE_PRESENT)) {
-        return; // Mapping does not exist
-    }
-    uint64_t *PDP = (uint64_t *)PhysToHHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
+    uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
+    nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
+    for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
+        VMM_mapPage(pml4, phys+offset, virt+offset, flags);
+}
 
-    // Walk to the PDT
-    if (!(PDP[PDP_INDEX(virt)] & PAGE_PRESENT)) {
-        return; // Mapping does not exist
-    }
-    uint64_t *pdt = (uint64_t *)PhysToHHDM(PDP[PDP_INDEX(virt)] & ~0xFFF);
 
-    // Check if this is a 2 MiB page
-    if (pdt[PD_INDEX(virt)] & 0x80) {
-        // This is a 2 MiB page
-        pdt[PD_INDEX(virt)] = 0; // Clear the entry
-        flush_tlb(virt);         // Flush TLB
+
+
+void VMM_unmapPage( uint64_t *pml4, uint64_t virt )
+{
+    uint64_t *pdp, *pd;
+
+    if (!(pml4[PML4_INDEX(virt)] & VMM::PAGE_PRESENT))
+        return;
+    pdp = (uint64_t*)PhysToHHDM(pml4[PML4_INDEX(virt)] & ~0xFFF);
+
+    if (!(pdp[PDP_INDEX(virt)] & VMM::PAGE_PRESENT))
+        return;
+    pd = (uint64_t*)PhysToHHDM(pdp[PDP_INDEX(virt)] & ~0xFFF);
+
+    if (pd[PD_INDEX(virt)] & VMM::PAGE_PAGESIZE) // 2 MiB page
+    {
+        // PMM::freeBlock(pd[PD_INDEX(virt)] & ~0xFFF);
+        pd[PD_INDEX(virt)] = 0; // Clear entry
+        flush_tlb(virt);        // Flush TLB
         return;
     }
 
-    // Walk to the PT
-    if (!(pdt[PD_INDEX(virt)] & PAGE_PRESENT)) {
-        return; // Mapping does not exist
-    }
-    uint64_t *pt = (uint64_t *)PhysToHHDM(pdt[PD_INDEX(virt)] & ~0xFFF);
+    kassert(false); // Only 2MiB pages should exist
 
-    // Clear the 4 KiB page entry
-    pt[PT_INDEX(virt)] = 0; // Clear the entry
-    flush_tlb(virt);        // Flush TLB
+    // if (!(pd[PD_INDEX(virt)] & VMM::PAGE_PRESENT))
+    //     return; // Mapping does not exist
+    // uint64_t *pt = (uint64_t *)PhysToHHDM(pd[PD_INDEX(virt)] & ~0xFFF);
+
+    // // Clear the 4 KiB page entry
+    // pt[PT_INDEX(virt)] = 0; // Clear the entry
+    // flush_tlb(virt);        // Flush TLB
 }
 
 
-void
-VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt )
+void VMM::unmapPage( uintptr_t virt )
 {
-    map_page(pml4, phys, virt, PAGE_PRESENT|PAGE_WRITE);
-}
-
-
-void VMM::mapPage( uintptr_t phys, uintptr_t virt )
-{
-    asm volatile ("cli");
-    uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
-    VMM_mapPage(pml4, phys, virt);
-    asm volatile ("sti");
-}
-
-
-void
-VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes )
-{
-    asm volatile ("cli");
-    uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
-
-    nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
-    for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
-    {
-        VMM_mapPage(pml4, phys+offset, virt+offset);
-    }
-
-    asm volatile ("sti");
-}
-
-
-void
-VMM::unmapPage( uintptr_t virt )
-{
-    asm volatile ("cli");
     uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
     VMM_unmapPage(pml4, virt);
-    asm volatile ("sti");
 }
 
 
@@ -165,6 +110,12 @@ VMM::unmapPage( uintptr_t virt )
 void VMM::init() 
 {
     syslog log("VMM::init");
+
+    uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
+    log("pml4: 0x%lx", pml4);
+
+    // uint64_t *clone = VMM::clonePML4(pml4);
+    // log("clone: 0x%lx", clone);
 
     // VMM::mapPage(0x0010'0000, 0xDEADBEBE);
 
@@ -176,3 +127,39 @@ void VMM::init()
 
     // VMM::unmapPage(0xDEADBEBE);
 }
+
+
+
+// uint64_t *VMM::clonePML4( uint64_t *pml4 )
+// {
+//     uint64_t *pml4_clone = (uint64_t*)PMM::alloc();
+
+
+//     constexpr auto RE = 512*sizeof(uint64_t);
+//     // PMM::PAGE_SIZE;2097152UL
+
+//     for (size_t i=0; i<512; i++)
+//     {
+//         if (!(pml4[i] & VMM::PAGE_PRESENT))
+//             continue;
+
+//         pml4_clone[i] = PMM::alloc() | (pml4[i] & 0xFFF);
+//         uint64_t *pdp_clone = (uint64_t*)PhysToHHDM(pml4_clone[i] & ~0xFFF);
+//         uint64_t *pdp_src   = (uint64_t*)PhysToHHDM(pml4[i] & ~0xFFF);
+
+//         for (size_t j=0; j<512; j++)
+//         {
+//             if (!(pdp_src[i] & VMM::PAGE_PRESENT))
+//                 continue;
+
+//             pdp_clone[i] = PMM::alloc() | (pdp_src[i] & 0xFFF);
+//             // uint64_t *pd_clone = (uint64_t*)PhysToHHDM(pdp_clone[i] & ~0xFFF);
+//             // uint64_t *pd_src   = (uint64_t*)PhysToHHDM(pdp_src[i] & ~0xFFF);
+
+//             // memcpy(pd_clone, pd_src, 512*sizeof(uint64_t));
+//         }
+//     }
+
+//     return pml4_clone;
+// }
+

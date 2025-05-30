@@ -6,6 +6,9 @@
 
 #define PMM_2MB_PAGES
 
+struct limine_memmap_response;
+
+
 
 namespace PMM
 {
@@ -15,11 +18,17 @@ namespace PMM
         static constexpr size_t PAGE_SIZE = 4*idk::KILO; 
     #endif
 
+    static constexpr size_t FRAME_SIZE = 512*sizeof(uint64_t);
+
+
     extern uint64_t hhdm;
     struct MemMap { uintptr_t base; size_t size; };
 
     void init( const MemMap &mmap, size_t hhdm_offset );
-    uintptr_t alloc();
-    void free( uintptr_t phys );
+    void init2( limine_memmap_response* );
+    uintptr_t allocFrame();
+    uintptr_t allocPage();
+    void freeFrame( uintptr_t phys );
+    void freePage( uintptr_t phys );
 
 }

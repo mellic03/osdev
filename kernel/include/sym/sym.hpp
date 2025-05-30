@@ -12,6 +12,7 @@
 #include "sym_kthread.hpp"
 #include "sym_kvideo.hpp"
 #include "sym_libc.hpp"
+#include "sym_vfs.hpp"
 
 
 inline void ksym::loadsym( ksym::ksym_t *sym )
@@ -28,6 +29,15 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
     }
 
     {
+        auto &lib = sym->vfs_sym;
+        uvfs::open  = lib.open;
+        uvfs::read  = lib.read;
+        uvfs::write = lib.write;
+        uvfs::tell  = lib.tell;
+        uvfs::seek  = lib.seek;
+    }
+
+    {
         auto &lib = sym->video_sym;
         kvideo::CSR          = lib.CSR;
         kvideo::W            = lib.W;
@@ -36,12 +46,6 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         kvideo::BPP          = lib.BPP;
         kvideo::frontbuffer  = lib.frontbuffer;
         kvideo::backbuffer   = lib.backbuffer;
-        // kvideo::clearBuffer  = lib.clearBuffer;
-        // kvideo::fillColor    = lib.fillColor;
-        // kvideo::fillBuffer   = lib.fillBuffer;
-        // kvideo::rect         = lib.rect;
-        kvideo::blit         = lib.blit;
-        // kvideo::renderString = lib.renderString;
         kvideo::swapBuffers  = lib.swapBuffers;
     }
 
@@ -54,22 +58,6 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         kthread::this_cpuid = lib.this_cpuid;
     }
 
-    {
-        auto &lib = sym->event_sym;
-        usrknl::readMsState  = lib.readMsState;
-        usrknl::writeMsState = lib.writeMsState;
-        usrknl::readMsEvent  = lib.readMsEvent;
-        usrknl::writeMsEvent = lib.writeMsEvent;
-        usrknl::readKbEvent  = lib.readKbEvent;
-        usrknl::writeKbEvent = lib.writeKbEvent;
-        usrknl::listenMsEvent = lib.listenMsEvent;
-        usrknl::listenKbEvent = lib.listenKbEvent;
-        usrknl::emitMsEvent   = lib.emitMsEvent;
-        usrknl::emitKbEvent   = lib.emitKbEvent;
-        usrknl::forgetMsEvent = lib.forgetMsEvent;
-        usrknl::forgetKbEvent = lib.forgetKbEvent;
-    }
-
     // {
     //     auto &lib = sym->cpu_sym;
     //     CPU::installISR = lib.installISR;
@@ -80,6 +68,10 @@ inline void ksym::loadsym( ksym::ksym_t *sym )
         auto &lib = sym->kernel_sym;
         usrknl::panic      = lib.panic;
         usrknl::hcf        = lib.hcf;
+        usrknl::popen      = lib.popen;
+        usrknl::fopen      = lib.fopen;
+        usrknl::fread      = lib.fread;
+        usrknl::fwrite     = lib.fwrite;
         usrknl::findModule = lib.findModule;
     }
 }

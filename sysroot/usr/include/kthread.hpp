@@ -7,7 +7,7 @@
 
 #include <algorithm>
 #include "cpu/cpu.hpp"
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 enum KThread_: uint32_t
 {
@@ -25,7 +25,7 @@ private:
 
 public:
     static constexpr size_t stack_size = 16 * 1024;
-    static constexpr size_t fxsize = 512;
+    static constexpr size_t fxsize = 2048;
     
     char       name[32];
     cpu_t     *cpu;
@@ -37,8 +37,6 @@ public:
     uint8_t   *stackTop;
     uint8_t    stack[stack_size]  __attribute__((aligned(16)));
     uint8_t    fxstate[fxsize]    __attribute__((aligned(16)));
-
-    // uint8_t    fxdata[fpreg_size] __attribute__((aligned(16)));
 
     void    setPriority( uint8_t p ) { m_priority = std::clamp(p, (uint8_t)1, (uint8_t)10); };
     uint8_t getPriority() { return m_priority; };

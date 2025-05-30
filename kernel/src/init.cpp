@@ -8,13 +8,15 @@
 #include <kernel/memory/vmm.hpp>
 #include <kernel/log.hpp>
 #include <kernel/kvideo.hpp>
+#include <kernel/module.hpp>
+#include "kernel/kmalloc.hpp"
+#include <ipc/pipe.hpp>
 #include <kpanic.h>
 
-#include <kernel/module.hpp>
 #include <filesystem/initrd.hpp>
-#include <filesystem/vfs2.hpp>
+#include <filesystem/ramfs.hpp>
+#include <filesystem/vfs.hpp>
 
-#include "kernel/kmalloc.hpp"
 #include <string.h>
 
 
@@ -67,6 +69,10 @@ void early_init()
             (*ctor)();
         }
     }
+
+    rfs::init();
+    vfs::init();
+
 }
 
 

@@ -1,8 +1,8 @@
-#pragma once
-#include <kernel/syscall.h>
-#include <kernel/interrupt.hpp>
+// #pragma once
+// #include <kernel/syscall.h>
+// #include <sys/interrupt.hpp>
 
-namespace knl
-{
-    void syscallISR( intframe_t* );
-}
+// namespace knl
+// {
+//     void syscallISR( intframe_t* );
+// }

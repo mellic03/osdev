@@ -2,7 +2,7 @@
 #include <kernel/log.hpp>
 #include <kernel/bitmanip.hpp>
 #include <kpanic.h>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <algorithm>
 
 
@@ -37,7 +37,7 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
     if (m_tail >= m_end)
     {
         kpanic("linear_allocator out of memory");
-        KInterrupt<IntNo_OUT_OF_MEMORY>();
+        knl::interrupt<IntNo_OUT_OF_MEMORY>();
         return nullptr;
     }
 
@@ -63,7 +63,7 @@ idk::linear_allocator::alloc( size_t nbytes, size_t alignment )
     if (m_tail >= m_end)
     {
         kpanic("linear_allocator out of memory");
-        KInterrupt<IntNo_OUT_OF_MEMORY>();
+        knl::interrupt<IntNo_OUT_OF_MEMORY>();
     }
     // LOG_ASSERT(
     //     m_tail < m_end,

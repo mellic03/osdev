@@ -9,40 +9,31 @@ namespace knl
     {
         int x, y;
 
-        struct {
-            bool l, m, r;
-        } prevDown, currDown;
+        bool l,  m,  r;
+        // bool lp, mp, rp;
 
         MsState( const ivec2 &p = ivec2(128, 128) )
-        : x(p.x), y(p.y)
-        {
-            prevDown = {false, false, false};
-            currDown = {false, false, false};
-        };
+        : x(p.x), y(p.y), l(false), m(false), r(false) {  };
+        //   lp(false), mp(false), rp(false) {  };
     
         ivec2 pos() { return ivec2(x, y); };
     };
 
-    enum MsBtn_
+    enum MsEvent_: uint8_t
     {
-        MsBtn_Invalid = 0,
-        MsBtn_Left,
-        MsBtn_Mid,
-        MsBtn_Right,
-    };
-
-    enum BtnAction_
-    {
-        BtnAction_Invalid = 0,
-        BtnAction_Down,
-        BtnAction_Up,
-        BtnAction_Tapped,
+        MsEvent_Invalid = 0,
+        MsEvent_LDn,
+        MsEvent_LUp,
+        MsEvent_RDn,
+        MsEvent_RUp,
+        MsEvent_X,
+        MsEvent_Y,
     };
 
     struct MsEvent
     {
-        MsBtn_ btn;
-        BtnAction_ action;
+        MsEvent_ type;
+        int data;
     };
 
     struct KbEvent
@@ -51,23 +42,23 @@ namespace knl
         uint8_t key;
     };
 
-    bool readMsState( MsState& );
-    void writeMsState( const MsState& );
+    // bool readMsState( MsState& );
+    // void writeMsState( const MsState& );
 
-    bool readMsEvent( MsEvent& );
-    void writeMsEvent( const MsEvent& );
+    // bool readMsEvent( MsEvent& );
+    // void writeMsEvent( const MsEvent& );
 
-    bool readKbEvent( KbEvent& );
-    void writeKbEvent( const KbEvent& );
+    // bool readKbEvent( KbEvent& );
+    // void writeKbEvent( const KbEvent& );
 
-    int listenMsEvent( void (*callback)(const MsEvent&) );
-    int listenKbEvent( void (*callback)(const KbEvent&) );
+    // int listenMsEvent( void (*callback)(const MsEvent&) );
+    // int listenKbEvent( void (*callback)(const KbEvent&) );
 
-    void emitMsEvent( const MsEvent& );
-    void emitKbEvent( const KbEvent& );
+    // void emitMsEvent( const MsEvent& );
+    // void emitKbEvent( const KbEvent& );
 
-    void forgetMsEvent( int callback_id );
-    void forgetKbEvent( int callback_id );
+    // void forgetMsEvent( int callback_id );
+    // void forgetKbEvent( int callback_id );
 
     // void onKbEvent( KbEvent event, BtnAction_ action, void (*callback)(void) )
     // {

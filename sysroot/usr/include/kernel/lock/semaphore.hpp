@@ -145,7 +145,7 @@
 
 // bool Semaphore::Wait()
 // {
-//     assert(CheckInterrupts());
+//     assert(Checknl::interrupts());
 
 //     acquireLock(&lock);
 //     __sync_fetch_and_sub(&value, 1);

@@ -35,6 +35,7 @@ struct sysreq_FileOpen: sysreq_t
     char     path[8];
 };
 
+
 struct sysreq_MemAlloc: sysreq_t
 {
     uint64_t size;
@@ -48,8 +49,10 @@ struct sysreq_MemAlloc: sysreq_t
 };
 
 
-
-void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res );
+// namespace knl
+// {
+    void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res );
+// }
 
 // #ifdef __cplusplus
 //     extern "C" void *syscall( uint64_t sysno, void* );

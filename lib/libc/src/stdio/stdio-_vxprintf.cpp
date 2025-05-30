@@ -6,86 +6,88 @@
 
 
 
-#ifdef __libk_sse
-static double shitpow( double base, double exp )
-{
-    double result = 1.0;
+#ifdef __SSE__
+// static double shitpow( double base, double exp )
+// {
+//     double result = 1.0;
 
-    for (double i=0.0; i<exp; i++)
-    {
-        result *= base;
-    }
+//     for (double i=0.0; i<exp; i++)
+//     {
+//         result *= base;
+//     }
 
-    return result;
-}
+//     return result;
+// }
 
-static char *__dtoa( double f, int precision, char *buf )
-{
-    uint64_t whole  = uint64_t(f);
-    double   dfract = shitpow(10, precision) * f;
-    uint64_t fract  = uint64_t((dfract < 0.0) ? -dfract : dfract);
+// static char *__dtoa( double f, int precision, char *buf )
+// {
+//     uint64_t whole  = uint64_t(f);
+//     double   dfract = shitpow(10, precision) * f;
+//     uint64_t fract  = uint64_t((dfract < 0.0) ? -dfract : dfract);
 
-    buf = ultoa(whole, buf, 10);
-    *(buf++) = '.';
-    buf = ultoa(fract, buf, 10);
+//     buf = ultoa(whole, buf, 10);
+//     *(buf++) = '.';
+//     buf = ultoa(fract, buf, 10);
 
-    return buf;
-}
+//     return buf;
+// }
 
-static const char *strseek( const char *str, char c )
-{
-    while (*str && (*str != c))
-    {
-        str++;
-    }
+// static const char *strseek( const char *str, char c )
+// {
+//     while (*str && (*str != c))
+//     {
+//         str++;
+//     }
 
-    if (!(*str))
-    {
-        return nullptr;
-    }
+//     if (!(*str))
+//     {
+//         return nullptr;
+//     }
 
-    return str;
-}
+//     return str;
+// }
 
-static char *__vsprintf_sse( char *buf, const char *&fmt, va_list args )
-{
-    // printf("%0.5f")
+// static char *__vsprintf_sse( char *buf, const char *&fmt, va_list args )
+// {
+//     // printf("%0.5f")
 
-    if (*fmt == 'f')
-    {
-        return __dtoa(va_arg(args, double), 8, buf);
-    }
-
-
-    auto *start = fmt;
-    auto *end   = strseek(fmt, 'f');
-
-    if (!end)
-    {
-        return buf;
-    }
+//     if (*fmt == 'f')
+//     {
+//         return __dtoa(va_arg(args, double), 8, buf);
+//     }
 
 
-    // have isolated from '0' to 'f'
+//     auto *start = fmt;
+//     auto *end   = strseek(fmt, 'f');
 
-    // Implement %00f later
-    if (*(start+1) != '.')
-    {
-        return buf;
-    }
+//     if (!end)
+//     {
+//         return buf;
+//     }
 
 
-    start++; // *start == '.'
-    start++; // *start == digit
+//     // have isolated from '0' to 'f'
 
-    int precision = int(*start);
-    return __dtoa(va_arg(args, double), precision, buf);
-}
+//     // Implement %00f later
+//     if (*(start+1) != '.')
+//     {
+//         return buf;
+//     }
+
+
+//     start++; // *start == '.'
+//     start++; // *start == digit
+
+//     int precision = int(*start);
+//     return __dtoa(va_arg(args, double), precision, buf);
+// }
 #endif
 
 
 
-static char *__vsprintf( char *buf, const char *&fmt, va_list args )
+
+
+static char *__vsprintf( char *buf, char *end, const char *&fmt, va_list args )
 {
     // char *prevbuf = buf;
     // int dgt = 0;
@@ -103,18 +105,19 @@ static char *__vsprintf( char *buf, const char *&fmt, va_list args )
         default: break;
 
         case 'l': lng = 1; break;
-
-        case 'c': *(buf++) = va_arg(args, int);                  break;
-        case 's': buf += strlen(strcpy(buf, va_arg(args, const char *))); break;
+        case 'c': *(buf++) = va_arg(args, int);                   break;
         case 'd': buf  = itoa(va_arg(args,      int), buf, 10);   break;
         case 'u': buf  = utoa(va_arg(args, uint32_t), buf, 10);   break;
         case 'x': buf  = ultoa(va_arg(args, uint32_t), buf, 16);  break;
-
-        #ifdef __libk_sse
-            case '0': buf = __vsprintf_sse(buf, fmt, args); break;
-            case '.': buf = __vsprintf_sse(buf, fmt, args); break;
-            case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
-        #endif
+        case 's':
+            if (end) buf += strlen(strncpy(buf, va_arg(args, const char*), end-buf-1));
+            else     buf += strlen(strcpy(buf, va_arg(args, const char*)));
+            break;
+        // #ifdef __SSE__
+        //     case '0': buf = __vsprintf_sse(buf, fmt, args); break;
+        //     case '.': buf = __vsprintf_sse(buf, fmt, args); break;
+        //     case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
+        // #endif
     }
 
     if (lng)
@@ -128,11 +131,11 @@ static char *__vsprintf( char *buf, const char *&fmt, va_list args )
             case 'u': buf = ultoa(va_arg(args, uint64_t), buf, 10); break;
             case 'x': buf = ultoa(va_arg(args, uint64_t), buf, 16); break;
 
-            #ifdef __libk_sse
-                case '0': buf = __vsprintf_sse(buf, fmt, args); break;
-                case '.': buf = __vsprintf_sse(buf, fmt, args); break;
-                case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
-            #endif
+            // #ifdef __SSE__
+            //     case '0': buf = __vsprintf_sse(buf, fmt, args); break;
+            //     case '.': buf = __vsprintf_sse(buf, fmt, args); break;
+            //     case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
+            // #endif
         }
     }
 
@@ -152,16 +155,13 @@ static char *__vsprintf( char *buf, const char *&fmt, va_list args )
 
 
 
-int
-vprintf( const char *fmt, va_list args )
+int vprintf( const char *fmt, va_list args )
 {
     return vfprintf(stdout, fmt, args);
 }
 
 
-int
-// vfprintf( FILE *addr, const char *fmt, va_list args )
-vfprintf( FILE*, const char*, va_list )
+int vfprintf( FILE*, const char*, va_list )
 {
     // auto *stream = &((vfsFileEntry*)addr)->stream;
     // int n = vsprintf((char*)(&stream->m_base[stream->m_write]), fmt, args);
@@ -177,26 +177,44 @@ vfprintf( FILE*, const char*, va_list )
 }
 
 
-int
-vsprintf( char *buf, const char *fmt, va_list args )
+int vsprintf( char *buf, const char *fmt, va_list args )
 {
     char *start = buf;
 
     while (*fmt)
     {
         if (*fmt == '%')
-        {
-            buf = __vsprintf(buf, fmt, args);
-        }
-
+            buf = __vsprintf(buf, nullptr, fmt, args);
         else
-        {
             *(buf++) = *fmt;
-        }
 
         fmt += 1;
     }
     *(buf++) = '\0';
+
+    return buf - start - 1;
+}
+
+
+int vsnprintf( char *buf, size_t bufsz, const char *fmt, va_list args )
+{
+    char *start = buf;
+    char *end   = buf + bufsz;
+
+    while (*fmt && (buf < end))
+    {
+        if (*fmt == '%')
+            buf = __vsprintf(buf, end, fmt, args);
+        else
+            *(buf++) = *fmt;
+
+        fmt += 1;
+    }
+
+    if (buf < end)
+    {
+        *(buf++) = '\0';
+    }
 
     return buf - start - 1;
 }

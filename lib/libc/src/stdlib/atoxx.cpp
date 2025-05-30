@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 
-int atoi_r( const char *str, int radix )
+static int atoi_r( const char *str, int radix )
 {
     int len = int(strlen(str));
 

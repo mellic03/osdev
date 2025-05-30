@@ -1,11 +1,10 @@
 #include <cpu/cpu.hpp>
-#include <cpu/cpu.hpp>
 
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kthread.hpp>
 
 #include <kernel/clock.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kernel/log.hpp>
 
 #include <kmalloc.h>
@@ -18,7 +17,7 @@
 
 void kthread::yield()
 {
-    KInterrupt<IntNo_KThreadYield>();
+    knl::interrupt<IntNo_KThreadYield>();
 }
 
 
@@ -42,11 +41,9 @@ void kthread::exit()
 kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 {
     static int idx = 0;
-
-    auto &cpu = SMP::all_cpus[idx];
+    auto *cpu = SMP::get_cpu(idx);
     idx = (idx+1) % SMP::num_cpus;
-
-    return cpu.sched.addThread(name, fn, arg);
+    return cpu->sched.addThread(name, fn, arg);
 }
 
 
@@ -60,7 +57,7 @@ kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 
 // void kthread::yield()
 // {
-//     KInterrupt<IntNo_KThreadYield>();
+//     knl::interrupt<IntNo_KThreadYield>();
 // }
 
 // void kthread::exit()

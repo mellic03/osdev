@@ -7,6 +7,7 @@
 #include <kassert.h>
 #include <kmalloc.h>
 #include <string.h>
+#include <kernel/bitmanip.hpp>
 
 
 // static std::mutex global_sched_lock;
@@ -86,8 +87,7 @@ static void idlemain( void* )
 }
 
 
-ThreadScheduler::ThreadScheduler( cpu_t &cpu )
-:   m_cpu(cpu)
+ThreadScheduler::ThreadScheduler()
 {
     m_startLock.set();
     m_switchCount.store(0);
@@ -108,15 +108,17 @@ ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
     m_threads.push_back(th);
 
     memset(th->stack, 0, sizeof(th->stack));
+    memset(th->fxstate, 0, sizeof(th->fxstate));
     memset(&(th->frame), 0, sizeof(intframe_t));
     memset(th->name, '\0', sizeof(th->name));
     strncpy(th->name, name, sizeof(th->name));
 
-    th->cpu          = &m_cpu;
     th->tid          = m_thread_tid++;
     th->status       = KThread_READY;
     th->wakeTime     = 0;
-    th->stackTop     = th->stack + sizeof(th->stack) - 16;
+    th->stackTop     = idk::align_down(th->stack + sizeof(th->stack), 16);
+    // th->stackTop     = th->stack + sizeof(th->stack) - 16;
+    CPU_fxsave(th->fxstate);
 
     th->frame.rsp    = (uint64_t)(th->stackTop);
     th->frame.rip    = (uint64_t)kthread_wrapper;
@@ -124,8 +126,6 @@ ThreadScheduler::addThread( const char *name, void (*fn)(void*), void *arg )
     th->frame.rsi    = (uint64_t)arg;
     th->frame.rbp    = 0;
     th->frame.rflags = CPU::getRFLAGS(); // 0x202;
-    CPU::fxsave(th->fxstate);
-    // asm volatile("fxsave %0 " : : "m"(th->fxstate));
 
     return th;
 }
@@ -147,7 +147,6 @@ ThreadScheduler::trampoline( intframe_t *frame )
     uint64_t frame_ss = frame->ss;
 
     auto *curr = m_threads.front();
-    CPU::fxsave(curr->fxstate);
 
     *frame = curr->frame;
     frame->cs = frame_cs;
@@ -243,7 +242,7 @@ ThreadScheduler::schedule( intframe_t *frame )
     //     "[ThreadScheduler::schedule CPU%lu] %s --> %s",
     //     SMP::this_cpuid(), prev->name, next->name
     // );
-
+    
     swap_threads(prev, next, frame);
 
     m_switchCount--;
@@ -269,14 +268,10 @@ void ThreadScheduler::scheduleISR( intframe_t *frame )
     // syslog::println("[scheduleISR] CPU=%lu", SMP::this_cpuid());
 
     auto *sd = SMP::this_sched();
-    CPU::fxsave(SMP::this_thread()->fxstate);
-
     if (sd->m_startLock.isset())
         sd->trampoline(frame);
     else
         sd->schedule(frame);
-
-    CPU::fxrstor(SMP::this_thread()->fxstate);
 
 }
 

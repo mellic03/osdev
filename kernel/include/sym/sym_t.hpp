@@ -2,6 +2,7 @@
 #include <kdef.h>
 #include <cringe/vec.hpp>
 
+struct vfsNode;
 struct ModuleInterface;
 struct kthread_t;
 
@@ -31,19 +32,20 @@ namespace ksym
         } libc_sym;
 
         struct {
+            vfsNode *(*open)(const char*);
+            size_t   (*read)(vfsNode *fh, void *dst, size_t offset, size_t nbytes);
+            size_t   (*write)(vfsNode *fh, const void *src, size_t offset, size_t nbytes);
+            size_t   (*tell)(vfsNode *fh);
+            int      (*seek)(vfsNode*, int64_t offset, uint8_t mode );
+        } vfs_sym;
+
+        struct {
             ivec2 *CSR;
             int W, H;
             int pitch;
             size_t BPP;
             uint8_t *frontbuffer;
             uint8_t *backbuffer;
-            // void (*clearBuffer)(uint8_t *buffer);
-            // void (*fillColor)  (uint8_t, uint8_t, uint8_t, uint8_t);
-            // void (*fillBuffer) (uint8_t *buffer);
-            // void (*rect)       (int, int, int, int);
-            void (*blit)       (const ivec2&, uint8_t*, int, int, const ivec2&, const ivec2&);
-            // ivec2 (*renderString)(const ivec4&, const char*, const ivec2&);
-            // void (*cursorString)(const char*);
             void (*swapBuffers)();
         } video_sym;
 
@@ -55,29 +57,18 @@ namespace ksym
             uint64_t (*this_cpuid)();
         } thread_sym;
 
-        struct {
-            bool (*readMsState)(knl::MsState&);
-            void (*writeMsState)(const knl::MsState&);
-            bool (*readMsEvent)(knl::MsEvent&);
-            void (*writeMsEvent)(const knl::MsEvent&);
-            bool (*readKbEvent)(knl::KbEvent&);
-            void (*writeKbEvent)(const knl::KbEvent&);
-            int (*listenMsEvent)( void (*)(const knl::MsEvent&) );
-            int (*listenKbEvent)( void (*)(const knl::KbEvent&) );
-            void (*emitMsEvent)( const knl::MsEvent& );
-            void (*emitKbEvent)( const knl::KbEvent& );
-            void (*forgetMsEvent)( int );
-            void (*forgetKbEvent)( int );
-        } event_sym;
-
         // struct {
         //     void (*installISR)(uint8_t, isrHandlerFn);
         //     void (*installIRQ)(uint8_t, irqHandlerFn);
         // } cpu_sym;
 
         struct {
-            void (*panic)(const char*);
-            void (*hcf)();
+            void   (*panic)(const char*);
+            void   (*hcf)();
+            vfsNode* (*popen)(const char*, size_t);
+            void*  (*fopen)(const char*);
+            size_t (*fread)(void*, void*, size_t);
+            size_t (*fwrite)(void*, const void*, size_t);
             ModuleInterface *(*findModule)(uint64_t, uint64_t);
         } kernel_sym;
     };

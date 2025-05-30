@@ -1,56 +1,54 @@
 #include "syscall.hpp"
-#include <kernel/interrupt.hpp>
-#include <filesystem/vfs2.hpp>
+#include <sys/interrupt.hpp>
 #include <cpu/cpu.hpp>
 #include <kassert.h>
 #include <kmalloc.h>
 
 
-void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res )
-{
-    cpu_t *cpu = SMP::this_cpu();
+// void syscall( SysNo_ sysno, const sysreq_t *req, sysres_t *res )
+// {
+//     cpu_t *cpu = SMP::this_cpu();
 
-    cpu->syscall_no  = sysno;
-    cpu->syscall_req = (uintptr_t)req;
-    cpu->syscall_res = (uintptr_t)res;
+//     cpu->syscall_no  = sysno;
+//     cpu->syscall_req = (uintptr_t)req;
+//     cpu->syscall_res = (uintptr_t)res;
 
-    KInterrupt<IntNo_Syscall>();
-}
-
-
-static void handle_FileOpen( sysreq_t *arg, sysres_t *res )
-{
-    auto *req  = (sysreq_FileOpen*)arg;
-    char *path = (char*)(req->path);
-    auto *fh   = vfs2::open(path, req->nbytes, nullptr);
-    res->addr  = (void*)fh;
-}
+//     knl::interrupt<IntNo_Syscall>();
+// }
 
 
-static void handle_MemAlloc( sysreq_t *arg, sysres_t *res )
-{
-    auto *req = (sysreq_MemAlloc*)arg;
-    res->addr = kmalloc(req->nbytes);
-}
+// static void handle_FileOpen( sysreq_t *arg, sysres_t *res )
+// {
+//     auto *req  = (sysreq_FileOpen*)arg;
+//     char *path = (char*)(req->path);
+//     auto *fh   = vfs2::open(path, req->nbytes, nullptr);
+//     res->addr  = (void*)fh;
+// }
+
+
+// static void handle_MemAlloc( sysreq_t *arg, sysres_t *res )
+// {
+//     auto *req = (sysreq_MemAlloc*)arg;
+//     res->addr = kmalloc(req->nbytes);
+// }
 
 
 
-void knl::syscallISR( intframe_t* )
-{
-    cpu_t *cpu = SMP::this_cpu();
+// void knl::syscallISR( intframe_t* )
+// {
+//     cpu_t *cpu = SMP::this_cpu();
 
-    auto sysno = cpu->syscall_no;
-    auto *req = (sysreq_t*)(cpu->syscall_req);
-    auto *res = (sysres_t*)(cpu->syscall_res);
+//     auto sysno = cpu->syscall_no;
+//     auto *req = (sysreq_t*)(cpu->syscall_req);
+//     auto *res = (sysres_t*)(cpu->syscall_res);
 
-    switch (sysno)
-    {
-        default: kpanic("Invalid sysno"); break;
-        case SysNo_FileOpen: handle_FileOpen(req, res); break;
-        case SysNo_MemAlloc: handle_MemAlloc(req, res); break;
-    }
-
-}
+//     switch (sysno)
+//     {
+//         default: kpanic("Invalid sysno"); break;
+//         case SysNo_FileOpen: handle_FileOpen(req, res); break;
+//         case SysNo_MemAlloc: handle_MemAlloc(req, res); break;
+//     }
+// }
 
 
 

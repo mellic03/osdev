@@ -32,8 +32,8 @@ static bool ustar_isChild( void *A, void *B )
 }
 
 
-// void ustar::forEach( void *archive, void(*action)(const char*, void*, size_t) )
-void ustar::forEach( void *addr, std::function<void(void*, size_t)> action )
+// void ustar::forEach( void *addr, std::function<void(void*, size_t)> action )
+void ustar::forEach( void *addr, void(*action)(void*, size_t) )
 {
     auto *ptr = (unsigned char*)(addr);
     while (!memcmp(ptr + 257, "ustar", 5))
@@ -51,21 +51,25 @@ void ustar::forEach( void *addr, std::function<void(void*, size_t)> action )
 
 
 
-void ustar::listChilren( void *tar )
-{
-    syslog log("ustar::listChilren");
-    ustar::forEach(tar, [&log, tar](void *child, size_t) {
-        if (ustar_isChild(tar, (void*)child) == false)
-            return;
-        log((const char*)child);
-    });
-}
+// void ustar::listChilren( void *tar )
+// {
+//     syslog log("ustar::listChilren");
+//     ustar::forEach(tar, [&log, tar](void *child, size_t) {
+//         if (ustar_isChild(tar, (void*)child) == false)
+//             return;
+//         log((const char*)child);
+//     });
+// }
+
+static syslog *logptr;
 
 void ustar::listAll( void *tar )
 {
     syslog log("ustar::listAll");
-    ustar::forEach(tar, [&log](void *child, size_t) {
-        log("%s", (const char*)child);
+    logptr = &log;
+
+    ustar::forEach(tar, [](void *child, size_t) {
+        (*logptr)("%s", (const char*)child);
     });
 }
 

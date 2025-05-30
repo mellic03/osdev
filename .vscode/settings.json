@@ -179,7 +179,10 @@
         "atomic2": "cpp",
         "barrier": "cpp",
         "atomic-old": "cpp",
-        "cxxabi": "cpp"
+        "cxxabi": "cpp",
+        "types.h": "c",
+        "errno.h": "c",
+        "limits.h": "c"
     },
     "C_Cpp.default.includePath": [
         "${default}",

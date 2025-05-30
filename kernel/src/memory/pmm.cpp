@@ -1,65 +1,100 @@
 #include <kernel/memory/pmm.hpp>
-
+#include <kernel/boot_limine.hpp>
 #include <kernel/bitmanip.hpp>
-#include <kernel/bitmap.hpp>
-#include <kernel/linear_allocator.hpp>
-#include <kernel/log.hpp>
+#include <kassert.h>
 #include <kmemxx.hpp>
+#include <kernel/log.hpp>
+#include <kernel/linear_allocator.hpp>
+#include <bitmap.hpp>
 
 #include <kinplace/inplace_array.hpp>
 #include <kinplace/inplace_stack.hpp>
 
 
-
-
-using namespace idk;
 uint64_t PMM::hhdm;
 
-uintptr_t m_bitmap_end;
-uintptr_t m_pbase;
-uintptr_t m_pend;
-uint64_t  m_npages;
 
 
-uint64_t *m_bitmap;
-
-static inline
-uint8_t get_bit(size_t i)
+struct pmmBitmap
 {
-    size_t idx = i / (sizeof(uint64_t) * 8);
-    size_t bit = i % (sizeof(uint64_t) * 8);
-    return (m_bitmap[idx] & (1ULL << bit)) ? 1 : 0;
-}
+    uint8_t *m_data;
+    size_t   m_setcount;
+    size_t   m_nbits;
 
-static inline
-void set_bit(size_t i)
-{
-    size_t idx = i / (sizeof(uint64_t) * 8);
-    size_t bit = i % (sizeof(uint64_t) * 8);
-    m_bitmap[idx] |= (1ULL << bit);
-}
+    pmmBitmap() {  };
 
-static inline
-void unset_bit(size_t i)
-{
-    size_t idx = i / (sizeof(uint64_t) * 8);
-    size_t bit = i % (sizeof(uint64_t) * 8);
-    m_bitmap[idx] &= ~(1ULL << bit);
-}
-
-
-
-uintptr_t PMM::alloc()
-{
-    for (size_t i=0; i<m_npages; i++)
+    pmmBitmap( void *base, size_t num_bits )
     {
-        if (get_bit(i) == 0)
-        {
-            set_bit(i);
+        num_bits = idk::align_down(num_bits, 8);
+        kassert(num_bits % 8 == 0);
+        m_data     = (uint8_t*)base;
+        m_setcount = 0;
+        m_nbits    = num_bits;
 
-            uintptr_t virt = m_pbase + PAGE_SIZE*i;
-            uintptr_t phys = virt - hhdm;
-            kmemset<uint128_t>((void*)virt, 0, PAGE_SIZE);
+        syslog log("pmmBitmap");
+        log("m_base:  0x%lx", m_data);
+        log("m_end:   0x%lx", m_data + nbytes());
+        log("m_nbits: %lu",   m_nbits);
+
+        clear();
+    }
+
+    void clear() { kmemset<uint8_t>(m_data, 0, nbytes()); }
+    size_t nbytes() { return m_nbits / 8; }
+    size_t nbits() { return m_nbits; }
+
+    uint8_t get( size_t i )
+    {
+        size_t idx = i / 8;
+        size_t bit = i % 8;
+        return (m_data[idx] & (1ULL << bit)) != 0;
+    }
+
+    void set( size_t i )
+    {
+        size_t idx = i / 8;
+        size_t bit = i % 8;
+        m_data[idx] |= (1ULL << bit);
+        m_setcount++;
+    }
+
+    void unset( size_t i )
+    {
+        size_t idx = i / 8;
+        size_t bit = i % 8;
+        m_data[idx] &= ~(1ULL << bit);
+        m_setcount--;
+    }
+
+    constexpr bool is_set   ( size_t i ) { return  get(i); }
+    constexpr bool is_unset ( size_t i ) { return !get(i); }
+};
+
+
+
+static constexpr size_t PMM_nframes = 64;
+struct pmmBlock { uint64_t data[512]; };
+static pmmBitmap PMM_framebmap;
+static uintptr_t PMM_framebase;
+static uintptr_t PMM_frameend;
+
+
+
+static uint64_t  PMM_npages;
+static pmmBitmap PMM_pagebmap;
+static uintptr_t PMM_pagebase;
+static uintptr_t PMM_pageend;
+
+
+uintptr_t PMM::allocFrame()
+{
+    for (size_t i=0; i<PMM_framebmap.nbits(); i++)
+    {
+        if (PMM_framebmap.is_unset(i))
+        {
+            PMM_framebmap.set(i);
+            uintptr_t virt = PMM_framebase + i*PMM::FRAME_SIZE;
+            uintptr_t phys = virt - PMM::hhdm;
             return phys;
         }
     }
@@ -68,10 +103,36 @@ uintptr_t PMM::alloc()
 }
 
 
-void PMM::free( uintptr_t phys )
+void PMM::freeFrame( uintptr_t phys )
 {
-    size_t idx = (phys - m_pbase - hhdm) / PAGE_SIZE;
-    unset_bit(idx);
+    size_t idx = (phys - PMM_framebase - PMM::hhdm) / PMM::FRAME_SIZE;
+    PMM_framebmap.unset(idx);
+}
+
+
+
+
+uintptr_t PMM::allocPage()
+{
+    for (size_t i=0; i<PMM_pagebmap.nbits(); i++)
+    {
+        if (PMM_pagebmap.is_unset(i))
+        {
+            PMM_pagebmap.set(i);
+            uintptr_t virt = PMM_pagebase + PMM::PAGE_SIZE*i;
+            uintptr_t phys = virt - PMM::hhdm;
+            return phys;
+        }
+    }
+
+    return 0;
+}
+
+
+void PMM::freePage( uintptr_t phys )
+{
+    size_t idx = (phys - PMM_pagebase - PMM::hhdm) / PAGE_SIZE;
+    PMM_pagebmap.unset(idx);
 }
 
 
@@ -81,27 +142,37 @@ void PMM::init( const MemMap &mmap, size_t hhdm_offset )
     PMM::hhdm = hhdm_offset;
     syslog log("PMM::init");
 
-    m_npages     = (mmap.size / PAGE_SIZE) - 2;
-    m_bitmap     = (uint64_t*)(mmap.base + hhdm);
-    m_bitmap_end = (uintptr_t)m_bitmap + m_npages * (sizeof(uint64_t)/8);
-    m_pbase      = align_up(m_bitmap_end, PAGE_SIZE);
-    m_pend       = m_pbase + m_npages;
+    uintptr_t tail = mmap.base + hhdm;
+    uintptr_t end  = mmap.base + hhdm + mmap.size;
 
-    log("base:       0x%lx", mmap.base + hhdm);
-    log("size:       0x%lx", mmap.size);
-    log("bitmap:     0x%lx", m_bitmap);
-    log("bitmap_end: 0x%lx", m_bitmap_end);
+    PMM_framebmap  = pmmBitmap((void*)tail, PMM_nframes);
+    tail          += PMM_framebmap.nbytes();
 
-    log("page size:  0x%lx", PAGE_SIZE);
-    log("npages:     %lu",   m_npages);
-    log("pbase:      0x%lx", m_pbase);
-    log("pend:       0x%lx", m_pend);
+    PMM_framebase  = idk::align_up(tail, PAGE_SIZE);
+    PMM_frameend   = PMM_framebase + PMM_nframes*PMM::FRAME_SIZE;
+    tail           = PMM_frameend;
+ 
+    PMM_npages     = (end-tail)/PMM::PAGE_SIZE - 7;
+    PMM_pagebmap   = pmmBitmap((void*)tail, PMM_npages);
+    tail          += PMM_pagebmap.nbytes();
 
-    for (size_t i=0; i<m_npages; i++)
-    {
-        m_bitmap[i] = 0;
-    }
+    PMM_pagebase   = idk::align_up(tail, PAGE_SIZE);
+    PMM_pageend    = PMM_pagebase + PMM_npages*PAGE_SIZE;
+
+    PMM_framebmap.clear();
+    PMM_pagebmap.clear();
+
+    log("base:      0x%lx", mmap.base + hhdm);
+    log("size:      0x%lx", mmap.size);
+
+    log("page size: 0x%lx", PAGE_SIZE);
+    log("npages:    %lu",   PMM_npages);
+
+    log("framebase: 0x%lx", PMM_framebase);
+    log("frameend:  0x%lx", PMM_frameend);
+
+    log("pagebase:  0x%lx", PMM_pagebase);
+    log("pageend:   0x%lx", PMM_pageend);
+
 }
-
-
 

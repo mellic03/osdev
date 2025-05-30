@@ -9,5 +9,4 @@ qemu-system-x86_64 \
     -cdrom ./output/CringeOS.iso \
     -serial stdio \
     -enable-kvm \
-    -cpu host \
     -device ati-vga

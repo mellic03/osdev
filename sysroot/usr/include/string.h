@@ -13,10 +13,13 @@ char    *antistrchr( const char *str, int ch );
 int      strcmp( const char*, const char* );
 int      strncmp( const char*, const char*, size_t );
 char    *strcpy( char*, const char* );
+char    *stpcpy( char*, const char* );
+char    *strdup( const char* );
 char    *strncpy( char*, const char*, size_t );
 size_t   strlen( const char* );
 char    *strpbrk( const char *dst, const char *breakset );
 size_t   strspn( const char *str, const char *ct );
+char    *strstr( char const *str, char const *substr );
 size_t   strcspn( const char *str, const char *bad );
 char    *strtok( char *str, const char *delim );
 

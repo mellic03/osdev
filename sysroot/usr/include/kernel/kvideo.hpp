@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <cringe/vec.hpp>
-#include <gui/gui.hpp>
+
 
 namespace kvideo
 {
@@ -24,7 +24,6 @@ namespace kvideo
     extern int    H;
     extern int    pitch;
     extern size_t BPP;
-    extern size_t stride;
     extern size_t nbytes;
 
     extern uint8_t *frontbuffer;
@@ -34,23 +33,7 @@ namespace kvideo
     // const ivec2 &getCursor();
     void initFrontbuffer( uintptr_t fb_res );
     void initBackbuffer( uintptr_t fb_res );
-
-    void setFont( const guiFont& );
-    void renderGlyph( char ch, int x, int y );
-    ivec2 renderString( const char *str, ivec2 csr );
-    ivec2 renderString( const guiContainer &bounds, const char *str, ivec2 csr );
-    // void cursorGlyph( char ch );
-    // void cursorString( const char *ch );
-
-    void blit( const ivec2 &dsttl, uint8_t *img, int imgw, int imgh,
-               const ivec2 &srctl, const ivec2 &srcsp );
-
-    void clearBuffer( uint8_t *buffer );
-    void fillColor( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
-    void fillBuffer( uint8_t *buffer );
-    
-    void rect( int x, int y, int w, int h );
-
+    void fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a );
     void swapBuffers();
 }
 

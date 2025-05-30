@@ -154,7 +154,7 @@
 //     uint8_t xmm[16][16]; // XMM Registers
 // } __attribute__((packed)) fx_state_t;
 
-// ALWAYS_INLINE static bool CheckInterrupts() {
+// ALWAYS_INLINE static bool Checknl::interrupts() {
 //     volatile unsigned long flags;
 //     asm volatile("pushfq;"
 //                  "pop %0;"
@@ -188,7 +188,7 @@
 
 // static ALWAYS_INLINE CPU* GetCPULocal() {
 //     CPU* ret;
-//     int intEnable = CheckInterrupts();
+//     int intEnable = Checknl::interrupts();
 //     asm("cli");
 //     asm volatile("swapgs; movq %%gs:0, %0; swapgs;"
 //                  : "=r"(ret)); // CPU info is 16-byte aligned as per liballoc alignment
@@ -199,7 +199,7 @@
 
 // static ALWAYS_INLINE Thread* GetCurrentThread() {
 //     Thread* ret;
-//     int intEnable = CheckInterrupts();
+//     int intEnable = Checknl::interrupts();
 //     asm("cli");
 //     asm volatile("swapgs; movq %%gs:16, %0; swapgs;"
 //                  : "=r"(ret)); // CPU info is 16-byte aligned as per liballoc alignment
@@ -218,7 +218,7 @@
 
 // class InterruptDisabler {
 // public:
-//     ALWAYS_INLINE InterruptDisabler() : m_intsWereEnabled(CheckInterrupts()) { asm volatile("cli"); }
+//     ALWAYS_INLINE InterruptDisabler() : m_intsWereEnabled(Checknl::interrupts()) { asm volatile("cli"); }
 //     ALWAYS_INLINE ~InterruptDisabler() {
 //         if (m_intsWereEnabled) {
 //             asm volatile("sti");

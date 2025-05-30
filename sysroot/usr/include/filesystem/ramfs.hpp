@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <bitmap2.hpp>
 #include <string.h>
+#include <ipc/pipe.hpp>
 
 
 class RamFS;
@@ -20,8 +21,10 @@ enum rfsEntry_: uint32_t
 
 enum rfsFlag_: uint32_t
 {
-    rfsFlag_None    = 0,
-    rfsFlag_Symlink = 1<<0,
+    rfsFlag_None      = 0,
+    rfsFlag_Symlink   = 1<<0,
+    rfsFlag_ReadCstm  = 1<<8,
+    rfsFlag_WriteCstm = 1<<9,
 };
 
 
@@ -64,6 +67,9 @@ struct rfsEntry
 {
     uint32_t type;
     uint32_t flags;
+    size_t   (*rcstm)(rfsEntry*, void*, size_t);
+    size_t   (*wcstm)(rfsEntry*, const void*, size_t);
+    void     *impl;
     size_t   cursor;
     char     name[32];
     int32_t  entry_id;
@@ -145,8 +151,8 @@ public:
 
     rfsEntry *open( const char *path );
     void      walk( int32_t entry_id, int depth=0 );
-    size_t    fwrite( rfsEntry *file, const uint8_t *src, size_t nbytes );
-    size_t    fread ( rfsEntry *file, uint8_t *dst, size_t nbytes );
+    size_t    fwrite( rfsEntry *file, const void *src, size_t nbytes );
+    size_t    fread ( rfsEntry *file, void *dst, size_t nbytes );
     // void      fprintf( rfsEntry *file, const uint8_t *src, size_t nbytes );
     size_t    fsize( rfsEntry *fh );
 
@@ -159,13 +165,14 @@ public:
 
 namespace rfs
 {
-    void init( void *base );
+    // void init( void *base );
+    void init();
     void walk();
 
-    rfsEntry *open( const char *path );
+    void *open( const char *path );
 
-    size_t    fwrite( rfsEntry *file, const uint8_t *src, size_t nbytes );
-    size_t    fread ( rfsEntry *file, uint8_t *dst, size_t nbytes );
+    size_t    fwrite( void *file, const void *src, size_t nbytes );
+    size_t    fread ( void *file, void *dst, size_t nbytes );
     size_t    ftell( rfsEntry *fh );
     size_t    fseek( rfsEntry *fh, size_t p );
     size_t    fsize( rfsEntry *fh );

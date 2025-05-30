@@ -1,15 +1,9 @@
 file(
     GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
 
 add_executable(
-    daemon.elf
+    daemon
     ${SOURCES}
 )
-
-# target_link_libraries(
-#     daemon.elf
-#     tinyubsan
-# )
-

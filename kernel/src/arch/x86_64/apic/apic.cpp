@@ -3,7 +3,7 @@
 #include <cpu/cpu.hpp>
 #include <driver/pic.hpp>
 #include <kernel/memory/vmm.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 
 uintptr_t APIC::lapicBase  = 0;

@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <cringe/bmp.hpp>
+#include <bmp.hpp>
 #include <cringe/vec.hpp>
 
 

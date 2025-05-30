@@ -63,4 +63,3 @@ namespace IO
     const auto out16 = IO::outw;
     const auto out32 = IO::outl;
 }
-

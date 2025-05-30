@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <algorithm>
+#include <type_traits>
 
 template <size_t N, typename T>
 struct vec;
@@ -297,7 +298,16 @@ template <size_t N, typename T>
 __attribute__((always_inline))
 inline vec<N, T> vec_mix( const vec<N, T> &X, const vec<N, T> &Y, float a )
 {
-    return (1.0f - a)*X + a*Y;
+    // if constexpr (std::is_same_v<T, uint8_t>)
+    // {
+    //     uint8_t a8 = uint8_t(a);
+    //     return vec<N, T>((T(255 - a8)*X + a8*Y) / T(255));
+    // }
+
+    // else
+    // {
+        return (1.0f - a)*X + a*Y;
+    // }
 }
 
 

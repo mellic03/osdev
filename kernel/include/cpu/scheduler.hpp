@@ -1,6 +1,6 @@
 #pragma once
 #include <kernel/ringbuffer.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <smp/lock.hpp>
 #include <vector>
 #include <algorithm>
@@ -13,8 +13,7 @@ struct kthread_t;
 class ThreadScheduler
 {
 private:
-    cpu_t  &m_cpu;
-    size_t  m_thread_tid = 0;
+    size_t m_thread_tid = 0;
 
     void trampoline( intframe_t* );
     void schedule( intframe_t* );
@@ -33,7 +32,7 @@ public:
     // static void trampolineISR( intframe_t* );
     static void scheduleISR( intframe_t* );
 
-    ThreadScheduler( cpu_t& );
+    ThreadScheduler();
 
     kthread_t *currThread() { return m_threads.front(); }
     kthread_t *addThread( const char *name, void (*fn)(void*), void *arg );

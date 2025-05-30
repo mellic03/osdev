@@ -32,3 +32,22 @@ int sprintf( char *buf, const char *fmt, ... )
     return n;
 }
 
+
+int snprintf( char *buf, size_t bufsize, const char *fmt, ... )
+{
+    va_list args;
+    va_start (args, fmt);
+    int n = vsnprintf(buf, bufsize, fmt, args);
+    va_end(args);
+    return n;
+}
+
+
+int asprintf( char **buf, const char *fmt, ... )
+{
+    va_list args;
+    va_start (args, fmt);
+    int n = vsprintf(*buf, fmt, args);
+    va_end(args);
+    return n;
+}

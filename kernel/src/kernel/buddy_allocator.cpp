@@ -1,7 +1,7 @@
 #include <kernel/memory.hpp>
 #include <kernel/log.hpp>
 #include <kernel/bitmanip.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kpanic.h>
 #include <algorithm>
 
@@ -133,7 +133,7 @@ idk::buddy_allocator::alloc( size_t nbytes, size_t alignment )
     if (idx == -1)
     {
         kpanic("buddy_allocator out of memory");
-        KInterrupt<IntNo_OUT_OF_MEMORY>();
+        knl::interrupt<IntNo_OUT_OF_MEMORY>();
         return nullptr;
     }
 

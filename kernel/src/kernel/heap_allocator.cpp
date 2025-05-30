@@ -2,7 +2,7 @@
 #include "heap_allocator.hpp"
 #include <kernel/log.hpp>
 #include <kernel/bitmanip.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 #include <kpanic.h>
 #include <algorithm>
 

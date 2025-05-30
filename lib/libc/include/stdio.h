@@ -37,10 +37,16 @@ int     puts( const char* );
 int     printf( const char *fmt, ... );
 
 int     sprintf( char *buf, const char *fmt, ... );
+int     snprintf( char *buf, size_t bufsz, const char *fmt, ... );
 
 int     vprintf( const char *fmt, va_list args );
 int     vfprintf( FILE*, const char *fmt, va_list args );
 int     vsprintf( char *buf, const char *fmt, va_list args );
+int     vsnprintf( char *buf, size_t bufsz, const char *fmt, va_list args );
+
+// #define asprintf sprintf
+int     asprintf( char **buf, const char *fmt, ... );
+
 
 #ifdef __cplusplus
 }

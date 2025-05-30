@@ -1,5 +1,5 @@
 #include <cxxabi>
-#include <kpanic.h>
+// #include <kpanic.h>
 
 extern "C"
 {
@@ -21,6 +21,8 @@ int __cxa_atexit(void (*func)(void *), void *objptr, void *dso)
 
     return 0;
 };
+
+
 
 void __cxa_finalize(void *func)
 {
@@ -47,17 +49,19 @@ void __cxa_finalize(void *func)
     };
 };
 
+
+
 namespace __cxxabiv1
 {
     int __cxa_guard_acquire( uint64_t *g )
     {
-		return !*(char *)(g);
-
+        return !__atomic_load_n(g, __ATOMIC_SEQ_CST)
+            && !__atomic_exchange_n(g, 0, __ATOMIC_SEQ_CST);
     }
 
     void __cxa_guard_release( uint64_t *g )
     {
-		*(char *)g = 1;
+        __atomic_store_n(g, 1, __ATOMIC_SEQ_CST);
     }
 
     void __cxa_guard_abort( uint64_t * )
@@ -66,11 +70,11 @@ namespace __cxxabiv1
     }
 }
 
+
 void __cxa_pure_virtual()
 {
-    kpanic("[__cxa_pure_virtual] Pure virtual function called!");
+    // kpanic("[__cxa_pure_virtual] Pure virtual function called!");
 }
-
 
 
 }

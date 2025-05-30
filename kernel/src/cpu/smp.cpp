@@ -2,7 +2,7 @@
 #include <cpu/cpu.hpp>
 #include <cpu/scheduler.hpp>
 #include <driver/pic.hpp>
-#include <kernel/interrupt.hpp>
+#include <sys/interrupt.hpp>
 
 #include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
@@ -38,8 +38,9 @@
 // };
 
 
-static uint64_t bspID = 99999999999;
-cpu_t SMP::all_cpus[8];
+static uint64_t bspID = 0;
+static uint8_t SMP_cpu_buf[8*sizeof(cpu_t)] __attribute__((aligned(16)));
+// static cpu_t   SMP_cpu_buf[8];
 size_t SMP::num_cpus;
 
 
@@ -74,6 +75,12 @@ uint64_t SMP::bsp_id()
 }
 
 
+
+cpu_t *SMP::get_cpu( uint32_t idx )
+{
+    return (cpu_t*)(SMP_cpu_buf) + idx;
+}
+
 cpu_t *SMP::this_cpu()
 {
     return (cpu_t*)CPU::rdmsr(CPU::MSR_KERNEL_GS_BASE);
@@ -87,7 +94,7 @@ uint64_t SMP::this_cpuid()
 ksched_t *SMP::this_sched()
 {
     auto *cpu = SMP::this_cpu();
-    return &(cpu->sched);
+    return &cpu->sched;
 }
 
 kthread_t *SMP::this_thread()
