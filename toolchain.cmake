@@ -22,7 +22,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 # set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/linker.ld")
 # set(KPROGRAM_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/src/programs/linker.ld")
 # set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -mno-sse2 -mno-avx -mgeneral-regs-only")
-set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -msse2 -mno-avx") # -mgeneral-regs-only")
+set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -mno-sse2 -mno-avx -mgeneral-regs-only")
 # set(SSE_FLAGS "")
 
 # add_definitions(-D__libk_sse=true)

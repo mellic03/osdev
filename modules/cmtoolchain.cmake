@@ -16,12 +16,11 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-# set(SSE_FLAGS "-mno-80387 -mno-mmx -msse -mavx")
-set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -mno-avx")
-# set(SSE_FLAGS "-mno-80387 -mno-mmx -msse -mavx")
+set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -mno-avx -mgeneral-regs-only")
 
 set(CringeModules_C_CXX_FLAGS
-    "${SSE_FLAGS} \
+    "-O3 \
+    ${SSE_FLAGS} \
     -Wall -Wextra -Werror \
     -fno-strict-aliasing \
     -fno-omit-frame-pointer \

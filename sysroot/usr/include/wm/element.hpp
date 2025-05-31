@@ -44,11 +44,11 @@ namespace wm
     struct guiButton: public guiElement
     {
     private:
-        // u8vec4 m_color0 = u8vec4(100, 100, 100, 255);
-        // u8vec4 m_color1 = u8vec4(200, 200, 200, 255);
-        vec4 m_color0 = vec4(0.5, 0.5, 0.5, 1.0);
-        vec4 m_color1 = vec4(0.85, 0.85, 0.85, 1.0);
-        vec4 m_color2 = vec4(0.85, 0.85, 0.85, 1.0);
+        u8vec4 m_color0 = u8vec4(100, 100, 100, 255);
+        u8vec4 m_color1 = u8vec4(200, 200, 200, 255);
+        // vec4 m_color0 = vec4(0.5, 0.5, 0.5, 1.0);
+        // vec4 m_color1 = vec4(0.85, 0.85, 0.85, 1.0);
+        // vec4 m_color2 = vec4(0.85, 0.85, 0.85, 1.0);
 
     public:
         char m_label[32];

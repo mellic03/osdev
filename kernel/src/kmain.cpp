@@ -78,35 +78,18 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 
 
 
-
-
-enum KeyEvent_
-{
-    KeyEvent_UP     = 1<<0,
-    KeyEvent_SHIFT  = 1<<1,
-    KeyEvent_CTRL   = 1<<2,
-    KeyEvent_ALT    = 1<<3,
-    KeyEvent_L      = 1<<4,
-    KeyEvent_R      = 1<<5,
-    KeyEvent_U      = 1<<6,
-    KeyEvent_D      = 1<<7,
-};
-
-
-
 #include <ipc/pipe.hpp>
 #include <arch/mmio.hpp>
 
 static knl::Barrier smpBarrier{4};
 // std::atomic_uint64_t smpCount{0};
-
 extern uintptr_t endkernel;
 
 extern "C"
 void _start()
 {
     CPU::cli();
-    CPU_enableSSE();
+    CPU::enableFloat();
 
     syslog::enable();
     if (!serial::init())
@@ -139,7 +122,7 @@ void _start()
     // buf[4] = 8765678;
     // log("buf[4]: %lu", buf[4]);
 
-    smpBarrier.reset(4);
+    smpBarrier.reset(limine_res.mp->cpu_count);
     SMP::init(smp_main);
 
     kassert(false); // Should be unreachable!
@@ -153,7 +136,7 @@ extern void sde_main(void*);
 static void smp_main( limine_mp_info *info )
 {
     CPU::cli();
-    CPU_enableSSE();
+    CPU::enableFloat();
 
     uint64_t  this_gdt[5];
     gdt_ptr_t this_gdtr;
