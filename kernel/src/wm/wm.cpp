@@ -26,7 +26,7 @@ static void wm_keyInput();
 static void waitForVBlank();
 
 static wm::guiRoot     wmRoot(ivec2(0, 0), ivec2(500, 500));
-static wm::guiButton   wmButton("roo", ivec2(25, 25), ivec2(100, 50), []() { syslog::println("Roo"); });
+// static wm::guiButton   wmButton("roo", ivec2(25, 25), ivec2(100, 50), []() { syslog::println("Roo"); });
 static wm::guiMouse    wmMouse;
 static wm::guiElement *wmFocus = nullptr;
 
@@ -41,20 +41,15 @@ void wm::main( void* )
     guiFont        txtfont(initrd::fopen("usr/share/font/cutive-w12hf18.bmp"));
 
 
-    wmRoot.addChild(&wmButton);
-
     syslog::println("[wm::main] A");
-    auto *ptr = new guiTextArea2(&txtfont, ivec2(0, 200), ivec2(600, 600));
-    syslog::println("[wm::main] ptr=0x%lx", ptr);
-    wmRoot.addChild(ptr);
-    // wmRoot.addChild(new guiTextInput(&txtfont, ivec2(50), ivec2(300, 50)));
-    // wmRoot.addChild(new guiWindow(ivec2(700, 100), ivec2(450, 450)));
-    // wmRoot.addChild(new guiButton("roo", ivec2(25, 25), ivec2(100, 50), []() {
-    //     syslog::println("Roo");
-    // }));
+    wmRoot.addChild(new guiTextArea2(&txtfont, ivec2(0, 200), ivec2(600, 600)));
+    syslog::println("[wm::main] B");
+    wmRoot.addChild(new guiTextInput(&txtfont, ivec2(50), ivec2(300, 50)));
+    wmRoot.addChild(new guiWindow(ivec2(700, 100), ivec2(450, 450)));
+    wmRoot.addChild(new guiButton("roo", ivec2(25, 25), ivec2(100, 50), []() {
+        syslog::println("Roo");
+    }));
 
-    // wmRoot.m_children.push_back(wmTerm);
-    // wmRoot.m_children.push_back(win);
 
     while (true)
     {
@@ -120,8 +115,6 @@ static void wm_mouseInput()
         if (wmMouse.delta != ivec2(0, 0))
         {
             wmMouse.updateHovered(&wmRoot);
-            if (wmMouse.focused)
-                wmMouse.focused->onMouseMove(wmMouse);
         }
 
         if (mscurr.l && !msprev.l) // left down
