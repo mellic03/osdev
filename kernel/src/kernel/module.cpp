@@ -42,7 +42,7 @@ static void init_device( DeviceInterface *dev )
     if (dev->irqfn && dev->irqno >= 0)
     {
         CPU::installIRQ(dev->irqno, dev->irqfn);
-        IOAPIC::mapIRQ(SMP::this_cpuid(), dev->irqno);
+        IOAPIC::mapIRQ(0, dev->irqno, 0);
     }
 }
 
@@ -67,15 +67,14 @@ static void load_module( uint8_t *tar, size_t size )
     iface->baseAddress = base;
     iface->pageSize    = PMM::PAGE_SIZE;
     iface->pageCount   = 1;
+
     knl::modules.push_back(iface);
     
-    char buf[128];
-    auto *path = (const char*)(tar+ustar::NAME_OFFSET);
-    size_t len1 = std::min(size_t(127), strlen(path));
-    strncpy(buf, path, len1);
-    rfs::open(buf);
-    // auto *fh = rfs::open(buf);
-    // rfs::fwrite(fh, data, 128);
+    // char buf[128];
+    // auto *path = (const char*)(tar+ustar::NAME_OFFSET);
+    // size_t len1 = std::min(size_t(127), strlen(path));
+    // strncpy(buf, path, len1);
+    // vfsNode *fh = vfs::open(buf);
 
 }
 
@@ -120,11 +119,11 @@ void knl::initModules()
 }
 
 
-ModuleInterface *knl::findModule( uint64_t mt, uint64_t bt )
+ModuleInterface *knl::findModule( uint64_t, uint64_t )
 {
-    for (auto *I: knl::modules)
-        if ((I->modtype==mt) && (I->basetype==bt))
-            return I;
+    // for (auto *I: knl::modules)
+    //     if ((I->modtype==mt) && (I->basetype==bt))
+    //         return I;
     return nullptr;
 }
 

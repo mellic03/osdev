@@ -70,10 +70,10 @@
 // }
 
 
-static void kthread_wrapper( void (*threadmain)(void*), void *arg )
+static void kthread_wrapper( void (*tmain)(void*), void *arg )
 {
     asm volatile ("sti");
-    threadmain(arg);
+    tmain(arg);
     kthread::yield();
     while (true) { CPU::hlt(); }
 }
@@ -242,8 +242,10 @@ ThreadScheduler::schedule( intframe_t *frame )
     //     "[ThreadScheduler::schedule CPU%lu] %s --> %s",
     //     SMP::this_cpuid(), prev->name, next->name
     // );
-    
+
+    CPU_fxsave(prev->fxstate);
     swap_threads(prev, next, frame);
+    CPU_fxsave(next->fxstate);
 
     m_switchCount--;
 }

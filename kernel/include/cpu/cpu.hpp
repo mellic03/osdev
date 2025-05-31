@@ -48,7 +48,7 @@ struct cpu_t
     ThreadScheduler sched;
     // std::atomic_uint64_t m_ticks{0};
     std::atomic_uint64_t m_msecs{0};
-    uint64_t m_lapicPeriod{0};
+    // uint64_t m_lapicPeriod{0};
 
     uint8_t    yldrsn;
     uint64_t   syscall_no;

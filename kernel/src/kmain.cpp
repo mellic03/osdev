@@ -14,7 +14,6 @@
 #include <kernel/event.hpp>
 #include <kernel/log.hpp>
 #include <sys/interrupt.hpp>
-#include <kernel/input.hpp>
 #include <kernel/syscall.h>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/module.hpp>
@@ -56,11 +55,9 @@ static void PIT_IrqHandler( intframe_t *frame )
 {
     // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
     auto *cpu = SMP::this_cpu();
-    cpu->m_msecs += cpu->m_lapicPeriod;
+    cpu->m_msecs += 500; // cpu->m_lapicPeriod;
 
-    CPU_fxsave(SMP::this_thread()->fxstate);
     ThreadScheduler::scheduleISR(frame);
-    CPU_fxrstor(SMP::this_thread()->fxstate);
 }
 
 
@@ -82,7 +79,7 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 #include <arch/mmio.hpp>
 
 static knl::Barrier smpBarrier{4};
-// std::atomic_uint64_t smpCount{0};
+std::atomic_uint64_t smpCount{0};
 extern uintptr_t endkernel;
 
 extern "C"
@@ -147,11 +144,11 @@ static void smp_main( limine_mp_info *info )
     size_t cpuid = info->lapic_id;
     cpu_t *cpu = new (SMP::get_cpu(cpuid)) cpu_t(cpuid);
 
-    // while (smpCount.load() != cpu->id)
-        // asm volatile ("nop");
+    while (smpCount.load() != cpu->id)
+        asm volatile ("nop");
 
     LAPIC::init();
-    // smpCount++;
+    smpCount++;
 
     if (cpu->id == SMP::bsp_id())
     {
@@ -159,6 +156,7 @@ static void smp_main( limine_mp_info *info )
         knl::loadModules(initrd::find("srv/"));
         knl::initModules();
         kthread::create("wm::main", wm::main, nullptr);
+        vfs::print();
     }
 
     smpBarrier.wait();
@@ -166,7 +164,7 @@ static void smp_main( limine_mp_info *info )
 
     while (true)
     {
-        CPU::cli_hlt();
+        CPU::hlt();
     }
 }
 

@@ -46,13 +46,10 @@ namespace wm
     private:
         u8vec4 m_color0 = u8vec4(100, 100, 100, 255);
         u8vec4 m_color1 = u8vec4(200, 200, 200, 255);
-        // vec4 m_color0 = vec4(0.5, 0.5, 0.5, 1.0);
-        // vec4 m_color1 = vec4(0.85, 0.85, 0.85, 1.0);
-        // vec4 m_color2 = vec4(0.85, 0.85, 0.85, 1.0);
 
     public:
         char m_label[32];
-        void (*m_onClick)() = nullptr;
+        void (*m_onClick)() = [](){  };
 
         guiButton( const char *label, const ivec2 &tl, const ivec2 &sp,
                    void (*click)()=nullptr );
@@ -62,9 +59,8 @@ namespace wm
 
         virtual void onHoverEnter( guiMouse& ) override;
         virtual void onHoverExit( guiMouse& ) override;
-        virtual void onClick( guiMouse& ) override { if (m_onClick) { m_onClick(); } };
+        virtual void onClick( guiMouse& ) override { m_onClick(); };
         virtual void draw( guiFramebuffer& );
-        
 
     };
 

@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <array>
+#include <mutex>
 
 // #ifndef kassert
 //     #include <kassert.h>
@@ -22,63 +23,73 @@ template <typename T, size_t N>
 class knl::RingBuffer
 {
 private:
-    std::array<T, N> m_data;
+    // lck_t  m_lock;
+    T      m_data[N];
     size_t m_head;
     size_t m_tail;
-    int    m_size;
+    std::atomic_int m_size{0};
 
 public:
 
-    inline void clear()
+    void clear()
     {
         m_head = 0;
         m_tail = 0;
-        m_size = 0;
+        m_size.store(0);
     }
 
-    inline void rotate( int n )
+    void rotate( int n )
     {
+        // std::lock_guard lock(m_lock);
         // kassert(m_size > 0);
         for (int i=0; i<n; i++)
             push_back(pop_front());
     }
 
-    inline T &front()
+    T &front()
     {
+        // std::lock_guard lock(m_lock);
         // kassert(m_size > 0);
         return m_data[m_head];
     }
 
-    inline T &back()
+    T &back()
     {
+        // std::lock_guard lock(m_lock);
         // kassert(m_size > 0);
         return m_data[(m_tail-1) % N];
     }
 
-	inline void push_back( const T &item )
+	void push_back( const T &item )
 	{
+        // std::lock_guard lock(m_lock);
         // kassert(m_size+1 < int(N));
         m_data[m_tail++] = item;
         m_tail %= N;
         m_size++;
 	}
 
-	inline T pop_front()
+	T pop_front()
 	{
+        // std::lock_guard lock(m_lock);
         // kassert(m_size > 0);
 
-        T value = front();
+        size_t idx = m_head;
         m_head = (m_head+1) % N;
         m_size--;
 
-        return value;
+        return m_data[idx];
 	}
 
+    size_t size()     { return m_size.load();            }
+    size_t capacity() { return N;                        }
+    bool   empty()    { return m_size.load() == 0;       }
+    bool   full()     { return m_size.load() >= (int)N;  }
 
-    inline size_t size() { return m_size; }
-    inline size_t capacity() { return N; }
-    inline bool empty() { return m_size==0; }
-    inline bool full() { return size() < capacity(); }
+    size_t size()     const { return m_size.load();      }
+    size_t capacity() const { return N;                  }
+    bool   empty()    const { return m_size.load() == 0; }
+    bool   full()     const { return m_size.load() < N;  }
 
     T &operator[] (int i) { return m_data[i]; }
 };
@@ -115,33 +126,33 @@ public:
 //     //     clear();
 //     // }
 
-//     inline void clear()
+//     void clear()
 //     {
 //         m_head = 0;
 //         m_tail = 0;
 //         m_size = 0;
 //     }
 
-//     inline void rotate( int n )
+//     void rotate( int n )
 //     {
 //         // kassert(m_size > 0);
 //         for (int i=0; i<n; i++)
 //             push_back(pop_front());
 //     }
 
-//     inline T &front()
+//     T &front()
 //     {
 //         // kassert(m_size > 0);
 //         return m_buf[m_head];
 //     }
 
-//     inline T &back()
+//     T &back()
 //     {
 //         // kassert(m_size > 0);
 //         return m_buf[(m_tail-1) % capacity()];
 //     }
 
-// 	inline void push_back( const T &item )
+// 	void push_back( const T &item )
 // 	{
 //         // kassert(m_size+1 < int(N));
 //         m_buf[m_tail++] = item;
@@ -149,7 +160,7 @@ public:
 //         m_size++;
 // 	}
 
-// 	inline T pop_front()
+// 	T pop_front()
 // 	{
 //         // kassert(m_size > 0);
 
@@ -160,10 +171,10 @@ public:
 //         return value;
 // 	}
 
-//     inline size_t size() { return m_size; }
-//     inline size_t capacity() { return m_cap; }
-//     inline bool empty() { return m_size==0; }
-//     inline bool full() { return size() < capacity(); }
+//     size_t size() { return m_size; }
+//     size_t capacity() { return m_cap; }
+//     bool empty() { return m_size==0; }
+//     bool full() { return size() < capacity(); }
 
 //     T &operator[](int i) { return m_buf[i]; }
 //     const T &operator[](int i) const { return m_buf[i]; }

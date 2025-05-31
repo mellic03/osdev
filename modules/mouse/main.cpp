@@ -130,7 +130,7 @@ static void irq_handler( intframe_t* )
 
 
 
-static void driver_main( void* )
+static void msdev_main( void* )
 {
     using namespace knl;
     mouse_init();
@@ -152,9 +152,7 @@ static void driver_main( void* )
 
 static void msdev_open()
 {
-    // mousepipe = usrknl::popen("/dev/ms0", sizeof(msdata));
     msstate = uvfs::open("/dev/msstate");
-    // msevents = usrknl::popen("/dev/msevent", sizeof(knl::MsEvent));
 }
 
 
@@ -168,7 +166,7 @@ ModuleInterface *init( ksym::ksym_t *sym )
     *msdev = {
         .modtype  = ModuleType_Device,
         .basetype = DeviceType_Mouse,
-        .main     = driver_main,
+        .main     = msdev_main,
 
         .open     = msdev_open,
         .close    = nullptr,

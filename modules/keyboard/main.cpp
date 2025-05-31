@@ -15,14 +15,12 @@
 #define STATE_NORMAL 0
 #define STATE_PREFIX 1
 
-static knl::RingBuffer<uint8_t, 256>      rawstream;
-// static knl::RingBuffer<knl::KbEvent, 256> keystream;
+static knl::RingBuffer<uint8_t, 256> rawstream;
 static vfsNode *kbfile;
-
-
 static char shift_table[256];
 
-void create_shift_table()
+
+static void create_shift_table()
 {
     kmemset<uint8_t>(shift_table, '\0', 256);
 
@@ -51,7 +49,7 @@ void create_shift_table()
 
 
 
-void driver_update( uint8_t scancode )
+static void kbdev_update( uint8_t scancode )
 {
     static uint8_t state = STATE_NORMAL;
     static uint8_t mask = 0;
@@ -124,18 +122,22 @@ void driver_update( uint8_t scancode )
 
 
 
-void irq_handler( intframe_t* )
+static void kbdev_irq( intframe_t* )
 {
     uint8_t code = IO::inb(0x60);
-    rawstream.push_back(code);
+
+    if (!rawstream.full())
+    {
+        rawstream.push_back(code);
+    }
 }
 
 
-#include <filesystem/ramfs.hpp>
-
 static void kbev_open()
 {
+    create_shift_table();
     kbfile = usrknl::popen("/dev/kbevent", sizeof(knl::KbEvent));
+    rawstream.clear();
 }
 
 static void kbev_close()
@@ -143,17 +145,16 @@ static void kbev_close()
     // kbfile = uvfs::close("/dev/kbevent", sizeof(knl::KbEvent));
 }
 
-void kbdev_main( void* )
+static void kbdev_main( void* )
 {
-    create_shift_table();
-
     while (true)
     {
-        while (!rawstream.empty())
+        if (!rawstream.empty())
         {   
-            uint8_t scancode = rawstream.pop_front(); 
-            driver_update(scancode);
+            uint8_t scancode = rawstream.pop_front();
+            kbdev_update(scancode);
         }
+        // kthread::yield();
     }
 }
 
@@ -163,21 +164,19 @@ extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
-    rawstream.clear();
-    // keystream.clear();
 
     auto *kbdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
     *kbdev = {
         .modtype  = ModuleType_Device,
         .basetype = DeviceType_Keyboard,
-        .main     = kbdev_main,
+        .main     = kbdev_main, // kbdev_main,
 
         .open     = kbev_open,
         .close    = kbev_close,
         .read     = nullptr,
         .write    = nullptr,
         .irqno    = IrqNo_Keyboard,
-        .irqfn    = irq_handler,
+        .irqfn    = kbdev_irq,
     };
 
     kmemset<char>(kbdev->signature, '\0', sizeof(kbdev->signature));

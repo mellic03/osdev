@@ -12,7 +12,6 @@ namespace std
 
 
 
-
 template <typename lock_type>
 class std::lock_guard
 {

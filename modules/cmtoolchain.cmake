@@ -3,24 +3,25 @@ set(CMAKE_SYSTEM_NAME "Generic")
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
 
-set(CMAKE_C_COMPILER   ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux/bin/x86_64-elf-gcc)
-set(CMAKE_CXX_COMPILER ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux/bin/x86_64-elf-g++)
+# set(CMAKE_C_COMPILER   ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux/bin/x86_64-elf-gcc)
+# set(CMAKE_CXX_COMPILER ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux/bin/x86_64-elf-g++)
+set(CMAKE_C_COMPILER   /home/michael/Desktop/cross/bin/x86_64-elf-gc)
+set(CMAKE_CXX_COMPILER /home/michael/Desktop/cross/bin/x86_64-elf-g++)
+
 set(CMAKE_ASM_COMPILER nasm)
 set(CMAKE_ASM_NASM_COMPILER nasm)
 
 set(CMAKE_C_COMPILER_WORKS 1)
 set(CMAKE_CXX_COMPILER_WORKS 1)
-set(CMAKE_FIND_ROOT_PATH ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+# set(CMAKE_FIND_ROOT_PATH ${CMAKE_SOURCE_DIR}/../external/x86_64-elf-tools-linux)
+# set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+# set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+# set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 set(SSE_FLAGS "-mno-80387 -mno-mmx -mno-sse -mno-avx -mgeneral-regs-only")
 
 set(CringeModules_C_CXX_FLAGS
-    "-O3 \
-    ${SSE_FLAGS} \
+    "-O3 ${SSE_FLAGS} \
     -Wall -Wextra -Werror \
     -fno-strict-aliasing \
     -fno-omit-frame-pointer \

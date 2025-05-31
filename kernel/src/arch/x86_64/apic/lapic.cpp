@@ -37,7 +37,7 @@ enum APIC_TIMER_DIVIDE_CONFIG
 
 void LAPIC::startTimer()
 {
-    APIC::write(APIC::REG_TIMER_DIV, 0x03);
+    APIC::write(APIC::REG_TIMER_DIV, DIVIDE_BY_16);
     // PIT::init(1000000); // sleep for 10ms
     APIC::write(APIC::REG_TIMER_INIT, 0xFFFFFFFF);
     // PIT::sleep(10); // sleep
@@ -51,31 +51,32 @@ void LAPIC::startTimer()
     // Start timer as periodic on IRQ 0, divider 16,
     // with the number of ticks we counted
     uint8_t irqno = IrqNo_PIT;
-    uint8_t isrno = IntNo_IOAPIC_Base + irqno;
+    uint8_t isrno = IntNo_IrqBase + irqno;
 
-    auto *cpu = SMP::this_cpu();
-    cpu->m_lapicPeriod = ticksIn10ms;
+    // auto *cpu = SMP::this_cpu();
+    // cpu->m_lapicPeriod = ticksIn10ms;
 
     APIC::write(APIC::REG_LVT_TIMER, isrno | APIC::TIMER_PERIODIC);
-    APIC::write(APIC::REG_TIMER_DIV, 0x03);
+    APIC::write(APIC::REG_TIMER_DIV, DIVIDE_BY_16);
     APIC::write(APIC::REG_TIMER_INIT, ticksIn10ms);
 }
 
 
-void LAPIC::resetTimer( uint32_t us )
+void LAPIC::resetTimer( uint32_t ticks )
 {
     uint8_t irqno = IrqNo_PIT;
-    uint8_t isrno = IntNo_IOAPIC_Base + irqno;
+    uint8_t isrno = IntNo_IrqBase + irqno;
     APIC::write(APIC::REG_LVT_TIMER, isrno | APIC::TIMER_PERIODIC);
-    APIC::write(APIC::REG_TIMER_INIT, 1000000/us);
+    APIC::write(APIC::REG_TIMER_DIV, DIVIDE_BY_16);
+    APIC::write(APIC::REG_TIMER_INIT, ticks);
 }
 
 
 void LAPIC::init()
 {
     APIC::write(APIC::REG_SPURIOUS, APIC::ENABLE | IntNo_Spurious);
-    LAPIC::startTimer();
-    // LAPIC::resetTimer(usecs);
+    // LAPIC::startTimer();
+    LAPIC::resetTimer(500);
 }
 
 
@@ -93,3 +94,4 @@ void LAPIC::sendEOI()
 {
     APIC::write(APIC::REG_EOI, 0);
 }
+

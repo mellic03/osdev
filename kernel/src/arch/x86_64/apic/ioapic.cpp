@@ -8,7 +8,7 @@
 #define IOAPICID        0x00
 #define IOAPICVER       0x01
 #define IOAPICARB       0x02
-#define IOAPICREDTBL(n) (0x10 + 2*n) // lower-32bits (add +1 for upper 32-bits)
+#define IOAPICREDTBL(n) (0x10 + 2*(uint32_t)n) // lower-32bits (add +1 for upper 32-bits)
 
 void ioapic_write_reg( const uint8_t offset, const uint32_t val );
 uint32_t ioapic_read_reg( const uint8_t offset );
@@ -24,6 +24,15 @@ static void Write64( uint32_t reg, uint64_t data )
 }
 
 
+static uint64_t Read64( uint32_t reg )
+{
+    uint64_t lo = ioapic_read_reg(reg);
+    uint64_t hi = ioapic_read_reg(reg+1);
+
+    return (hi<<32) + lo;
+}
+
+
 
 void IOAPIC::init()
 {
@@ -33,9 +42,9 @@ void IOAPIC::init()
 
 }
 
-void IOAPIC::mapIRQ( uint8_t lapic_id, uint8_t irqno )
+void IOAPIC::mapIRQ( uint8_t lapic_id, uint8_t irqno, bool mask )
 {
-    uint8_t  isrno = IntNo_IOAPIC_Base + irqno;
+    uint8_t isrno = IntNo_IrqBase + irqno;
 
     union {
         uint64_t   qword;
@@ -50,12 +59,41 @@ void IOAPIC::mapIRQ( uint8_t lapic_id, uint8_t irqno )
         .polarity      = 0,
         .irr           = 0,
         .trigger       = 0,
-        .mask          = 0,
+        .mask          = mask,
         .reserved      = 0,
         .destination   = lapic_id,
     };
 
     Write64(IOAPICREDTBL(irqno), U.qword);
+}
+
+void IOAPIC::maskIRQ( uint8_t irqno )
+{
+    uint32_t reg = IOAPICREDTBL(irqno);
+
+    union {
+        uint64_t   qword;
+        RedirEntry entry;
+    } U = {0};
+
+    U.qword = Read64(reg);
+    U.entry.mask = 1;
+    Write64(reg, U.qword);
+}
+
+
+void IOAPIC::unmaskIRQ( uint8_t irqno )
+{
+    uint32_t reg = IOAPICREDTBL(irqno);
+
+    union {
+        uint64_t   qword;
+        RedirEntry entry;
+    } U = {0};
+
+    U.qword = Read64(reg);
+    U.entry.mask = 0;
+    Write64(reg, U.qword);
 }
 
 

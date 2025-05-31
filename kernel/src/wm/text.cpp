@@ -207,12 +207,12 @@ void wm::guiTextInput::draw( guiFramebuffer &dst )
     guiElement::draw(dst);
     // guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
 
-    // if (m_font)
-    // {
-    //     ivec2 csr = guiRenderFont(dst, m_tl, m_sp, *m_font, ">> ", m_tl);
-    //     csr = guiRenderFont(dst, m_tl, m_sp, *m_font, m_buf, csr);
-    //     guiRenderFont(dst, m_tl, m_sp, *m_font, "_", csr);
-    // }
+    if (m_font)
+    {
+        ivec2 csr = guiRenderFont(dst, m_tl, m_sp, *m_font, ">> ", m_tl);
+        csr = guiRenderFont(dst, m_tl, m_sp, *m_font, m_buf, csr);
+        guiRenderFont(dst, m_tl, m_sp, *m_font, "_", csr);
+    }
 }
 
 

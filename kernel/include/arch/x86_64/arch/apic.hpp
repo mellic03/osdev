@@ -164,7 +164,7 @@ namespace IOAPIC
     static constexpr uint32_t REG_IOAPICVER = 0x1;
 
     void     init();
-    void     mapIRQ( uint8_t lapic_id, uint8_t irqno );
+    void     mapIRQ( uint8_t lapic_id, uint8_t irqno, bool mask );
     void     maskIRQ( uint8_t irqno );
     void     unmaskIRQ( uint8_t irqno );
     uint32_t read( uint32_t reg );

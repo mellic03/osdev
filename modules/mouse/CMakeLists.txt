@@ -1,15 +1,15 @@
-# file(
-#     GLOB SOURCES
-#     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-# )
+file(
+    GLOB SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+)
 
-# add_executable(
+add_executable(
+    mouse
+    ${SOURCES}
+)
+
+# target_link_libraries(
 #     mouse.elf
-#     ${SOURCES}
+#     tinyubsan
 # )
-
-# # target_link_libraries(
-# #     mouse.elf
-# #     tinyubsan
-# # )
 

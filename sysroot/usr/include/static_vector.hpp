@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <functional>
 
 
 namespace idk
@@ -99,11 +98,11 @@ public:
     T &operator[] ( size_t i ) { return *(m_base+i); }
     const T &operator[] ( size_t i ) const { return *(m_base+i); }
 
-    void forEach( std::function<void(T&)> action )
-    {
-        for (T &value: *this)
-            action(value);
-    }
+    // void forEach( std::function<void(T&)> action )
+    // {
+    //     for (T &value: *this)
+    //         action(value);
+    // }
 
     struct iterator;
     iterator begin() { return iterator(m_base); };

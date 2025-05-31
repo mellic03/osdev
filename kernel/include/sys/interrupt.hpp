@@ -41,8 +41,8 @@ enum IntNo_: uint8_t
 
     IntNo_KThreadYield              = 97,
 
-    IntNo_IOAPIC_Base               = 100,
-    IntNo_IOAPIC_End                = IntNo_IOAPIC_Base + 24,
+    IntNo_IrqBase                   = 100,
+    IntNo_IrqEnd                    = IntNo_IrqBase + 24,
 
     IntNo_Spurious                  = 254,
     IntNo_Syscall 	  	            = 255,
@@ -110,8 +110,8 @@ inline const char *IntNoStr( uint8_t isrno )
         case IntNo_BAD_FREE: return "IntNo_BAD_FREE";
         case IntNo_OUT_OF_MEMORY: return "IntNo_OUT_OF_MEMORY";
         case IntNo_KThreadYield: return "IntNo_KThreadYield";
-        case IntNo_IOAPIC_Base: return "IntNo_IOAPIC_Base";
-        case IntNo_IOAPIC_End: return "IntNo_IOAPIC_End";
+        case IntNo_IrqBase: return "IntNo_IrqBase";
+        case IntNo_IrqEnd: return "IntNo_IrqEnd";
         case IntNo_Spurious: return "IntNo_Spurious";
         case IntNo_Syscall: return "IntNo_Syscall";
     }

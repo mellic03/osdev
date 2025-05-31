@@ -27,14 +27,16 @@ void isr_dispatch( intframe_t *frame )
     if (usrtab[isrno])
         usrtab[isrno](frame);
 
-    else if (!usrtab[isrno] && isrno <= 31)
-    {
-        syslog::println("[isr_dispatch] unhandled expction type %u", isrno);
-        while (true) { asm volatile ("cli; hlt"); }
-    }
+    // else if (!usrtab[isrno] && isrno <= 31)
+    // {
+    //     syslog::println("[isr_dispatch] unhandled expction type %u", isrno);
+    //     while (true) { asm volatile ("cli; hlt"); }
+    // }
 
-    if ((IntNo_IOAPIC_Base <= isrno) && (isrno <= IntNo_IOAPIC_End))
+    if ((IntNo_IrqBase <= isrno) && (isrno <= IntNo_IrqEnd))
+    {
         LAPIC::sendEOI();
+    }
 }
 
 
@@ -76,6 +78,6 @@ void CPU::installISR( uint8_t isrno, isrHandlerFn handler )
 
 void CPU::installIRQ( uint8_t irqno, irqHandlerFn handler )
 {
-    usrtab[IntNo_IOAPIC_Base + irqno] = handler;
+    usrtab[IntNo_IrqBase + irqno] = handler;
 }
 
