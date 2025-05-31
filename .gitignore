@@ -4,5 +4,7 @@ external/limine
 external/x86_64-elf-tools-linux
 external/x86_64-elf-tools-linux.zip
 kernel/initrd
-modules/modules
-tooling
+sysroot/drv
+sysroot/srv
+sysroot/usr/bin
+sysroot/usr/include
