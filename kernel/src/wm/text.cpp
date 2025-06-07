@@ -49,15 +49,15 @@ void wm::guiTextArea::putstr( const char *str )
 
 void wm::guiTextArea::draw( guiFramebuffer &dst )
 {
-    guiElement::draw(dst);
+    // guiElement::draw(dst);
 
-    // guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
+    guiRenderRect(dst, m_color, m_gpos, m_gsp);
 
-    // if (m_font)
-    // {
-    //     ivec2 csr = guiRenderFont(dst, m_tl, m_sp, *m_font, m_buf, m_tl);
-    //     guiRenderFont(dst, m_tl, m_sp, *m_font, "_", csr);
-    // }
+    if (m_font)
+    {
+        ivec2 csr = guiRenderFont(dst, m_gpos, m_gsp, *m_font, m_buf, m_gpos);
+        guiRenderFont(dst, m_gpos, m_gsp, *m_font, "_", csr);
+    }
 }
 
 
@@ -82,8 +82,7 @@ wm::guiTextArea2::guiTextArea2( guiFont *font, const ivec2 &tl, const ivec2 &sp 
 
 void wm::guiTextArea2::putch( char ch )
 {
-  
-    int bufw = m_sp.x / m_font->getGlyphExtents().x;
+    int bufw = m_lsp.x / m_font->getGlyphExtents().x;
     // int bufh = m_sp.y / m_font->getGlyphExtents().y;
     int idx = bufw*m_row + m_col;
 
@@ -130,12 +129,12 @@ void wm::guiTextArea2::draw( guiFramebuffer &dst )
 {
     guiElement::draw(dst);
 
-    // guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
+    // guiRenderRect(dst, m_color, m_gpos.x, m_gpos.y, m_sp.x, m_sp.y);
 
     // if (m_font)
     // {
-    //     // ivec2 csr = guiRenderFont(dst, m_tl, m_sp, *m_font, m_buf, m_tl);
-    //     // guiRenderFont(dst, m_tl, m_sp, *m_font, "_", csr);
+    //     // ivec2 csr = guiRenderFont(dst, m_gpos, m_sp, *m_font, m_buf, m_gpos);
+    //     // guiRenderFont(dst, m_gpos, m_sp, *m_font, "_", csr);
     //     ivec2 fsp = m_font->getGlyphExtents();
     //     int bufw = m_sp.x / fsp.x;
     //     int bufh = m_sp.x / fsp.y;
@@ -150,7 +149,7 @@ void wm::guiTextArea2::draw( guiFramebuffer &dst )
     //         if (ftl.x == -1)
     //             continue;
 
-    //         guiBlitImage(dst, *m_font, m_tl+fsp*ivec2(c, r), ftl, fsp);
+    //         guiBlitImage(dst, *m_font, m_gpos+fsp*ivec2(c, r), ftl, fsp);
     //     }
     // }
 }
@@ -202,16 +201,17 @@ void wm::guiTextInput::onKey( const knl::KbEvent &ev )
     putch(ev.key);
 }
 
+
 void wm::guiTextInput::draw( guiFramebuffer &dst )
 {
-    guiElement::draw(dst);
-    // guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
+    // guiElement::draw(dst);
+    guiRenderRect(dst, m_color, m_gpos, m_gsp);
 
     if (m_font)
     {
-        ivec2 csr = guiRenderFont(dst, m_tl, m_sp, *m_font, ">> ", m_tl);
-        csr = guiRenderFont(dst, m_tl, m_sp, *m_font, m_buf, csr);
-        guiRenderFont(dst, m_tl, m_sp, *m_font, "_", csr);
+        ivec2 csr = guiRenderFont(dst, m_gpos, m_gsp, *m_font, ">> ", m_gpos);
+        csr = guiRenderFont(dst, m_gpos, m_gsp, *m_font, m_buf, csr);
+        guiRenderFont(dst, m_gpos, m_gsp, *m_font, "_", csr);
     }
 }
 

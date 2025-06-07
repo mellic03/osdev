@@ -34,7 +34,11 @@ public:
 
     ThreadScheduler();
 
-    kthread_t *currThread() { return m_threads.front(); }
+    kthread_t *currThread()
+    {
+        return (m_threads.empty()) ? nullptr : m_threads.front();
+    }
+
     kthread_t *addThread( const char *name, void (*fn)(void*), void *arg );
     void       releaseThread( kthread_t *thread );
 };

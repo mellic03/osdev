@@ -23,5 +23,8 @@ namespace wm
 
     void guiRenderBox  ( guiFramebuffer&, const u8vec4 &color, const ivec2 &tl, const ivec2 &sp );
     void guiRenderBox  ( guiFramebuffer&st, const u8vec4 &color, int x, int y, int w, int h );
+
+    // void guiRenderLine( guiFramebuffer&, const ivec2 &A, const ivec2 &B, const u8vec4 &color );
+
 }
 

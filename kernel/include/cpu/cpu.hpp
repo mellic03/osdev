@@ -45,10 +45,8 @@ struct cpu_t
     cpu_t     *self;
     uint64_t   id;
 
-    ThreadScheduler sched;
-    // std::atomic_uint64_t m_ticks{0};
     std::atomic_uint64_t m_msecs{0};
-    // uint64_t m_lapicPeriod{0};
+    ThreadScheduler sched;
 
     uint8_t    yldrsn;
     uint64_t   syscall_no;
@@ -63,6 +61,7 @@ struct cpu_t
 namespace SMP
 {
     // extern uint8_t all_cpus[];
+    static constexpr size_t max_cpus = 8;
     extern size_t num_cpus;
 
     cpu_t     *get_cpu( uint32_t id );
@@ -80,35 +79,19 @@ namespace SMP
 
 
 
-extern "C" void cpu_enable_fpu(void);
-extern "C" void cpu_enable_sse(void);
-extern "C" void cpu_enable_xsave(void);
-extern "C" void cpu_enable_avx(void);
-
-#if defined(__SSE__)
-    #define CPU_fxsave(dst_) asm volatile("fxsave (%0)" ::"r"(dst_) : "memory")
-    #define CPU_fxrstor(src_) asm volatile("fxrstor (%0)" ::"r"(src_) : "memory");
-#else
-    #define CPU_fxsave(dst_)
-    #define CPU_fxrstor(src_)
-#endif
-
 namespace CPU
 {
     static constexpr uint16_t GDT_OFFSET_KERNEL_CODE = 0x08;
     static constexpr uint16_t GDT_OFFSET_KERNEL_DATA = 0x10;
+    static constexpr uint32_t MSR_FS_BASE        = 0xC0000100;
+    static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
+    static constexpr uint32_t MSR_KERNEL_GS_BASE = 0xC0000102;
 
-    inline void enableFloat()
-    {
-        #ifdef __SSE__
-            cpu_enable_fpu();
-            cpu_enable_sse();
-            cpu_enable_xsave();
-            #ifdef __AVX__
-                cpu_enable_avx();
-            #endif
-        #endif
-    } 
+    void featureCheck();
+
+    void enableFloat();
+    void fxsave( void *p );
+    void fxrstor( void *p );
 
     void createGDT();
     void installGDT();
@@ -123,29 +106,24 @@ namespace CPU
     void installISR( uint8_t isrno, isrHandlerFn fn );
     void installIRQ( uint8_t irqno, irqHandlerFn fn );
 
-}
-
-
-
-
-
-#include <sys/interrupt.hpp>
-
-namespace CPU
-{
-    // void enableSSE();
-    // void fxsave( uint8_t *dst );
-    // void fxrstor( uint8_t *src );
-
-    static constexpr uint32_t MSR_FS_BASE        = 0xC0000100;
-    static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
-    static constexpr uint32_t MSR_KERNEL_GS_BASE = 0xC0000102;
-        
+    inline void nop() { asm volatile ("nop"); }
     inline void cli() { asm volatile ("cli"); }
     inline void sti() { asm volatile ("sti"); }
     inline void hlt() { asm volatile ("hlt"); }
     inline void cli_hlt() { asm volatile ("cli; hlt"); }
     inline void hcf() { while (true) { asm volatile ("cli; hlt"); } }
+
+    void     stos8 ( void *dst,  uint8_t value, size_t count );
+    void     stos32( void *dst, uint32_t value, size_t count );
+    void     stos64( void *dst, uint64_t value, size_t count );
+    void     movs8( void *dst, const void *src, size_t count );
+    void     movs32( void *dst, const void *src, size_t count );
+    void     movs64( void *dst, const void *src, size_t count );
+
+    void     setRSP( uintptr_t );
+    uint64_t getCR3();
+    void     setCR3( uint64_t );
+    uint64_t getTSC();
 
     inline uint64_t rdmsr( uint32_t msr )
     {
@@ -159,9 +137,10 @@ namespace CPU
         asm volatile ("wrmsr" : : "c"(msr), "a"(value & 0xFFFFFFFF), "d"(value >> 32));
     }
 
-    void     setRSP( uintptr_t );
-    uint64_t getCR3();
-    void     setCR3( uint64_t );
+    inline void flushTLB( uintptr_t addr )
+    {
+        asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+    }
 
     inline uint64_t getRFLAGS()
     {
@@ -182,7 +161,7 @@ namespace CPU
     }
 
     // __attribute__((always_inline))
-    // inline bool checknl::interrupts()
+    // inline bool knl::checkInterrupts()
     // {
     //     volatile unsigned long flags;
     //     asm volatile("pushfq;"
@@ -191,10 +170,15 @@ namespace CPU
     //     return (flags & 0x200) != 0;
     // }
 
-    inline uint64_t getTSC()
-    {
-        uint32_t timestamp_low, timestamp_high;
-        asm volatile("rdtsc" : "=a"(timestamp_low), "=d"(timestamp_high));
-        return ((uint64_t)timestamp_high << 32) | ((uint64_t)timestamp_low);
-    }
+
+    // static inline void movsl( void *dst, const void *src, size_t count )
+    // {
+    //     asm volatile("rep movsl" : "+D"(dst), "+S"(src), "+c"(count) : : "memory");
+    // }
+
+    // static inline void movsq( void *dst, const void *src, size_t count )
+    // {
+    //     asm volatile("rep movsq" : "+D"(dst), "+S"(src), "+c"(count) : : "memory");
+    // }
+
 }

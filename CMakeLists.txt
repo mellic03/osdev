@@ -31,7 +31,6 @@ include_directories("${CMAKE_SOURCE_DIR}/include/")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
-# add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libcxxrt/")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
@@ -46,12 +45,15 @@ target_compile_definitions(
     -D__is_kernel
 )
 
+
+# add_library(crti.o OBJECT ${CMAKE_SOURCE_DIR}/kernel/src/crti.asm)
+# add_library(crtn.o OBJECT ${CMAKE_SOURCE_DIR}/kernel/src/crtn.asm)
+
 target_link_libraries(
     ${PROJECT_NAME}
     libc_k
     libc++_k
-    # cxxrt-static
-    ${CringeOS_LIBRARIES} 
+    ${CringeOS_LIBRARIES}
 )
 
 

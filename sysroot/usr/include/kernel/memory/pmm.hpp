@@ -28,6 +28,7 @@ namespace PMM
     void init2( limine_memmap_response* );
     uintptr_t allocFrame();
     uintptr_t allocPage();
+    uintptr_t allocPages( size_t n );
     void freeFrame( uintptr_t phys );
     void freePage( uintptr_t phys );
 

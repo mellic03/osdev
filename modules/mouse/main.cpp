@@ -81,17 +81,22 @@ void ProcessMousePacket( const MousePacket &P )
 
 static void mouse_init()
 {
-    IO::outb(0x64, 0xA8); // enabling the auxiliary device - mouse
+    // enabling the auxiliary device - mouse
+    IO::outb(0x64, 0xA8);
+    MouseWait();
 
+    // tells the keyboard controller that we want to send a command to the mouse
+    IO::outb(0x64, 0x20);
     MouseWait();
-    IO::outb(0x64, 0x20); // tells the keyboard controller that we want to send a command to the mouse
-    MouseWait();
+
     uint8_t status = IO::inb(0x60);
-    status |= 0b10;
     MouseWait();
+
     IO::outb(0x64, 0x60);
     MouseWait();
-    IO::outb(0x60, status); // setting the correct bit is the "compaq" status byte
+
+    // setting the correct bit is the "compaq" status byte
+    IO::outb(0x60, status|0b10);
 
     MouseWrite(0xF6);
     MouseRead();
@@ -157,29 +162,30 @@ static void msdev_open()
 
 
 
+static CharDevInterface msdev;
+
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
 
-    auto *msdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
-    *msdev = {
-        .modtype  = ModuleType_Device,
-        .basetype = DeviceType_Mouse,
-        .main     = msdev_main,
+    // auto *msdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
 
-        .open     = msdev_open,
-        .close    = nullptr,
-        .read     = nullptr,
-        .write    = nullptr,
-        .irqno    = IrqNo_Mouse,
-        .irqfn    = irq_handler
-    };
+    msdev.modtype  = ModuleType_Device;
+    msdev.basetype = DeviceType_Mouse;
+    msdev.main     = msdev_main;
 
-    kmemset<char>(msdev->signature, '\0', sizeof(msdev->signature));
-    kmemcpy<char>(msdev->signature, "mouse", 5);
+    msdev.open     = msdev_open;
+    msdev.close    = nullptr;
+    msdev.read     = nullptr;
+    msdev.write    = nullptr;
+    msdev.irqno    = IrqNo_Mouse;
+    msdev.irqfn    = irq_handler;
 
-    return (ModuleInterface*)msdev;
+    kmemset<char>(msdev.signature, '\0', sizeof(msdev.signature));
+    kmemcpy<char>(msdev.signature, "mouse", 5);
+
+    return (ModuleInterface*)&msdev;
 }
 
 

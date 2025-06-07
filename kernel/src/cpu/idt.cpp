@@ -25,13 +25,15 @@ void isr_dispatch( intframe_t *frame )
     uint32_t isrno = frame->isrno;
 
     if (usrtab[isrno])
+    {
         usrtab[isrno](frame);
+    }
 
-    // else if (!usrtab[isrno] && isrno <= 31)
-    // {
-    //     syslog::println("[isr_dispatch] unhandled expction type %u", isrno);
-    //     while (true) { asm volatile ("cli; hlt"); }
-    // }
+    else if (!usrtab[isrno] && isrno <= 31)
+    {
+        syslog::println("[isr_dispatch] unhandled expction %u (%s)", isrno, IntNoStr(isrno));
+        while (true) { asm volatile ("cli; hlt"); }
+    }
 
     if ((IntNo_IrqBase <= isrno) && (isrno <= IntNo_IrqEnd))
     {

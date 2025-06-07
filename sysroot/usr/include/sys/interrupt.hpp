@@ -18,25 +18,25 @@ struct intframe_t
     uint64_t ss;
 } __attribute__((packed));
 
+
 enum IntNo_: uint8_t
 {
-    IntNo_DIVISION_ERROR            = 0,
-    IntNo_DEBUG 			        = 1,
-    IntNo_INVALID_OPCODE            = 6,
-    IntNo_DEVICE_UNAVAILABLE        = 7,
-    IntNo_DOUBLE_FAULT              = 8,
-    IntNo_INVALID_TSS               = 10,
-    IntNo_SEGMENT_NOT_PRESENT       = 11,
-    IntNo_STACK_SEGFAULT            = 12,
-    IntNo_GEN_FAULT                 = 13,
-    IntNo_PAGE_FAULT	  	        = 14,
-    
+    IntNo_DivisionError             = 0,
+    IntNo_Debug 			        = 1,
+    IntNo_InvalidOpcode             = 6,
+    IntNo_DeviceUnavailable         = 7,
+    IntNo_DoubleFault               = 8,
+    IntNo_InvalidTSS                = 10,
+    IntNo_SegmentNotPresent         = 11,
+    IntNo_StackSegfault             = 12,
+    IntNo_GenFault                  = 13,
+    IntNo_PageFault	  	            = 14,
+
     IntNo_x86_FP_Exception          = 16,
     IntNo_SIMD_FP_Exception         = 19,
-    // IntNo_TripleFault               = 
 
-    IntNo_BAD_ALLOC 	  	        = 52,
-    IntNo_BAD_FREE  	  	        = 53,
+    IntNo_BadAlloc 	  	            = 52,
+    IntNo_BadFree  	  	            = 53,
     IntNo_OUT_OF_MEMORY 	        = 54,
 
     IntNo_KThreadYield              = 97,
@@ -94,20 +94,20 @@ inline const char *IntNoStr( uint8_t isrno )
     switch (isrno)
     {
         default: return "IntNo_Invalid";
-        case IntNo_DIVISION_ERROR: return "IntNo_DIVISION_ERROR";
-        case IntNo_DEBUG: return "IntNo_DEBUG";
-        case IntNo_INVALID_OPCODE: return "IntNo_INVALID_OPCODE";
-        case IntNo_DEVICE_UNAVAILABLE: return "IntNo_DEVICE_UNAVAILABLE";
-        case IntNo_DOUBLE_FAULT: return "IntNo_DOUBLE_FAULT";
-        case IntNo_INVALID_TSS: return "IntNo_INVALID_TSS";
-        case IntNo_SEGMENT_NOT_PRESENT: return "IntNo_SEGMENT_NOT_PRESENT";
-        case IntNo_STACK_SEGFAULT: return "IntNo_STACK_SEGFAULT";
-        case IntNo_GEN_FAULT: return "IntNo_GEN_FAULT";
-        case IntNo_PAGE_FAULT: return "IntNo_PAGE_FAULT";
+        case IntNo_DivisionError: return "IntNo_DivisionError";
+        case IntNo_Debug: return "IntNo_Debug";
+        case IntNo_InvalidOpcode: return "IntNo_InvalidOpcode";
+        case IntNo_DeviceUnavailable: return "IntNo_DeviceUnavailable";
+        case IntNo_DoubleFault: return "IntNo_DoubleFault";
+        case IntNo_InvalidTSS: return "IntNo_InvalidTSS";
+        case IntNo_SegmentNotPresent: return "IntNo_SegmentNotPresent";
+        case IntNo_StackSegfault: return "IntNo_StackSegfault";
+        case IntNo_GenFault: return "IntNo_GenFault";
+        case IntNo_PageFault: return "IntNo_PageFault";
         case IntNo_x86_FP_Exception: return "IntNo_x86_FP_Exception";
         case IntNo_SIMD_FP_Exception: return "IntNo_SIMD_FP_Exception";
-        case IntNo_BAD_ALLOC: return "IntNo_BAD_ALLOC";
-        case IntNo_BAD_FREE: return "IntNo_BAD_FREE";
+        case IntNo_BadAlloc: return "IntNo_BadAlloc";
+        case IntNo_BadFree: return "IntNo_BadFree";
         case IntNo_OUT_OF_MEMORY: return "IntNo_OUT_OF_MEMORY";
         case IntNo_KThreadYield: return "IntNo_KThreadYield";
         case IntNo_IrqBase: return "IntNo_IrqBase";

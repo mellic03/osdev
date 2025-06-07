@@ -44,6 +44,7 @@
 #include <smp/barrier.hpp>
 
 
+static void invalidOpISR( intframe_t* );
 static void genfaultISR( intframe_t* );
 static void pagefaultISR( intframe_t* );
 static void outOfMemoryISR( intframe_t* );
@@ -56,7 +57,6 @@ static void PIT_IrqHandler( intframe_t *frame )
     // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
     auto *cpu = SMP::this_cpu();
     cpu->m_msecs += 500; // cpu->m_lapicPeriod;
-
     ThreadScheduler::scheduleISR(frame);
 }
 
@@ -74,13 +74,14 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 };
 
 
-
-#include <ipc/pipe.hpp>
-#include <arch/mmio.hpp>
-
-static knl::Barrier smpBarrier{4};
-std::atomic_uint64_t smpCount{0};
+static knl::Barrier barrierA{0};
+static knl::Barrier barrierB{0};
+std::atomic_uint64_t smpCount;
 extern uintptr_t endkernel;
+
+static uint64_t  smp_gdt[SMP::max_cpus][5];
+static gdt_ptr_t smp_gdtr[SMP::max_cpus];
+
 
 extern "C"
 void _start()
@@ -93,14 +94,19 @@ void _start()
         syslog::disable();
     syslog log("_start");
 
+    CPU::createGDT(smp_gdt[0], &smp_gdtr[0]);
+    CPU::installGDT(&smp_gdtr[0]);
+
     early_init();
     kprintf_init();
+
     CPU::createIDT();
     PIC::disable();
-    // PCI::init();
+    PCI::init();
 
-    CPU::installISR(IntNo_GEN_FAULT,     genfaultISR);
-    CPU::installISR(IntNo_PAGE_FAULT,    pagefaultISR);
+    CPU::installISR(IntNo_InvalidOpcode, invalidOpISR);
+    CPU::installISR(IntNo_GenFault,      genfaultISR);
+    CPU::installISR(IntNo_PageFault,     pagefaultISR);
     CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
     CPU::installISR(IntNo_KThreadYield,  ThreadScheduler::scheduleISR);
     CPU::installISR(IntNo_Syscall,       syscallISR);
@@ -111,6 +117,7 @@ void _start()
     ACPI::init(lim_rsdp_req.response->address, res);
     APIC::init(res);
 
+    // CPU::featureCheck();
     // VMM::mapPage(0x3000, 0xFFFFFFFFFFF30000);
     // uint64_t *buf = (uint64_t*)0xFFFFFFFFFFF30000;
     // buf[4] = 1234321;
@@ -119,7 +126,9 @@ void _start()
     // buf[4] = 8765678;
     // log("buf[4]: %lu", buf[4]);
 
-    smpBarrier.reset(limine_res.mp->cpu_count);
+    smpCount.store(0);
+    barrierA.reset(limine_res.mp->cpu_count);
+    barrierB.reset(limine_res.mp->cpu_count);
     SMP::init(smp_main);
 
     kassert(false); // Should be unreachable!
@@ -128,38 +137,47 @@ void _start()
 }
 
 
-extern void sde_main(void*);
+
+
+extern ModuleInterface *msdev_init( void* );
+extern ModuleInterface *kbdev_init( void* );
+extern void load_module2( ModuleInterface* (*)(void*) );
+
 
 static void smp_main( limine_mp_info *info )
 {
     CPU::cli();
     CPU::enableFloat();
 
-    uint64_t  this_gdt[5];
-    gdt_ptr_t this_gdtr;
-    CPU::createGDT(this_gdt, &this_gdtr);
-    CPU::installGDT(&this_gdtr);
-    CPU::installIDT();
-    
     size_t cpuid = info->lapic_id;
+    CPU::createGDT(smp_gdt[cpuid], &smp_gdtr[cpuid]);
+    CPU::installGDT(&smp_gdtr[cpuid]);
     cpu_t *cpu = new (SMP::get_cpu(cpuid)) cpu_t(cpuid);
 
-    while (smpCount.load() != cpu->id)
-        asm volatile ("nop");
-
+    CPU::installIDT();
     LAPIC::init();
-    smpCount++;
 
     if (cpu->id == SMP::bsp_id())
     {
-        knl::loadModules(initrd::find("drv/"));
-        knl::loadModules(initrd::find("srv/"));
+        // knl::loadModules(initrd::find("drv/"));
+        // knl::loadModules(initrd::find("srv/"));
+        load_module2(msdev_init);
+        load_module2(kbdev_init);
         knl::initModules();
         kthread::create("wm::main", wm::main, nullptr);
         vfs::print();
     }
 
-    smpBarrier.wait();
+    // else if (cpu->id == 2)
+    // {
+    //     vec3 rgb0(0.6, 0.6, 0.85);
+    //     vec3 rgb1(0.9, 0.2, 0.65);
+    //     vec3 rgb2 = vec_mix(rgb0, rgb1, 0.25f);
+    //     u8vec3 rgb = u8vec3(255.0f * rgb2);
+    //     syslog::println("rgb3: %u %u %u", rgb.r, rgb.g, rgb.b);
+    // }
+
+    barrierB.wait();
     CPU::sti();
 
     while (true)
@@ -184,14 +202,25 @@ void stacktrace( intframe_t *frame )
     }
 }
 
+static void invalidOpISR( intframe_t *frame )
+{
+    syslog log("Exception %u (%s)", frame->isrno, IntNoStr(frame->isrno));
+
+    auto *cpu = SMP::this_cpu();
+    auto *th = cpu->sched.currThread();
+    if (cpu) log("cpu %d", cpu->id);
+    if (th)  log("thread %d (%s)", th, th->name);
+
+}
+
 static void genfaultISR( intframe_t* )
 {
     syslog log("Exception GENERAL_PROTECTION_FAULT");
-    auto *cpu = SMP::this_cpu();
-    if (cpu) log("cpu %d", cpu->id);
 
-    auto *th = SMP::this_thread();
-    if (th) log("thread %d (%s)", th, th->name);
+    auto *cpu = SMP::this_cpu();
+    auto *th = cpu->sched.currThread();
+    if (cpu) log("cpu %d", cpu->id);
+    if (th)  log("thread %d (%s)", th, th->name);
 
     CPU::hcf();
 }
@@ -227,10 +256,9 @@ static void pagefaultISR( intframe_t *frame )
     // }
 
     auto *cpu = SMP::this_cpu();
-    if (cpu) log("cpu %d", cpu->id);
-
-    auto *th = SMP::this_thread();
-    if (th) log("thread %d (%s)", th, th->name);
+    auto *th = cpu->sched.currThread();
+    log("cpu %d", cpu->id);
+    log("thread %d (%s)", th, th->name);
 
     log("rip:   0x%lx", frame->rip);
     log("rsp:   0x%lx", frame->rsp);

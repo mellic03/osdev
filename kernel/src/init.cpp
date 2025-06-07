@@ -34,6 +34,8 @@ extern "C"
     using  ctor_t = void(*)();
     extern ctor_t __init_array_start[];
     extern ctor_t __init_array_end[];
+    // extern void _init( void );
+    // extern void _fini( void );
 }
 
 
@@ -62,6 +64,7 @@ void early_init()
 
     {
         syslog log("call_ctors");
+
         int i = 0;
         for (ctor_t *ctor = __init_array_start; ctor < __init_array_end; ctor++)
         {
@@ -70,7 +73,7 @@ void early_init()
         }
     }
 
-    rfs::init();
+    // rfs::init();
     vfs::init();
 
 }

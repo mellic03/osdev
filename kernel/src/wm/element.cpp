@@ -4,11 +4,47 @@
 #include <string.h>
 
 
+wm::guiElement*
+wm::guiElement::findRoot( guiElement *E )
+{
+    guiElement *curr = E;
+    while (E->m_parent)
+        E = E->m_parent;
+    return curr;
+}
+
+bool
+wm::guiElement::isOver( guiElement *E, const ivec2 &p )
+{
+    auto &tl = E->m_gpos;
+    auto &sp = E->m_gsp;
+    bool x = (tl.x < p.x) && (p.x < tl.x+sp.x);
+    bool y = (tl.y < p.y) && (p.y < tl.y+sp.y);
+    return x && y;
+}
+
+
+
+// wm::guiElementBounds
+// wm::guiElement::getBounds( guiElement *E, const guiElementBounds &Bp )
+// {
+//     guiElementBounds B = Bp;
+
+//     B.tl = vec_clamp(B.tl+E->m_lpos, Bp.tl, Bp.bl());
+//     B.sp.x = std::min(B.sp.x, E->m_lsp.x);
+//     B.sp.y = std::min(B.sp.y, E->m_lsp.y);
+//     B.sp.x = std::min(B.sp.x, (B.bl()-B.tl).x);
+//     B.sp.y = std::min(B.sp.y, (B.bl()-B.tl).y);
+
+//     return B;
+// }
+
+
+
 wm::guiElement::guiElement( const ivec2 &tl, const ivec2 &sp )
-:   m_tl(tl), m_sp(sp)
+:   m_lpos(tl), m_gpos(tl), m_lsp(sp), m_gsp(sp)
 {
     static uint8_t count = 71;
-
     m_color[0] = (count); count = (count+63) % 255;
     m_color[1] = (count); count = (count+63) % 255;
     m_color[2] = (count); count = (count+63) % 255;
@@ -17,10 +53,13 @@ wm::guiElement::guiElement( const ivec2 &tl, const ivec2 &sp )
 
 
 
-
 void wm::guiElement::addChild( guiElement *E )
 {
     E->m_parent = this;
+
+    if (m_root == nullptr)
+        m_root = findRoot(this);
+    E->m_root = m_root;
 
     if (m_child == nullptr)
         m_child = E;
@@ -32,12 +71,8 @@ void wm::guiElement::addChild( guiElement *E )
 void wm::guiElement::addSibling( guiElement *E )
 {
     guiElement *curr = this;
-
     while (curr->m_next)
-    {    
         curr = curr->m_next;
-    }
-
     curr->m_next = E;
     E->m_prev = curr;
     E->m_parent = m_parent;
@@ -91,61 +126,49 @@ void wm::guiElement::makeLast()
 }
 
 
-void wm::guiElement::draw( guiFramebuffer &dst )
+
+
+
+void wm::guiElement::updateBounds( const ivec2 &tl, const ivec2 &sp )
 {
-    // u8vec4 color(255);
-    // for (int i=0; i<3; i++)
-    //     color[i] = CPU::getTSC() % 255;
-
-    wm::guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
-
-    auto *curr = m_child;
-    while (curr)
+    if (m_style.fillBounds)
     {
-        curr->draw(dst);
-        curr = curr->m_next;
+        m_gpos = tl;
+        m_gsp  = sp;
+        return;
+    }
+
+    m_gpos  = tl + m_lpos + m_margin;
+    m_gsp.x = std::min(m_lsp.x, sp.x - 2*m_margin.x);
+    m_gsp.y = std::min(m_lsp.y, sp.y - 2*m_margin.y);
+}
+
+
+void wm::guiElement::update( const ivec2 &tl, const ivec2 &sp )
+{
+    updateBounds(tl, sp);
+
+    for (auto *E: *this)
+    {
+        E->update(m_gpos+m_padding, m_gsp-2*m_padding);
     }
 }
 
 
-
-
-
-
-
-wm::guiButton::guiButton( const char *label, const ivec2 &tl, const ivec2 &sp, void (*fn)() )
-:   guiElement(tl, sp),
-    m_onClick(fn)
+void wm::guiElement::draw( guiFramebuffer &dst )
 {
-    memset(m_label, '\0', sizeof(m_label));
-    strncpy(m_label, label, sizeof(m_label)-1);
+    if (m_style.solidColor)
+        wm::guiRenderRect(dst, m_color, m_gpos, m_gsp);
+    else
+        wm::guiRenderBox(dst, m_color, m_gpos, m_gsp);
+
+    for (auto *E: *this)
+    {
+        E->draw(dst);
+    }
+
 }
 
 
-
-
-void wm::guiButton::onHoverEnter( guiMouse& )
-{
-    // float a = 0.01f;
-    // m_color2 = (1.0f-a)*m_color0 + a*m_color1;
-    // m_color  = u8vec4(255.0f * m_color2);
-    m_color = m_color0;
-}
-
-
-void wm::guiButton::onHoverExit( guiMouse& )
-{
-    // float a = 0.01f;
-    // m_color2 = (1.0f-a)*m_color1 + a*m_color0;
-    // m_color  = u8vec4(255.0f * m_color2);
-    m_color = m_color1;
-}
-
-
-void wm::guiButton::draw( guiFramebuffer &dst )
-{
-    wm::guiRenderRect(dst, m_color, m_tl.x, m_tl.y, m_sp.x, m_sp.y);
-
-}
 
 

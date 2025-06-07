@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <math.h>
 #include <algorithm>
 #include <type_traits>
 
@@ -35,20 +36,32 @@ vec<N, T> &operator op( vec<N, T> &L, T R )\
 
 
 #define vec_OPERATOR_SCALAR_VEC(op)\
-template <size_t N, typename T>\
-vec<N, T> operator op( T L, const vec<N, T> &R )\
+template <typename U, size_t N, typename T>\
+vec<N, T> operator op( U L, const vec<N, T> &R )\
 {\
-    vec<N, T> v;   for (size_t i=0; i<N; i++)     v[i] = L op R[i];\
+    vec<N, T> v;\
+    for (size_t i=0; i<N; i++) { v[i] = T(L) op R[i]; }\
     return v;\
 }
 
 #define vec_OPERATOR_VEC_SCALAR(op)\
-template <size_t N, typename T>\
-vec<N, T> operator op( const vec<N, T> &L, T R )\
+template <size_t N, typename T, typename U>\
+vec<N, T> operator op( const vec<N, T> &L, U R )\
 {\
-    vec<N, T> v;   for (size_t i=0; i<N; i++)     v[i] = L[i] op R;\
+    vec<N, T> v;\
+    for (size_t i=0; i<N; i++) { v[i] = L[i] op T(R); }\
     return v;\
+} \
+
+#define VEC_OPERATOR_VEC_SCALAR_EQ(op)\
+template <size_t N, typename T, typename U>\
+vec<N, T> &operator op=( U R )\
+{\
+    for (size_t i=0; i<N; i++)\
+        (*this)[i] op= T(R);\
+    return *this\
 }
+
 
 #define vec_OPERATOR_CONSTRUCT(szA)\
 template <size_t szB, typename U>\
@@ -114,6 +127,8 @@ struct alignas(T) vec<1, T>
 
     vec_OPERATOR_CONSTRUCT(1)
     vec_OPERATOR_ASSIGN(1)
+    // VEC_OPERATOR_VEC_SCALAR_EQ(+)
+    // VEC_OPERATOR_VEC_SCALAR_EQ(*)
 };
 
 
@@ -144,7 +159,6 @@ struct alignas(T) vec<2, T>
     vec_OPERATOR_ASSIGN(2)
 
 };
-
 
 
 
@@ -272,23 +286,48 @@ inline static uint32_t vec4_pack_argb( const vec4 &v )
 
 
 
+// template <size_t N, typename T>
+// __attribute__((always_inline))
+// inline vec<N, T> vec_clamp( vec<N, T> v, T lo, T hi )
+// {
+//     for (size_t i=0; i<N; i++)
+//         v[i] = std::clamp(v[i], lo, hi);
+//     return v;
+// }
+
+
 template <size_t N, typename T>
 __attribute__((always_inline))
-inline vec<N, T> vec_clamp( vec<N, T> v, T lo, T hi )
+inline vec<N, T> vec_clamp( const vec<N, T> &V, const vec<N, T> &lo, const vec<N, T> &hi )
 {
+    vec<N, T> U;
     for (size_t i=0; i<N; i++)
-        v[i] = std::clamp(v[i], lo, hi);
-    return v;
+        U[i] = std::clamp(V[i], lo[i], hi[i]);
+    return U;
 }
 
 
-template <size_t N, typename T>
-__attribute__((always_inline))
-inline vec<N, T> vec_clamp( vec<N, T> v, const vec<N, T> &lo, const vec<N, T> &hi )
+template <size_t N>
+inline float vec_length2( const vec<N, float> &V )
 {
+    float magSq = 0.0f;
     for (size_t i=0; i<N; i++)
-        v[i] = std::clamp(v[i], lo[i], hi[i]);
-    return v;
+        magSq += V[i] * V[i];
+    return magSq;
+}
+
+
+template <size_t N>
+inline float vec_length( const vec<N, float> &V )
+{
+    return fsqrt(vec_length2(V));
+}
+
+
+template <size_t N>
+inline vec<N, float> vec_normalize( const vec<N, float> &V )
+{
+    return V / vec_length(V);
 }
 
 
@@ -298,16 +337,7 @@ template <size_t N, typename T>
 __attribute__((always_inline))
 inline vec<N, T> vec_mix( const vec<N, T> &X, const vec<N, T> &Y, float a )
 {
-    // if constexpr (std::is_same_v<T, uint8_t>)
-    // {
-    //     uint8_t a8 = uint8_t(a);
-    //     return vec<N, T>((T(255 - a8)*X + a8*Y) / T(255));
-    // }
-
-    // else
-    // {
-        return (1.0f - a)*X + a*Y;
-    // }
+    return T(1.0f - a)*X + T(a)*Y;
 }
 
 

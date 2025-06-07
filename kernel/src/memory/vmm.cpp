@@ -10,11 +10,6 @@
 #include <kernel/bitmanip.hpp>
 
 
-static inline void flush_tlb(unsigned long addr)
-{
-    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
-}
-
 constexpr uint64_t PML4_INDEX( uint64_t va ) { return (va>>39) & 0x1FF; }
 constexpr uint64_t PDP_INDEX ( uint64_t va ) { return (va>>30) & 0x1FF; }
 constexpr uint64_t PD_INDEX  ( uint64_t va ) { return (va>>21) & 0x1FF; }
@@ -56,12 +51,18 @@ void VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
 }
 
 void
-VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t nbytes, uint64_t flags )
+VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t npages, uint64_t flags )
 {
     uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
-    nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
-    for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
+    // nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
+    // for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
+    //     VMM_mapPage(pml4, phys+offset, virt+offset, flags);
+
+    for (size_t i=0; i<npages; i++)
+    {
+        size_t offset = i*PMM::PAGE_SIZE;
         VMM_mapPage(pml4, phys+offset, virt+offset, flags);
+    }
 }
 
 
@@ -81,9 +82,8 @@ void VMM_unmapPage( uint64_t *pml4, uint64_t virt )
 
     if (pd[PD_INDEX(virt)] & VMM::PAGE_PAGESIZE) // 2 MiB page
     {
-        // PMM::freeBlock(pd[PD_INDEX(virt)] & ~0xFFF);
         pd[PD_INDEX(virt)] = 0; // Clear entry
-        flush_tlb(virt);        // Flush TLB
+        CPU::flushTLB(virt);    // Flush TLB
         return;
     }
 
@@ -106,26 +106,41 @@ void VMM::unmapPage( uintptr_t virt )
 }
 
 
+void VMM::unmapRange( uintptr_t virt, size_t npages )
+{
+    uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
+    
+    for (size_t i=0; i<npages; i++)
+    {
+        VMM_unmapPage(pml4, virt + i*PMM::PAGE_SIZE);
+    }
+}
+
+
 
 void VMM::init() 
 {
     syslog log("VMM::init");
-
     uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
     log("pml4: 0x%lx", pml4);
+}
 
-    // uint64_t *clone = VMM::clonePML4(pml4);
-    // log("clone: 0x%lx", clone);
 
-    // VMM::mapPage(0x0010'0000, 0xDEADBEBE);
+void *VMM::alloc( size_t nbytes, uint64_t flags )
+{
+    size_t npages = (nbytes+PMM::PAGE_SIZE) / PMM::PAGE_SIZE;
+    uintptr_t phys = PMM::allocPages(npages);
+    uintptr_t virt = phys + PMM::hhdm;
+    VMM::mapRange(phys, virt, npages, flags);
 
-    // auto *test = (uint64_t*)0xDEADBEBE;
+    return (void*)virt;
+}
 
-    // log("writing 123456789 to 0x%lx", test);
-    // test[4] = 123456789;
-    // log("0x%lx: %u", test, test[4]);
 
-    // VMM::unmapPage(0xDEADBEBE);
+void VMM::free( void *virt, size_t nbytes )
+{
+    size_t npages = (nbytes+PMM::PAGE_SIZE) / PMM::PAGE_SIZE;
+    VMM::unmapRange((uintptr_t)virt, npages);
 }
 
 

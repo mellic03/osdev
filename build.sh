@@ -27,11 +27,16 @@ cp -r lib/libc++/include/* sysroot/usr/include/.
 
 # Build modules
 # ---------------------------------------------------------
-cd ./modules
-mkdir -p build && cd build
-cmake ..
-make
-cd ../../
+# cd ./modules
+# mkdir -p build && cd build
+# cmake ..
+# make
+# cd ../../
+
+# rm modules/mouse.txt
+# rm modules/keyboard.txt
+# readelf -a sysroot/drv/mouse >> modules/mouse.txt
+# readelf -a sysroot/drv/keyboard >> modules/keyboard.txt
 # ---------------------------------------------------------
 
 

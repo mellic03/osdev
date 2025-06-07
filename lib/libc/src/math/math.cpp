@@ -1,15 +1,22 @@
-// #ifdef __SSE__
-// #include <math.h>
-// #include <immintrin.h>
-// // #include <kdef.h>
+#ifdef __SSE__
+#include <math.h>
+#include <immintrin.h>
+// #include <kdef.h>
 
 
-// double sqrt( double x )
-// {
-//     __m128d input  = _mm_set_sd(x);
-//     __m128d result = _mm_sqrt_sd(input, input);
-//     return _mm_cvtsd_f64(result);
-// }
+double sqrt( double x )
+{
+    return 0.0 * x;
+    // __m128d input  = _mm_set_sd(x);
+    // __m128d result = _mm_sqrt_sd(input, input);
+    // return _mm_cvtsd_f64(result);
+}
+
+
+float fsqrt( float x )
+{
+    return (float)sqrt((double)x);
+}
 
 // double floor( double x )
 // {
@@ -126,4 +133,4 @@
 // }
 
 
-// #endif
+#endif

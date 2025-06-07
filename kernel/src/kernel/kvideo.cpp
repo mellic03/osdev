@@ -8,6 +8,8 @@
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
 
+#include <driver/video.hpp>
+
 #include <cringe/font.hpp>
 #include <bmp.hpp>
 
@@ -40,29 +42,68 @@ void kvideo::initFrontbuffer( uintptr_t fbres )
     syslog log("kvideo::initFrontbuffer");
     auto *fb = res->framebuffers[0];
 
-    log("fb count:    %u", res->framebuffer_count);
-    log("width:       %u", fb->width);
-    log("height:      %u", fb->height);
-    log("pitch:       %u", fb->pitch);
-    log("bpp:         %u", fb->bpp);
-    log("mem model:   %u", fb->memory_model);
+    log("fb count:    %u",    res->framebuffer_count);
+    log("width:       %u",    fb->width);
+    log("height:      %u",    fb->height);
+    log("pitch:       %u",    fb->pitch);
+    log("bpp:         %u",    fb->bpp);
+    log("mem model:   %u",    fb->memory_model);
     log("edid:        0x%lx", fb->edid);
     log("edid_size:   %lu",   fb->edid_size);
     log("mode_count:  %lu",   fb->mode_count);
-    log("rmask_size:  %u", fb->red_mask_size);
-    log("rmask_shift: %u", fb->red_mask_shift);
-    log("gmask_size:  %u", fb->green_mask_size);
-    log("gmask_shift: %u", fb->green_mask_shift);
-    log("bmask_size:  %u", fb->blue_mask_size);
-    log("bmask_shift: %u", fb->blue_mask_shift);
+    log("rmask_size:  %u",    fb->red_mask_size);
+    log("rmask_shift: %u",    fb->red_mask_shift);
+    log("gmask_size:  %u",    fb->green_mask_size);
+    log("gmask_shift: %u",    fb->green_mask_shift);
+    log("bmask_size:  %u",    fb->blue_mask_size);
+    log("bmask_shift: %u",    fb->blue_mask_shift);
+
+    // {
+    //     auto *edid = (VideoEDID*)(fb->edid);
+    //     // lg("hSizeMax            %u", edid->hSizeMax);
+    //     // lg("vSizeMax            %u", edid->vSizeMax);
+    //     // lg("");
+    
+    //     for (int i=0; i<4; i++)
+    //     {
+    //         syslog lg("Timing Desc %d", i);
+    //         auto &desc = edid->detailedTimingDesc[i];
+    //         lg("hFreq:              %u", desc.hFreq);
+    //         lg("vFreq:              %u", desc.vFreq);
+    //         lg("hActiveTime:        %u", desc.hActiveTime);
+    //         lg("hBlankTime:         %u", desc.hBlankTime);
+    //         lg("hActiveBlankTime:   %u", desc.hActiveBlankTime);
+    //         lg("vActiveTime:        %u", desc.vActiveTime);
+    //         lg("vBlankTime:         %u", desc.vBlankTime);
+    //         lg("vActiveBlankTime:   %u", desc.vActiveBlankTime);
+    //         lg("hSyncOffset:        %u", desc.hSyncOffset);
+    //         lg("hSyncPulseW:        %u", desc.hSyncPulseW);
+    //         lg("vSyncOffsetPulseW:  %u", desc.vSyncOffsetPulseW);
+    //         lg("vhSyncOffsetPulseW: %u", desc.vhSyncOffsetPulseW);
+    //         lg("hImageSize:         %u", desc.hImageSize);
+    //         lg("vImageSize:         %u", desc.vImageSize);
+    //         lg("hvRatio:            %u", desc.hvRatio);
+    //         lg("hBorder:            %u", desc.hBorder);
+    //         lg("vBorder:            %u", desc.vBorder);
+    
+    //         {
+    //             syslog lg0("Display Type");
+    //             auto &disp = desc.displayType;
+    //             lg0("unused:       %u", disp.unused);
+    //             lg0("syncLocation: %u", disp.syncLocation);
+    //             lg0("serrate:      %u", disp.serrate);
+    //             lg0("syncType:     %u", disp.syncType);
+    //             lg0("stereoMode:   %u", disp.stereoMode);
+    //             lg0("interlaced:   %u", disp.interlaced);
+    //         }
+    //     }
+    // }
 
     kvideo::W      = fb->width;
     kvideo::H      = fb->height;
     kvideo::pitch  = fb->pitch;
     kvideo::BPP    = fb->bpp;
     kvideo::nbytes = pitch*H;
-    log("size:        %lu KB", kvideo::nbytes/1000);
-
     kvideo::frontbuffer = (uint8_t*)fb->address;
 }
 
@@ -70,44 +111,28 @@ void kvideo::initBackbuffer( uintptr_t )
 {
     syslog log("kvideo::initBackbuffer");
 
-    // if (kvideo::nbytes < 3*PMM::PAGE_SIZE)
-    // {
-    //     using namespace VMM;
-    
-    //     uintptr_t phys1 = PMM::alloc();
-    //     uintptr_t phys2 = PMM::alloc();
-    //     uintptr_t phys3 = PMM::alloc();
-    //     uintptr_t virt  = phys1 + PMM::hhdm;
+    {
+        using namespace VMM;
 
-    //     VMM::mapPage(phys1, virt+0*PMM::PAGE_SIZE, PAGE_PRESENT|PAGE_WRITE|PAGE_PWT);
-    //     VMM::mapPage(phys2, virt+1*PMM::PAGE_SIZE, PAGE_PRESENT|PAGE_WRITE|PAGE_PWT);
-    //     VMM::mapPage(phys3, virt+2*PMM::PAGE_SIZE, PAGE_PRESENT|PAGE_WRITE|PAGE_PWT);
-    
-    //     kvideo::backbuffer = (uint8_t*)virt;
-    // }
+        // backbuffer = (uint8_t*)VMM::alloc(nbytes, PAGE_PRESENT|PAGE_WRITE);
+        // backbuffer = (uint8_t*)VMM::alloc(nbytes, PAGE_PRESENT|PAGE_WRITE|PAGE_PCD);
+        backbuffer = (uint8_t*)kmalloc(nbytes);
+    }
 
     // else
     // {
-        kvideo::backbuffer = (uint8_t*)kmalloc(kvideo::nbytes);
+    //     kvideo::backbuffer = (uint8_t*)kmalloc(kvideo::nbytes);
     // }
 }
 
 
-static inline void movsd( void *dst, const void *src, size_t size )
-{
-    asm volatile("rep movsl" : "+D"(dst), "+S"(src), "+c"(size) : : "memory");
-}
-
 void kvideo::swapBuffers()
 {
-    movsd(frontbuffer, backbuffer, nbytes/4);
-    // kmemcpy<uint8_t>(frontbuffer, backbuffer, nbytes);
-    kmemset<uint8_t>(backbuffer, 0, nbytes);
+    // movsl(frontbuffer, backbuffer, nbytes/4);
 
-    // uint8_t *A = idk::align_up(frontbuffer, 16);
-    // uint8_t *B = idk::align_up(backbuffer, 16);
-    // kmemcpy<uint128_t>(A, B, nbytes);
-    // kmemset<uint128_t>(B, 0, nbytes);
+    // CPU::movs64(frontbuffer, backbuffer, nbytes/sizeof(uint64_t));
+    kmemcpy<uint128_t>(frontbuffer, backbuffer, nbytes);
+    kmemset<uint128_t>(backbuffer, 0, nbytes);
 }
 
 
@@ -116,14 +141,18 @@ void kvideo::fill( uint8_t r, uint8_t g, uint8_t b, uint8_t a )
 {
     uint8_t rgba[4] = {r, g, b, a};
 
+    int bypp = kvideo::BPP/8;
+
     for (int i=0; i<kvideo::H; i++)
     {
         for (int j=0; j<kvideo::W; j++)
         {
-            int idx = i*kvideo::pitch + j;
+            int idx = i*kvideo::pitch + bypp*j;
 
-            for (size_t k=0; k<kvideo::BPP/8; k++)
+            for (int k=0; k<bypp; k++)
+            {
                 kvideo::frontbuffer[idx+k] = rgba[k];
+            }
         }
     }
 

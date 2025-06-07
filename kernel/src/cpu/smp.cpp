@@ -6,6 +6,8 @@
 
 #include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
+#include <kernel/memory/pmm.hpp>
+#include <kernel/memory/vmm.hpp>
 #include <kthread.hpp>
 #include <kmalloc.h>
 #include <string.h>
@@ -39,8 +41,8 @@
 
 
 static uint64_t bspID = 0;
-static uint8_t SMP_cpu_buf[8*sizeof(cpu_t)] __attribute__((aligned(16)));
-// static cpu_t   SMP_cpu_buf[8];
+// static cpu_t   *SMP_cpus;
+static cpu_t    SMP_cpus[8];
 size_t SMP::num_cpus;
 
 
@@ -49,6 +51,8 @@ void SMP::init(void (*entry)(limine_mp_info*))
     auto *mp = limine_res.mp;
     auto count = mp->cpu_count;
     num_cpus = count;
+    // SMP_cpus = (cpu_t*)VMM::alloc(count * sizeof(cpu_t));
+
     bspID = mp->bsp_lapic_id;
     for (size_t i=0; i<count; i++)
     {
@@ -78,7 +82,7 @@ uint64_t SMP::bsp_id()
 
 cpu_t *SMP::get_cpu( uint32_t idx )
 {
-    return (cpu_t*)(SMP_cpu_buf) + idx;
+    return &(SMP_cpus[idx]);
 }
 
 cpu_t *SMP::this_cpu()

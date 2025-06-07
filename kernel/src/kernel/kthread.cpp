@@ -40,6 +40,9 @@ void kthread::exit()
 
 kthread_t *kthread::create( const char *name, void (*fn)(void*), void *arg )
 {
+    // static std::mutex M{0};
+    // std::lock_guard lock(M);
+
     static int idx = 0;
     auto *cpu = SMP::get_cpu(idx);
     idx = (idx+1) % SMP::num_cpus;

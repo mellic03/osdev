@@ -3,7 +3,7 @@
 
 extern "C"
 {
-    extern void GDT64_Install( gdt_ptr_t* );
+    extern void cpu_installGDT( gdt_ptr_t* );
     // extern void cpu_load_gdt( gdt_ptr_t* );
     // extern void cpu_flush_gdt( void );
 }
@@ -86,12 +86,12 @@ void CPU::createGDT()
 
 void CPU::installGDT()
 {
-    GDT64_Install(&default_GDTR);
+    cpu_installGDT(&default_GDTR);
 }
 
 
 void CPU::installGDT( gdt_ptr_t *gdtr )
 {
-    GDT64_Install(gdtr);
+    cpu_installGDT(gdtr);
 }
 

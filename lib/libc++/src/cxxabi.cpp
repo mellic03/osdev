@@ -8,7 +8,7 @@ extern "C"
 atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
 uarch_t __atexit_func_count = 0;
 
-void *__dso_handle = 0;
+// void *__dso_handle = 0;
 
 int __cxa_atexit(void (*func)(void *), void *objptr, void *dso)
 {
@@ -64,7 +64,7 @@ namespace __cxxabiv1
         __atomic_store_n(g, 1, __ATOMIC_SEQ_CST);
     }
 
-    void __cxa_guard_abort( uint64_t * )
+    void __cxa_guard_abort( uint64_t* )
     {
         
     }

@@ -68,7 +68,10 @@ struct BMP_header
 struct BMP_File
 {
     uint8_t *pixels;
-    int w, h, bpp;
+    int w, h;
+    int bpp;    // bits per pixel
+    int bypp;   // bytes per pixel
+    int pitch;  // bytes per row
     size_t nbytes;
 
     BMP_File( void *addr )
@@ -79,19 +82,22 @@ struct BMP_File
         this->w      = int(info.width);
         this->h      = int(info.height);
         this->bpp    = int(info.bpp);
+        this->bypp   = int(info.bpp) / 8;
+        this->pitch  = this->w * this->bypp;
         this->nbytes = header->filesize;
         this->pixels = (uint8_t*)header + header->offset;
 
         // Flip vertically
         auto *buf = (uint8_t*)pixels;
+
         for (int i=0; i<h/2; i++)
         {
             for (int j=0; j<w; j++)
             {
-                for (int k=0; k<4; k++)
+                for (int k=0; k<bypp; k++)
                 {
-                    int idx0 = w*4*(h-1 - i) + 4*j + k;
-                    int idx1 = w*4*i + 4*j + k;
+                    int idx0 = pitch*(h-1 - i) + bypp*j + k;
+                    int idx1 = pitch*i + bypp*j + k;
                     std::swap(buf[idx0], buf[idx1]);
                 }
             }

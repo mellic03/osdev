@@ -46,7 +46,6 @@ static void init_device( DeviceInterface *dev )
     }
 }
 
-
 static void load_module( uint8_t *tar, size_t size )
 {
     syslog log("knl::loadModule");
@@ -76,6 +75,21 @@ static void load_module( uint8_t *tar, size_t size )
     // strncpy(buf, path, len1);
     // vfsNode *fh = vfs::open(buf);
 
+}
+
+
+void load_module2( ModuleInterface* (*entryfn)(void*) )
+{
+    syslog log("knl::loadModule2");
+
+    auto *iface = entryfn(nullptr);
+    log("modtype:  %s",    ModuleTypeStr(iface->modtype));
+    log("basetype: %s",    ModuleBaseTypeStr(iface->modtype, iface->basetype));
+    iface->baseAddress = 0x00;
+    iface->pageSize    = PMM::PAGE_SIZE;
+    iface->pageCount   = 1;
+
+    knl::modules.push_back(iface);
 }
 
 

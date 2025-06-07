@@ -5,6 +5,8 @@
 #include <kmemxx.hpp>
 #include <kernel/log.hpp>
 #include <kernel/linear_allocator.hpp>
+#include <sys/interrupt.hpp>
+
 #include <bitmap.hpp>
 
 #include <kinplace/inplace_array.hpp>
@@ -72,12 +74,10 @@ struct pmmBitmap
 
 
 
-static constexpr size_t PMM_nframes = 64;
-struct pmmBlock { uint64_t data[512]; };
+static constexpr size_t PMM_nframes = 512;\
 static pmmBitmap PMM_framebmap;
 static uintptr_t PMM_framebase;
 static uintptr_t PMM_frameend;
-
 
 
 static uint64_t  PMM_npages;
@@ -95,6 +95,7 @@ uintptr_t PMM::allocFrame()
             PMM_framebmap.set(i);
             uintptr_t virt = PMM_framebase + i*PMM::FRAME_SIZE;
             uintptr_t phys = virt - PMM::hhdm;
+            // syslog::println("[PMM::allocFrame] setcount=%d", PMM_framebmap.m_setcount);
             return phys;
         }
     }
@@ -111,7 +112,6 @@ void PMM::freeFrame( uintptr_t phys )
 
 
 
-
 uintptr_t PMM::allocPage()
 {
     for (size_t i=0; i<PMM_pagebmap.nbits(); i++)
@@ -121,6 +121,34 @@ uintptr_t PMM::allocPage()
             PMM_pagebmap.set(i);
             uintptr_t virt = PMM_pagebase + PMM::PAGE_SIZE*i;
             uintptr_t phys = virt - PMM::hhdm;
+            // syslog::println("[PMM::allocPage] setcount=%d", PMM_pagebmap.m_setcount);
+            return phys;
+        }
+    }
+
+    return 0;
+}
+
+static bool isFreeAndContiguous( size_t idx, size_t count )
+{
+    for (size_t i=0; i<count; i++)
+        if (PMM_pagebmap.is_set(idx+i))
+            return false;
+    return true;
+}
+
+uintptr_t PMM::allocPages( size_t n )
+{
+    for (size_t i=0; i<PMM_pagebmap.nbits(); i++)
+    {
+        if (isFreeAndContiguous(i, n))
+        {
+            for (size_t j=0; j>n; j++)
+                PMM_pagebmap.set(i+j);
+
+            uintptr_t virt = PMM_pagebase + PMM::PAGE_SIZE*i;
+            uintptr_t phys = virt - PMM::hhdm;
+            // syslog::println("[PMM::allocPages] setcount=%d", PMM_pagebmap.m_setcount);
             return phys;
         }
     }
@@ -163,6 +191,7 @@ void PMM::init( const MemMap &mmap, size_t hhdm_offset )
     PMM_pagebmap.clear();
 
     log("base:      0x%lx", mmap.base + hhdm);
+    log("end:       0x%lx", mmap.base + hhdm + mmap.size);
     log("size:      0x%lx", mmap.size);
 
     log("page size: 0x%lx", PAGE_SIZE);

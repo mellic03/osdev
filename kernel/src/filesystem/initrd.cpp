@@ -25,5 +25,5 @@ void initrd::init( void *tar )
     log("tar: 0x%lx", tar);
 
     initrd::tarball = (uint8_t*)tar;
-    ustar::listAll(initrd::tarball);
+    // ustar::listAll(initrd::tarball);
 }

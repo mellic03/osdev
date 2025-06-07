@@ -9,14 +9,15 @@ namespace wm
     struct guiImage: public guiElement
     {
         uint8_t *m_pixels;
-        uint8_t  m_bpp;
+        int      m_bypp;
+        int      m_pitch;
     
         guiImage()
-        :   guiImage(nullptr, 0, 0, 0) {  };
+        :   guiImage(nullptr, 0, 0, 0, 0) {  };
 
-        guiImage( uint8_t *pixels, int width, int height, int bpp )
+        guiImage( uint8_t *pixels, int width, int height, int bypp, int pitch )
         :   guiElement(ivec2(0, 0), ivec2(width, height)),
-            m_pixels(pixels), m_bpp(bpp) {  };
+            m_pixels(pixels), m_bypp(bypp), m_pitch(pitch) {  };
 
         guiImage( void *bmp_addr );
 

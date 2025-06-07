@@ -160,28 +160,29 @@ static void kbdev_main( void* )
 
 
 
+static CharDevInterface kbdev;
+
 extern "C"
 ModuleInterface *init( ksym::ksym_t *sym )
 {
     ksym::loadsym(sym);
 
-    auto *kbdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
-    *kbdev = {
-        .modtype  = ModuleType_Device,
-        .basetype = DeviceType_Keyboard,
-        .main     = kbdev_main, // kbdev_main,
+    // auto *kbdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
 
-        .open     = kbev_open,
-        .close    = kbev_close,
-        .read     = nullptr,
-        .write    = nullptr,
-        .irqno    = IrqNo_Keyboard,
-        .irqfn    = kbdev_irq,
-    };
+    kbdev.modtype  = ModuleType_Device;
+    kbdev.basetype = DeviceType_Keyboard;
+    kbdev.main     = kbdev_main;
 
-    kmemset<char>(kbdev->signature, '\0', sizeof(kbdev->signature));
-    kmemcpy<char>(kbdev->signature, "kboard", 6);
+    kbdev.open     = kbev_open;
+    kbdev.close    = kbev_close;
+    kbdev.read     = nullptr;
+    kbdev.write    = nullptr;
+    kbdev.irqno    = IrqNo_Keyboard;
+    kbdev.irqfn    = kbdev_irq;
 
-    return (ModuleInterface*)kbdev;
+    kmemset<char>(kbdev.signature, '\0', sizeof(kbdev.signature));
+    kmemcpy<char>(kbdev.signature, "kboard", 6);
+
+    return (ModuleInterface*)&kbdev;
 }
 

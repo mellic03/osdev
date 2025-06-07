@@ -163,7 +163,7 @@ namespace ACPI
     const auto findTableRSDT = detail::findTable<RSDT_t, T>;
 
     template <typename T>
-    const auto findTableXSDT = detail::findTable<XSDP_t, T>;
+    const auto findTableXSDT = detail::findTable<XSDT_t, T>;
 }
 
 
@@ -297,22 +297,22 @@ table_type *ACPI::detail::findTable( rsdt_type *rsdt, const char *signature )
 
     constexpr size_t N = std::is_same_v<rsdt_type, ACPI::RSDT_t> ? 4 : 8;
 
-    syslog log("ACPI::findTable");
+    // syslog log("ACPI::findTable");
     int entries = (rsdt->header.Length - sizeof(rsdt->header)) / N;
-    log("entries: %d", entries);
+    // log("entries: %d", entries);
 
     for (int i=0; i<entries; i++)
     {
         uintptr_t phys = (uintptr_t)(rsdt->PointerToOtherSDT[i]);
         uintptr_t virt = (uintptr_t)phys; // + PMM::hhdm;
-        log("phys: 0x%lx", phys);
-        log("virt: 0x%lx", virt);
+        // log("phys: 0x%lx", phys);
+        // log("virt: 0x%lx", virt);
         auto *header = (ACPISDTHeader*)virt;
 
         char buf[5];
         memcpy(buf, header->Signature, 4);
         buf[4] = '\0';
-        log("signature: \"%s\"", buf);
+        // log("signature: \"%s\"", buf);
 
         if (strncmp(header->Signature, signature, 4) == 0)
             return (table_type*)header;

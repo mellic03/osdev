@@ -16,7 +16,7 @@ namespace knl
         : x(p.x), y(p.y), l(false), m(false), r(false) {  };
         //   lp(false), mp(false), rp(false) {  };
     
-        ivec2 pos() { return ivec2(x, y); };
+        ivec2 pos() const { return ivec2(x, y); };
     };
 
     enum MsEvent_: uint8_t

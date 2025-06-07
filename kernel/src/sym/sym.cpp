@@ -70,9 +70,9 @@ ksym::ksym_t *ksym::getsym()
         lib.hcf   = CPU::hcf;
 
         lib.popen  = knl::popen;
-        lib.fopen  = rfs::open;
-        lib.fread  = rfs::fread;
-        lib.fwrite = rfs::fwrite;
+        // lib.fopen  = rfs::open;
+        // lib.fread  = rfs::fread;
+        // lib.fwrite = rfs::fwrite;
 
         lib.findModule = knl::findModule;
     }

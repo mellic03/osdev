@@ -54,7 +54,7 @@ struct vfsNode
 struct vfsDirListing
 {
     size_t  count;
-    vfsNode entries[];
+    vfsNode entries[1];
 };
 
 

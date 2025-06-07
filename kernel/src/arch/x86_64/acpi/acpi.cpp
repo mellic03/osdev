@@ -14,32 +14,33 @@
 
 void ACPI::init( uintptr_t phys, ACPI::Response &res )
 {
-    syslog log("ACPI::init");
+    // syslog log("ACPI::init");
 
     VMM::mapPage(phys, phys); // MUCH easier if identity mapped 
     RSDP_t *rsdp = (RSDP_t*)phys;
     RSDT_t *rsdt = nullptr;
+    XSDT_t *xsdt = nullptr;
     MADT_t *madt = nullptr;
 
-    log("rsdp: 0x%lx", rsdp);
+    // log("rsdp: 0x%lx", rsdp);
     bool is_v1 = (rsdp->Revision == 0);
-    log("%s", (is_v1 ? "is_v1" : "is_v2"));
+    // log("%s", (is_v1 ? "is_v1" : "is_v2"));
 
     if (is_v1)
     {
         uintptr_t rsdt_addr = rsdp->RsdtAddress;
         VMM::mapPage(rsdt_addr, rsdt_addr);
         rsdt = (RSDT_t*)rsdt_addr;
-        log("rsdt: 0x%lx", rsdt);
+        // log("rsdt: 0x%lx", rsdt);
         madt = ACPI::findTableRSDT<MADT_t>(rsdt, "APIC");
     }
 
     else
     {
         uintptr_t xsdt_addr = rsdp->RsdtAddress;
-        auto *xsdt = (XSDT_t*)xsdt_addr;
-        log("xsdt: 0x%lx", xsdt);
-        madt = ACPI::findTableRSDT<MADT_t>(rsdt, "APIC");
+        xsdt = (XSDT_t*)xsdt_addr;
+        // log("xsdt: 0x%lx", xsdt);
+        madt = ACPI::findTableXSDT<MADT_t>(xsdt, "APIC");
     }
         
     if (madt)
