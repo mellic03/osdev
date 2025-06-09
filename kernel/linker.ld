@@ -39,6 +39,7 @@ SECTIONS
         *(.data .data.*)
     } :data
 
+
     . = ALIGN(CONSTANT(MAXPAGESIZE));
     .init_array : {
         PROVIDE_HIDDEN(__init_array_start = .);
@@ -48,14 +49,28 @@ SECTIONS
         PROVIDE_HIDDEN(__init_array_end = .);
     } :data
 
+    /*
+    . = ALIGN(CONSTANT(MAXPAGESIZE));
+    .fini_array : {
+        PROVIDE_HIDDEN(__fini_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
+        KEEP(*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+        KEEP(*(.fini_array .dtors))
+        PROVIDE_HIDDEN(__fini_array_end = .);
+    } :data
+    */
+
     /* NOTE: .bss needs to be the last thing mapped to :data, otherwise lots of */
     /* unnecessary zeros will be written to the binary. */
     /* If you need, for example, .init_array and .fini_array, those should be placed */
     /* above this. */
     .bss : {
+        __bss_start = .;
         *(.bss .bss.*)
+        __bss_end = .;
+
         *(COMMON)
-        endkernel = .;
+        __kernel_end = .;
     } :data
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */

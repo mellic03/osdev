@@ -190,6 +190,7 @@
         "${workspaceFolder}/include/",
         "${workspaceFolder}/lib/libc/include/",
         "${workspaceFolder}/lib/libc++/include/",
+        "${workspaceFolder}/lib/libmath/include/",
         "${workspaceFolder}/kernel/include/",
         "${workspaceFolder}/kernel/include/arch/x86_64"
 

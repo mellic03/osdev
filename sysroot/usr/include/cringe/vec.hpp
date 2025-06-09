@@ -334,10 +334,20 @@ inline vec<N, float> vec_normalize( const vec<N, float> &V )
 
 
 template <size_t N, typename T>
-__attribute__((always_inline))
-inline vec<N, T> vec_mix( const vec<N, T> &X, const vec<N, T> &Y, float a )
+vec<N, T> vec_mix(  vec<N, T> X, vec<N, T> Y, float a )
 {
     return T(1.0f - a)*X + T(a)*Y;
+}
+
+
+inline vec4 vec_test( const vec4 &X, const vec4 &Y, float a )
+{
+    vec4 V(0.0f);
+
+    for (int i=0; i<4; i++)
+        V[i] = (1.0f - a)*X[i] + a*Y[i];
+    
+    return V;
 }
 
 

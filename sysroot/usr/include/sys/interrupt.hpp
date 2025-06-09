@@ -7,8 +7,7 @@
 struct intframe_t
 {
     uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
-    uint64_t rax, rbx, rcx, rdx;
-    uint64_t rdi, rsi, rbp;
+    uint64_t rax, rbx, rcx, rdx, rdi, rsi, rbp;
     uint64_t isrno, errno;
 
     uint64_t rip;
@@ -21,6 +20,7 @@ struct intframe_t
 
 enum IntNo_: uint8_t
 {
+    IntNo_ExceptionBase             = 0,
     IntNo_DivisionError             = 0,
     IntNo_Debug 			        = 1,
     IntNo_InvalidOpcode             = 6,
@@ -34,6 +34,7 @@ enum IntNo_: uint8_t
 
     IntNo_x86_FP_Exception          = 16,
     IntNo_SIMD_FP_Exception         = 19,
+    IntNo_ExceptionEnd              = 31,
 
     IntNo_BadAlloc 	  	            = 52,
     IntNo_BadFree  	  	            = 53,

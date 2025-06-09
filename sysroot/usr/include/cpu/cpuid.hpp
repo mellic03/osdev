@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <cpuid.h>
 
 enum CPUID_: uint64_t
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include <kpanic.h>
+#include <kpanic.hpp>
 
 void kernel_assert( bool cond, const char *msg, const char *file,
                     const char *func, int line );

@@ -23,7 +23,7 @@ void exit( int )
     }
 
     #ifdef __is_kernel
-        kthread::exit();
+        // kthread::exit();
     #else
         knl::syscall(SysNo_Exit, nullptr, nullptr);
     #endif

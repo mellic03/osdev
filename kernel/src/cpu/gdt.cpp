@@ -46,11 +46,6 @@ void CPU::createGDT( uint64_t *gdtbase, gdt_ptr_t *gdtr)
     fill_entry(gdtbase, 2, 0, 0xFFFFF, 0x92, 0xC);        // Kernel mode data segment
     fill_entry(gdtbase, 3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
     fill_entry(gdtbase, 4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
-
-    // uint64_t tssBase = (uint64_t)TSS; // Address of your TSS structure
-    // uint32_t tssLimit = sizeof(tss_t) - 1;
-    // fill_entry(default_GDT, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
-    // fill_entry(default_GDT, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
     size_t numDescriptors = 5;
 
     *gdtr = {
@@ -68,19 +63,12 @@ void CPU::createGDT()
     fill_entry(default_GDT, 2, 0, 0xFFFFF, 0x92, 0xC); // Kernel mode data segment
     fill_entry(default_GDT, 3, 0xFFFFF, 0xF00000, 0xFA, 0xA); // User mode code segment
     fill_entry(default_GDT, 4, 0xFFFFF, 0xF00000, 0xF2, 0xC); // User mode data segment
-
-
-    // uint64_t tssBase = (uint64_t)(&default_TSS); // Address of your TSS structure
-    // uint32_t tssLimit = sizeof(tss_t) - 1;
-    // fill_entry(default_GDT, 5, tssBase & 0xFFFFFF, tssLimit, 0x89, 0x0); // TSS (low 32 bits of base)
-    // fill_entry(default_GDT, 6, (tssBase >> 32) & 0xFFFFFFFF, 0, 0, 0);   // TSS (high 32 bits of base)
     size_t numDescriptors = 5;
 
     default_GDTR = {
         .limit = (uint16_t)(numDescriptors * sizeof(uint64_t) - 1),
         .base  = (uint64_t)(default_GDT)
     };
-
 }
 
 

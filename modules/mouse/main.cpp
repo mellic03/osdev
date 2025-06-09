@@ -45,9 +45,9 @@ void MouseWait()
 static void MouseWrite( uint8_t value )
 {
     MouseWait();
-    IO::outb(0x64, 0xD4);
+    IO::out8(0x64, 0xD4);
     MouseWait();
-    IO::outb(0x60, value);
+    IO::out8(0x60, value);
 }
 
 uint8_t MouseRead()
@@ -82,21 +82,21 @@ void ProcessMousePacket( const MousePacket &P )
 static void mouse_init()
 {
     // enabling the auxiliary device - mouse
-    IO::outb(0x64, 0xA8);
+    IO::out8(0x64, 0xA8);
     MouseWait();
 
     // tells the keyboard controller that we want to send a command to the mouse
-    IO::outb(0x64, 0x20);
+    IO::out8(0x64, 0x20);
     MouseWait();
 
     uint8_t status = IO::inb(0x60);
     MouseWait();
 
-    IO::outb(0x64, 0x60);
+    IO::out8(0x64, 0x60);
     MouseWait();
 
     // setting the correct bit is the "compaq" status byte
-    IO::outb(0x60, status|0b10);
+    IO::out8(0x60, status|0b10);
 
     MouseWrite(0xF6);
     MouseRead();

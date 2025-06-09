@@ -14,18 +14,11 @@ namespace VMM
     static constexpr uint64_t PAGE_PAGESIZE   = 1 << 7;
     static constexpr uint64_t PAGE_ADDRESS    = 0x000FFFFFFFFFF000;
     static constexpr uint64_t PAGE_EXECUTE    = 1ULL << 63ULL;
-    // static constexpr uint64_t PAGE_EXECUTE    = uint64_t(1) << uint64_t(63);
-
-    static constexpr size_t vmFlag__None  = 0b0000;
-    static constexpr size_t vmFlag__Write = 0b0001;
-    static constexpr size_t vmFlag__Exec  = 0b0010;
-    static constexpr size_t vmFlag__User  = 0b0100;
 
     struct vmObject
     {
-        uintptr_t base;
+        uint64_t  pml4; // physical address
         size_t    size;
-        size_t    flags;
         vmObject *next;
     };
 
@@ -39,6 +32,9 @@ namespace VMM
     void mapPage( uintptr_t phys, uintptr_t virt,
                   uint64_t flags=PAGE_PRESENT|PAGE_WRITE );
 
+    void mapPage2( uintptr_t pml4_phys, uintptr_t phys, uintptr_t virt,
+                   uint64_t flags=PAGE_PRESENT|PAGE_WRITE );
+
     void mapRange( uintptr_t phys, uintptr_t virt, size_t npages,
                    uint64_t flags=PAGE_PRESENT|PAGE_WRITE );
 
@@ -49,28 +45,33 @@ namespace VMM
 
 
 
-struct vmm_pml4_t
+union vmm_pml4_t
 {
-    /// @brief Is this a valid entry?
-    uint64_t present:1;
-    /// @brief If clear, this page is read only;
-    uint64_t writable:1;
-    /// @brief If set, this page is user accessable;
-    uint64_t user:1;
-    /// @brief If set, write through caching is enabled
-    uint64_t write_through:1;
-    /// @brief Page will not be cached
-    uint64_t cache_disable:1;
-    /// @brief If set, this page has been recently accessed by the CPU
-    uint64_t accessed:1;
-    uint64_t unused_0:1;
-    uint64_t reserved_0:1;
-    uint64_t unused_1:4;
-    /// @brief The address of the page directory pointer table
-    uint64_t address:36;
-    uint64_t reserved_1:4;
-    uint64_t unused_2:11;
-    uint64_t disable_execution:1;
+    uint64_t qword;
+
+    struct
+    {
+        /// @brief Is this a valid entry?
+        uint64_t present:1;
+        /// @brief If clear, this page is read only;
+        uint64_t writable:1;
+        /// @brief If set, this page is user accessable;
+        uint64_t user:1;
+        /// @brief If set, write through caching is enabled
+        uint64_t write_through:1;
+        /// @brief Page will not be cached
+        uint64_t cache_disable:1;
+        /// @brief If set, this page has been recently accessed by the CPU
+        uint64_t accessed:1;
+        uint64_t unused_0:1;
+        uint64_t reserved_0:1;
+        uint64_t unused_1:4;
+        /// @brief The address of the page directory pointer table
+        uint64_t address:36;
+        uint64_t reserved_1:4;
+        uint64_t unused_2:11;
+        uint64_t disable_execution:1;
+    };
 } __attribute__((packed));
 
 
@@ -112,21 +113,27 @@ struct vmm_pdpt_t
 };
 
 
-struct vmm_pde_t
+union vmm_pde_t
 {
-    uint64_t present       :1;
-    uint64_t writable      :1;
-    uint64_t user          :1;
-    uint64_t write_through :1;
-    uint64_t cache_disable :1;
-    uint64_t accessed      :1;
-    uint64_t unused_0      :1;
-    uint64_t page_size     :1;
-    uint64_t unused_1      :4;
-    uint64_t address       :36;
-    uint64_t reserved_1    :4;
-    uint64_t unused_2      :11;
-    uint64_t ex            :1;
+    uint64_t qword;
+
+    struct
+    {
+        uint64_t present       :1;
+        uint64_t writable      :1;
+        uint64_t user          :1;
+        uint64_t write_through :1;
+        uint64_t cache_disable :1;
+        uint64_t accessed      :1;
+        uint64_t unused_0      :1;
+        uint64_t page_size     :1;
+        uint64_t unused_1      :4;
+        uint64_t address       :36;
+        uint64_t reserved_1    :4;
+        uint64_t unused_2      :11;
+        uint64_t ex            :1;
+    };
+
 } __attribute__((packed));
 
 struct vmm_pd_t

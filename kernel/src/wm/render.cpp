@@ -65,12 +65,10 @@ void wm::guiBlitImage( guiFramebuffer &dstimg, guiImage &srcimg,
 
 
 
-static void nextLine( const ivec2 &tl_bound,
-                      int &x, int &y, const ivec2 &sp )
+static ivec2 nextLine( const ivec2 &csr, const ivec2 &tl_bound, const ivec2 &sp )
 {
     int xmin = tl_bound.x;
-    x = xmin;
-    y += sp.y;
+    return ivec2(xmin, csr.y + sp.y);
 }
 
 
@@ -78,29 +76,29 @@ ivec2 wm::guiRenderFont( guiFramebuffer &dstimg, const ivec2 &tl_bound, const iv
                          guiFont &font, const char *str, ivec2 csr )
 {
     ivec2 sp = font.getGlyphExtents();
-    int   &x = csr.x;
-    int   &y = csr.y;
+    // int   &x = csr.x;
+    // int   &y = csr.y;
 
     int xmin = tl_bound.x;
     int xmax = tl_bound.x + sp_bound.x;
     int ymin = tl_bound.y;
     int ymax = tl_bound.y + sp_bound.y;
 
-    x = std::clamp(x, xmin, xmax);
-    y = std::clamp(y, ymin, ymax);
+    csr.x = std::clamp(csr.x, xmin, xmax);
+    csr.y = std::clamp(csr.y, ymin, ymax);
 
     while (*str)
     {
         char ch = *(str++);
 
-        // if (ch == '\n')
-        //     nextLine(tl_bound, x, y, sp);
+        if (ch == '\n')
+            csr = nextLine(csr, tl_bound, sp);
 
-        if (x+sp.x >= xmax)
-            nextLine(tl_bound, x, y, sp);
+        if (csr.x + sp.x >= xmax)
+            csr = nextLine(csr, tl_bound, sp);
     
-        if (y >= ymax)
-            return ivec2(x, y);
+        if (csr.y >= ymax)
+            return csr;
 
         ivec2 tl = font.getGlyphCorner(ch);
         if (tl.x == -1)
@@ -108,10 +106,10 @@ ivec2 wm::guiRenderFont( guiFramebuffer &dstimg, const ivec2 &tl_bound, const iv
 
         guiBlitImage(dstimg, font, csr, tl, sp);
 
-        x += sp.x;
+        csr.x += sp.x;
     }
 
-    return ivec2(x, y);
+    return csr;
 }
 
 void wm::guiRenderHLine( guiFramebuffer &dstimg, const u8vec4 &color, int x0, int x1, int y )

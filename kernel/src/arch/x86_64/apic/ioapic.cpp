@@ -74,10 +74,9 @@ void IOAPIC::maskIRQ( uint8_t irqno )
     union {
         uint64_t   qword;
         RedirEntry entry;
-    } U = {0};
-
-    U.qword = Read64(reg);
+    } U = { Read64(reg) };
     U.entry.mask = 1;
+
     Write64(reg, U.qword);
 }
 
@@ -89,10 +88,9 @@ void IOAPIC::unmaskIRQ( uint8_t irqno )
     union {
         uint64_t   qword;
         RedirEntry entry;
-    } U = {0};
-
-    U.qword = Read64(reg);
+    } U = { Read64(reg) };
     U.entry.mask = 0;
+
     Write64(reg, U.qword);
 }
 

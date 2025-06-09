@@ -52,9 +52,9 @@ void PIT::init( uint64_t us )
     uint8_t lo = (uint8_t)(divisor & 0xFF);
     uint8_t hi = (uint8_t)((divisor>>8) & 0xFF);
 
-    IO::outb(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);
-    IO::outb(PIT_COUNTER0, lo);
-    IO::outb(PIT_COUNTER0, hi);
+    IO::out8(PIT_CMD, CMD_MODE3 | CMD_RW_BOTH | CMD_COUNTER0);
+    IO::out8(PIT_COUNTER0, lo);
+    IO::out8(PIT_COUNTER0, hi);
 }
 
 

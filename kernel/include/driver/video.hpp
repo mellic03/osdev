@@ -1,6 +1,74 @@
 #pragma once
+
 #include <stddef.h>
 #include <stdint.h>
+#include <cringe/vec.hpp>
+
+
+namespace knl
+{
+    class VideoInterface;
+}
+
+
+namespace kvideo2
+{
+    union ColorRGBA8
+    {
+        u8vec4   rgba;
+        uint32_t dword;
+    
+        ColorRGBA8( const u8vec4 &v ): rgba(v) {  };
+        ColorRGBA8( uint32_t d ): dword(d) {  };
+        ColorRGBA8(): dword(0) {  };
+    };
+
+
+    extern knl::VideoInterface *iface;
+    extern uint8_t *fbmem;
+    extern uint32_t W;
+    extern uint32_t H;
+    extern uint32_t BPP;
+    extern uint32_t BYPP;
+    extern uint32_t Pitch;
+
+    void init();
+    void flush();
+    void setMode( uint32_t w, uint32_t h, uint32_t bpp );
+    void fill( ColorRGBA8 color );
+}
+
+
+namespace knl
+{
+    class VideoInterface
+    {
+    public:
+        struct Mode
+        {
+            uint32_t w, h, bpp, pitch;
+        };
+    
+        virtual bool available() = 0;
+        virtual void init() = 0;
+        virtual void flush( uint32_t x, uint32_t y, uint32_t w, uint32_t h ) = 0;
+        virtual void setMode( uint32_t w, uint32_t h, uint32_t bpp ) = 0;
+        virtual uint8_t *getFb() = 0;
+        virtual void drawRect( int x, int y, int w, int h, kvideo2::ColorRGBA8 ) = 0;
+
+        const Mode &getMode()  { return m_mode; };
+        constexpr uint32_t W()     const { return m_mode.w; };
+        constexpr uint32_t H()     const { return m_mode.h; };
+        constexpr uint32_t BPP()   const { return m_mode.bpp; };
+        constexpr uint32_t BYPP()  const { return BPP() / 8; };
+        constexpr uint32_t Pitch() const { return m_mode.pitch; };
+
+    protected:
+        Mode m_mode;
+    };
+
+}
+
 
 
 // Bit(s)	Description

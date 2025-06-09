@@ -124,24 +124,38 @@ template <typename T, size_t Capacity>
 struct idk::BitMapAllocator2
 {
     idk::BitMap<Capacity> bmap;
-    T *data;
+    // T m_data[Capacity];
+    uint8_t m_data[Capacity * sizeof(T)] __attribute__((aligned(16)));
 
-    int64_t alloc()
+    BitMapAllocator2()
+    {
+        bmap.clear();
+    }
+
+    template <typename... Args>
+    T *alloc( Args... args )
     {
         for (size_t i=0; i<bmap.nbits(); i++)
         {
             if (bmap.is_unset(i))
             {
                 bmap.set(i);
-                new (get(i)) T();
-                return i;
+                T *ptr = (T*)(m_data + i*sizeof(T));
+                return new (ptr) T(args...);
+                // return new (&m_data[i]) T(args...);
             }
         }
-        return -1;
+        return nullptr;
     }
 
-    void free( int id ) { bmap.unset(id); }
-    T   *get ( int id ) { return &data[id]; }
+    void free( T *ptr )
+    {
+        ptr->~T();
+        size_t idx = ((uint8_t*)ptr - m_data) / sizeof(T);
+        // size_t idx = ptr - m_data;
+        bmap.unset(idx);
+    }
+
     void clear() { bmap.clear(); }
 };
 

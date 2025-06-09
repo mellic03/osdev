@@ -50,11 +50,6 @@ namespace IO
         __asm__ volatile("outl %0, %w1" : : "a"(value), "Nd"(port));
     }
 
-    inline void wait()
-    {
-        IO::outb(0x80, 0);
-    }
-
     const auto in8  = IO::inb;
     const auto in16 = IO::inw;
     const auto in32 = IO::inl;
@@ -62,4 +57,44 @@ namespace IO
     const auto out8  = IO::outb;
     const auto out16 = IO::outw;
     const auto out32 = IO::outl;
+
+
+    // template <typename uintxx_t>
+    // inline uintxx_t inxx( uint16_t port );
+
+    // template<> inline uint8_t inxx<uint8_t>( uint16_t port )
+    // { uint8_t v; __asm__ volatile ("inb %1, %0" : "=a"(v) : "Nd"(port)); return v; }
+
+    // template<> inline uint16_t inxx<uint16_t>( uint16_t port )
+    // { uint16_t v; __asm__ volatile ("inw %1, %0" : "=a"(v) : "Nd"(port)); return v; }
+
+    // template<> inline uint32_t inxx<uint32_t>( uint16_t port )
+    // { uint32_t v; __asm__ volatile ("inl %w1,%0":"=a" (v):"Nd" (port)); return v; }
+
+
+    // template <typename uintxx_t>
+    // inline void outxx( uint16_t port, uintxx_t value );
+
+    // template<> inline void outxx<uint8_t>( uint16_t port, uint8_t value )
+    // { __asm__ volatile("outb %0, %1" : : "a"(value), "Nd"(port)); }
+
+    // template<> inline void outxx<uint16_t>( uint16_t port, uint16_t value )
+    // { __asm__ volatile("outw %0, %1" : : "a"(value), "Nd"(port)); }
+
+    // template<> inline void outxx<uint32_t>( uint16_t port, uint32_t value )
+    // { __asm__ volatile("outl %0, %w1" : : "a"(value), "Nd"(port)); }
+
+    // const auto in8  = IO::inxx<uint8_t>;
+    // const auto in16 = IO::inxx<uint16_t>;
+    // const auto in32 = IO::inxx<uint32_t>;
+
+    // const auto out8  = IO::outxx<uint8_t>;
+    // const auto out16 = IO::outxx<uint16_t>;
+    // const auto out32 = IO::outxx<uint32_t>;
+
+
+    inline void wait()
+    {
+        IO::out8(0x80, 0);
+    }
 }

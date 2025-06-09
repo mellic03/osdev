@@ -28,6 +28,21 @@ static volatile struct limine_memmap_request lim_mmap_req = {
     .revision = 3
 };
 
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_executable_file_request lim_execfile_req = {
+    .id = LIMINE_EXECUTABLE_FILE_REQUEST,
+    .revision = 3
+};
+
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_executable_address_request lim_execaddr_req = {
+    .id = LIMINE_EXECUTABLE_ADDRESS_REQUEST,
+    .revision = 3
+};
+
+
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
@@ -67,7 +82,54 @@ void LimineRes_init()
         .fb      = lim_fb_req.response,
         .modules = lim_module_req.response,
         .mmaps   = lim_mmap_req.response,
+        .fh      = lim_execfile_req.response,
+        .execaddr = lim_execaddr_req.response,
         .mp      = lim_mp_req.response
     };
+
 }
+
+
+
+
+
+
+
+
+#include <kmemxx.hpp>
+#include <cpu/cpu.hpp>
+
+
+extern "C"
+{
+    extern uint8_t __bss_start[];
+    extern uint8_t __bss_end[];
+}
+
+
+void knl_ClearBSS()
+{
+    CPU::stos64(__bss_start, 0, (__bss_end-__bss_start)/sizeof(uint64_t));
+    // kmemset<uint128_t>(__bss_start, 0, __bss_end-__bss_start);
+}
+
+
+void knl_ClearMemory()
+{
+    size_t hhdm  = lim_hhdm_req.response->offset;
+    size_t count = lim_mmap_req.response->entry_count;
+    auto  *mmaps = lim_mmap_req.response->entries;
+
+    for (size_t i=0; i<count; i++)
+    {
+        if (mmaps[i]->type == LIMINE_MEMMAP_USABLE)
+        {
+            uint8_t *base = (uint8_t*)(mmaps[i]->base) + hhdm;
+            CPU::stos64(base, 0, mmaps[i]->length / sizeof(uint64_t));
+            // kmemset<uint8_t>(base, 0, mmaps[i]->length);
+        }
+    }
+}
+
+
 

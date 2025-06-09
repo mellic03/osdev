@@ -46,17 +46,28 @@ void VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt, uint64_t flags
 
 void VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
 {
+    phys = idk::align_down(phys, PMM::PAGE_SIZE);
+    virt = idk::align_down(virt, PMM::PAGE_SIZE);
     uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
     VMM_mapPage(pml4, phys, virt, flags);
 }
 
+void VMM::mapPage2( uintptr_t pml4_phys, uintptr_t phys, uintptr_t virt,
+                    uint64_t flags )
+{
+    phys = idk::align_down(phys, PMM::PAGE_SIZE);
+    virt = idk::align_down(virt, PMM::PAGE_SIZE);
+    uint64_t *pml4_virt = (uint64_t*)PhysToHHDM(pml4_phys);
+    VMM_mapPage(pml4_virt, phys, virt, flags);
+}
+
+
 void
 VMM::mapRange( uintptr_t phys, uintptr_t virt, size_t npages, uint64_t flags )
 {
+    phys = idk::align_down(phys, PMM::PAGE_SIZE);
+    virt = idk::align_down(virt, PMM::PAGE_SIZE);
     uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
-    // nbytes = idk::align_up(nbytes, PMM::PAGE_SIZE);
-    // for (size_t offset=0; offset<nbytes; offset+=PMM::PAGE_SIZE)
-    //     VMM_mapPage(pml4, phys+offset, virt+offset, flags);
 
     for (size_t i=0; i<npages; i++)
     {
@@ -80,6 +91,9 @@ void VMM_unmapPage( uint64_t *pml4, uint64_t virt )
         return;
     pd = (uint64_t*)PhysToHHDM(pdp[PDP_INDEX(virt)] & ~0xFFF);
 
+    if (pd[PD_INDEX(virt)] == 0)    
+        return;
+
     if (pd[PD_INDEX(virt)] & VMM::PAGE_PAGESIZE) // 2 MiB page
     {
         pd[PD_INDEX(virt)] = 0; // Clear entry
@@ -89,31 +103,34 @@ void VMM_unmapPage( uint64_t *pml4, uint64_t virt )
 
     kassert(false); // Only 2MiB pages should exist
 
-    // if (!(pd[PD_INDEX(virt)] & VMM::PAGE_PRESENT))
-    //     return; // Mapping does not exist
-    // uint64_t *pt = (uint64_t *)PhysToHHDM(pd[PD_INDEX(virt)] & ~0xFFF);
+    if (!(pd[PD_INDEX(virt)] & VMM::PAGE_PRESENT))
+        return; // Mapping does not exist
+    uint64_t *pt = (uint64_t*)PhysToHHDM(pd[PD_INDEX(virt)] & ~0xFFF);
 
-    // // Clear the 4 KiB page entry
-    // pt[PT_INDEX(virt)] = 0; // Clear the entry
-    // flush_tlb(virt);        // Flush TLB
+    // Clear the 4 KiB page entry
+    pt[PT_INDEX(virt)] = 0; // Clear the entry
+    CPU::flushTLB(virt);    // Flush TLB
 }
 
 
 void VMM::unmapPage( uintptr_t virt )
 {
+    virt = idk::align_down(virt, PMM::PAGE_SIZE);
     uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
     VMM_unmapPage(pml4, virt);
+    CPU::flushTLB(virt);
 }
 
 
 void VMM::unmapRange( uintptr_t virt, size_t npages )
 {
+    virt = idk::align_down(virt, PMM::PAGE_SIZE);
     uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
     
     for (size_t i=0; i<npages; i++)
-    {
         VMM_unmapPage(pml4, virt + i*PMM::PAGE_SIZE);
-    }
+
+    CPU::flushTLB(virt);
 }
 
 
@@ -121,7 +138,7 @@ void VMM::unmapRange( uintptr_t virt, size_t npages )
 void VMM::init() 
 {
     syslog log("VMM::init");
-    uint64_t *pml4 = (uint64_t *)PhysToHHDM(CPU::getCR3());
+    uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
     log("pml4: 0x%lx", pml4);
 }
 

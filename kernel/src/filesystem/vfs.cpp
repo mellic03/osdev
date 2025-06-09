@@ -10,7 +10,7 @@
 static vfsNode     *vfs_Root;
 static std::mutex   vfs_Lock;
 
-static idk::BitMapAllocator<vfsInode, 1024> vfs_Inodes;
+static idk::BitMapAllocator<vfsInode, 1024>   vfs_Inodes;
 static idk::BitMapAllocator<vfsBlock, 2*4096> vfs_Blocks;
 
 
@@ -128,7 +128,9 @@ static vfsNode *vfs_CopyToDir( vfsNode *dir, const vfsNode &child )
 
 vfsNode *vfs::open( const char *path )
 {
-    static char name[64];
+    std::lock_guard lock(vfs_Lock);
+
+    char name[64];
     memset(name, '\0', sizeof(name));
 
     auto *A = skip_ch(path, ' ');

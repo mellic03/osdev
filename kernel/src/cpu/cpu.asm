@@ -6,8 +6,8 @@
 
 section .data
     align 16
-    fxsave_region: times 512 db 0
-
+    mxcsr_temp: dd 0
+    
 
 
 section .text
@@ -18,8 +18,8 @@ section .text
         mov rax, cr0
         bts rax, 1		; Set Monitor co-processor (Bit 1)
         btr rax, 2		; Clear Emulation (Bit 2)
-        bts rax, 5		; Set Native Exception (Bit 5)
-        btr rax, 3		; Clear TS
+        ; bts rax, 5		; Set Native Exception (Bit 5)
+        ; btr rax, 3		; Clear TS
         mov cr0, rax
         finit
         ret
@@ -37,16 +37,18 @@ section .text
 
     global cpu_enable_avx
     cpu_enable_avx:
-        mov rax, cr4
-        or  eax, 0x40000
-        mov cr4, rax
+        push rax
+        push rcx
+        push rdx
 
-        mov rcx, 0
-        xgetbv
+        xor rcx, rcx
+        xgetbv          ; Load XCR0 register
+        or eax, 7       ; Set AVX, SSE, X87 bits
+        xsetbv          ; Save back to XCR0
 
-        or eax, 6
-        mov rcx, 0
-        xsetbv
+        pop rdx
+        pop rcx
+        pop rax
         ret
 
     global cpu_enable_xsave
@@ -113,15 +115,77 @@ section .text
         ret
 
 
+    ; global cpu_getCR
+    ; cpu_getCR:          ; cpu_getCRX( &cr0, &cr1, ... )
+    ;     mov rax, cr0
+    ;     mov [rdi], rax
+    ;     mov rax, cr2
+    ;     mov [rsi], rax
+    ;     mov rax, cr3
+    ;     mov [rdx], rax
+    ;     mov rax, cr4
+    ;     mov [rcx], rax
+    ;     ret
+
+    global cpu_getXCR0
+    cpu_getXCR0:
+        mov ecx, 0
+        xgetbv
+        ret
+
+    global cpu_getCR0
+    cpu_getCR0:
+        mov rax, cr0
+        ret
+
     global cpu_getCR3
-    cpu_getCR3:        ; uint64_t cpu_getCR3( void )
+    cpu_getCR3:
         mov rax, cr3
         ret
 
+    global cpu_getCR4
+    cpu_getCR4:
+        mov rax, cr4
+        ret
+
+
+
+    global cpu_setXCR0
+    cpu_setXCR0:
+        mov rdx, rdi
+        mov rax, rsi
+        mov ecx, 0
+        xsetbv
+        ret
+
+    global cpu_setCR0
+    cpu_setCR0:
+        mov cr0, rdi
+        ret
+
     global cpu_setCR3
-    cpu_setCR3:       ; void cpu_setCR3( uint64_t )
+    cpu_setCR3:
         mov cr3, rdi
         ret
+
+    global cpu_setCR4
+    cpu_setCR4:
+        mov cr4, rdi
+        ret
+
+    global cpu_setMXCSR
+    cpu_setMXCSR:
+        mov eax, dword 0x00
+        or  eax, dword 0x1000
+        or  eax, dword 0x0800
+        or  eax, dword 0x0400
+        or  eax, dword 0x0200
+        or  eax, dword 0x0100
+        or  eax, dword 0x0080
+        mov [mxcsr_temp], dword eax
+        ldmxcsr [mxcsr_temp]
+        ret
+
 
     global cpu_getTSC
     cpu_getTSC:

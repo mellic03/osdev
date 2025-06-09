@@ -12,12 +12,6 @@ section .text
     align 16
 
     %macro ctx_push 0
-        ; ; cr3 -------------
-        ; mov [qtemp], rax
-        ;     mov rax, cr3
-        ;     push rax
-        ; mov rax, [qtemp]
-        ; ; -----------------
         push rbp
         push rsi
         push rdi
@@ -52,12 +46,6 @@ section .text
         pop rdi
         pop rsi
         pop rbp
-        ; ; cr3 -------------
-        ; mov [qtemp], rax
-        ;     pop rax
-        ;     mov cr3, rax
-        ; mov rax, [qtemp]
-        ; ; -----------------
     %endmacro
 
 

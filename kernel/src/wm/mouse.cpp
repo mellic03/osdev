@@ -43,7 +43,12 @@ void wm::guiMouse::update( const knl::MsState &mscurr, guiElement *root )
 
         if (focused && (focused != root))
         {
-            focused->makeLast();
+            auto *E = focused;
+            while (E->m_parent)
+            {
+                E->makeLast();
+                E = E->m_parent;
+            }
             focused->onClick(*this);
             this->dragging = true; 
         }

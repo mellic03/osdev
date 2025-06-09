@@ -14,9 +14,9 @@ file(
 # target_link_libraries(libc libk)
 
 
-add_library(libc_k OBJECT ${SOURCES})
-target_link_libraries(libc_k CringeOS)
-target_compile_definitions(libc_k PUBLIC -D__is_kernel)
+add_library(klibc OBJECT ${SOURCES})
+target_link_libraries(klibc CringeOS)
+target_compile_definitions(klibc PUBLIC -D__is_kernel)
 
 
 # file(

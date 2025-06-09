@@ -19,11 +19,12 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 
-include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
+include(${CMAKE_SOURCE_DIR}/config.cmake)
 
 include_directories("${CMAKE_SOURCE_DIR}/external/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libc/include/")
 include_directories("${CMAKE_SOURCE_DIR}/lib/libc++/include/")
+include_directories("${CMAKE_SOURCE_DIR}/lib/libmath/include/")
 
 include_directories("${CMAKE_SOURCE_DIR}/kernel/include/")
 include_directories("${CMAKE_SOURCE_DIR}/kernel/include/arch/x86_64/")
@@ -31,6 +32,7 @@ include_directories("${CMAKE_SOURCE_DIR}/include/")
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc/")
 add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libc++/")
+add_subdirectory("${CMAKE_SOURCE_DIR}/lib/libmath/")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/kernel/)
 
@@ -51,8 +53,8 @@ target_compile_definitions(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    libc_k
-    libc++_k
+    klibc
+    klibc++
     ${CringeOS_LIBRARIES}
 )
 

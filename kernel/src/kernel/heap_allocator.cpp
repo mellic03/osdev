@@ -3,7 +3,7 @@
 #include <kernel/log.hpp>
 #include <kernel/bitmanip.hpp>
 #include <sys/interrupt.hpp>
-#include <kpanic.h>
+#include <kpanic.hpp>
 #include <algorithm>
 
 

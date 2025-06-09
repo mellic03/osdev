@@ -52,6 +52,7 @@ cd ../
 # Compile kernel
 # ---------------------------------------------------------
 mkdir -p build && cd build
+# cmake -DCMAKE_TOOLCHAIN_FILE=config.cmake ..
 cmake ..
 make -j8
 cd ../

@@ -211,10 +211,13 @@ int vsnprintf( char *buf, size_t bufsz, const char *fmt, va_list args )
         fmt += 1;
     }
 
-    if (buf < end)
+    if (buf >= end)
     {
-        *(buf++) = '\0';
+        *(end-1) = '\0';
+        return bufsz;
     }
+
+    *(buf++) = '\0';
 
     return buf - start - 1;
 }

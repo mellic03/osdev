@@ -1,7 +1,7 @@
 #include <kernel/memory.hpp>
 #include <kernel/log.hpp>
 #include <kernel/bitmanip.hpp>
-#include <kpanic.h>
+#include <kpanic.hpp>
 #include <sys/interrupt.hpp>
 #include <algorithm>
 

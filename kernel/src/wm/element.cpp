@@ -7,10 +7,9 @@
 wm::guiElement*
 wm::guiElement::findRoot( guiElement *E )
 {
-    guiElement *curr = E;
     while (E->m_parent)
         E = E->m_parent;
-    return curr;
+    return E;
 }
 
 bool
@@ -59,6 +58,7 @@ void wm::guiElement::addChild( guiElement *E )
 
     if (m_root == nullptr)
         m_root = findRoot(this);
+
     E->m_root = m_root;
 
     if (m_child == nullptr)
@@ -141,6 +141,18 @@ void wm::guiElement::updateBounds( const ivec2 &tl, const ivec2 &sp )
     m_gpos  = tl + m_lpos + m_margin;
     m_gsp.x = std::min(m_lsp.x, sp.x - 2*m_margin.x);
     m_gsp.y = std::min(m_lsp.y, sp.y - 2*m_margin.y);
+
+    if (m_style.fillX)
+    {
+        m_gpos.x = tl.x;
+        m_gsp.x  = sp.x;
+    }
+    if (m_style.fillY)
+    {
+        m_gpos.y = tl.y;
+        m_gsp.y  = sp.y;
+    }
+
 }
 
 
@@ -168,7 +180,5 @@ void wm::guiElement::draw( guiFramebuffer &dst )
     }
 
 }
-
-
 
 

@@ -40,16 +40,6 @@ namespace ksym
         } vfs_sym;
 
         struct {
-            ivec2 *CSR;
-            int W, H;
-            int pitch;
-            size_t BPP;
-            uint8_t *frontbuffer;
-            uint8_t *backbuffer;
-            void (*swapBuffers)();
-        } video_sym;
-
-        struct {
             kthread_t *(*create)( const char*, void(*)(void*), void* );
             void (*yield)();
             void (*sleep)(uint64_t);

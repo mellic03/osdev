@@ -13,7 +13,7 @@ static void IOAPIC_ISO_init( ACPI::MADT_ioapic_iso_t*, ACPI::Response& );
 
 void ACPI::MADT_init( ACPI::MADT_t *madt, ACPI::Response &res )
 {
-    // syslog log("MADT_init");
+    syslog log("MADT_init");
 
     // If bit 0 in the flags field is set then you need to mask all the 8259 PIC's interrupts,
     // but you should probably do this anyway. 
@@ -26,7 +26,7 @@ void ACPI::MADT_init( ACPI::MADT_t *madt, ACPI::Response &res )
     uintptr_t end  = base + madt->header.Length;
     uintptr_t curr = base + 0;
 
-    // log("lapic_addr: 0x%lx", madt->lapic_addr);
+    log("lapic_addr: 0x%lx", madt->lapic_addr);
     // log("flags:      %lu", madt->flags);
     // log("end:        0x%lx", end);
 

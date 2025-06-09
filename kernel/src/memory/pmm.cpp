@@ -88,6 +88,9 @@ static uintptr_t PMM_pageend;
 
 uintptr_t PMM::allocFrame()
 {
+    static std::mutex M;
+    std::lock_guard lock(M);
+
     for (size_t i=0; i<PMM_framebmap.nbits(); i++)
     {
         if (PMM_framebmap.is_unset(i))
@@ -95,6 +98,7 @@ uintptr_t PMM::allocFrame()
             PMM_framebmap.set(i);
             uintptr_t virt = PMM_framebase + i*PMM::FRAME_SIZE;
             uintptr_t phys = virt - PMM::hhdm;
+            kmemset((void*)virt, 0, PMM::FRAME_SIZE);
             // syslog::println("[PMM::allocFrame] setcount=%d", PMM_framebmap.m_setcount);
             return phys;
         }
@@ -106,6 +110,9 @@ uintptr_t PMM::allocFrame()
 
 void PMM::freeFrame( uintptr_t phys )
 {
+    static std::mutex M;
+    std::lock_guard lock(M);
+
     size_t idx = (phys - PMM_framebase - PMM::hhdm) / PMM::FRAME_SIZE;
     PMM_framebmap.unset(idx);
 }
@@ -121,6 +128,7 @@ uintptr_t PMM::allocPage()
             PMM_pagebmap.set(i);
             uintptr_t virt = PMM_pagebase + PMM::PAGE_SIZE*i;
             uintptr_t phys = virt - PMM::hhdm;
+            kmemset((void*)virt, 0, PMM::PAGE_SIZE);
             // syslog::println("[PMM::allocPage] setcount=%d", PMM_pagebmap.m_setcount);
             return phys;
         }

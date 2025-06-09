@@ -36,6 +36,8 @@ namespace wm
         struct {
             bool solidColor = false;
             bool fillBounds = false;
+            bool fillX = false;
+            bool fillY = false;
         } m_style;
 
         ivec2 m_margin  = ivec2(4);
@@ -65,8 +67,8 @@ namespace wm
 
         virtual void update( const ivec2&, const ivec2& );
         virtual void draw( guiFramebuffer& );
-    
-    
+
+
         struct iterator
         {
             guiElement *curr;

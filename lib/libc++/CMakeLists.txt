@@ -7,9 +7,9 @@ file(
 # target_link_libraries(libc++ libc)
 
 
-add_library(libc++_k OBJECT ${SOURCES})
-target_link_libraries(libc++_k libc_k)
-target_compile_definitions(libc++_k PUBLIC -D__is_kernel)
+add_library(klibc++ OBJECT ${SOURCES})
+target_link_libraries(klibc++ klibc)
+target_compile_definitions(klibc++ PUBLIC -D__is_kernel)
 
 
 # target_link_options(
@@ -28,7 +28,7 @@ target_compile_definitions(libc++_k PUBLIC -D__is_kernel)
 
 
 # target_link_options(
-#     libc++_k PUBLIC
+#     klibc++ PUBLIC
 #     -Wl,-m,elf_x86_64
 #     -Wl,--build-id=none
 #     -static

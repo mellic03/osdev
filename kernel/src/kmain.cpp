@@ -4,7 +4,7 @@
 
 #include <kassert.h>
 #include <kmalloc.h>
-#include <kpanic.h>
+#include <kpanic.hpp>
 #include <kthread.hpp>
 #include <kprintf.hpp>
 #include <new>
@@ -23,8 +23,8 @@
 #include <wm/wm.hpp>
 
 #include <cpu/cpu.hpp>
-#include <cpu/scheduler.hpp>
-#include "cpu/smp.hpp"
+#include "smp/smp.hpp"
+#include <sys/process.hpp>
 
 #include <string.h>
 #include <stdio.h>
@@ -43,129 +43,45 @@
 #include "syscall/syscall.hpp"
 #include <smp/barrier.hpp>
 
-
-static void invalidOpISR( intframe_t* );
-static void genfaultISR( intframe_t* );
-static void pagefaultISR( intframe_t* );
-static void outOfMemoryISR( intframe_t* );
-static void syscallISR( intframe_t* );
-static void spuriousISR( intframe_t* );
-
-
-static void PIT_IrqHandler( intframe_t *frame )
-{
-    // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
-    auto *cpu = SMP::this_cpu();
-    cpu->m_msecs += 500; // cpu->m_lapicPeriod;
-    ThreadScheduler::scheduleISR(frame);
-}
-
-
-extern void LimineRes_init();
-extern void early_init();
-static void smp_main(limine_mp_info*);
-const auto &println = syslog::println;
-
-
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_rsdp_request lim_rsdp_req = {
-    .id = LIMINE_RSDP_REQUEST,
-    .revision = 3
-};
-
-
-static knl::Barrier barrierA{0};
-static knl::Barrier barrierB{0};
-std::atomic_uint64_t smpCount;
-extern uintptr_t endkernel;
-
-static uint64_t  smp_gdt[SMP::max_cpus][5];
-static gdt_ptr_t smp_gdtr[SMP::max_cpus];
-
-
-extern "C"
-void _start()
-{
-    CPU::cli();
-    CPU::enableFloat();
-
-    syslog::enable();
-    if (!serial::init())
-        syslog::disable();
-    syslog log("_start");
-
-    CPU::createGDT(smp_gdt[0], &smp_gdtr[0]);
-    CPU::installGDT(&smp_gdtr[0]);
-
-    early_init();
-    kprintf_init();
-
-    CPU::createIDT();
-    PIC::disable();
-    PCI::init();
-
-    CPU::installISR(IntNo_InvalidOpcode, invalidOpISR);
-    CPU::installISR(IntNo_GenFault,      genfaultISR);
-    CPU::installISR(IntNo_PageFault,     pagefaultISR);
-    CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
-    CPU::installISR(IntNo_KThreadYield,  ThreadScheduler::scheduleISR);
-    CPU::installISR(IntNo_Syscall,       syscallISR);
-    CPU::installISR(IntNo_Spurious,      spuriousISR);
-    CPU::installIRQ(IrqNo_PIT,           PIT_IrqHandler);
-
-    static ACPI::Response res;
-    ACPI::init(lim_rsdp_req.response->address, res);
-    APIC::init(res);
-
-    // CPU::featureCheck();
-    // VMM::mapPage(0x3000, 0xFFFFFFFFFFF30000);
-    // uint64_t *buf = (uint64_t*)0xFFFFFFFFFFF30000;
-    // buf[4] = 1234321;
-    // log("buf[4]: %lu", buf[4]);
-    // VMM::unmapPage(0xFFFFFFFFFFF30000);
-    // buf[4] = 8765678;
-    // log("buf[4]: %lu", buf[4]);
-
-    smpCount.store(0);
-    barrierA.reset(limine_res.mp->cpu_count);
-    barrierB.reset(limine_res.mp->cpu_count);
-    SMP::init(smp_main);
-
-    kassert(false); // Should be unreachable!
-
-    CPU::hcf();
-}
-
-
+#include <fixed.hpp>
 
 
 extern ModuleInterface *msdev_init( void* );
 extern ModuleInterface *kbdev_init( void* );
 extern void load_module2( ModuleInterface* (*)(void*) );
 
+static knl::Barrier barrierA{0};
+static knl::Barrier barrierB{0};
 
-static void smp_main( limine_mp_info *info )
+
+static void kmain( cpu_t *cpu )
 {
-    CPU::cli();
-    CPU::enableFloat();
-
-    size_t cpuid = info->lapic_id;
-    CPU::createGDT(smp_gdt[cpuid], &smp_gdtr[cpuid]);
-    CPU::installGDT(&smp_gdtr[cpuid]);
-    cpu_t *cpu = new (SMP::get_cpu(cpuid)) cpu_t(cpuid);
-
-    CPU::installIDT();
-    LAPIC::init();
-
     if (cpu->id == SMP::bsp_id())
     {
+        // Fixed f = 0.5f;
+        // uint32_t whole = f.value / Fixed::Scale;
+        // uint32_t fract = 0; // (f.value >> Fixed::Shift);
+        // uint32_t divisor = 2;
+        // for (int i=15; i>=0; i--)
+        // {
+        //     (f.value & (1<<i)) ? syslog::print("1") : syslog::print("0");
+
+        //     if (f.value & (1<<i))
+        //         fract += Fixed::Scale*divisor;
+        //     divisor *= 2;
+        // } 
+        // syslog::println("");
+        // syslog::println("[kmain] value: %u.%u", whole, fract);
+
         // knl::loadModules(initrd::find("drv/"));
         // knl::loadModules(initrd::find("srv/"));
         load_module2(msdev_init);
         load_module2(kbdev_init);
         knl::initModules();
-        kthread::create("wm::main", wm::main, nullptr);
         vfs::print();
+
+        // kthread::create("wm::main", wm::main, nullptr);
+        knl::createProcess("wm::main", wm::main, nullptr);
     }
 
     // else if (cpu->id == 2)
@@ -189,41 +105,146 @@ static void smp_main( limine_mp_info *info )
 
 
 
-void stacktrace( intframe_t *frame )
-{
-    syslog log("stacktrace");
-    intframe_t *sf = frame;
 
-    for (int i=0; i<16; i++)
-    {
-        log("rip: 0x%lx", sf->rip);
-        log("rbp: 0x%lx\n", sf->rbp);
-        sf = (intframe_t*)(&sf->rbp);
-    }
+
+
+
+
+#include <driver/svga.hpp>
+#include <driver/video.hpp>
+#include <kernel/linkedlist.hpp>
+
+
+static void pagefaultISR( intframe_t* );
+static void outOfMemoryISR( intframe_t* );
+static void syscallISR( intframe_t* );
+static void spuriousISR( intframe_t* );
+
+
+static void PIT_IrqHandler( intframe_t *frame )
+{
+    // syslog::println("[PIT_IRQ] cpu=%lu", SMP::this_cpuid());
+    auto *cpu = SMP::this_cpu();
+    cpu->m_ticks += 500;
+    knl::Sched::scheduleISR(frame);
 }
 
-static void invalidOpISR( intframe_t *frame )
+
+
+extern void knl_ClearBSS();
+extern void knl_ClearMemory();
+extern void early_init();
+extern void CPU_featureCheck();
+extern void CPU_featureCheck2();
+const auto &println = syslog::println;
+
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_rsdp_request lim_rsdp_req = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 3
+};
+
+
+// static void smp_hell( limine_mp_info* )
+// {
+//     CPU::cli();
+//     CPU::hcf();
+// }
+
+// #include <arch/elf.h>
+
+// void knl_reboot()
+// {
+//     cpu_t *cpu = SMP::this_cpu();
+//     auto  *res = limine_res.mp;
+
+//     for (size_t i=0; i<SMP::num_cpus; i++)
+//     {
+//         if (SMP::get_cpu(i)->id != cpu->id)
+//         {
+//             __atomic_store_n(
+//                 &(res->cpus[i]->goto_address), &smp_hell, __ATOMIC_SEQ_CST
+//             );
+//         }
+//     }
+
+//     auto *ehdr = (Elf64_Ehdr*)(limine_res.fh->executable_file->address);
+//     auto entryfn = (void (*)())(ehdr->e_entry);
+//     syslog::println("[knl_reboot] entry: 0x%lx", entryfn);
+//     entryfn();
+// }
+
+
+extern "C"
+void _start()
 {
-    syslog log("Exception %u (%s)", frame->isrno, IntNoStr(frame->isrno));
+    CPU::cli();
+    // knl_ClearBSS();
+    // knl_ClearMemory();
+    CPU_featureCheck();
+    CPU::enableFloat();
+    
+    CPU::createGDT();
+    CPU::installGDT();
+    
+    (serial::init()) ? syslog::enable() : syslog::disable();
+    early_init();
 
-    auto *cpu = SMP::this_cpu();
-    auto *th = cpu->sched.currThread();
-    if (cpu) log("cpu %d", cpu->id);
-    if (th)  log("thread %d (%s)", th, th->name);
+    CPU_featureCheck2();
 
-}
+    CPU::createIDT();
+    PIC::disable();
 
-static void genfaultISR( intframe_t* )
-{
-    syslog log("Exception GENERAL_PROTECTION_FAULT");
+    // CPU::installISR(IntNo_InvalidOpcode, invalidOpISR);
+    // CPU::installISR(IntNo_GenFault,      genfaultISR);
+    CPU::installISR(IntNo_PageFault,     pagefaultISR);
+    CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
+    CPU::installISR(IntNo_KThreadYield,  knl::Sched::scheduleISR);
+    CPU::installISR(IntNo_Syscall,       syscallISR);
+    CPU::installISR(IntNo_Spurious,      spuriousISR);
+    CPU::installIRQ(IrqNo_PIT,           PIT_IrqHandler);
 
-    auto *cpu = SMP::this_cpu();
-    auto *th = cpu->sched.currThread();
-    if (cpu) log("cpu %d", cpu->id);
-    if (th)  log("thread %d (%s)", th, th->name);
+    static ACPI::Response res;
+    ACPI::init(lim_rsdp_req.response->address, res);
+    APIC::init(res);
+
+    // smpCount.store(0);
+    barrierA.reset(limine_res.mp->cpu_count);
+    barrierB.reset(limine_res.mp->cpu_count);
+    SMP::init(kmain);
+
+    kassert(false); // Should be unreachable!
 
     CPU::hcf();
 }
+
+
+
+
+
+
+// void stacktrace( intframe_t *frame )
+// {
+//     syslog log("stacktrace");
+//     intframe_t *sf = frame;
+
+//     for (int i=0; i<16; i++)
+//     {
+//         log("rip: 0x%lx", sf->rip);
+//         log("rbp: 0x%lx\n", sf->rbp);
+//         sf = (intframe_t*)(&sf->rbp);
+//     }
+// }
+
+// static void invalidOpISR( intframe_t *frame )
+// {
+//     syslog log("Exception %u (%s)", frame->isrno, IntNoStr(frame->isrno));
+
+//     auto *cpu = SMP::this_cpu();
+//     if (cpu) log("cpu %d", cpu->id);
+
+// }
 
 static void outOfMemoryISR( intframe_t* )
 {
@@ -244,38 +265,27 @@ static void spuriousISR( intframe_t* )
 
 
 
-// static std::atomic_int faultCount{0};
-
 static void pagefaultISR( intframe_t *frame )
 {
     syslog log("Exception PAGE_FAULT");
 
-    // if (faultCount++ > 0)
-    // {
-    //     kpanic("faultCount++ > 0");
-    // }
-
     auto *cpu = SMP::this_cpu();
-    auto *th = cpu->sched.currThread();
     log("cpu %d", cpu->id);
-    log("thread %d (%s)", th, th->name);
 
-    log("rip:   0x%lx", frame->rip);
-    log("rsp:   0x%lx", frame->rsp);
-    log("r11:   0x%lx", frame->r11);
-    log("r12:   0x%lx", frame->r12);
-    log("r13:   0x%lx", frame->r13);
-    log("r14:   0x%lx", frame->r14);
-    log("r15:   0x%lx", frame->r15);
-    log("rax:   0x%lx", frame->rax);
-    log("rbx:   0x%lx", frame->rbx);
-    log("rcx:   0x%lx", frame->rcx);
-    log("rdx:   0x%lx", frame->rdx);
-    log("rdi:   0x%lx", frame->rdi);
-    log("rsi:   0x%lx", frame->rsi);
-    log("rbp:   0x%lx", frame->rbp);
-    log("isrno: %lu", frame->isrno);
-    log("errno: %lu", frame->errno);
+    log("rax:    0x%lx", frame->rax);
+    log("rbx:    0x%lx", frame->rbx);
+    log("rcx:    0x%lx", frame->rcx);
+    log("rdx:    0x%lx", frame->rdx);
+    log("rdi:    0x%lx", frame->rdi);
+    log("rsi:    0x%lx", frame->rsi);
+    log("rbp:    0x%lx", frame->rbp);
+    log("isrno:  %lu",   frame->isrno);
+    log("errno:  %lu",   frame->errno);
+    log("rip:    0x%lx", frame->rip);
+    log("cs:     0x%lx", frame->cs);
+    log("rflags: 0x%lx", frame->rflags);
+    log("rsp:    0x%lx", frame->rsp);
+    log("ss:     0x%lx", frame->ss);
 
     uint64_t flags = frame->errno;
     // printBits(flags);

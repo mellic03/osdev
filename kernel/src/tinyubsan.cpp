@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <kpanic.h>
+#include <kpanic.hpp>
 #include <kernel/log.hpp>
 
 

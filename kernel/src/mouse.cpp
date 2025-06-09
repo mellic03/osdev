@@ -1,10 +1,11 @@
 #include <driver/interface.hpp>
+#include <driver/video.hpp>
 
 #include <arch/io.hpp>
 #include <filesystem/vfs.hpp>
 #include <ipc/pipe.hpp>
+#include <sys/process.hpp>
 
-#include <kernel/kvideo.hpp>
 #include <kernel/log.hpp>
 #include <kernel/event.hpp>
 #include <kernel/ringbuffer.hpp>
@@ -34,7 +35,7 @@ void MouseWait()
     uint64_t timeout = 100000;
     while (timeout--)
     {
-        if ((IO::inb(0x64) & 0b10) == 0)
+        if ((IO::in8(0x64) & 0b10) == 0)
         {
             return;
         }
@@ -44,15 +45,15 @@ void MouseWait()
 static void MouseWrite( uint8_t value )
 {
     MouseWait();
-    IO::outb(0x64, 0xD4);
+    IO::out8(0x64, 0xD4);
     MouseWait();
-    IO::outb(0x60, value);
+    IO::out8(0x60, value);
 }
 
 uint8_t MouseRead()
 {
     MouseWait();
-    return IO::inb(0x60);
+    return IO::in8(0x60);
 }
 
 
@@ -72,8 +73,8 @@ void ProcessMousePacket( const MousePacket &P )
     int dy = (ysign==1) ? P.b2 : 256-P.b2;
         dy = ysign * (dy - yover);
     
-    mscurr.x = std::clamp(mscurr.x + dx, 0, kvideo::W-1);
-    mscurr.y = std::clamp(mscurr.y - dy, 0, kvideo::H-1);
+    mscurr.x = std::clamp(mscurr.x + dx, 0, int(kvideo2::W) - 1);
+    mscurr.y = std::clamp(mscurr.y - dy, 0, int(kvideo2::H) - 1);
 }
 
 
@@ -81,21 +82,21 @@ void ProcessMousePacket( const MousePacket &P )
 static void mouse_init()
 {
     // enabling the auxiliary device - mouse
-    IO::outb(0x64, 0xA8);
+    IO::out8(0x64, 0xA8);
     MouseWait();
 
     // tells the keyboard controller that we want to send a command to the mouse
-    IO::outb(0x64, 0x20);
+    IO::out8(0x64, 0x20);
     MouseWait();
 
-    uint8_t status = IO::inb(0x60);
+    uint8_t status = IO::in8(0x60);
     MouseWait();
 
-    IO::outb(0x64, 0x60);
+    IO::out8(0x64, 0x60);
     MouseWait();
 
     // setting the correct bit is the "compaq" status byte
-    IO::outb(0x60, status|0b10);
+    IO::out8(0x60, status|0b10);
 
     MouseWrite(0xF6);
     MouseRead();
@@ -109,7 +110,7 @@ static void irq_handler( intframe_t* )
 {
     static int count = 0;
     static MousePacket packet;
-    uint8_t data = IO::inb(0x60);
+    uint8_t data = IO::in8(0x60);
 
     switch (count)
     {
@@ -142,6 +143,7 @@ static void msdev_main( void* )
 
     while (true)
     {
+        // syslog::println("[msdev_main]");
         while (!msbuf.empty())
         {
             ProcessMousePacket(msbuf.front());
@@ -149,7 +151,7 @@ static void msdev_main( void* )
             vfs::write(msstate, &mscurr, 0, sizeof(mscurr));
         }
 
-        kthread::yield();
+        knl::threadYield();
     }
 }
 

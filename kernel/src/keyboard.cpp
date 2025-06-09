@@ -3,13 +3,13 @@
 #include <arch/io.hpp>
 #include <filesystem/vfs.hpp>
 #include <ipc/pipe.hpp>
+#include <sys/process.hpp>
 
 #include <kernel/kvideo.hpp>
 #include <kernel/log.hpp>
 #include <kernel/event.hpp>
 #include <kernel/kscancode.h>
 #include <kernel/ringbuffer.hpp>
-#include <kthread.hpp>
 
 #include <kmemxx.hpp>
 #include <algorithm>
@@ -128,7 +128,7 @@ static void kbdev_update( uint8_t scancode )
 
 static void kbdev_irq( intframe_t* )
 {
-    uint8_t code = IO::inb(0x60);
+    uint8_t code = IO::in8(0x60);
 
     if (!rawstream.full())
     {
@@ -153,12 +153,13 @@ static void kbdev_main( void* )
 {
     while (true)
     {
+        // syslog::println("[kbdev_main]");
         if (!rawstream.empty())
         {   
             uint8_t scancode = rawstream.pop_front();
             kbdev_update(scancode);
         }
-        // kthread::yield();
+        knl::threadYield();
     }
 }
 

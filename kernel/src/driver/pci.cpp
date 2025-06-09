@@ -1,73 +1,34 @@
 #include <driver/pci.hpp>
 #include <driver/pci_id.hpp>
 
-#include <kmalloc.h>
 #include <kernel/log.hpp>
+#include <kmalloc.h>
 
+#include <bitmap.hpp>
 #include <inplace_vector.hpp>
-static PCI_Device PCI_devices_buf[128];
-static idk::inplace_vector<PCI_Device> PCI_devices;
 
 
-static uint8_t pci_read_byte( int bus, int slot, int fn, int off )
-{
-    uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
-    IO::out32(PCI_CONFIG_ADDRESS, addr);
-    return IO::in8(0xcfc + (off & 0x03));
-}
+static PCI_Device *PCI_RootDevice; //      = PCI_Device(PCIAddress(0, 0, 0));
+static auto PCI_DeviceAllocator = idk::BitMapAllocator2<PCI_Device, 128>();
 
-static uint16_t pci_read_word( int bus, int slot, int fn, int off )
-{
-    if ((off & 0x03) == 0x3)
-        return 0;
-    uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
-    IO::out32(PCI_CONFIG_ADDRESS, addr);
-    return IO::in16(PCI_CONFIG_DATA + (off & 0x03));
-}
+// static PCI_Device *PCI_devices_buf[128];
+// static idk::inplace_vector<PCI_Device*> PCI_devices;
 
-static uint32_t pci_read_dword( int bus, int slot, int fn, int off )
-{
-    if (off & 0x03)
-        return 0;
-    
-    uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
-    IO::out32(PCI_CONFIG_ADDRESS, addr);
-    return IO::in32(PCI_CONFIG_DATA);
-}
+static constexpr uint8_t PCI_GET_HEADER( uint8_t bus, uint8_t dev, uint8_t fun )
+{ return PCI::read8(PCIAddress(bus, dev, fun), PCI_HEADER_TYPE); }
 
-void pci_write16( int bus, int slot, int fn, int off, uint16_t data )
-{
-    uint32_t addr = (1 << 31) | (bus << 16) | (slot << 11) | (fn << 8) | (off & 0xfc);
-    IO::out32(PCI_CONFIG_ADDRESS, addr);
-    IO::out32(PCI_CONFIG_DATA + (off & 0x03), data);
-}
+static constexpr uint16_t PCI_GET_VENDOR( uint8_t bus, uint8_t dev, uint8_t fun )
+{ return PCI::read16(PCIAddress(bus, dev, fun), PCI_VENDOR_ID); }
 
-void pci_write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t data)
-{
-    uint32_t address = (uint32_t)((bus << 16) | (slot << 11) | (func << 8) | (offset & 0xfc) | 0x80000000);
+static constexpr uint8_t PCI_GET_CLASS( uint8_t bus, uint8_t dev, uint8_t fun )
+{ return PCI::read8(PCIAddress(bus, dev, fun), PCI_CLASS); }
 
-    IO::out32(0xCF8, address);
-    IO::out32(0xCFC, data);
-}
-
-
-#define PCI_GET_VENDOR(bus, dev, fun) pci_read_word(bus, dev, fun, PCI_VENDOR_ID)
-#define PCI_GET_CLASS(bus, dev, fun) pci_read_byte(bus, dev, fun, PCI_CLASS)
-#define PCI_GET_SUBCLASS(bus, dev, fun) pci_read_byte(bus, dev, fun, PCI_SUBCLASS)
-#define PCI_GET_CLASSCODE(bus, dev, fun) ((pci_read_byte(bus, dev, fun, 0xB) << 8) | pci_read_byte(bus, dev, fun, 0xA))
-
+static constexpr uint8_t PCI_GET_SUBCLASS( uint8_t bus, uint8_t dev, uint8_t fun )
+{ return PCI::read8(PCIAddress(bus, dev, fun), PCI_SUBCLASS); }
 
 
 /* https://www.reddit.com/r/osdev/comments/q83p87/pci_troubles/ */
-// static void PCI_scan_function( uint32_t bus, uint32_t device, uint32_t function );
-// static void PCI_scan_device( uint32_t bus, uint32_t device );
-static void PCI_scan_bus( uint32_t bus );
-
-
-static uint8_t getHeader( uint8_t bus, uint8_t slot, uint8_t fun )
-{
-    return pci_read_byte(bus, slot, fun, PCI_HEADER_TYPE);
-}
+static void PCI_scan_bus( PCI_Device *pdev, uint32_t bus );
 
 static bool checkDevice( uint8_t bus, uint8_t slot, uint8_t fun )
 {
@@ -77,226 +38,213 @@ static bool checkDevice( uint8_t bus, uint8_t slot, uint8_t fun )
 }
 
 
-static int addDevice( uint8_t bus, uint8_t slot, uint8_t fun )
-{
-    PCI_devices.push_back(PCI_Device(bus, slot, fun));
-    return PCI_devices.size() - 1;
-}
-
-
-// static void PCI_scan_function( uint32_t bus, uint32_t dev, uint32_t function )
+// static int addDevice( uint8_t bus, uint8_t slot, uint8_t fun )
 // {
-//     uint32_t header    = pci_read_byte(bus, dev, function, PCI_HEADER_TYPE);
-//     uint32_t baseclass = PCI_GET_CLASS(bus, dev, function);
-//     uint32_t subclass  = PCI_GET_SUBCLASS(bus, dev, function);
-
-//     syslog log("%s (0x%x)", baseclass_str(baseclass), baseclass);
-//     log("header:   0x%x", header);
-//     log("function: %u", function);
-//     log("subclass: %s (0x%x)", subclass_str(baseclass, subclass), subclass);
-
-//     if ((baseclass == PCI::CLASS_BRIDGE) && (subclass == PCI::BRIDGE_PCI))
-//     {
-//         uint8_t secondary_bus = pci_read_byte(bus, dev, function, PCI_SECONDARY_BUS);
-//         log("secondary_bus: 0x%x", secondary_bus);
-//         PCI_scan_bus(secondary_bus);
-//     }
-
-//     else
-//     {
-//         PCI_Device device(bus, dev, function);
-//         // PCI_Devices.push_back(PCI_dev(bus, dev, function));
-//     }
+//     PCIAddress addr(bus, slot, fun);
+//     PCI_devices.push_back(PCI_Device(addr));
+//     return PCI_devices.size() - 1;
 // }
 
 
-// static void PCI_scan_device( uint32_t bus, uint32_t dev )
-// {
-//     /*
-//         Scan function 0 for a valid vendor ID first. If it's valid, bit 7 of the header
-//         type will indicate whether functions 1 through 7 will return sensible data.
-//     */
-//     uint16_t vendor = pci_read_word(bus, dev, 0, PCI_VENDOR_ID);
-//     if (vendor == PCI_NONE)
-//         return;
 
-//     syslog log("%s (0x%x)", vendorid_str(vendor), vendor);
-//     PCI_scan_function(bus, dev, 0);
-
-//     uint32_t header = pci_read_byte(bus, dev, 0, PCI_HEADER_TYPE);
-
-//     if (header & 0x80)
-//     {
-//         for (uint32_t fun=1; fun<8; fun++)
-//         {
-//             if (PCI_GET_VENDOR(bus, dev, fun) == PCI_NONE)
-//                 continue;
-//             PCI_scan_function(bus, dev, fun);
-//         }
-//     }
-// }
-
-
-static void PCI_scan_slot( uint32_t bus, uint32_t slot )
+static PCI_Device *PCI_scan_device( uint32_t bus, uint32_t dev )
 {
-    if (!checkDevice(bus, slot, 0))
+    if (!checkDevice(bus, dev, 0))
     {
-        return;
+        return nullptr;
     }
 
-    addDevice(bus, slot, 0);
+    auto *currdev = PCI_DeviceAllocator.alloc(PCIAddress(bus, dev, 0));
+    // PCI_devices.push_back(currdev);
 
-    if (!(0x80 & pci_read_byte(bus, slot, 0, PCI_HEADER_TYPE)))
+    // PCI_Device *childA;
+
+    // if (PCIAddress(bus, dev, 0).dword == currdev->address.dword)
+    // {
+    //     childA = currdev;
+    // }
+
+    // else
+    // {
+    //     childA = PCI_DeviceAllocator.alloc(PCIAddress(bus, dev, 0));
+    //     currdev->children.insert(childA);
+    //     PCI_devices.push_back(childA);
+    // }
+
+    // addDevice(bus, dev, 0);
+
+    if (!(0x80 & PCI_GET_HEADER(bus, dev, 0)))
     {
-        return;
+        return currdev;
     }
 
     for (uint8_t fn=0; fn<8; fn++)
     {
-        if (!checkDevice(bus, slot, fn))
+        if (!checkDevice(bus, dev, fn))
             continue;
-        addDevice(bus, slot, fn);
+
+        auto *child = PCI_DeviceAllocator.alloc(PCIAddress(bus, dev, fn));
+        currdev->children.insert(child);
+        // PCI_devices.push_back(child);
     
-        uint8_t baseclass = PCI_GET_CLASS(bus, slot, fn);
-        uint8_t subclass  = PCI_GET_SUBCLASS(bus, slot, fn);
+        uint8_t baseclass = PCI_GET_CLASS(bus, dev, fn);
+        uint8_t subclass  = PCI_GET_SUBCLASS(bus, dev, fn);
     
         if ((baseclass == PCI::CLASS_BRIDGE) && (subclass == PCI::BRIDGE_PCI))
         {
-            uint8_t secondaryBus = pci_read_byte(bus, slot, fn, PCI_SECONDARY_BUS);
-            PCI_scan_bus(secondaryBus);
+            uint8_t secondaryBus = PCI::read8(PCIAddress(bus, dev, fn), PCI_SECONDARY_BUS);
+            PCI_scan_bus(child, secondaryBus);
+        }
+    }
+
+    return currdev;
+}
+
+
+static void PCI_scan_bus( PCI_Device *currdev, uint32_t bus )
+{
+    for (uint32_t dev=0; dev<32; dev++)
+    {
+        auto *child = PCI_scan_device(bus, dev);
+
+        if (child)
+        {
+            currdev->children.insert(child);
         }
     }
 }
 
-static void PCI_scan_bus( uint32_t bus )
+
+
+
+static void PCI_PrintDevices( PCI_Device *curr )
 {
-    for (uint32_t slot=0; slot<32; slot++)
+    static int indent0 = syslog::getIndent();
+    static int indent  = indent0;
+    for (int i=0; i<indent-1; i++)
+        syslog::print(" ");
+    syslog::print("- ");
+
+    PCIAddress addr = curr->address;
+    syslog::println(
+        "[PCI %u:%u.%u] %s %s",
+        addr.bus, addr.device, addr.func,
+        subclass_str(curr->baseclass, curr->subclass) + sizeof("PCI_CLASS_")-1,
+        deviceid_str(curr->device_id) + sizeof("PCI_DEVICE_ID_")-1
+    );
+
+    for (auto *child: curr->children)
     {
-        PCI_scan_slot(bus, slot);
+        indent += 2;
+        PCI_PrintDevices((PCI_Device*)child);
+        indent -= 2;
     }
 }
+
+
+
+// static void PCI_PrintDevices( PCI_Device *curr )
+// {
+//     static int indent0 = syslog::getIndent();
+//     static int indent  = indent0;
+
+//     for (auto *child: curr->children)
+//     {
+//         PCIAddress addr = child->address;
+
+//         for (int i=0; i<indent-1; i++)
+//             syslog::print(" ");
+//         syslog::print("- ");
+
+//         syslog::println(
+//             "[PCI %u:%u.%u] %s %s",
+//             addr.bus, addr.device, addr.func,
+//             subclass_str(child->baseclass, child->subclass) + sizeof("PCI_CLASS_")-1,
+//             deviceid_str(child->device_id) + sizeof("PCI_DEVICE_ID_")-1
+//         );
+
+//         indent += 2;
+//         PCI_PrintDevices((PCI_Device*)child);
+//         indent -= 2;
+//     }
+// }
+
+
 
 
 void PCI::init()
 {
     syslog log("PCI_init");
+    PCI_RootDevice = PCI_DeviceAllocator.alloc(PCIAddress(0, 0, 0));
 
-    PCI_devices = idk::inplace_vector<PCI_Device>(
-        PCI_devices_buf, 128
-    );
-
-
-    uint8_t header = getHeader(0, 0, 0);
-
-    // Single PCI host controller
-    if ((header & 0x80) == 0)
+    if ((PCI_GET_HEADER(0, 0, 0) & 0x80) == 0)
     {
-        PCI_scan_bus(0);
+        log("Single PCI host controller");
+        PCI_scan_bus(PCI_RootDevice, 0);
     }
 
-    // Multiple PCI host controllers
     else
     {
+        log("Multiple PCI host controllers");
+
         for (uint8_t fn=0; fn<8; fn++)
         {
             if (PCI_GET_VENDOR(0, 0, fn) != 0xFFFF)
                 break;
-            PCI_scan_bus(fn);
+            PCI_scan_bus(PCI_RootDevice, fn);
         }
     }
 
+    PCI_PrintDevices(PCI_RootDevice);
 }
 
-#include <kernel/memory/pmm.hpp>
-
-PCI_Device PCI::findDevice( uint16_t vendor_id, uint16_t device_id )
+static PCI_Device *PCI_findDevice( PCI_Device *curr, uint16_t vid, uint16_t did )
 {
-    for (auto &dev: PCI_devices)
+    if (curr->vendor_id == vid && curr->device_id == did)
+        return curr;
+
+    for (auto *childA: curr->children)
     {
-        if ((dev.vendor_id == vendor_id) && (dev.device_id == device_id))
-        {
-            return dev;
-        }
+        auto *childB = PCI_findDevice((PCI_Device*)childA, vid, did);
+        if (childB)
+            return childB;
     }
 
-    PCI_Device dummy;
-    dummy.vendor_id = PCI_NONE;
-    dummy.device_id = PCI_NONE;
-    return dummy;
+    return nullptr;
+}
+
+
+PCI_Device *PCI::findDevice( uint16_t vendor_id, uint16_t device_id )
+{
+    return PCI_findDevice(PCI_RootDevice, vendor_id, device_id);
 }
 
 
 
-// static void PCI_readBar( uint8_t bus, uint8_t slot, uint8_t fn, uint32_t index, uint32_t *address, uint32_t *mask)
-// {
-//     uint32_t reg = PCI_BAR0 + index * sizeof(uint32_t);
-
-//     // Get address
-//     *address = pci_read_word(bus, slot, fn, reg);
-
-//     // Find out size of the bar
-//     pci_write32(bus, slot, fn, reg, 0xffffffff);
-//     *mask = pci_read_dword(bus, slot, fn, reg);
-
-//     // Restore adddress
-//     pci_write32(bus, slot, fn, reg, *address);
-// }
-
-
-// static void PCI_getBar( PCIBarInfo *bar, uint8_t bus, uint8_t slot, uint8_t fn, uint32_t index )
-// {
-//     // Read pci bar register
-//     uint32_t addressLow;
-//     uint32_t maskLow;
-//     PCI_readBar(bus, slot, fn, index, &addressLow, &maskLow);
-
-//     if (addressLow & PCI_BAR_64)
-//     {
-//         // 64-bit mmio
-//         uint32_t addressHigh;
-//         uint32_t maskHigh;
-//         PCI_readBar(bus, slot, fn, index + 1, &addressHigh, &maskHigh);
-
-//         bar->u.address = (void *)(((uintptr_t)addressHigh << 32) | (addressLow & ~0xf));
-//         bar->size = ~(((uint64_t)maskHigh << 32) | (maskLow & ~0xf)) + 1;
-//         bar->flags = addressLow & 0xf;
-//     }
-//     else if (addressLow & PCI_BAR_IO)
-//     {
-//         // i/o register
-//         bar->u.port = (uint16_t)(addressLow & ~0x3);
-//         bar->size = (uint16_t)(~(maskLow & ~0x3) + 1);
-//         bar->flags = addressLow & 0x3;
-//     }
-//     else
-//     {
-//         // 32-bit mmio
-//         bar->u.address = (void *)(uintptr_t)(addressLow & ~0xf);
-//         bar->size = ~(maskLow & ~0xf) + 1;
-//         bar->flags = addressLow & 0xf;
-//     }
-// }
 
 
 
-
-
-
-PCI_Device::PCI_Device()
-: vendor_id(PCI_NONE), device_id(PCI_NONE) {  }
-
-
-PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
+uint32_t PCI::getBARAddr( PCIAddress addr, int idx )
 {
-    vendor_id = pci_read_word(bs, st, fn, PCI_VENDOR_ID);
-    device_id = pci_read_word(bs, st, fn, PCI_DEVICE_ID);
-    bus       = bs;
-    slot      = st;
-    func      = fn;
-    baseclass = PCI_GET_CLASS(bs, st, fn);
-    subclass  = PCI_GET_SUBCLASS(bs, st, fn);
+    uint32_t bar = PCI::read32(addr, PCI_BAR0 + 4*idx);
+    uint32_t mask = (bar & PCI_BAR_IO) ? 0x3 : 0xf;
+    return bar & ~mask;
+}
 
-    syslog log("%s", subclass_str(baseclass, subclass), subclass);
+
+
+PCI_Device::PCI_Device( const PCIAddress &addr )
+:   address(addr),
+    vendor_id (PCI::read16(addr, PCI_VENDOR_ID)),
+    device_id (PCI::read16(addr, PCI_DEVICE_ID)),
+    baseclass (PCI::read8 (addr, PCI_CLASS)),
+    subclass  (PCI::read8 (addr, PCI_SUBCLASS))
+{
+    uint8_t bs = addr.bus;
+    uint8_t st = addr.device;
+    uint8_t fn = addr.func;
+
+    syslog log("%u:%u.%u  %s", bs, st, fn, deviceid_str(device_id));
     log("vendor:   %s (0x%x)", vendorid_str(vendor_id), vendor_id);
     log("device:   %s (0x%x)", deviceid_str(device_id), device_id);
     log("class:    %s (0x%x)", baseclass_str(baseclass), baseclass);
@@ -308,20 +256,19 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
             uint32_t bar;
             PCIBarInfo binfo;
         };
-    
-        bar = pci_read_dword(bs, st, fn, PCI_BAR0 + 4*i);
-        this->bars[i] = bar;
+
+        bar = PCI::read32(addr, PCI_BAR0 + 4*i);
+        this->bars[i] = binfo;
 
         if (bar == 0)
-        {
             continue;
-        }
-    
-        syslog lg("bar%d", i);
+
+        syslog lg("bar%d", i, bar);
 
         if (binfo.is_iospace)
-        {            
+        {
             auto &info = binfo.iospace;
+            info.address = PCI::getBARAddr(addr, i);
             lg("- iospace");
             lg("- addr:  0x%lx", info.address);
         }
@@ -329,6 +276,7 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
         else
         {
             auto &info = binfo.memspace;
+            info.address = PCI::getBARAddr(addr, i);
             lg("- memspace");
             lg("- addr:     0x%lx", info.address);
             lg("- prefetch: %u", info.prefetchable);
@@ -339,4 +287,57 @@ PCI_Device::PCI_Device( uint16_t bs, uint16_t st, uint16_t fn )
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+uint8_t PCI::read8( PCIAddress addr, uint8_t offset )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    return IO::in8(PCI_CONFIG_DATA);
+}
+
+uint16_t PCI::read16( PCIAddress addr, uint8_t offset )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    return IO::in16(PCI_CONFIG_DATA);
+}
+
+uint32_t PCI::read32( PCIAddress addr, uint8_t offset )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    return IO::in32(PCI_CONFIG_DATA);
+}
+
+
+void PCI::write8( PCIAddress addr, uint8_t offset, uint8_t value )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    IO::out8(PCI_CONFIG_DATA, value);
+}
+
+void PCI::write16( PCIAddress addr, uint8_t offset, uint16_t value )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    IO::out16(PCI_CONFIG_DATA, value);
+}
+
+void PCI::write32( PCIAddress addr, uint8_t offset, uint32_t value )
+{
+    addr.enable = 1; addr.offset = offset;
+    IO::out32(PCI_CONFIG_ADDRESS, addr.dword);
+    IO::out32(PCI_CONFIG_DATA, value);
+}
 

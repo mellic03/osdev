@@ -17,32 +17,49 @@ void *memcpy128 ( uint128_t*, const uint128_t*, size_t n );
 // void *memset128 ( uint128_t*, const uint128_t*, size_t n );
 
 
+// template <typename T=uint8_t>
+// inline constexpr
+// void *kmemcpy( void *dst, const void *src, size_t nbytes )
+// {
+//     auto *dstptr = reinterpret_cast<T*>(dst);
+//     auto *dstend = reinterpret_cast<T*>((uintptr_t)dst + nbytes);
+//     auto *srcptr = reinterpret_cast<const T*>(src);
+
+//     while (dstptr < dstend)
+//     {
+//         *(dstptr++) = *(srcptr++);
+//     }
+
+//     return dst;
+// }
+
 template <typename T=uint8_t>
 inline constexpr
 void *kmemcpy( void *dst, const void *src, size_t nbytes )
 {
-    auto *dstptr = reinterpret_cast<T*>(dst);
-    auto *dstend = reinterpret_cast<T*>((uintptr_t)dst + nbytes);
-    auto *srcptr = reinterpret_cast<const T*>(src);
+    auto  *dstptr = (T*)dst;
+    auto  *srcptr = (const T*)src;
+    size_t count  = nbytes / sizeof(T);
 
-    while (dstptr < dstend)
+    for (size_t i=0; i<count; i++)
     {
-        *(dstptr++) = *(srcptr++);
+        dstptr[i] = srcptr[i];
     }
 
     return dst;
 }
 
+
 template <typename T=uint8_t>
 inline constexpr
 void *kmemset( void *dst, T value, size_t nbytes )
 {
-    auto *dstptr = reinterpret_cast<T*>(dst);
-    auto *dstend = reinterpret_cast<T*>((uintptr_t)dst + nbytes);
+    auto  *dstptr = (T*)dst;
+    size_t count  = nbytes / sizeof(T);
 
-    while (dstptr < dstend)
+    for (size_t i=0; i<count; i++)
     {
-        *(dstptr++) = value;
+        dstptr[i] = value;
     }
 
     return dst;

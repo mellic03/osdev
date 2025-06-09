@@ -170,7 +170,6 @@ namespace IOAPIC
     uint32_t read( uint32_t reg );
     void     write( uint32_t reg, uint32_t value );
 
-
     struct redirection_entry_regs
     {
         uint32_t lower;

@@ -7,18 +7,21 @@
 // #include <functional>
 
 
-
 namespace wm
 {
     struct guiTextArea: public guiElement
     {
-        char     m_buf[1024];
+        static constexpr size_t BUF_W = 80; 
+        static constexpr size_t BUF_H = 6; 
+        char     m_buf[BUF_H*BUF_W];
         int      m_idx;
         guiFont *m_font;
         guiTextArea( guiFont *font, const ivec2&, const ivec2& );
 
         virtual void putch( char );
         void putstr( const char* );
+        void scroll();
+        void scrolln( int n );
         virtual void draw( guiFramebuffer& ) override;
     };
 

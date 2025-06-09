@@ -9,8 +9,8 @@ namespace wm
     private:
         u8vec4 m_color0 = u8vec4(100, 100, 100, 255);
         u8vec4 m_color1 = u8vec4(200, 200, 200, 255);
-        // vec4   m_colorA = vec4(0.5, 0.5, 0.5, 1.0);
-        // vec4   m_colorB = vec4(0.8, 0.8, 0.8, 1.0);
+        vec4   m_colorA = vec4(0.9f, 0.2f, 0.2f, 1.0f);
+        vec4   m_colorB = vec4(0.4f, 0.8f, 0.8f, 1.0f);
 
     public:
         char m_label[32];

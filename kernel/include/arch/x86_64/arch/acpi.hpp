@@ -8,6 +8,7 @@
 #include <kernel/boot_limine.hpp>
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
+#include <kernel/bitmanip.hpp>
 #include <kernel/log.hpp>
 
 namespace ACPI
@@ -155,15 +156,12 @@ namespace ACPI
 
     namespace detail
     {
-        template <typename rsdt_type, typename table_type>
-        table_type *findTable( rsdt_type *rsdt, const char *signature );    
+        template <typename rsdt_type>
+        uintptr_t findTable( rsdt_type *rsdt, const char *signature );    
     }
 
-    template <typename T>
-    const auto findTableRSDT = detail::findTable<RSDT_t, T>;
-
-    template <typename T>
-    const auto findTableXSDT = detail::findTable<XSDT_t, T>;
+    const auto findTableRSDT = detail::findTable<RSDT_t>;
+    const auto findTableXSDT = detail::findTable<XSDT_t>;
 }
 
 
@@ -287,8 +285,8 @@ struct ACPI::FADT_t
 
 #include <type_traits>
 
-template <typename rsdt_type, typename table_type>
-table_type *ACPI::detail::findTable( rsdt_type *rsdt, const char *signature )
+template <typename rsdt_type>
+uintptr_t ACPI::detail::findTable( rsdt_type *rsdt, const char *signature )
 {
     static_assert(
         std::is_same_v<rsdt_type, ACPI::RSDT_t>
@@ -297,27 +295,30 @@ table_type *ACPI::detail::findTable( rsdt_type *rsdt, const char *signature )
 
     constexpr size_t N = std::is_same_v<rsdt_type, ACPI::RSDT_t> ? 4 : 8;
 
-    // syslog log("ACPI::findTable");
+    syslog log("ACPI::findTable");
     int entries = (rsdt->header.Length - sizeof(rsdt->header)) / N;
     // log("entries: %d", entries);
 
     for (int i=0; i<entries; i++)
     {
         uintptr_t phys = (uintptr_t)(rsdt->PointerToOtherSDT[i]);
-        uintptr_t virt = (uintptr_t)phys; // + PMM::hhdm;
-        // log("phys: 0x%lx", phys);
-        // log("virt: 0x%lx", virt);
-        auto *header = (ACPISDTHeader*)virt;
+        uintptr_t page = idk::align_down(phys, PMM::PAGE_SIZE);
+        VMM::mapPage(page, page);
 
+        auto *header = (ACPISDTHeader*)phys;
         char buf[5];
         memcpy(buf, header->Signature, 4);
         buf[4] = '\0';
-        // log("signature: \"%s\"", buf);
+        log("signature: \"%s\"", buf);
+        log("phys: 0x%lx", phys);
+        log("page: 0x%lx", page);
 
         if (strncmp(header->Signature, signature, 4) == 0)
-            return (table_type*)header;
+        {
+            return phys;
+        }
     }
-    return nullptr;
+    return 0;
 }
 
 

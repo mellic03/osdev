@@ -1,5 +1,5 @@
 #include <cxxabi>
-// #include <kpanic.h>
+// #include <kpanic.hpp>
 
 extern "C"
 {
