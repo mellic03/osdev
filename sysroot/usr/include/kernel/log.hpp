@@ -66,6 +66,7 @@
         static void popIndent( int ) {  };
         static int  getIndent() { return 0; };
         static void putIndent() {  };
+        static void vprint( const char*, va_list ) {  };
         static void print( const char*, ... ) {  };
         static void println( const char*, ... ) {  };
 

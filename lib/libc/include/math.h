@@ -17,11 +17,11 @@
 
     double sqrt( double x );
     float fsqrt( float x );
-    // double floor( double x );
-    // double ceil( double x );
-    // double round( double x );
-    // double trunc( double x );
-    // double fract( double x );
+    double floor( double x );
+    double ceil( double x );
+    double round( double x );
+    double trunc( double x );
+    double fract( double x );
 
     // double log( double x );
     // double exp( double n );

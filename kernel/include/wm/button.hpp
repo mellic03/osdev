@@ -11,6 +11,7 @@ namespace wm
         u8vec4 m_color1 = u8vec4(200, 200, 200, 255);
         vec4   m_colorA = vec4(0.9f, 0.2f, 0.2f, 1.0f);
         vec4   m_colorB = vec4(0.4f, 0.8f, 0.8f, 1.0f);
+        bool   m_hovered = false;
 
     public:
         char m_label[32];

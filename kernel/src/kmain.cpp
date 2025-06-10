@@ -43,9 +43,6 @@
 #include "syscall/syscall.hpp"
 #include <smp/barrier.hpp>
 
-#include <fixed.hpp>
-
-
 extern ModuleInterface *msdev_init( void* );
 extern ModuleInterface *kbdev_init( void* );
 extern void load_module2( ModuleInterface* (*)(void*) );
@@ -58,20 +55,10 @@ static void kmain( cpu_t *cpu )
 {
     if (cpu->id == SMP::bsp_id())
     {
-        // Fixed f = 0.5f;
-        // uint32_t whole = f.value / Fixed::Scale;
-        // uint32_t fract = 0; // (f.value >> Fixed::Shift);
-        // uint32_t divisor = 2;
-        // for (int i=15; i>=0; i--)
-        // {
-        //     (f.value & (1<<i)) ? syslog::print("1") : syslog::print("0");
-
-        //     if (f.value & (1<<i))
-        //         fract += Fixed::Scale*divisor;
-        //     divisor *= 2;
-        // } 
-        // syslog::println("");
-        // syslog::println("[kmain] value: %u.%u", whole, fract);
+        // float valueSq = 12345.0f * 12345.0f;
+        // float value = fsqrt(valueSq);
+        // syslog::println("[kmain] valueSq: %d.%d", (int)round(valueSq), (int)fract(valueSq));
+        // syslog::println("[kmain] value:   %d.%d", (int)round(value), (int)fract(value));
 
         // knl::loadModules(initrd::find("drv/"));
         // knl::loadModules(initrd::find("srv/"));
@@ -80,18 +67,8 @@ static void kmain( cpu_t *cpu )
         knl::initModules();
         vfs::print();
 
-        // kthread::create("wm::main", wm::main, nullptr);
         knl::createProcess("wm::main", wm::main, nullptr);
     }
-
-    // else if (cpu->id == 2)
-    // {
-    //     vec3 rgb0(0.6, 0.6, 0.85);
-    //     vec3 rgb1(0.9, 0.2, 0.65);
-    //     vec3 rgb2 = vec_mix(rgb0, rgb1, 0.25f);
-    //     u8vec3 rgb = u8vec3(255.0f * rgb2);
-    //     syslog::println("rgb3: %u %u %u", rgb.r, rgb.g, rgb.b);
-    // }
 
     barrierB.wait();
     CPU::sti();
@@ -146,36 +123,6 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 };
 
 
-// static void smp_hell( limine_mp_info* )
-// {
-//     CPU::cli();
-//     CPU::hcf();
-// }
-
-// #include <arch/elf.h>
-
-// void knl_reboot()
-// {
-//     cpu_t *cpu = SMP::this_cpu();
-//     auto  *res = limine_res.mp;
-
-//     for (size_t i=0; i<SMP::num_cpus; i++)
-//     {
-//         if (SMP::get_cpu(i)->id != cpu->id)
-//         {
-//             __atomic_store_n(
-//                 &(res->cpus[i]->goto_address), &smp_hell, __ATOMIC_SEQ_CST
-//             );
-//         }
-//     }
-
-//     auto *ehdr = (Elf64_Ehdr*)(limine_res.fh->executable_file->address);
-//     auto entryfn = (void (*)())(ehdr->e_entry);
-//     syslog::println("[knl_reboot] entry: 0x%lx", entryfn);
-//     entryfn();
-// }
-
-
 extern "C"
 void _start()
 {
@@ -190,7 +137,6 @@ void _start()
     
     (serial::init()) ? syslog::enable() : syslog::disable();
     early_init();
-
     CPU_featureCheck2();
 
     CPU::createIDT();

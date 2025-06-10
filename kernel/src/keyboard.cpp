@@ -1,8 +1,6 @@
 #include <driver/interface.hpp>
 
 #include <arch/io.hpp>
-#include <filesystem/vfs.hpp>
-#include <ipc/pipe.hpp>
 #include <sys/process.hpp>
 
 #include <kernel/kvideo.hpp>
@@ -20,8 +18,18 @@
 #define STATE_PREFIX 1
 
 static knl::RingBuffer<uint8_t, 256> rawstream;
-static vfsNode *kbfile;
+static knl::RingBuffer<knl::KbEvent, 32> keystream;
 static char shift_table[256];
+
+
+bool kbDevGetEvent( knl::KbEvent *dst )
+{
+    if (keystream.empty())
+        return false;
+    *dst = keystream.pop_front();
+    return true;
+}
+
 
 
 static void create_shift_table()
@@ -29,17 +37,13 @@ static void create_shift_table()
     kmemset<uint8_t>(shift_table, '\0', 256);
 
     for (int i=0; i<256; i++)
-    {
         shift_table[i] = char(i);
-    }
 
     char mod_0_9[] = {')', '!', '@', '#', '$', '%', '^', '&', '*', '('};
     kmemcpy<uint8_t>(&(shift_table['0']), mod_0_9, sizeof(mod_0_9));
 
     for (int i=0; i<='z'-'a'; i++)
-    {
         shift_table['a'+i] = toupper('a'+i);
-    }
 
     shift_table['/'] = '?';
     shift_table['['] = '{';
@@ -88,7 +92,9 @@ static void kbdev_update( uint8_t scancode )
             .mask = mask,
             .key  = 0
         };
-        vfs::write(kbfile, &event, 0, sizeof(event));
+    
+        if (!keystream.full())
+            keystream.push_back(event);
 
         state = STATE_NORMAL;
         return;
@@ -121,7 +127,8 @@ static void kbdev_update( uint8_t scancode )
         .key  = key
     };
 
-    vfs::write(kbfile, &event, 0, sizeof(event));
+    if (!keystream.full())
+        keystream.push_back(event);
 }
 
 
@@ -140,21 +147,23 @@ static void kbdev_irq( intframe_t* )
 static void kbev_open()
 {
     create_shift_table();
-    kbfile = knl::popen("/dev/kbevent", sizeof(knl::KbEvent));
     rawstream.clear();
+    keystream.clear();
 }
+
 
 static void kbev_close()
 {
-    // kbfile = uvfs::close("/dev/kbevent", sizeof(knl::KbEvent));
+
 }
+
 
 static void kbdev_main( void* )
 {
     while (true)
     {
         // syslog::println("[kbdev_main]");
-        if (!rawstream.empty())
+        while (!rawstream.empty())
         {   
             uint8_t scancode = rawstream.pop_front();
             kbdev_update(scancode);

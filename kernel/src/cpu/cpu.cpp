@@ -54,7 +54,6 @@ extern "C"
 static CPU::cpu_features_t CPU_FEATURES;
 // static CPU::fxstate_t      CPU_TempFXState;
 
-
 CPU::cpu_features_t CPU_featureCheck()
 {
     uint32_t eax, ebx, ecx, edx;
@@ -104,64 +103,66 @@ void CPU_featureCheck2()
 
 namespace CPU
 {
-    #ifdef __SSE__
-        void enableFloat()
+#ifdef __SSE__
+    void enableFloat()
+    {
+        const auto &F = CPU_FEATURES;
+
+        if (F.sse)
         {
-            const auto &F = CPU_FEATURES;
+            cr0_t cr0{getCR0()};
+            cr0.MP = 1;
+            cr0.EM = 0;
+            setCR0(cr0.qword);
 
-            if (F.sse)
-            {
-                cr0_t cr0{getCR0()};
-                cr0.MP = 1;
-                cr0.EM = 0;
-                setCR0(cr0.qword);
-
-                cr4_t cr4{getCR4()};
-                // cr4.OSXSAVE    = 1;
-                cr4.OSFXSR     = 1;
-                cr4.OSXMMEXCPT = 1;
-                setCR4(cr4.qword);
-
-                cpu_enable_xsave();
-            }
+            cr4_t cr4{getCR4()};
+            cr4.OSXSAVE    = (F.xsave) ? 1 : 0;
+            cr4.OSFXSR     = 1;
+            cr4.OSXMMEXCPT = 1;
+            setCR4(cr4.qword);
 
             if (F.xsave)
             {
-                // CPU::fxrstor(&CPU_TempFXState);
-                // cpu_setMXCSR();
+                cpu_enable_xsave();
+
+                #ifdef __AVX__
+                    if (F.avx) cpu_enable_avx();
+                #endif
             }
 
-            if (F.avx)
-            {
-                cpu_enable_avx();
-            }
+        // #ifdef __AVX__
+        //     if (F.avx)
+        //         cpu_enable_avx();
+        // #endif
         }
 
-        void disableFloat()
-        {
-            
-        }
-    
-        void fxsave ( void *p )
-        {
-            if (CPU_FEATURES.xsave)
-                cpu_fxsave64((uintptr_t)p);
-        }
-    
-        void fxrstor( void *p )
-        {
-            if (CPU_FEATURES.xsave)
-                cpu_fxrstor64((uintptr_t)p);
-        }
-    
+    }
 
-    #else
-        void enableFloat() {  }
-        void disableFloat() {  }
-        void fxsave ( void* ) {  }
-        void fxrstor( void* ) {  }
+    void disableFloat()
+    {
+        
+    }
 
-    #endif
+    void fxsave ( void *p )
+    {
+        if (CPU_FEATURES.xsave)
+            cpu_fxsave64((uintptr_t)p);
+    }
+
+    void fxrstor( void *p )
+    {
+        if (CPU_FEATURES.xsave)
+            cpu_fxrstor64((uintptr_t)p);
+    }
+
+
+#else
+    void enableFloat() {  }
+    void disableFloat() {  }
+    void fxsave ( void* ) {  }
+    void fxrstor( void* ) {  }
+
+#endif
 
     void stos8 ( void *d,  uint8_t v, size_t n ) { cpu_stos8(d, v, n);  }
     void stos32( void *d, uint32_t v, size_t n ) { cpu_stos32(d, v, n); }

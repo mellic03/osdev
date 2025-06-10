@@ -6,55 +6,56 @@
 
 double sqrt( double x )
 {
-    return 0.0 * x;
-    // __m128d input  = _mm_set_sd(x);
-    // __m128d result = _mm_sqrt_sd(input, input);
-    // return _mm_cvtsd_f64(result);
+    __m128d input  = _mm_set_sd(x);
+    __m128d result = _mm_sqrt_sd(input, input);
+    return _mm_cvtsd_f64(result);
 }
-
 
 float fsqrt( float x )
 {
     return (float)sqrt((double)x);
 }
 
-// double floor( double x )
-// {
-//     return double(int(x));
-//     // __m128d input  = _mm_set1_pd(x);
-//     // __m128d result = _mm_floor_pd(input);
-//     // return _mm_cvtsd_f64(result);
-// }
 
-// double ceil( double x )
-// {
-//     return double(int(x+1.0));
-//     // __m128d input  = _mm_set1_pd(x);
-//     // __m128d result = _mm_ceil_pd(input);
-//     // return _mm_cvtsd_f64(result);
-// }
 
-// double round( double x )
-// {
-//     return double(int(x+0.5));
-//     // __m128d input  = _mm_set1_pd(x);
-//     // __m128d result = _mm_round_pd(input, _MM_FROUND_TO_NEAREST_INT);
-//     // return _mm_cvtsd_f64(result);
-// }
+#ifdef __AVX__
+    double floor( double x )
+    {
+        // return double(int(x));
+        __m128d input  = _mm_set1_pd(x);
+        __m128d result = _mm_floor_pd(input);
+        return _mm_cvtsd_f64(result);
+    }
 
-// double trunc( double x )
-// {
-//     return (x < 0.0) ? ceil(x) : floor(x);
+    double ceil( double x )
+    {
+        // return double(int(x+1.0));
+        __m128d input  = _mm_set1_pd(x);
+        __m128d result = _mm_ceil_pd(input);
+        return _mm_cvtsd_f64(result);
+    }
 
-//     // __m128d input  = _mm_set1_pd(x);
-//     // __m128d result = _mm_round_pd(input, _MM_FROUND_TRUNC);
-//     // return _mm_cvtsd_f64(result);
-// }
+    double round( double x )
+    {
+        // return double(int(x+0.5));
+        __m128d input  = _mm_set1_pd(x);
+        __m128d result = _mm_round_pd(input, _MM_FROUND_TO_NEAREST_INT);
+        return _mm_cvtsd_f64(result);
+    }
 
-// double fract( double x )
-// {
-//     return x - floor(x);
-// }
+    double trunc( double x )
+    {
+        // return (x < 0.0) ? ceil(x) : floor(x);
+        __m128d input  = _mm_set1_pd(x);
+        __m128d result = _mm_round_pd(input, _MM_FROUND_TRUNC);
+        return _mm_cvtsd_f64(result);
+    }
+
+    double fract( double x )
+    {
+        return x - floor(x);
+    }
+#endif
 
 // double log( double x )
 // {

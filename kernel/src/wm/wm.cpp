@@ -21,8 +21,8 @@
 #include <new>
 
 
-static vfsNode *msstate;
-static vfsNode *kbevent;
+// static vfsNode *msstate;
+// static vfsNode *kbevent;
 // static vfsNode *fh_stdout;
 
 static void wm_mouseInput();
@@ -61,9 +61,8 @@ void wm::main( void* )
 {
     // knl::createThread(nullptr, thread0, nullptr);
     // knl::createThread(nullptr, thread1, nullptr);
-    msstate = vfs::open("/dev/msstate");
-    kbevent = vfs::open("/dev/kbevent");
-    // fh_stdout = vfs::open("/dev/stdout");
+    // msstate = vfs::open("/dev/msstate");
+    // kbevent = vfs::open("/dev/kbevent");
 
     guiImage cursorimg(initrd::fopen("usr/share/img/cursor.bmp"));
     guiFont  txtfont(initrd::fopen("usr/share/font/cutive-w12hf18.bmp"));
@@ -138,31 +137,48 @@ void wm::main( void* )
 }
 
 
+extern bool msdevGetState( knl::MsState* );
+extern bool kbDevGetEvent( knl::KbEvent* );
 
 static void wm_mouseInput()
 {
-    static knl::MsState msdata;
-    
-    if (vfs::read(msstate, &msdata, 0, sizeof(msdata)) == sizeof(msdata))
+    knl::MsState msdata;
+
+    while (msdevGetState(&msdata))
     {
         wmMouse.update(msdata, &wmRoot);
     }
+
+    // if (vfs::read(msstate, &msdata, 0, sizeof(msdata)) == sizeof(msdata))
+    // {
+    //     wmMouse.update(msdata, &wmRoot);
+    // }
 }
 
 
 static void wm_keyInput()
 {
-    knl::KbEvent buf[8];
-    size_t nbytes = vfs::read(kbevent, buf, 0, sizeof(buf));
-    size_t count  = nbytes / sizeof(knl::KbEvent);
+    knl::KbEvent kbdata;
 
-    for (size_t i=0; i<count; i++)
+    while (kbDevGetEvent(&kbdata))
     {
         if (wmMouse.focused)
         {
-            wmMouse.focused->onKey(buf[i]);
+            wmMouse.focused->onKey(kbdata);
         }
     }
+
+    // knl::KbEvent buf[8];
+    // size_t nbytes = vfs::read(kbevent, buf, 0, sizeof(buf));
+    // size_t count  = nbytes / sizeof(knl::KbEvent);
+
+    // for (size_t i=0; i<count; i++)
+    // {
+    //     if (wmMouse.focused)
+    //     {
+    //         wmMouse.focused->onKey(buf[i]);
+    //     }
+    // }
 }
 
 

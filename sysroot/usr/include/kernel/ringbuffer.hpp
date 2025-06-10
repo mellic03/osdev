@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <kassert.h>
 #include <array>
 #include <mutex>
 
@@ -23,7 +24,7 @@ template <typename T, size_t N>
 class knl::RingBuffer
 {
 private:
-    // lck_t  m_lock;
+    // LockType m_lock;
     T      m_data[N];
     size_t m_head;
     size_t m_tail;
@@ -41,7 +42,7 @@ public:
     void rotate( int n )
     {
         // std::lock_guard lock(m_lock);
-        // kassert(m_size > 0);
+        kassert(m_size.load() > 0);
         for (int i=0; i<n; i++)
             push_back(pop_front());
     }
@@ -49,21 +50,21 @@ public:
     T &front()
     {
         // std::lock_guard lock(m_lock);
-        // kassert(m_size > 0);
+        kassert(m_size.load() > 0);
         return m_data[m_head];
     }
 
     T &back()
     {
         // std::lock_guard lock(m_lock);
-        // kassert(m_size > 0);
+        kassert(m_size.load() > 0);
         return m_data[(m_tail-1) % N];
     }
 
 	void push_back( const T &item )
 	{
         // std::lock_guard lock(m_lock);
-        // kassert(m_size+1 < int(N));
+        kassert(size()+1 <= capacity());
         m_data[m_tail++] = item;
         m_tail %= N;
         m_size++;
@@ -72,7 +73,7 @@ public:
 	T pop_front()
 	{
         // std::lock_guard lock(m_lock);
-        // kassert(m_size > 0);
+        kassert(m_size.load() > 0);
 
         size_t idx = m_head;
         m_head = (m_head+1) % N;
@@ -81,15 +82,30 @@ public:
         return m_data[idx];
 	}
 
-    size_t size()     { return m_size.load();            }
-    size_t capacity() { return N;                        }
-    bool   empty()    { return m_size.load() == 0;       }
-    bool   full()     { return m_size.load() >= (int)N;  }
+    // bool try_pop_front( T *dst )
+    // {
+        // std::lock_guard lock(m_lock);
+    //     int idx = --m_size;
 
-    size_t size()     const { return m_size.load();      }
-    size_t capacity() const { return N;                  }
-    bool   empty()    const { return m_size.load() == 0; }
-    bool   full()     const { return m_size.load() < N;  }
+    //     if (idx < 0)
+    //     {
+    //         m_size++;
+    //         return false;
+    //     }
+    
+    //     *dst = m_data[idx];
+    //     return true;
+    // }
+
+    size_t size()     { return m_size.load();     }
+    size_t capacity() { return N;                 }
+    bool   empty()    { return size() == 0;       }
+    bool   full()     { return size() >= N;       } 
+
+    size_t size()     const { return m_size.load(); }
+    size_t capacity() const { return N;             }
+    bool   empty()    const { return size() == 0;   }
+    bool   full()     const { return size() >= N;   }
 
     T &operator[] (int i) { return m_data[i]; }
 };

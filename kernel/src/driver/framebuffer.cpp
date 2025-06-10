@@ -1,4 +1,5 @@
 #include <kernel/boot_limine.hpp>
+#include <kernel/ringbuffer.hpp>
 #include <driver/framebuffer.hpp>
 #include <kmemxx.hpp>
 
@@ -7,10 +8,38 @@
 #include <kernel/log.hpp>
 
 
+enum VideoCmd_: uint32_t
+{
+    VideoCmd_Invalid = 0,
+    VideoCmd_Rect,
+    VideoCmd_Blit
+};
+
+struct VideoCmdRect
+{
+    uint32_t x, y, w, h;
+    uint32_t color;
+};
+
+struct VideoCmdBlit
+{
+    uint32_t x0, y0, w0, h0;
+    uint32_t x1, y1, w1, h1;
+};
+
+union VideoCmd
+{
+    VideoCmd_    type;
+    VideoCmdRect rect;
+    VideoCmdBlit blit;
+};
+
+
 
 class VideoInterfaceFramebuffer: public knl::VideoInterface
 {
 private:
+    knl::RingBuffer<VideoCmd, 128> m_cmdbuf;
     uint8_t *m_front, *m_back;
 
 public:
@@ -91,6 +120,18 @@ void VideoInterfaceFramebuffer::flush( uint32_t x, uint32_t y, uint32_t w, uint3
     {
         
     }
+
+    // VideoCmd cmd;
+
+    // while (m_cmdbuf.try_pop_front(&cmd))
+    // {
+    //     switch (cmd.type)
+    //     {
+    //         default: break;
+    //         case VideoCmd_Rect: break;
+    //         case VideoCmd_Blit: break;
+    //     }
+    // }
 
     size_t nbytes = m_mode.pitch * m_mode.h;
     kmemcpy<uint128_t>(m_front, m_back, nbytes);

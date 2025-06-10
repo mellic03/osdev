@@ -1,10 +1,11 @@
 #include "smp.hpp"
+#include <smp/smp.hpp>
+#include <smp/barrier.hpp>
+#include <cpu/cpu.hpp>
 
 #include <arch/acpi.hpp>
 #include <arch/apic.hpp>
 
-#include <cpu/cpu.hpp>
-#include <smp/smp.hpp>
 #include <driver/pic.hpp>
 #include <sys/interrupt.hpp>
 
@@ -58,8 +59,8 @@ void SMP::init( void (*entry)(cpu_t*) )
 
     auto *mp = limine_res.mp;
     SMP::num_cpus = mp->cpu_count;
-
     bspID = mp->bsp_lapic_id;
+
     for (size_t i=0; i<SMP::num_cpus; i++)
     {
         auto *info = mp->cpus[i];

@@ -11,7 +11,8 @@ set(CMAKE_CXX_COMPILER   /home/michael/Desktop/cross/bin/x86_64-elf-g++)
 set(CMAKE_LINKER         /home/michael/Desktop/cross/bin/x86_64-elf-gcc)
 
 # set(SSE_FLAGS "-mfpmath=387 -mhard-float -m80387 -mmmx -msse -msse2 -mavx")
-set(SSE_FLAGS "-mno-80387 -mno-mmx -msse -msse2 -mno-avx")
+# set(SSE_FLAGS "-mno-80387 -mno-mmx -msse -msse2 -mavx")
+set(SSE_FLAGS "-mgeneral-regs-only")
 # -fno-strict-aliasing -fno-wrapv \
 # -fno-builtin \
 
@@ -20,6 +21,7 @@ set(GlowOS_GCC_FLAGS
     ${SSE_FLAGS} \
     -Wall -Wextra -Werror \
     -Wno-missing-field-initializers \
+    -fsanitize=undefined \
     -ftree-vectorize \
     -fno-stack-protector \
     -fno-unwind-tables -fno-asynchronous-unwind-tables \

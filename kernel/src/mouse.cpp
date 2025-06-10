@@ -15,8 +15,18 @@
 #include <algorithm>
 
 
-static vfsNode *msstate;
+// static vfsNode *msstate;
 static knl::MsState mscurr;
+static knl::RingBuffer<knl::MsState, 4> mswaiting;
+
+bool msdevGetState( knl::MsState *dst )
+{
+    if (mswaiting.empty())
+        return false;
+    *dst = mswaiting.pop_front();
+    return true;
+}
+
 
 struct MousePacket { uint8_t b0, b1, b2, b3; };
 static knl::RingBuffer<MousePacket, 32> msbuf;
@@ -148,7 +158,10 @@ static void msdev_main( void* )
         {
             ProcessMousePacket(msbuf.front());
             msbuf.pop_front();
-            vfs::write(msstate, &mscurr, 0, sizeof(mscurr));
+        
+            if (!mswaiting.full())
+                mswaiting.push_back(mscurr);
+            // vfs::write(msstate, &mscurr, 0, sizeof(mscurr));
         }
 
         knl::threadYield();
@@ -158,7 +171,7 @@ static void msdev_main( void* )
 
 static void msdev_open()
 {
-    msstate = vfs::open("/dev/msstate");
+    // msstate = vfs::open("/dev/msstate");
 }
 
 
@@ -167,7 +180,7 @@ static CharDevInterface msdev;
 
 ModuleInterface *msdev_init( void* )
 {
-    // auto *msdev = (CharDevInterface*)std::malloc(sizeof(CharDevInterface));
+    mswaiting.clear();
 
     msdev.modtype  = ModuleType_Device;
     msdev.basetype = DeviceType_Mouse;

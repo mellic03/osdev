@@ -63,7 +63,10 @@ public:
     intframe_t frame;
     uint8_t   *stackTop;
     uint8_t    stack[STACK_SIZE] __attribute__((aligned(16)));
-    uint8_t    fxstate[4096]     __attribute__((aligned(16)));
+
+    #if defined(__SSE__) && defined(__AVX__)
+        uint8_t fxstate[4096] __attribute__((aligned(16)));
+    #endif
 
     Thread(): LinkedListNode() {  };
 

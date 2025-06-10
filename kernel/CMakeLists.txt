@@ -22,22 +22,22 @@ file(
 )
 
 
-set_source_files_properties(
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/init.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/kmain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/cpu.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/gdt.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/idt.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/smp.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/process.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/sched.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/pmm.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/vmm.cpp
-    PROPERTIES COMPILE_FLAGS
-    "-mgeneral-regs-only -mno-sse -mno-sse2 -mno-sse3"
-)
+# set_source_files_properties(
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/init.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/kmain.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/keyboard.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/cpu.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/gdt.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/cpu/idt.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/smp.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/process.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/smp/sched.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/pmm.cpp
+#     ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/vmm.cpp
+#     PROPERTIES COMPILE_FLAGS
+#     "-mgeneral-regs-only -mno-sse -mno-sse2 -mno-sse3"
+# )
 
 
 set(CringeOS_SOURCES ${SOURCES} PARENT_SCOPE)

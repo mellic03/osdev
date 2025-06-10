@@ -15,38 +15,29 @@ wm::guiButton::guiButton( const char *label, const ivec2 &tl, const ivec2 &sp, v
 }
 
 
-
 void wm::guiButton::onHoverEnter( guiMouse& )
 {
-    m_colorA = vec4(0.9f, 0.2f, 0.2f, 1.0f);
-    m_colorB = vec4(0.4f, 0.8f, 0.8f, 1.0f);
-
-    vec4 color = vec4(m_color) / 255.0f;
-    color = vec_test(color, m_colorA, 0.5f);
-    m_color = u8vec4(255.0f * color);
-
-    // color.r = 0.95f*color.r + 0.05f*m_colorA.r;
-    // color.g = 0.95f*color.g + 0.05f*m_colorA.g;
-    // color.b = 0.95f*color.b + 0.05f*m_colorA.b;
-    // color.a = 0.95f*color.a + 0.05f*m_colorA.a;
-
-    // m_color = m_color0;
+    m_hovered = true;
 }
 
 
 void wm::guiButton::onHoverExit( guiMouse& )
 {
-    m_colorA = vec4(0.9f, 0.2f, 0.2f, 1.0f);
-    m_colorB = vec4(0.4f, 0.8f, 0.8f, 1.0f);
-
-    vec4 color = vec4(m_color) / 255.0f;
-    color = vec_test(color, m_colorB, 0.5f);
-    m_color = u8vec4(255.0f * color);
-
+    m_hovered = false;
 }
 
 
 void wm::guiButton::draw( guiFramebuffer &dst )
 {
+    #ifdef __SSE__
+        m_colorA = vec4(0.9f, 0.1f, 0.1f, 1.0f);
+        m_colorB = vec4(0.1f, 0.1f, 0.9f, 1.0f);
+
+        vec4 &colorC = (m_hovered) ? m_colorA : m_colorB;
+        vec4 color = vec4(m_color) / 255.0f;
+        color = vec_test(color, colorC, 0.01f);
+        m_color = u8vec4(255.0f * color);
+    #endif
+
     wm::guiRenderRect(dst, m_color, m_gpos, m_gsp);
 }
