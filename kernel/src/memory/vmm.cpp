@@ -44,12 +44,13 @@ void VMM_mapPage( uint64_t *pml4, uintptr_t phys, uintptr_t virt, uint64_t flags
     #endif
 }
 
-void VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
+uintptr_t VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
 {
     phys = idk::align_down(phys, PMM::PAGE_SIZE);
     virt = idk::align_down(virt, PMM::PAGE_SIZE);
     uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
     VMM_mapPage(pml4, phys, virt, flags);
+    return virt;
 }
 
 void VMM::mapPage2( uintptr_t pml4_phys, uintptr_t phys, uintptr_t virt,

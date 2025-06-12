@@ -1,86 +1,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <ctype.h>
+#include <kernel/kstring.h>
 
 
 
 
 #ifdef __SSE__
+#include <math.h>
+#include "ftoa.hpp"
 // static double shitpow( double base, double exp )
 // {
 //     double result = 1.0;
-
 //     for (double i=0.0; i<exp; i++)
-//     {
 //         result *= base;
-//     }
-
 //     return result;
 // }
 
-// static char *__dtoa( double f, int precision, char *buf )
-// {
-//     uint64_t whole  = uint64_t(f);
-//     double   dfract = shitpow(10, precision) * f;
-//     uint64_t fract  = uint64_t((dfract < 0.0) ? -dfract : dfract);
 
-//     buf = ultoa(whole, buf, 10);
+// static char *__dtoa( double f, int, char *buf )
+// {
+//     uint64_t whl = uint64_t(trunc(f));
+//     uint64_t fct = uint64_t(1'000'000 * fabs(fract(f)));
+//     // double  dfct = shitpow(10, precision) * f;
+//     // int64_t sign = (f < 0.0) ? -1 : +1;
+//     // int64_t whl  = sign*int64_t(trunc(f));
+//     // double  dfct = float(1<<precision) * f;
+//     // int64_t fct  = int64_t(1'000'000.0 * fabs(fract(f)));
+
+//     // *(buf++) = (sign == -1) ? '-' : '+';
+//     buf = ultoa(whl, buf, 10);
 //     *(buf++) = '.';
-//     buf = ultoa(fract, buf, 10);
+//     buf = ultoa(fct, buf, 10);
 
 //     return buf;
 // }
 
-// static const char *strseek( const char *str, char c )
-// {
-//     while (*str && (*str != c))
-//     {
-//         str++;
-//     }
 
-//     if (!(*str))
-//     {
-//         return nullptr;
-//     }
+static char *__vsprintf_sse( char *buf, const char *&fmt, va_list args )
+{
+    if (*fmt == 'f')
+    {
+        float value = (float)va_arg(args, double);
+        return buf + ftoa(buf, 64, value, 16);
+    }
 
-//     return str;
-// }
+    return buf;
 
-// static char *__vsprintf_sse( char *buf, const char *&fmt, va_list args )
-// {
-//     // printf("%0.5f")
-
-//     if (*fmt == 'f')
-//     {
-//         return __dtoa(va_arg(args, double), 8, buf);
-//     }
-
-
-//     auto *start = fmt;
-//     auto *end   = strseek(fmt, 'f');
-
-//     if (!end)
-//     {
-//         return buf;
-//     }
-
-
-//     // have isolated from '0' to 'f'
-
-//     // Implement %00f later
-//     if (*(start+1) != '.')
-//     {
-//         return buf;
-//     }
-
-
-//     start++; // *start == '.'
-//     start++; // *start == digit
-
-//     int precision = int(*start);
-//     return __dtoa(va_arg(args, double), precision, buf);
-// }
+}
 #endif
 
 
@@ -113,11 +82,11 @@ static char *__vsprintf( char *buf, char *end, const char *&fmt, va_list args )
             if (end) buf += strlen(strncpy(buf, va_arg(args, const char*), end-buf-1));
             else     buf += strlen(strcpy(buf, va_arg(args, const char*)));
             break;
-        // #ifdef __SSE__
-        //     case '0': buf = __vsprintf_sse(buf, fmt, args); break;
-        //     case '.': buf = __vsprintf_sse(buf, fmt, args); break;
-        //     case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
-        // #endif
+        #ifdef __SSE__
+            case '0': buf = __vsprintf_sse(buf, fmt, args); break;
+            case '.': buf = __vsprintf_sse(buf, fmt, args); break;
+            case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
+        #endif
     }
 
     if (lng)
@@ -131,11 +100,11 @@ static char *__vsprintf( char *buf, char *end, const char *&fmt, va_list args )
             case 'u': buf = ultoa(va_arg(args, uint64_t), buf, 10); break;
             case 'x': buf = ultoa(va_arg(args, uint64_t), buf, 16); break;
 
-            // #ifdef __SSE__
-            //     case '0': buf = __vsprintf_sse(buf, fmt, args); break;
-            //     case '.': buf = __vsprintf_sse(buf, fmt, args); break;
-            //     case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
-            // #endif
+            #ifdef __SSE__
+                case '0': buf = __vsprintf_sse(buf, fmt, args); break;
+                case '.': buf = __vsprintf_sse(buf, fmt, args); break;
+                case 'f': buf = __vsprintf_sse(buf, fmt, args); break;
+            #endif
         }
     }
 
@@ -183,7 +152,9 @@ int vsprintf( char *buf, const char *fmt, va_list args )
 
     while (*fmt)
     {
-        if (*fmt == '%')
+        if (*fmt == '%' && *(fmt+1) == '%')
+            *(buf++) = *(fmt++);
+        else if (*fmt == '%')
             buf = __vsprintf(buf, nullptr, fmt, args);
         else
             *(buf++) = *fmt;

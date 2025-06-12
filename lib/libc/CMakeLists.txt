@@ -1,25 +1,32 @@
-file(
-    GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.asm
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/math/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/stdio/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/stdlib/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/string/*.cpp
+
+add_library(
+    klibc STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/libc.cpp"
+)
+
+target_compile_options(
+    klibc PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+)
+
+target_link_options(
+    klibc PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
 )
 
 
-# add_library(libc OBJECT ${SOURCES})
-# target_link_options(libc PUBLIC ${LIBC_LINK_FLAGS})
-# target_link_libraries(libc libk)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/assert/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/math/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/stdio/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/stdlib/")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src/string/")
 
+target_link_libraries(
+    klibc PRIVATE
+    klibc_assert
+    klibc_math
+    klibc_stdio
+    klibc_stdlib
+    klibc_string
+)
 
-add_library(klibc OBJECT ${SOURCES})
-target_link_libraries(klibc CringeOS)
-target_compile_definitions(klibc PUBLIC -D__is_kernel)
-
-
-# file(
-#     COPY ${CMAKE_CURRENT_SOURCE_DIR}/include
-#     DESTINATION ${KERNEL_SYSROOT_DIR}/usr/
-# )

@@ -55,19 +55,15 @@ static void kmain( cpu_t *cpu )
 {
     if (cpu->id == SMP::bsp_id())
     {
-        // float valueSq = 12345.0f * 12345.0f;
-        // float value = fsqrt(valueSq);
-        // syslog::println("[kmain] valueSq: %d.%d", (int)round(valueSq), (int)fract(valueSq));
-        // syslog::println("[kmain] value:   %d.%d", (int)round(value), (int)fract(value));
-
         // knl::loadModules(initrd::find("drv/"));
         // knl::loadModules(initrd::find("srv/"));
         load_module2(msdev_init);
         load_module2(kbdev_init);
         knl::initModules();
-        vfs::print();
+        // vfs::print();
 
         knl::createProcess("wm::main", wm::main, nullptr);
+        syslog::println("WOWAEOWEAOEWA");
     }
 
     barrierB.wait();
@@ -84,9 +80,6 @@ static void kmain( cpu_t *cpu )
 
 
 
-
-
-
 #include <driver/svga.hpp>
 #include <driver/video.hpp>
 #include <kernel/linkedlist.hpp>
@@ -96,7 +89,6 @@ static void pagefaultISR( intframe_t* );
 static void outOfMemoryISR( intframe_t* );
 static void syscallISR( intframe_t* );
 static void spuriousISR( intframe_t* );
-
 
 static void PIT_IrqHandler( intframe_t *frame )
 {
@@ -123,24 +115,25 @@ static volatile struct limine_rsdp_request lim_rsdp_req = {
 };
 
 
+
 extern "C"
 void _start()
 {
     CPU::cli();
-    // knl_ClearBSS();
-    // knl_ClearMemory();
-    CPU_featureCheck();
-    CPU::enableFloat();
+    knl_ClearBSS();
+    knl_ClearMemory();
+    CPU::initFoat();
     
     CPU::createGDT();
     CPU::installGDT();
-    
+
     (serial::init()) ? syslog::enable() : syslog::disable();
     early_init();
     CPU_featureCheck2();
 
-    CPU::createIDT();
     PIC::disable();
+    CPU::createIDT();
+    CPU::installIDT();
 
     // CPU::installISR(IntNo_InvalidOpcode, invalidOpISR);
     // CPU::installISR(IntNo_GenFault,      genfaultISR);
@@ -217,6 +210,13 @@ static void pagefaultISR( intframe_t *frame )
 
     auto *cpu = SMP::this_cpu();
     log("cpu %d", cpu->id);
+
+    auto *th = cpu->sched2.currThread();
+    if (th && th->process)
+    {
+        log("process: %s", th->process->m_name);
+    }
+
 
     log("rax:    0x%lx", frame->rax);
     log("rbx:    0x%lx", frame->rbx);

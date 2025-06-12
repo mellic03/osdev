@@ -58,7 +58,7 @@ enum CPUID_: uint64_t
     CPUID_FEAT_EDX_DS           = 1 << 21,
     CPUID_FEAT_EDX_ACPI         = 1 << 22,
     CPUID_FEAT_EDX_MMX          = 1 << 23,
-    CPUID_FEAT_EDX_FXSR         = 1 << 24,
+    CPUID_FEAT_EDX_FXSR         = 1 << 24,  // fxsave, fxrstor
     CPUID_FEAT_EDX_SSE          = 1 << 25,
     CPUID_FEAT_EDX_SSE2         = 1 << 26,
     CPUID_FEAT_EDX_SS           = 1 << 27,

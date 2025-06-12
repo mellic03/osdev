@@ -1,7 +1,3 @@
-// #ifndef __is_kernel
-//     #define __is_kernel
-// #endif
-
 // #include <kassert.h>
 // #include <kernel/kvideo.hpp>
 // #include <kernel/bitmanip.hpp>

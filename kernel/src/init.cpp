@@ -85,7 +85,7 @@ void early_init()
             initrd::init(file->address);
     }
 
-    vfs::init();
+    // vfs::init();
 
 }
 

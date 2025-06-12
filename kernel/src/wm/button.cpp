@@ -30,12 +30,13 @@ void wm::guiButton::onHoverExit( guiMouse& )
 void wm::guiButton::draw( guiFramebuffer &dst )
 {
     #ifdef __SSE__
-        m_colorA = vec4(0.9f, 0.1f, 0.1f, 1.0f);
-        m_colorB = vec4(0.1f, 0.1f, 0.9f, 1.0f);
+        m_colorA = vec4(0.9f, 0.5f, 0.5f, 1.0f);
+        m_colorB = vec4(0.5f, 0.5f, 0.9f, 1.0f);
+        float a = (m_hovered) ? 0.02f : 0.02f;
 
         vec4 &colorC = (m_hovered) ? m_colorA : m_colorB;
         vec4 color = vec4(m_color) / 255.0f;
-        color = vec_test(color, colorC, 0.01f);
+        color = vec_test(color, colorC, a);
         m_color = u8vec4(255.0f * color);
     #endif
 

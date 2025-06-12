@@ -8,7 +8,9 @@
 #include <arch/mmio.hpp>
 #include <cpu/cpu.hpp>
 
+#include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
+#include <kmalloc.h>
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kmemxx.hpp>
@@ -161,7 +163,6 @@ void SVGA::init()
     log("fbMem:             0x%lx", svgadev.fbMem);
     log("fifoMem:           0x%lx", svgadev.fifoMem);
     log("fifoSize:          %lu",   svgadev.fifoSize);
-    log("fbMem:             0x%lx", svgadev.fbMem);
     log("fbSize:            %lu",   svgadev.fbSize);
     log("vramSize:          %lu",   svgadev.vramSize);
     log("deviceVersionId:   %u",    svgadev.deviceVersionId);
@@ -194,7 +195,8 @@ void SVGA::init()
 
     SVGA_Enable();
 
-    // SVGA::setMode(1280, 720, 32);
+    auto *fb = limine_res.fb->framebuffers[0];
+    SVGA::setMode(fb->width, fb->height, fb->bpp);
     // SVGA::setMode(1024, 768, 32);
 
     svga_enabled = true;
@@ -575,9 +577,15 @@ public:
     virtual void init() final
     {
         SVGA::init();
+    
+        // kvideo2::setMode(fb->width, fb->height, fb->bpp);
 
         using namespace VMM;
         size_t nbytes = svgadev.pitch * svgadev.height;
+        nbytes = std::min((uint32_t)nbytes, svgadev.fbSize);
+
+        syslog log("VideoInterfaceSVGA::init");
+        log("nbytes: %lu", nbytes);
         m_back = (uint8_t*)VMM::alloc(nbytes, PAGE_PRESENT|PAGE_WRITE);
         // m_back = (uint8_t*)VMM::alloc(nbytes, PAGE_PRESENT|PAGE_WRITE|PAGE_PWT|PAGE_PCD);
     }
@@ -597,10 +605,14 @@ public:
     virtual void flush( uint32_t x, uint32_t y, uint32_t w, uint32_t h ) final
     {
         size_t nbytes = svgadev.pitch * svgadev.height;
-        CPU::movs64(svgadev.fbMem + PMM::hhdm, m_back, nbytes/8);
-        CPU::stos64(m_back, 0, nbytes/8);
-        // kmemcpy<uint128_t>(svgadev.fbMem + PMM::hhdm, m_back, nbytes);
-        // kmemset<uint128_t>(m_back, 0, nbytes);
+               nbytes = std::min((uint32_t)nbytes, svgadev.fbSize);
+
+        syslog log("VideoInterfaceSVGA::flush");
+        log("nbytes: %lu", nbytes);
+        // CPU::movs64(svgadev.fbMem + PMM::hhdm, m_back, nbytes/8);
+        // CPU::stos64(m_back, 0, nbytes/8);
+        kmemcpy<uint128_t>(svgadev.fbMem + PMM::hhdm, m_back, nbytes);
+        kmemset<uint128_t>(m_back, 0, nbytes);
         SVGA::update(x, y, w, h);
     }
 
@@ -619,7 +631,6 @@ public:
         {
             // uint32_t idx = pitch*i + bypp*x;
             // kmemset<uint32_t>(m_back + idx, C.dword, bypp*w);
-        
             for (int j=x; j<x+w; j++)
             {
                 uint32_t idx = pitch*i + bypp*j;

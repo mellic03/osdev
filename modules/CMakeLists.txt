@@ -23,3 +23,6 @@ include_directories("${CMAKE_SOURCE_DIR}/../include/")
 
 add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/keyboard/main.cpp)
 
+# Specify elf format
+#   -flinker-output=type
+#   -flinker-output={exec, dyn, pie, rel, nolto-rel}

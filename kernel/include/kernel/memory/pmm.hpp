@@ -9,9 +9,11 @@
 struct limine_memmap_response;
 
 
-
 namespace PMM
 {
+    static constexpr size_t PAGE_SIZE_4K = 4*1024;
+    static constexpr size_t PAGE_SIZE_2M = 2*1024*1024;
+
     #ifdef PMM_2MB_PAGES
         static constexpr size_t PAGE_SIZE = 2*idk::MEGA; 
     #else

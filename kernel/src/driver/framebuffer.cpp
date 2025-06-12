@@ -7,6 +7,8 @@
 #include <kernel/memory/vmm.hpp>
 #include <kernel/log.hpp>
 
+#include <cpu/cpu.hpp>
+
 
 enum VideoCmd_: uint32_t
 {
@@ -134,8 +136,10 @@ void VideoInterfaceFramebuffer::flush( uint32_t x, uint32_t y, uint32_t w, uint3
     // }
 
     size_t nbytes = m_mode.pitch * m_mode.h;
-    kmemcpy<uint128_t>(m_front, m_back, nbytes);
-    kmemset<uint128_t>(m_back, 0, nbytes);
+    CPU::movs64(m_front, m_back, nbytes/sizeof(uint64_t));
+    CPU::stos64(m_back, 0, nbytes/sizeof(uint64_t));
+    // kmemcpy<uint128_t>(m_front, m_back, nbytes);
+    // kmemset<uint128_t>(m_back, 0, nbytes);
 }
 
 
@@ -158,17 +162,19 @@ void VideoInterfaceFramebuffer::drawRect( int x, int y, int w, int h, kvideo2::C
 
     for (int i=y; i<y+h; i++)
     {
-        // int idx = pitch*i + bypp*x;
-        // CPU::stos32(dst+idx, color, w);
+        int idx = pitch*i + bypp*x;
+        CPU::stos32(dst+idx, color.dword, w);
 
-        for (int j=x; j<x+w; j++)
-        {
-            int idx = pitch*i + bypp*j;
+        // for (int j=x; j<x+w; j++)
+        // {
+        //     int idx = pitch*i + bypp*j;
         
-            for (uint32_t k=0; k<bypp; k++)
-            {
-                dst[idx + k] = color.rgba[k];
-            }
-        }
+        //     for (uint32_t k=0; k<bypp; k++)
+        //     {
+        //         dst[idx + k] = color.rgba[k];
+        //     }
+        // }
     }
 }
+
+

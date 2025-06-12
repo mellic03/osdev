@@ -5,70 +5,65 @@
 
 #ifdef __is_kernel
     #include <kmalloc.h>
+
+    void *malloc( size_t size )
+    {
+        return kmalloc(size);
+    }
+
+    void *calloc( size_t num, size_t size )
+    {
+        void *ptr = malloc(num*size);
+        memset(ptr, 0, num*size);
+        return ptr;
+    }
+
+    void *realloc( void *ptr, size_t size )
+    {
+        return krealloc(ptr, size);
+    }
+
+    void free( void *ptr )
+    {
+        kfree(ptr);
+    }
+
+
+
 #else
     #include <kernel/syscall.h>
-#endif
-
-
-
-void *malloc( size_t size )
-{
-    #ifdef __is_kernel
-        return kmalloc(size);
-
-    #else
-        static sysreq_MemAlloc req;
-        static sysres_t res;
-        req = sysreq_MemAlloc(size);
-        syscall(SysNo_MemAlloc, (sysreq_t*)(&req), &res);
-        return res.addr;
-
-    #endif
-}
-
-
-void *calloc( size_t num, size_t size )
-{
-    void *ptr = malloc(num*size);
-    memset(ptr, 0, num*size);
-    return ptr;
-}
-
-
-void *realloc( void *ptr, size_t size )
-{
-    #ifdef __is_kernel
-        return krealloc(ptr, size);
-
-    #else
+    void *malloc( size_t )
+    {
         // static ksysc_request req;
         // req = {
-        //     .type = SYSC_MEM_REALLOC,
-        //     .size = size,
+        //     .type = SYSC_MEM_ALLOC,
         //     .data = ptr
         // };
         // libk_syscall(&req);
-        // return req.res;
+        return nullptr;
+    }
 
-    #endif
-}
+    void *calloc( size_t num, size_t size )
+    {
+        void *ptr = malloc(num*size);
+        memset(ptr, 0, num*size);
+        return ptr;
+    }
 
+    void *realloc( void*, size_t )
+    {
+        return nullptr;
+    }
 
-
-void free( void *ptr )
-{
-    #ifdef __is_kernel
-        kfree(ptr);
-
-    #else
+    void free( void* )
+    {
         // static ksysc_request req;
         // req = {
         //     .type = SYSC_MEM_FREE,
         //     .data = ptr
         // };
         // libk_syscall(&req);
+    }
 
-    #endif
-
-}
+#endif
 

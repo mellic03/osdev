@@ -16,16 +16,18 @@
 
 
 // static vfsNode *msstate;
-static knl::MsState mscurr;
-static knl::RingBuffer<knl::MsState, 4> mswaiting;
+std::mutex   mslock{0};
+knl::MsState mscurr;
+// static knl::RingBuffer<knl::MsState, 4> mswaiting;
 
-bool msdevGetState( knl::MsState *dst )
-{
-    if (mswaiting.empty())
-        return false;
-    *dst = mswaiting.pop_front();
-    return true;
-}
+// bool msdevGetState( knl::MsState *dst )
+// {
+//     std::lock_guard lock(mslock);
+//     if (mswaiting.empty())
+//         return false;
+//     *dst = mswaiting.pop_front();
+//     return true;
+// }
 
 
 struct MousePacket { uint8_t b0, b1, b2, b3; };
@@ -69,9 +71,12 @@ uint8_t MouseRead()
 
 void ProcessMousePacket( const MousePacket &P )
 {
-    mscurr.l = (P.b0 & PS2Leftbutton);
-    mscurr.m = (P.b0 & PS2Middlebutton);
-    mscurr.r = (P.b0 & PS2Rightbutton);
+    {
+        std::lock_guard lock(mslock);
+        mscurr.l = (P.b0 & PS2Leftbutton);
+        mscurr.m = (P.b0 & PS2Middlebutton);
+        mscurr.r = (P.b0 & PS2Rightbutton);
+    }
 
     int xsign = (P.b0 & (1<<4)) ? -1 : +1;
     int ysign = (P.b0 & (1<<5)) ? -1 : +1;
@@ -82,9 +87,12 @@ void ProcessMousePacket( const MousePacket &P )
         dx = xsign * (dx - xover);
     int dy = (ysign==1) ? P.b2 : 256-P.b2;
         dy = ysign * (dy - yover);
-    
-    mscurr.x = std::clamp(mscurr.x + dx, 0, int(kvideo2::W) - 1);
-    mscurr.y = std::clamp(mscurr.y - dy, 0, int(kvideo2::H) - 1);
+
+    {
+        std::lock_guard lock(mslock);
+        mscurr.x = std::clamp(mscurr.x + dx, 0, int(kvideo2::W) - 1);
+        mscurr.y = std::clamp(mscurr.y - dy, 0, int(kvideo2::H) - 1);
+    }
 }
 
 
@@ -156,11 +164,13 @@ static void msdev_main( void* )
         // syslog::println("[msdev_main]");
         while (!msbuf.empty())
         {
-            ProcessMousePacket(msbuf.front());
-            msbuf.pop_front();
-        
-            if (!mswaiting.full())
-                mswaiting.push_back(mscurr);
+            ProcessMousePacket(msbuf.pop_front());
+
+            // {
+            //     std::lock_guard lock(mslock);
+            //     if (!mswaiting.full())
+            //        mswaiting.push_back(mscurr);
+            // }
             // vfs::write(msstate, &mscurr, 0, sizeof(mscurr));
         }
 
@@ -180,7 +190,7 @@ static CharDevInterface msdev;
 
 ModuleInterface *msdev_init( void* )
 {
-    mswaiting.clear();
+    // mswaiting.clear();
 
     msdev.modtype  = ModuleType_Device;
     msdev.basetype = DeviceType_Mouse;

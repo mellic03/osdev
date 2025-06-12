@@ -50,12 +50,13 @@ namespace CPU
         bool fpu, mmx;
         bool sse, sse2, sse3;
         bool avx, avx2;
-        bool xsave, osxsave;
+        bool fxsave, xsave, osxsave;
     };
 
+    void initFoat();
     void enableFloat();
-    void fxsave( void *p );
-    void fxrstor( void *p );
+    void fpSaveRegs( void *p );
+    void fpLoadRegs( void *p );
 
     void createGDT();
     void installGDT();
@@ -157,12 +158,12 @@ namespace CPU
             // uint8_t extensionType           : 1; // 4	ET	Extension type
             // uint8_t numericError            : 1; // 5	NE	Numeric error
 
-            uint8_t  PE     : 1;    // 0    Protected Mode Enable
-            uint8_t  MP     : 1;    // 1    Monitor Co-Processor
-            uint8_t  EM     : 1;    // 2    x87 FPU Emulation
-            uint8_t  TS     : 1;    // 3    Task Switched
-            // uint8_t  ET     : 1;    // 4    Extension Type
-            // uint8_t  NE     : 1;    // 5    Numeric Error
+            bool  PE     : 1;    // 0    Protected Mode Enable
+            bool  MP     : 1;    // 1    Monitor Co-Processor
+            bool  EM     : 1;    // 2    x87 FPU Emulation
+            bool  TS     : 1;    // 3    Task Switched
+            bool  ET     : 1;    // 4    Extension Type
+            bool  NE     : 1;    // 5    Numeric Error
             // uint16_t resv0  : 10;   // 6-15 Reserved
             // uint8_t  WP     : 1;    // 16   Write Protect
             // uint8_t  resv1  : 1;    // 17   Reserved
@@ -187,15 +188,15 @@ namespace CPU
 
         struct
         {
-            uint8_t X87       : 1; // x87 FPU/MMX support (must be 1)
-            uint8_t SSE       : 1; // XSAVE support for MXCSR and XMM registers
-            uint8_t AVX       : 1; // AVX enabled and XSAVE support for upper halves of YMM registers
-            uint8_t BNDREG    : 1; // MPX enabled and XSAVE support for BND0-BND3 registers
-            uint8_t BNDCSR    : 1; // MPX enabled and XSAVE support for BNDCFGU and BNDSTATUS registers
-            uint8_t opmask    : 1; // AVX-512 enabled and XSAVE support for opmask registers k0-k7
-            uint8_t ZMM_Hi256 : 1; // AVX-512 enabled and XSAVE support for upper halves of lower ZMM registers
-            uint8_t Hi16_ZMM  : 1; // AVX-512 enabled and XSAVE support for upper ZMM registers
-            uint8_t PKRU      : 1; // XSAVE support for PKRU register 
+            bool X87       : 1; // x87 FPU/MMX support (must be 1)
+            bool SSE       : 1; // XSAVE support for MXCSR and XMM registers
+            bool AVX       : 1; // AVX enabled and XSAVE support for upper halves of YMM registers
+            bool BNDREG    : 1; // MPX enabled and XSAVE support for BND0-BND3 registers
+            bool BNDCSR    : 1; // MPX enabled and XSAVE support for BNDCFGU and BNDSTATUS registers
+            bool opmask    : 1; // AVX-512 enabled and XSAVE support for opmask registers k0-k7
+            bool ZMM_Hi256 : 1; // AVX-512 enabled and XSAVE support for upper halves of lower ZMM registers
+            bool Hi16_ZMM  : 1; // AVX-512 enabled and XSAVE support for upper ZMM registers
+            bool PKRU      : 1; // XSAVE support for PKRU register 
         };
         
     };
@@ -213,31 +214,31 @@ namespace CPU
 
         struct
         {
-            uint8_t VME         : 1; // Virtual 8086 Mode Extensions
-            uint8_t PVI         : 1; // Protected-mode Virtual Interrupts
-            uint8_t TSD         : 1; // Time Stamp Disable
-            uint8_t DE          : 1; // Debugging Extensions
-            uint8_t PSE         : 1; // Page Size Extension
-            uint8_t PAE         : 1; // Physical Address Extension
-            uint8_t MCE         : 1; // Machine Check Exception
-            uint8_t PGE         : 1; // Page Global Enabled
-            uint8_t PCE         : 1; // Performance-Monitoring Counter enable
-            uint8_t OSFXSR      : 1; // Operating system support for FXSAVE and FXRSTOR instructions
-            uint8_t OSXMMEXCPT  : 1; // Operating System Support for Unmasked SIMD Floating-Point Exceptions
-            uint8_t UMIP        : 1; // User-Mode Instruction Prevention (if set, #GP on SGDT, SIDT, SLDT, SMSW, and STR instructions when CPL > 0)
-            uint8_t LA57        : 1; // 57-bit linear addresses (if set, the processor uses 5-level paging otherwise it uses uses 4-level paging)
-            uint8_t VMXE        : 1; // Virtual Machine Extensions Enable
-            uint8_t SMXE        : 1; // Safer Mode Extensions Enable
-            uint8_t resv0       : 1;
-            uint8_t FSGSBASE    : 1; // Enables the instructions RDFSBASE, RDGSBASE, WRFSBASE, and WRGSBASE
-            uint8_t PCIDE       : 1; // PCID Enable
-            uint8_t OSXSAVE     : 1; // XSAVE and Processor Extended States Enable
-            uint8_t resv1       : 1;
-            uint8_t SMEP        : 1; // Supervisor Mode Execution Protection Enable
-            uint8_t SMAP        : 1; // Supervisor Mode Access Prevention Enable
-            uint8_t PKE         : 1; // Protection Key Enable
-            uint8_t CET         : 1; // Control-flow Enforcement Technology
-            uint8_t PKS         : 1; // Enable Protection Keys for Supervisor-Mode Pages
+            bool VME         : 1; // Virtual 8086 Mode Extensions
+            bool PVI         : 1; // Protected-mode Virtual Interrupts
+            bool TSD         : 1; // Time Stamp Disable
+            bool DE          : 1; // Debugging Extensions
+            bool PSE         : 1; // Page Size Extension
+            bool PAE         : 1; // Physical Address Extension
+            bool MCE         : 1; // Machine Check Exception
+            bool PGE         : 1; // Page Global Enabled
+            bool PCE         : 1; // Performance-Monitoring Counter enable
+            bool OSFXSR      : 1; // Operating system support for FXSAVE and FXRSTOR instructions
+            bool OSXMMEXCPT  : 1; // Operating System Support for Unmasked SIMD Floating-Point Exceptions
+            bool UMIP        : 1; // User-Mode Instruction Prevention (if set, #GP on SGDT, SIDT, SLDT, SMSW, and STR instructions when CPL > 0)
+            bool LA57        : 1; // 57-bit linear addresses (if set, the processor uses 5-level paging otherwise it uses uses 4-level paging)
+            bool VMXE        : 1; // Virtual Machine Extensions Enable
+            bool SMXE        : 1; // Safer Mode Extensions Enable
+            bool resv0       : 1;
+            bool FSGSBASE    : 1; // Enables the instructions RDFSBASE, RDGSBASE, WRFSBASE, and WRGSBASE
+            bool PCIDE       : 1; // PCID Enable
+            bool OSXSAVE     : 1; // XSAVE and Processor Extended States Enable
+            bool resv1       : 1;
+            bool SMEP        : 1; // Supervisor Mode Execution Protection Enable
+            bool SMAP        : 1; // Supervisor Mode Access Prevention Enable
+            bool PKE         : 1; // Protection Key Enable
+            bool CET         : 1; // Control-flow Enforcement Technology
+            bool PKS         : 1; // Enable Protection Keys for Supervisor-Mode Pages
         };
     };
 
@@ -249,21 +250,21 @@ namespace CPU
 
         struct
         {
-            uint8_t IE  : 1; // Invalid Operation Flag
-            uint8_t DE  : 1; // Denormal Flag
-            uint8_t ZE  : 1; // Divide-by-Zero Flag
-            uint8_t OE  : 1; // Overflow Flag
-            uint8_t UE  : 1; // Underflow Flag
-            uint8_t PE  : 1; // Precision Flag
-            uint8_t DAZ : 1; // Denormals Are Zeros
-            uint8_t IM  : 1; // Invalid Operation Mask
-            uint8_t DM  : 1; // Denormal Operation Mask
-            uint8_t ZM  : 1; // Divide-by-Zero Mask
-            uint8_t OM  : 1; // Overflow Mask
-            uint8_t UM  : 1; // Underflow Mask
-            uint8_t PM  : 1; // Precision Mask
-            uint8_t RC  : 1; // Rounding Control
-            uint8_t FZ  : 1; // Flush to Zero
+            bool IE  : 1; // Invalid Operation Flag
+            bool DE  : 1; // Denormal Flag
+            bool ZE  : 1; // Divide-by-Zero Flag
+            bool OE  : 1; // Overflow Flag
+            bool UE  : 1; // Underflow Flag
+            bool PE  : 1; // Precision Flag
+            bool DAZ : 1; // Denormals Are Zeros
+            bool IM  : 1; // Invalid Operation Mask
+            bool DM  : 1; // Denormal Operation Mask
+            bool ZM  : 1; // Divide-by-Zero Mask
+            bool OM  : 1; // Overflow Mask
+            bool UM  : 1; // Underflow Mask
+            bool PM  : 1; // Precision Mask
+            bool RC  : 1; // Rounding Control
+            bool FZ  : 1; // Flush to Zero
         };
     };
 

@@ -21,10 +21,6 @@
 #include <new>
 
 
-// static vfsNode *msstate;
-// static vfsNode *kbevent;
-// static vfsNode *fh_stdout;
-
 static void wm_mouseInput();
 static void wm_keyInput();
 // static void waitForVBlank();
@@ -33,36 +29,12 @@ static wm::guiRoot  wmRoot;
 static wm::guiMouse wmMouse;
 static wm::guiTextArea *wmTextArea;
 
-
-
-// static void thread0( void* )
-// {
-//     while (true)
-//     {
-//         syslog::println("[wm::thread0]");
-//         knl::threadYield();
-//     }
-// }
-
-
-// static void thread1( void* )
-// {
-//     while (true)
-//     {
-//         syslog::println("[wm::thread1]");
-//         knl::threadYield();
-//     }
-// }
-
-
-
+#include <math.h>
 
 void wm::main( void* )
 {
-    // knl::createThread(nullptr, thread0, nullptr);
-    // knl::createThread(nullptr, thread1, nullptr);
-    // msstate = vfs::open("/dev/msstate");
-    // kbevent = vfs::open("/dev/kbevent");
+    int value = (int)pow(2.0, 8.0);
+    syslog::println("[wm::main] 2^8=%d", value);
 
     guiImage cursorimg(initrd::fopen("usr/share/img/cursor.bmp"));
     guiFont  txtfont(initrd::fopen("usr/share/font/cutive-w12hf18.bmp"));
@@ -105,18 +77,11 @@ void wm::main( void* )
         //  win0->addChild(new guiImage(initrd::fopen("usr/share/img/mountains.bmp")));
     wmRoot.addChild(win0);
 
-    // vec3 rgb0(0.6, 0.6, 0.85);
-    // vec3 rgb1(0.9, 0.2, 0.65);
-    // vec3 rgb2 = vec_mix(rgb0, rgb1, 0.25f);
-    // u8vec3 rgb = u8vec3(255.0f * rgb2);
-    // syslog::println("rgb3: %u %u %u", rgb.r, rgb.g, rgb.b);
+    // syslog log("wm::main");
+    // log("FPU_tan: %f", 0.724);
 
     while (true)
     {
-        // auto *buf = (uint64_t*)0x1000;
-        // syslog::println("[wm::main] *0x1000: %lu", buf[0]);
-        // syslog::println("[wm::main]");
-
         auto dstimg = guiFramebuffer(
             kvideo2::fbmem, kvideo2::W, kvideo2::H,
             kvideo2::BYPP, kvideo2::Pitch
@@ -137,25 +102,24 @@ void wm::main( void* )
 }
 
 
-extern bool msdevGetState( knl::MsState* );
-extern bool kbDevGetEvent( knl::KbEvent* );
+
+extern std::mutex   mslock;
+extern knl::MsState mscurr;
 
 static void wm_mouseInput()
 {
     knl::MsState msdata;
 
-    while (msdevGetState(&msdata))
     {
-        wmMouse.update(msdata, &wmRoot);
+        std::lock_guard lock(mslock);
+        msdata = mscurr;
     }
 
-    // if (vfs::read(msstate, &msdata, 0, sizeof(msdata)) == sizeof(msdata))
-    // {
-    //     wmMouse.update(msdata, &wmRoot);
-    // }
+    wmMouse.update(msdata, &wmRoot);
 }
 
 
+extern bool kbDevGetEvent( knl::KbEvent* );
 static void wm_keyInput()
 {
     knl::KbEvent kbdata;

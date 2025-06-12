@@ -58,13 +58,12 @@ knl::Sched::createThread( void (*tmain)(void*), void *arg )
     th->status   = Thread_Ready;
     th->wakeTime = 0;
 
-    #if defined(__SSE__) && defined(__AVX__)
-        kmemset<uint8_t>(th->fxstate, 0, sizeof(th->fxstate));
-        uint32_t mask = 0x1000|0x0800|0x0400|0x0200|0x0100|0x0080;
-        ((CPU::fxstate_t*)th->fxstate)->mxcsr     = 0x1F80;
-        ((CPU::fxstate_t*)th->fxstate)->mxcsrMask = mask;
-        ((CPU::fxstate_t*)th->fxstate)->fcw       = 0x033F;
-    #endif
+    kmemset<uint8_t>(th->fxstate, 0, sizeof(th->fxstate));
+    // uint32_t mask = 0x1000|0x0800|0x0400|0x0200|0x0100|0x0080;
+    // ((CPU::fxstate_t*)th->fxstate)->mxcsr     = 0x1F80;
+    // ((CPU::fxstate_t*)th->fxstate)->mxcsrMask = mask;
+    // ((CPU::fxstate_t*)th->fxstate)->fcw       = 0x033F;
+    CPU::fpSaveRegs(th->fxstate);
 
     kmemset<uint8_t>(th->stack, 0, sizeof(th->stack));
     th->stackTop = idk::align_down(th->stack + sizeof(th->stack), 16);
@@ -107,10 +106,7 @@ knl::Sched::trampoline( intframe_t *frame )
     frame->cs = frame_cs;
     frame->ss = frame_ss;
 
-    #if defined(__SSE__) && defined(__AVX__)
-        CPU::fxrstor(curr->fxstate);
-    #endif
-
+    CPU::fpLoadRegs(curr->fxstate);
     if (curr->process)
     {
         CPU::setCR3(curr->process->m_pml4);
@@ -213,10 +209,8 @@ knl::Sched::schedule( intframe_t *frame )
 
     // if (prev->useSSE)
     // if (next->useSSE)
-    #if defined(__SSE__) && defined(__AVX__)
-        CPU::fxsave(prev->fxstate);
-        CPU::fxrstor(next->fxstate);
-    #endif
+    CPU::fpSaveRegs(prev->fxstate);
+    CPU::fpLoadRegs(next->fxstate);
 
     if (next->process && (next->process != prev->process))
     {

@@ -1,11 +1,7 @@
 #include <driver/pci.hpp>
 #include <driver/pci_id.hpp>
-
 #include <kernel/log.hpp>
-#include <kmalloc.h>
-
 #include <bitmap.hpp>
-#include <inplace_vector.hpp>
 
 
 static PCI_Device *PCI_RootDevice; //      = PCI_Device(PCIAddress(0, 0, 0));

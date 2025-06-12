@@ -5,7 +5,9 @@
             "includePath": [
                 "${default}"
             ],
-            "defines": [],
+            "defines": [
+                "__is_kernel"
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
             "intelliSenseMode": "linux-clang-x64"

@@ -29,8 +29,8 @@ namespace VMM
 
     uint64_t *clonePML4( uint64_t *pml4 );
 
-    void mapPage( uintptr_t phys, uintptr_t virt,
-                  uint64_t flags=PAGE_PRESENT|PAGE_WRITE );
+    uintptr_t mapPage( uintptr_t phys, uintptr_t virt,
+                       uint64_t flags=PAGE_PRESENT|PAGE_WRITE );
 
     void mapPage2( uintptr_t pml4_phys, uintptr_t phys, uintptr_t virt,
                    uint64_t flags=PAGE_PRESENT|PAGE_WRITE );

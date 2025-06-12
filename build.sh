@@ -56,6 +56,8 @@ mkdir -p build && cd build
 cmake ..
 make -j8
 cd ../
+
+rm dump.txt && readelf -a sysroot/usr/bin/CringeOS >> dump.txt
 # ---------------------------------------------------------
 
 

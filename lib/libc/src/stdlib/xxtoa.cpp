@@ -42,7 +42,7 @@ char *ltoa( int64_t value, char *buf, int radix )
 
 char *ultoa( uint64_t value, char *buf, int radix )
 {
-    char tmp[32];
+    char tmp[64];
     char *tp = tmp;
     uint64_t i;
     uint64_t v = value;

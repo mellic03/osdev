@@ -18,8 +18,8 @@ section .text
         mov rax, cr0
         bts rax, 1		; Set Monitor co-processor (Bit 1)
         btr rax, 2		; Clear Emulation (Bit 2)
-        ; bts rax, 5		; Set Native Exception (Bit 5)
         ; btr rax, 3		; Clear TS
+        ; bts rax, 5		; Set Native Exception (Bit 5)
         mov cr0, rax
         finit
         ret
@@ -35,22 +35,6 @@ section .text
         mov cr4, rax
         ret
 
-    global cpu_enable_avx
-    cpu_enable_avx:
-        push rax
-        push rcx
-        push rdx
-
-        xor rcx, rcx
-        xgetbv          ; Load XCR0 register
-        or eax, 7       ; Set AVX, SSE, X87 bits
-        xsetbv          ; Save back to XCR0
-
-        pop rdx
-        pop rcx
-        pop rax
-        ret
-
     global cpu_enable_xsave
     cpu_enable_xsave:
         mov rax, cr4
@@ -58,6 +42,25 @@ section .text
         mov cr4, rax 
         ret
 
+    global cpu_enable_avx
+    cpu_enable_avx:
+        xor rcx, rcx
+        xgetbv          ; Load XCR0 register
+        or eax, 7       ; Set AVX, SSE, X87 bits
+        xsetbv          ; Save back to XCR0
+        ret
+
+
+
+    global cpu_xsave64
+    cpu_xsave64:
+        xsave64 [rdi]
+        ret
+
+    global cpu_xrstor64
+    cpu_xrstor64:
+        xrstor64 [rdi]
+        ret
 
     global cpu_fxsave64
     cpu_fxsave64:
@@ -69,6 +72,15 @@ section .text
         fxrstor64 [rdi]
         ret
 
+    global cpu_fsave
+    cpu_fsave:
+        fsave [rdi]
+        ret
+
+    global cpu_frstor
+    cpu_frstor:
+        frstor [rdi]
+        ret
 
     ; https://www.felixcloutier.com/x86/stos:stosb:stosw:stosd:stosq
     ; The STOSX instructions can be preceded by the REP prefix

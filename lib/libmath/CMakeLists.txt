@@ -1,8 +1,27 @@
-file(
-    GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+
+add_library(
+    libmath STATIC "${CMAKE_CURRENT_SOURCE_DIR}/src/libmath.cpp"
 )
 
-add_library(libmath OBJECT ${SOURCES})
-target_include_directories(libmath PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_options(
+    libmath PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+)
+
+target_link_options(
+    libmath PRIVATE
+    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
+)
+
+
+
+
+add_library(
+    ulibmath SHARED "${CMAKE_CURRENT_SOURCE_DIR}/src/libmath.cpp"
+)
+
+target_compile_options(
+    ulibmath PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+)
 

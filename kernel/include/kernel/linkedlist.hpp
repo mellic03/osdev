@@ -3,15 +3,17 @@
 
 namespace knl
 {
-    struct LinkedListNode
-    {
-        LinkedListNode *prev, *next;
-        LinkedListNode(): prev(nullptr), next(nullptr) {  };
-        void makeLast( LinkedListNode *&root );
-    };
-
     template <typename T>
     class LinkedList;
+
+    class LinkedListNode
+    {
+    public:
+        LinkedListNode(): prev(nullptr), next(nullptr) {  };
+    // private:
+        LinkedListNode *prev, *next;
+        void makeLast( LinkedListNode *&root );
+    };
 }
 
 
@@ -22,7 +24,7 @@ class knl::LinkedList
 public:
 
     LinkedList()
-    : m_root(nullptr), m_size(0) {  };
+    :   m_root(nullptr), m_size(0) {  };
 
     void insert( NodeType* );
     void remove( NodeType* );

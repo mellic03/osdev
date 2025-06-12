@@ -10,21 +10,21 @@ struct vec;
 
 
 #define vec_OPERATOR_VEC_VEC(op)\
-template <size_t N, typename T, typename U>\
-vec<N, T> operator op( const vec<N, T> &L, const vec<N, U> &R )\
+template <size_t N, typename T>\
+vec<N, T> operator op( const vec<N, T> &L, const vec<N, T> &R )\
 {\
     vec<N, T> res;\
-    for (size_t i=0; i<N; i++) { res[i] = L[i] op static_cast<T>(R[i]); }\
+    for (size_t i=0; i<N; i++) { res[i] = L[i] op R[i]; }\
     return res;\
 }
 
 
 
 #define vec_OPEQ_VEC_VEC(op)\
-template <size_t N, typename T, typename U>\
-vec<N, T> &operator op( vec<N, T> &L, const vec<N, U> &R )\
+template <size_t N, typename T>\
+vec<N, T> &operator op( vec<N, T> &L, const vec<N, T> &R )\
 {\
-    for (size_t i=0; i<N; i++) L[i] op static_cast<T>(R[i]);\
+    for (size_t i=0; i<N; i++) L[i] op R[i];\
     return L;\
 }\
 template <size_t N, typename T>\
@@ -36,39 +36,38 @@ vec<N, T> &operator op( vec<N, T> &L, T R )\
 
 
 #define vec_OPERATOR_SCALAR_VEC(op)\
-template <typename U, size_t N, typename T>\
-vec<N, T> operator op( U L, const vec<N, T> &R )\
+template <size_t N, typename T>\
+vec<N, T> operator op( T L, const vec<N, T> &R )\
 {\
     vec<N, T> v;\
-    for (size_t i=0; i<N; i++) { v[i] = T(L) op R[i]; }\
+    for (size_t i=0; i<N; i++) { v[i] = L op R[i]; }\
     return v;\
 }
 
 #define vec_OPERATOR_VEC_SCALAR(op)\
-template <size_t N, typename T, typename U>\
-vec<N, T> operator op( const vec<N, T> &L, U R )\
+template <size_t N, typename T>\
+vec<N, T> operator op( const vec<N, T> &L, T R )\
 {\
     vec<N, T> v;\
-    for (size_t i=0; i<N; i++) { v[i] = L[i] op T(R); }\
+    for (size_t i=0; i<N; i++) { v[i] = L[i] op R; }\
     return v;\
 } \
 
 #define VEC_OPERATOR_VEC_SCALAR_EQ(op)\
-template <size_t N, typename T, typename U>\
-vec<N, T> &operator op=( U R )\
+template <size_t N, typename T>\
+vec<N, T> &operator op=( T R )\
 {\
     for (size_t i=0; i<N; i++)\
-        (*this)[i] op= T(R);\
+        (*this)[i] op= R;\
     return *this\
 }
 
 
 #define vec_OPERATOR_CONSTRUCT(szA)\
-template <size_t szB, typename U>\
-vec( const vec<szB, U> &R )\
+template <typename U>\
+vec( const vec<szA, U> &R )\
 {\
-    constexpr size_t szmin = std::min(size_t(szA), size_t(szB));\
-    for (size_t i=0; i<szmin; i++) (*this)[i] = T(R[i]);\
+    for (size_t i=0; i<szA; i++) (*this)[i] = T(R[i]);\
 }
 
 
@@ -220,6 +219,12 @@ struct alignas(T) vec<4, T>
     {
         return x==rhs.x && y==rhs.y && z==rhs.z && w==rhs.w;
     }
+
+    // template <typename U> vec( const vec<4, U> &R )
+    // {
+    //     for (size_t i=0; i<4; i++)
+    //         (*this)[i] = T(R[i]);
+    // }
 
     vec_OPERATOR_CONSTRUCT(4)
     vec_OPERATOR_ASSIGN(4)

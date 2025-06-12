@@ -19,8 +19,14 @@ extern "C"
     void cpu_disable_sse();
     void cpu_enable_avx();
     void cpu_enable_xsave();
-    void cpu_fxsave64( uintptr_t );
-    void cpu_fxrstor64( uintptr_t );
+
+    void cpu_xsave64(void*);
+    void cpu_fxsave64( void* );
+    void cpu_fsave( void* );
+
+    void cpu_xrstor64(void*);
+    void cpu_fxrstor64( void* );
+    void cpu_frstor( void* );
 
     void cpu_stos8 ( void*, uint8_t, size_t );
     void cpu_stos32( void*, uint32_t, size_t );
@@ -51,42 +57,11 @@ extern "C"
     #include <immintrin.h>
 #endif
 
-static CPU::cpu_features_t CPU_FEATURES;
-// static CPU::fxstate_t      CPU_TempFXState;
-
-CPU::cpu_features_t CPU_featureCheck()
-{
-    uint32_t eax, ebx, ecx, edx;
-    __cpuid(0x01, eax, ebx, ecx, edx);
-
-    CPU::cpu_features_t F;
-    kmemset(&F, 0, sizeof(F));
-
-    F.fpu     = bool(edx & CPUID_FEAT_EDX_FPU);
-    F.mmx     = bool(edx & CPUID_FEAT_EDX_MMX);
-    F.sse     = bool(edx & CPUID_FEAT_EDX_SSE);
-    F.sse2    = bool(edx & CPUID_FEAT_EDX_SSE2);
-    F.sse3    = bool(ecx & CPUID_FEAT_ECX_SSE3);
-    F.avx     = bool(ecx & CPUID_FEAT_ECX_AVX);
-    F.xsave   = bool(ecx & CPUID_FEAT_ECX_XSAVE);
-    F.osxsave = bool(ecx & CPUID_FEAT_ECX_OSXSAVE);
-
-    __cpuid(0x07, eax, ebx, ecx, edx);
-    F.avx2 = bool(ebx & bit_AVX2);
-    CPU_FEATURES = F;
-
-    // kmemset<uint8_t>(&CPU_TempFXState, 0, sizeof(CPU_TempFXState));
-    // CPU_TempFXState.mxcsr     = 0x1F80;
-    // CPU_TempFXState.mxcsrMask = 0x1000|0x0800|0x0400|0x0200|0x0100|0x0080;
-    // CPU_TempFXState.fcw       = 0x033F;
-
-    return F;
-}
-
+static CPU::cpu_features_t *CPU_FEATURES = nullptr;
 
 void CPU_featureCheck2()
 {
-    const auto &F = CPU_FEATURES;
+    const auto &F = *CPU_FEATURES;
 
     syslog lg("CPU::featureCheck");
     lg("fpu:     %u", F.fpu);
@@ -96,6 +71,7 @@ void CPU_featureCheck2()
     lg("sse3:    %u", F.sse3);
     lg("avx:     %u", F.avx);
     lg("avx2:    %u", F.avx2);
+    lg("fxsave:  %u", F.fxsave);
     lg("xsave:   %u", F.xsave);
     lg("osxsave: %u", F.osxsave);
 }
@@ -103,39 +79,81 @@ void CPU_featureCheck2()
 
 namespace CPU
 {
-#ifdef __SSE__
+    // static void (*fpSaveRegsFunc)(void*);
+    // static void (*fpLoadRegsFunc)(void*);
+
+    void initFoat()
+    {
+        static cpu_features_t F;
+        kmemset<uint8_t>(&F, 0, sizeof(F));
+        CPU_FEATURES = &F;
+
+        uint32_t eax, ebx, ecx, edx;
+        __cpuid(0x01, eax, ebx, ecx, edx);
+
+        F.fpu     = bool(edx & CPUID_FEAT_EDX_FPU);
+        F.mmx     = bool(edx & CPUID_FEAT_EDX_MMX);
+        F.sse     = bool(edx & CPUID_FEAT_EDX_SSE);
+        F.sse2    = bool(edx & CPUID_FEAT_EDX_SSE2);
+        F.sse3    = bool(ecx & CPUID_FEAT_ECX_SSE3);
+        F.avx     = bool(ecx & CPUID_FEAT_ECX_AVX);
+        F.fxsave  = bool(ecx & CPUID_FEAT_EDX_FXSR);
+        F.xsave   = bool(ecx & CPUID_FEAT_ECX_XSAVE);
+        F.osxsave = bool(ecx & CPUID_FEAT_ECX_OSXSAVE);
+
+        // __cpuid(0x07, eax, ebx, ecx, edx);
+        // F.avx2 = bool(ebx & bit_AVX2);
+
+        // fpSaveRegsFunc = nullptr;
+        // fpLoadRegsFunc = nullptr;
+
+        // if (F.xsave)
+        // {
+        //     CPU::fpSaveRegsFunc = cpu_xsave64;
+        //     CPU::fpLoadRegsFunc = cpu_xrstor64;
+        // }
+
+        // else if (F.fxsave)
+        // {
+        //     CPU::fpSaveRegsFunc = cpu_fxsave64;
+        //     CPU::fpLoadRegsFunc = cpu_fxrstor64;
+        // }
+
+        // else
+        // {
+        //     CPU::fpSaveRegsFunc = cpu_fsave;
+        //     CPU::fpLoadRegsFunc = cpu_frstor;
+        // }
+
+        CPU::enableFloat();
+    }
+
     void enableFloat()
     {
-        const auto &F = CPU_FEATURES;
+        const auto &F = *CPU_FEATURES;
 
         if (F.sse)
         {
             cr0_t cr0{getCR0()};
             cr0.MP = 1;
             cr0.EM = 0;
+            cr0.TS = 0;
+            cr0.ET = 1;
+            cr0.NE = 1;
             setCR0(cr0.qword);
 
             cr4_t cr4{getCR4()};
-            cr4.OSXSAVE    = (F.xsave) ? 1 : 0;
             cr4.OSFXSR     = 1;
             cr4.OSXMMEXCPT = 1;
+            cr4.OSXSAVE    = (F.xsave) ? 1 : 0;
             setCR4(cr4.qword);
 
-            if (F.xsave)
-            {
-                cpu_enable_xsave();
-
-                #ifdef __AVX__
-                    if (F.avx) cpu_enable_avx();
-                #endif
-            }
-
-        // #ifdef __AVX__
-        //     if (F.avx)
-        //         cpu_enable_avx();
-        // #endif
+            // if (F.xsave && F.avx)
+            // {
+            //     cpu_enable_xsave();
+            //     cpu_enable_avx();
+            // }
         }
-
     }
 
     void disableFloat()
@@ -143,26 +161,28 @@ namespace CPU
         
     }
 
-    void fxsave ( void *p )
+    void fpSaveRegs( void *p )
     {
-        if (CPU_FEATURES.xsave)
-            cpu_fxsave64((uintptr_t)p);
+        // fpSaveRegsFunc(p);
+        if (CPU_FEATURES->fxsave)
+            cpu_fxsave64(p);
     }
 
-    void fxrstor( void *p )
+    void fpLoadRegs( void *p )
     {
-        if (CPU_FEATURES.xsave)
-            cpu_fxrstor64((uintptr_t)p);
+        // fpSaveRegsFunc(p);
+        if (CPU_FEATURES->fxsave)
+            cpu_fxrstor64(p);
     }
 
 
-#else
-    void enableFloat() {  }
-    void disableFloat() {  }
-    void fxsave ( void* ) {  }
-    void fxrstor( void* ) {  }
+// #else
+    // void enableFloat() {  }
+    // void disableFloat() {  }
+    // void fxsave ( void* ) {  }
+    // void fxrstor( void* ) {  }
 
-#endif
+// #endif
 
     void stos8 ( void *d,  uint8_t v, size_t n ) { cpu_stos8(d, v, n);  }
     void stos32( void *d, uint32_t v, size_t n ) { cpu_stos32(d, v, n); }

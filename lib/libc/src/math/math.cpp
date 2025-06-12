@@ -1,137 +1,141 @@
 #ifdef __SSE__
 #include <math.h>
+#include <xmmintrin.h>
 #include <immintrin.h>
-// #include <kdef.h>
+#include <bit>
 
 
-double sqrt( double x )
+double floor( double x )
 {
-    __m128d input  = _mm_set_sd(x);
-    __m128d result = _mm_sqrt_sd(input, input);
-    return _mm_cvtsd_f64(result);
+    double ix = double(int64_t(x));
+    if (x >= 0.0)
+        return double(int64_t(x));
+    return (x == ix) ? ix : ix-1.0;
 }
 
-float fsqrt( float x )
+double ceil( double x )
 {
-    return (float)sqrt((double)x);
+    double ix = double(int64_t(x));
+        return (x == ix) ? ix : ix+1;
+    return double(int64_t(x));
 }
 
+double round( double x )
+{
+    return (x >= 0.0) ? floor(x+0.5) : ceil(x-0.5);
+}
 
+double trunc( double x )
+{
+    return double(int64_t(x));
+}
 
-#ifdef __AVX__
-    double floor( double x )
-    {
-        // return double(int(x));
-        __m128d input  = _mm_set1_pd(x);
-        __m128d result = _mm_floor_pd(input);
-        return _mm_cvtsd_f64(result);
-    }
+double fract( double x )
+{
+    return x - trunc(x);
+}
 
-    double ceil( double x )
-    {
-        // return double(int(x+1.0));
-        __m128d input  = _mm_set1_pd(x);
-        __m128d result = _mm_ceil_pd(input);
-        return _mm_cvtsd_f64(result);
-    }
+double fabs( double x )
+{
+    double sign = (x < 0.0) ? -1.0 : +1.0;
+    return sign*x;
+}
 
-    double round( double x )
-    {
-        // return double(int(x+0.5));
-        __m128d input  = _mm_set1_pd(x);
-        __m128d result = _mm_round_pd(input, _MM_FROUND_TO_NEAREST_INT);
-        return _mm_cvtsd_f64(result);
-    }
+double fmod( double x, double y )
+{
+    return x - (floor(x/y) * y);
+}
 
-    double trunc( double x )
-    {
-        // return (x < 0.0) ? ceil(x) : floor(x);
-        __m128d input  = _mm_set1_pd(x);
-        __m128d result = _mm_round_pd(input, _MM_FROUND_TRUNC);
-        return _mm_cvtsd_f64(result);
-    }
-
-    double fract( double x )
-    {
-        return x - floor(x);
-    }
-#endif
-
-// double log( double x )
+// float floorf( float x )
 // {
-//     double rx = sqrt(x);
-//     return rx - (1.0 / rx);
+//     __m128 input  = _mm_set1_ps(x);
+//     __m128 result = _mm_floor_ps(input);
+//     return _mm_cvtss_f32(result);
 // }
 
 
-// double exp( double x )
+
+// double floor( double x )
 // {
-//     double inv = 1.0;
-//     double x_k = x;
-
-//     inv = inv - (x_k) / 1.0;    x_k *= x;
-//     inv = inv + (x_k) / 2.0;    x_k *= x;
-//     inv = inv + (x_k) / 6.0;    x_k *= x;
-//     inv = inv + (x_k) / 24.0;   x_k *= x;
-//     inv = inv + (x_k) / 120.0;  x_k *= x;
-
-//     return 1.0 / inv;
-
-//     // double inv = 1.0;
-//     // double dir = -1.0;
-
-//     // double k_factorial = 1.0;
-
-//     // // k1: 1
-//     // // k2: k1*2 ==  1*2 == 2
-//     // // k3: k2*3 ==  2*3 == 6
-//     // // k4: k3*4 ==  6*4 == 24
-//     // // k5: k4*5 == 24*5 == 120
-
-//     // for (int k=1; k<=8; k++)
-//     // {
-//     //     k_factorial = k_factorial * (double)k;
-
-//     //     inv += dir * (1.0 / k_factorial);
-//     //     dir *= -1.0;
-//     // }
-
-//     // return inv * x;
+//     __m128d input  = _mm_set1_pd(x);
+//     __m128d result = _mm_floor_pd(input);
+//     return _mm_cvtsd_f64(result);
 // }
 
-
-// double pow( double x, double y )
+// double ceil( double x )
 // {
-//     union {
-//         double d;
-//         int a[2];
-//     } u = { x };
-
-//     u.a[1] = (int)(y * (u.a[1] - 1072632447) + 1072632447);
-//     u.a[0] = 0;
-
-//     return u.d;
-//     // return exp(y*log(x));
+//     __m128d input  = _mm_set1_pd(x);
+//     __m128d result = _mm_ceil_pd(input);
+//     return _mm_cvtsd_f64(result);
 // }
 
-
-// double fmod( double x, double y )
+// double round( double x )
 // {
-//     return x - y * trunc(x/y);
+//     __m128d input  = _mm_set1_pd(x);
+//     __m128d result = _mm_round_pd(input, _MM_FROUND_TO_NEAREST_INT);
+//     return _mm_cvtsd_f64(result);
 // }
 
+// double trunc( double x )
+// {
+//     __m128d input  = _mm_set1_pd(x);
+//     __m128d result = _mm_round_pd(input, _MM_FROUND_TRUNC);
+//     return _mm_cvtsd_f64(result);
+// }
+
+// double fract( double x )
+// {
+//     return x - trunc(x);
+// }
+
+// double sign( double x )
+// {
+//     if (x == 0.0)
+//         return 0.0;
+//     return (x < 0.0) ? -1.0 : +1.0;
+// }
 
 // double fabs( double x )
 // {
-//     union {
-//         double f;
-//         uint64_t i;
-//     } u = {x};
-
-// 	u.i &= -1ULL / 2;
-
-// 	return u.f;
+//     return sign(x) * x;
 // }
+
+// double fmod( double x, double y )
+// {
+//     return x - (floor(x/y) * y);
+// }
+
+
+
+// double log_e( double x )
+// {
+//     // Extract exponent and mantissa
+//     union {
+//         double   f64;
+//         uint64_t u64;
+//     } U = {x};
+//     uint64_t ix = U.u64;
+
+//     int exponent = ((ix >> 52) & 0x7FF) - 1023; // Extract exponent (bias 1023)
+//     ix = (ix & 0x000FFFFFFFFFFFFF) | 0x3FF0000000000000; // Normalize mantissa
+//     double m = *(double*)&ix; // Mantissa (normalized)
+    
+//     // Polynomial or minimax approximation for ln(m) around m ~ 1.0
+//     double m1 = m - 1.0;
+//     double m2 = m1 * m1;
+    
+//     // Coefficients for minimax approximation
+//     const double c1 = +0.999999999999996;
+//     const double c2 = -0.499999999999999;
+//     const double c3 = +0.333333333333333;
+//     const double c4 = -0.250000000000000;
+    
+//     double log_m = m1 * (c1 + m1 * (c2 + m1 * (c3 + m1 * c4)));
+//     double log_x = log_m + exponent * 0.6931471805599453; // ln(2) ~ 0.6931471805599453
+
+//     return log_x;
+// }
+
 
 
 #endif

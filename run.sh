@@ -22,7 +22,7 @@ qemu-system-x86_64 \
     -serial stdio \
     -device ati-vga,model=rage128p \
     -display gtk,gl=on
-    # -device virtio-gpu-gl-pci \
     # -device vmware-svga \
+    # -device virtio-gpu-gl-pci \
     # -device virtio-vga-gl \
     # -device virtio-gpu-gl-pci \
