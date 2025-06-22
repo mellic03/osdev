@@ -5,12 +5,9 @@ file(GLOB SOURCES
 add_library(knl_syslog OBJECT ${SOURCES})
 
 target_compile_options(
-    knl_syslog PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+    knl_syslog PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_KERNEL_NOFPU}>"
 )
 
 target_link_options(
-    knl_syslog PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
+    knl_syslog PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_KERNEL}>"
 )

@@ -31,34 +31,11 @@ void isr_dispatch( intframe_t *frame )
         usrtab[isrno](frame);
     }
 
-    else if (!usrtab[isrno] && isrno <= 31)
-    {
-        syslog::println("[isr_dispatch] unhandled expction %u (%s)", isrno, IntNoStr(isrno));
-        while (true) { asm volatile ("cli; hlt"); }
-    }
-
     if ((IntNo_IrqBase <= isrno) && (isrno <= IntNo_IrqEnd))
     {
         LAPIC::sendEOI();
     }
 }
-
-
-void idt_setdesc( idt_entry_t &desc, uintptr_t isr, uint8_t flags )
-{
-    desc.isr_high   = (isr >> 32) & 0xFFFFFFFF;
-    desc.isr_mid    = (isr >> 16) & 0xFFFF;
-    desc.isr_low    =  isr & 0xFFFF;
-
-    desc.kernel_cs  = CPU::GDT_OFFSET_KERNEL_CODE;
-    desc.ist        = 0;
-    desc.attributes = flags;
-    desc.reserved   = 0;
-}
-
-
-#define INTERRUPT_GATE 0x8E
-#define TRAP_GATE 0x8
 
 
 static void defaultExceptionHandler( intframe_t *frame )
@@ -84,16 +61,39 @@ static void defaultExceptionHandler( intframe_t *frame )
 }
 
 
+
+void idt_setdesc( idt_entry_t &desc, uintptr_t isr, uint8_t flags )
+{
+    desc.isr_high   = (isr >> 32) & 0xFFFFFFFF;
+    desc.isr_mid    = (isr >> 16) & 0xFFFF;
+    desc.isr_low    =  isr & 0xFFFF;
+
+    desc.kernel_cs  = CPU::GDT_OFFSET_KERNEL_CODE;
+    desc.ist        = 0;
+    desc.attributes = flags;
+    desc.reserved   = 0;
+}
+
+
+#define INTERRUPT_GATE 0x8E
+#define TRAP_GATE 0x8
+
+
 void CPU::createIDT()
 {
+    kmemset<uint8_t>(usrtab, 0, sizeof(usrtab));
+
     for (size_t i=0; i<NUM_INTERRUPTS; i++)
+    {
         idt_setdesc(idt_entries[i], (uintptr_t)(isrtab[i]), INTERRUPT_GATE);
+        usrtab[i] = defaultExceptionHandler;
+    }
+
     idtr.base  = (uint64_t)(&idt_entries[0]);
     idtr.limit = (uint16_t)sizeof(idt_entries) - 1;
 
-    kmemset<uint8_t>(usrtab, 0, sizeof(usrtab));
-    for (size_t i=IntNo_ExceptionBase; i<IntNo_ExceptionEnd; i++)
-        usrtab[i] = defaultExceptionHandler;
+    // for (size_t i=IntNo_ExceptionBase; i<IntNo_ExceptionEnd; i++)
+    //     usrtab[i] = defaultExceptionHandler;
 
     // kprintf("[CPU::createIDT] base=0x%lx, limit=%lu\n", idtr.base, idtr.limit);
 }

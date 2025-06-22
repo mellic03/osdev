@@ -77,10 +77,10 @@ using irqHandlerFn = void (*)(intframe_t*);
 
 namespace knl
 {
-    template <uint16_t isrno>
+    template <uint16_t intno>
     constexpr inline void interrupt()
     {
-        asm volatile("int %0" : : "i" (isrno));
+        asm volatile("int %0" : : "i" (intno));
     }
 }
 

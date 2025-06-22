@@ -3,7 +3,6 @@
 #endif
 
 #include <kassert.h>
-#include <kmalloc.h>
 #include <kpanic.hpp>
 #include <kthread.hpp>
 #include <kprintf.hpp>
@@ -15,10 +14,10 @@
 #include <kernel/log.hpp>
 #include <sys/interrupt.hpp>
 #include <kernel/syscall.h>
+#include <kernel/memory.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/module.hpp>
 #include <kernel/kvideo.hpp>
-#include <kprintf.hpp>
 
 #include <wm/wm.hpp>
 
@@ -48,7 +47,7 @@ extern ModuleInterface *kbdev_init( void* );
 extern void load_module2( ModuleInterface* (*)(void*) );
 
 static knl::Barrier barrierA{0};
-static knl::Barrier barrierB{0};
+
 
 
 static void kmain( cpu_t *cpu )
@@ -63,10 +62,9 @@ static void kmain( cpu_t *cpu )
         // vfs::print();
 
         knl::createProcess("wm::main", wm::main, nullptr);
-        syslog::println("WOWAEOWEAOEWA");
     }
 
-    barrierB.wait();
+    barrierA.wait();
     CPU::sti();
 
     while (true)
@@ -82,7 +80,7 @@ static void kmain( cpu_t *cpu )
 
 #include <driver/svga.hpp>
 #include <driver/video.hpp>
-#include <kernel/linkedlist.hpp>
+#include <util/linkedlist.hpp>
 
 
 static void pagefaultISR( intframe_t* );
@@ -108,24 +106,16 @@ extern void CPU_featureCheck2();
 const auto &println = syslog::println;
 
 
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_rsdp_request lim_rsdp_req = {
-    .id = LIMINE_RSDP_REQUEST,
-    .revision = 3
-};
-
-
-
 extern "C"
 void _start()
 {
     CPU::cli();
-    knl_ClearBSS();
-    knl_ClearMemory();
-    CPU::initFoat();
-    
+    // knl_ClearBSS();
+    // knl_ClearMemory();
+
     CPU::createGDT();
     CPU::installGDT();
+    CPU::initFoat();
 
     (serial::init()) ? syslog::enable() : syslog::disable();
     early_init();
@@ -135,8 +125,6 @@ void _start()
     CPU::createIDT();
     CPU::installIDT();
 
-    // CPU::installISR(IntNo_InvalidOpcode, invalidOpISR);
-    // CPU::installISR(IntNo_GenFault,      genfaultISR);
     CPU::installISR(IntNo_PageFault,     pagefaultISR);
     CPU::installISR(IntNo_OUT_OF_MEMORY, outOfMemoryISR);
     CPU::installISR(IntNo_KThreadYield,  knl::Sched::scheduleISR);
@@ -145,12 +133,22 @@ void _start()
     CPU::installIRQ(IrqNo_PIT,           PIT_IrqHandler);
 
     static ACPI::Response res;
-    ACPI::init(lim_rsdp_req.response->address, res);
+    ACPI::init(limine_res.rsdp->address, res);
     APIC::init(res);
 
-    // smpCount.store(0);
+    // ustar::listAll(initrd::tarball);
+
+    // void *handle = knl::dl_open("usr/lib/libc.a");
+    // syslog::println("handle: 0x%lx", handle);
+    // void *addr1  = knl::sym_load(handle, "ulibc_add");
+    // syslog::println("addr1:  0x%lx", addr1);
+
+    // auto testfn = (int (*)(int, int))addr1;
+    // syslog::println("YOLO\n");
+    // int value = testfn(2, 98);
+    // syslog::println("res: %d\n", value);
+
     barrierA.reset(limine_res.mp->cpu_count);
-    barrierB.reset(limine_res.mp->cpu_count);
     SMP::init(kmain);
 
     kassert(false); // Should be unreachable!
@@ -161,29 +159,6 @@ void _start()
 
 
 
-
-
-// void stacktrace( intframe_t *frame )
-// {
-//     syslog log("stacktrace");
-//     intframe_t *sf = frame;
-
-//     for (int i=0; i<16; i++)
-//     {
-//         log("rip: 0x%lx", sf->rip);
-//         log("rbp: 0x%lx\n", sf->rbp);
-//         sf = (intframe_t*)(&sf->rbp);
-//     }
-// }
-
-// static void invalidOpISR( intframe_t *frame )
-// {
-//     syslog log("Exception %u (%s)", frame->isrno, IntNoStr(frame->isrno));
-
-//     auto *cpu = SMP::this_cpu();
-//     if (cpu) log("cpu %d", cpu->id);
-
-// }
 
 static void outOfMemoryISR( intframe_t* )
 {
@@ -264,9 +239,6 @@ static void pagefaultISR( intframe_t *frame )
     
     kpanic("Page fault");
 }
-
-
-
 
 
 

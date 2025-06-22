@@ -7,14 +7,11 @@ add_library(
 )
 
 target_compile_options(
-    klibc++ PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+    klibc++ PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_KERNEL_NOFPU}>"
 )
 
 target_link_options(
-    klibc++ PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
+    klibc++ PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_KERNEL}>"
 )
 
 

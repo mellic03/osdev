@@ -1,6 +1,11 @@
 #include <stdio.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 int fgetc( FILE* )
 {
     // while (true)
@@ -17,3 +22,7 @@ int fgetc( FILE* )
 }
 
 
+
+#ifdef __cplusplus
+}
+#endif

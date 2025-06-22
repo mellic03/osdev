@@ -6,9 +6,6 @@
 
 #define PMM_2MB_PAGES
 
-struct limine_memmap_response;
-
-
 namespace PMM
 {
     static constexpr size_t PAGE_SIZE_4K = 4*1024;
@@ -27,7 +24,7 @@ namespace PMM
     struct MemMap { uintptr_t base; size_t size; };
 
     void init( const MemMap &mmap, size_t hhdm_offset );
-    void init2( limine_memmap_response* );
+
     uintptr_t allocFrame();
     uintptr_t allocPage();
     uintptr_t allocPages( size_t n );

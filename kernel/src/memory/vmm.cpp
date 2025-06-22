@@ -7,7 +7,7 @@
 #include <string.h>
 #include <kernel/log.hpp>
 #include <kernel/memory.hpp>
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
 
 
 constexpr uint64_t PML4_INDEX( uint64_t va ) { return (va>>39) & 0x1FF; }
@@ -48,6 +48,8 @@ uintptr_t VMM::mapPage( uintptr_t phys, uintptr_t virt, uint64_t flags )
 {
     phys = idk::align_down(phys, PMM::PAGE_SIZE);
     virt = idk::align_down(virt, PMM::PAGE_SIZE);
+    // syslog log("VMM:mapPage");
+    // log("phys, virt: 0x%lx, 0x%lx", phys, virt);
     uint64_t *pml4 = (uint64_t*)PhysToHHDM(CPU::getCR3());
     VMM_mapPage(pml4, phys, virt, flags);
     return virt;

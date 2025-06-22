@@ -44,7 +44,6 @@ namespace CPU
     static constexpr uint32_t MSR_GS_BASE        = 0xC0000101;
     static constexpr uint32_t MSR_GS_KERNEL_BASE = 0xC0000102;
 
-
     struct cpu_features_t
     {
         bool fpu, mmx;

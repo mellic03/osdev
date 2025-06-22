@@ -2,16 +2,16 @@
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kernel/log.hpp>
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
 #include <cpu/cpu.hpp>
 #include <string.h>
-#include <bitmap.hpp>
+#include <util/bitmap.hpp>
 
 #include <kmalloc.h>
 #include <new>
 
 
-static idk::BitMapAllocator2<knl::Process, knl::MAX_PROCESSES> ProcAllocator;
+static idk::BitMapAllocator<knl::Process, knl::MAX_PROCESSES> ProcAllocator;
 knl::LinkedList<knl::Process> knl::AllProcs;
 knl::Process *knl::InitProc = nullptr;
 

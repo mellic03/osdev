@@ -2,6 +2,7 @@
 #include <cpu/cpuid.hpp>
 #include <kernel/log.hpp>
 #include <kmemxx.hpp>
+#include <kprintf.hpp>
 
 
 cpu_t::cpu_t( size_t cpuid )
@@ -57,11 +58,11 @@ extern "C"
     #include <immintrin.h>
 #endif
 
-static CPU::cpu_features_t *CPU_FEATURES = nullptr;
+static CPU::cpu_features_t CPU_FEATURES;
 
 void CPU_featureCheck2()
 {
-    const auto &F = *CPU_FEATURES;
+    const auto &F = CPU_FEATURES;
 
     syslog lg("CPU::featureCheck");
     lg("fpu:     %u", F.fpu);
@@ -84,13 +85,12 @@ namespace CPU
 
     void initFoat()
     {
-        static cpu_features_t F;
-        kmemset<uint8_t>(&F, 0, sizeof(F));
-        CPU_FEATURES = &F;
-
+        kmemset<uint8_t>(&CPU_FEATURES, 0, sizeof(CPU_FEATURES));
+        
         uint32_t eax, ebx, ecx, edx;
         __cpuid(0x01, eax, ebx, ecx, edx);
-
+        
+        cpu_features_t &F = CPU_FEATURES;
         F.fpu     = bool(edx & CPUID_FEAT_EDX_FPU);
         F.mmx     = bool(edx & CPUID_FEAT_EDX_MMX);
         F.sse     = bool(edx & CPUID_FEAT_EDX_SSE);
@@ -127,25 +127,24 @@ namespace CPU
 
         CPU::enableFloat();
     }
-
+    
     void enableFloat()
     {
-        const auto &F = *CPU_FEATURES;
-
-        if (F.sse)
+        if (CPU_FEATURES.sse)
         {
-            cr0_t cr0{getCR0()};
-            cr0.MP = 1;
-            cr0.EM = 0;
-            cr0.TS = 0;
-            cr0.ET = 1;
-            cr0.NE = 1;
-            setCR0(cr0.qword);
+            cpu_enable_fpu();
+            // cr0_t cr0{getCR0()};
+            // cr0.MP = 1;
+            // cr0.EM = 0;
+            // cr0.TS = 0;
+            // cr0.ET = 1;
+            // cr0.NE = 1;
+            // setCR0(cr0.qword);
 
             cr4_t cr4{getCR4()};
             cr4.OSFXSR     = 1;
             cr4.OSXMMEXCPT = 1;
-            cr4.OSXSAVE    = (F.xsave) ? 1 : 0;
+            cr4.OSXSAVE    = (CPU_FEATURES.xsave) ? 1 : 0;
             setCR4(cr4.qword);
 
             // if (F.xsave && F.avx)
@@ -163,26 +162,19 @@ namespace CPU
 
     void fpSaveRegs( void *p )
     {
-        // fpSaveRegsFunc(p);
-        if (CPU_FEATURES->fxsave)
+        if (CPU_FEATURES.fxsave)
             cpu_fxsave64(p);
+        // fpSaveRegsFunc(p);
     }
 
     void fpLoadRegs( void *p )
     {
-        // fpSaveRegsFunc(p);
-        if (CPU_FEATURES->fxsave)
+        if (CPU_FEATURES.fxsave)
             cpu_fxrstor64(p);
+        // fpLoadRegsFunc(p);
     }
 
 
-// #else
-    // void enableFloat() {  }
-    // void disableFloat() {  }
-    // void fxsave ( void* ) {  }
-    // void fxrstor( void* ) {  }
-
-// #endif
 
     void stos8 ( void *d,  uint8_t v, size_t n ) { cpu_stos8(d, v, n);  }
     void stos32( void *d, uint32_t v, size_t n ) { cpu_stos32(d, v, n); }

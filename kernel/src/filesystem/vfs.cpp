@@ -2,7 +2,7 @@
 #include <kernel/kstring.h>
 #include <kernel/log.hpp>
 #include <kassert.h>
-#include <bitmap.hpp>
+#include <util/bitmap.hpp>
 #include <algorithm>
 #include <tuple>
 #include <new>
@@ -24,10 +24,10 @@ vfsNode::vfsNode( const char *name, uint32_t type )
 
     if (type == vfsNode_Directory)
     {
-        m_inode = vfs_Inodes.alloc();
+        m_inode = vfs_Inodes.allocIdx();
         auto *inode = vfs_Inodes.get(m_inode);
               inode->idx = 0;
-              inode->block = vfs_Blocks.alloc();
+              inode->block = vfs_Blocks.allocIdx();
 
         auto *block = vfs_Blocks.get(inode->block);
         memset(block, 0, sizeof(vfsDirListing));
@@ -187,10 +187,10 @@ static vfsInode *inodeAppend( vfsInode *inode )
 
     vfsInode *prev = inode;
 
-    inode->next = vfs_Inodes.alloc();
+    inode->next = vfs_Inodes.allocIdx();
     inode = vfs_Inodes.get(inode->next);
     inode->idx = prev->idx + 1;
-    inode->block = vfs_Blocks.alloc();
+    inode->block = vfs_Blocks.allocIdx();
 
     return inode;
 }
@@ -265,10 +265,10 @@ size_t vfs::write( vfsNode *fh, const void *srcbuf, size_t, size_t nbytes )
 
     if (fh->m_inode == -1)
     {
-        fh->m_inode = vfs_Inodes.alloc();
+        fh->m_inode = vfs_Inodes.allocIdx();
         auto *inode = vfs_Inodes.get(fh->m_inode);
               inode->idx = 0;
-              inode->block = vfs_Blocks.alloc();
+              inode->block = vfs_Blocks.allocIdx();
     }
 
     auto *src = (const uint8_t*)srcbuf;

@@ -1,7 +1,4 @@
 #include <kernel/tty.hpp>
-// #include <stdint.h>
-// #include <kmemxx.hpp>
-
 
 
 void knl::kTTY::putch( char ch )
@@ -49,8 +46,10 @@ void knl::kTTY::putch( char ch )
 
 }
 
+
 void knl::kTTY::scroll()
 {
+    // int curr_row = std::clamp(m_idx/BUF_W, (size_t)0, BUF_H-1);
     int curr_row = BUF_H-1;
 
     for (int i=0; i<curr_row; i++)
@@ -61,8 +60,11 @@ void knl::kTTY::scroll()
     }
 
     kmemset(m_buf + BUF_W*curr_row, 0, BUF_W);
+
+    // curr_row = std::max(curr_row-1, 0);
     m_idx = BUF_W*curr_row;
 }
+
 
 void knl::kTTY::scrolln( int n )
 {
@@ -70,5 +72,12 @@ void knl::kTTY::scrolln( int n )
     {
         scroll();
     }
+}
+
+
+void knl::kTTY::putstr( const char *str )
+{
+    while (*str)
+        putch(*(str++));
 }
 

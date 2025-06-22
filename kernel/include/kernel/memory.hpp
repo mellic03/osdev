@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <mutex>
-#include "linear_allocator.hpp"
 #include "buddy_allocator.hpp"
 
 
@@ -22,5 +21,16 @@ namespace idk
         MemoryMap( uint64_t p, uint64_t l, uint64_t hhdm )
         : phys(p), addr(p+hhdm), len(l) {  }
     };
+
+    void *bumpAlloc( size_t );
+
+}
+
+
+
+namespace kmem
+{
+    void init();
+    void *bumpAlloc( size_t );
 }
 

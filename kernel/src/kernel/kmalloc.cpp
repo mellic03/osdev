@@ -3,7 +3,9 @@
 #include <mutex>
 #include <kmalloc.h>
 
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
+#include <util/linear_allocator.hpp>
+
 #include <kernel/log.hpp>
 #include <kinplace/inplace_stack.hpp>
 #include <kernel/memory.hpp>
@@ -35,26 +37,15 @@ void kfree( void *ptr )
 }
 
 
+void kmalloc_init( uintptr_t base, size_t size )
+{
+    using namespace idk;
+
+    syslog log("kmalloc_init");
+    knl::linear_allocator kmem0((void*)base, size);
+
+    kalloc0 = (buddy_allocator*)(kmem0.alloc(sizeof(buddy_allocator), 16));
+    kalloc0 = new (kalloc0) buddy_allocator(kmem0);
+}
 
 
-#if 1
-    // #include "kmalloc.hpp"
-    // static std::mutex kmalloc_mutex;
-
-    void kmalloc_init( uintptr_t base, size_t size )
-    {
-        using namespace idk;
-
-        syslog log("kmalloc_init");
-        linear_allocator kmem0((void*)base, size);
-
-        kalloc0 = (buddy_allocator*)(kmem0.alloc(sizeof(buddy_allocator), 16));
-        kalloc0 = new (kalloc0) buddy_allocator(kmem0);
-    }
-#endif
-
-
-
-#ifdef __is_kernel
-
-#endif

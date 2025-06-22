@@ -7,10 +7,13 @@
 
 #include <arch/io.hpp>
 #include <sys/process.hpp>
+#include <sys/tty0.hpp>
+
 #include <driver/video.hpp>
 #include <kernel/kvideo.hpp>
 #include <kernel/event.hpp>
 #include <kernel/log.hpp>
+#include <kprintf.hpp>
 #include <kpanic.hpp>
 #include <kthread.hpp>
 #include <kmalloc.h>
@@ -23,32 +26,31 @@
 
 static void wm_mouseInput();
 static void wm_keyInput();
-// static void waitForVBlank();
 
 static wm::guiRoot  wmRoot;
 static wm::guiMouse wmMouse;
 static wm::guiTextArea *wmTextArea;
 
-#include <math.h>
 
 void wm::main( void* )
 {
-    int value = (int)pow(2.0, 8.0);
-    syslog::println("[wm::main] 2^8=%d", value);
-
     guiImage cursorimg(initrd::fopen("usr/share/img/cursor.bmp"));
     guiFont  txtfont(initrd::fopen("usr/share/font/cutive-w12hf18.bmp"));
 
-    // wmRoot.addChild(new guiTextArea2(&txtfont, ivec2(0, 200), ivec2(600, 600)));
+    syslog::println("[wm::main] A");
     wmRoot.addChild(new guiButton("roo", ivec2(50), ivec2(100, 50), []() { syslog::println("Roo"); }));
-    
+    // wmTextArea = new guiTextTTY(&knl::tty0, &txtfont, ivec2(0, 200), ivec2(600, 600));
     wmTextArea = new guiTextArea(&txtfont, ivec2(0, 200), ivec2(600, 600));
+    knl::tty0_stdout.listen(wmTextArea);
+    syslog::println("[wm::main] B");
+
     auto win1 = new guiWindow(ivec2(50, 50), ivec2(450, 450));
     {
         wmTextArea->m_style.fillBounds = true;
         win1->addChild(wmTextArea);
     }
     wmRoot.addChild(win1);
+    syslog::println("[wm::main] C");
 
     auto win0 = new guiWindow(ivec2(200, 100), ivec2(450, 450));
     {
@@ -61,24 +63,24 @@ void wm::main( void* )
         };
         win0->addChild(txt);
 
-        win0->addChild(new guiButton("A", ivec2(0, 75), ivec2(100, 50), []() {
-            kvideo2::setMode(1280, 720, 32);
+        win0->addChild(new guiButton("256*256", ivec2(0, 75), ivec2(100, 50), []() {
+            kvideo2::setMode(256, 256, 32);
         }));
 
         win0->addChild(new guiButton("B", ivec2(0, 150), ivec2(100, 50), []() {
-            kvideo2::setMode(800, 600, 32);
+            kprintf("[ButtonCallback]\n");
+            kprintf("{\n");
+            kprintf("    Test: %d\n", 12345);
+            kprintf("}\n");
         }));
 
         win0->addChild(new guiButton("C", ivec2(0, 225), ivec2(100, 50), []() {
             kpanic("test");
         }));
     }
-        //  win0->addChild(new guiButton("Yee", ivec2(25, 25), ivec2(100, 50), [](){ kpanic("Yee"); }));
-        //  win0->addChild(new guiImage(initrd::fopen("usr/share/img/mountains.bmp")));
     wmRoot.addChild(win0);
+    syslog::println("[wm::main] D");
 
-    // syslog log("wm::main");
-    // log("FPU_tan: %f", 0.724);
 
     while (true)
     {
@@ -93,8 +95,6 @@ void wm::main( void* )
 
         wmRoot.draw(dstimg);
         guiBlitImage(dstimg, cursorimg, wmMouse.xy);
-
-        // waitForVBlank();
 
         kvideo2::flush();
     }

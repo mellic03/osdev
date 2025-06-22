@@ -1,12 +1,14 @@
 #pragma once
+
 #include <kmemxx.hpp>
+
 
 namespace knl
 {
     struct kTTY
     {
         static constexpr size_t BUF_W = 80; 
-        static constexpr size_t BUF_H = 35; 
+        static constexpr size_t BUF_H = 6; 
         char     m_buf[BUF_H*BUF_W];
         int      m_idx;
     
@@ -17,7 +19,7 @@ namespace knl
         };
 
         void putch( char );
-        void putstr( const char *s ) { while (*s) putch(*(s++)); };
+        void putstr( const char* );
         void scroll();
         void scrolln( int n );
     };

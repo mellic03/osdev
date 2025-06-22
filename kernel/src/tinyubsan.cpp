@@ -107,7 +107,8 @@ extern "C"
 #endif
     static void tu_print_location(const char *message, struct tu_source_location loc)
     {
-        syslog::print(
+        // syslog::print(
+        kpanic(
             "tinyubsan: %s at file %s, line %d, column %d\n",
             message, loc.file, loc.line, loc.column
         );

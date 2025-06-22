@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-size_t oct2bin( unsigned char *str, int size )
+static size_t oct2bin( unsigned char *str, int size )
 {
     size_t n = 0;
     unsigned char *c = str;
@@ -61,16 +61,20 @@ void ustar::forEach( void *addr, void(*action)(void*, size_t) )
 //     });
 // }
 
-static syslog *logptr;
-
 void ustar::listAll( void *tar )
 {
     syslog log("ustar::listAll");
-    logptr = &log;
 
-    ustar::forEach(tar, [](void *child, size_t) {
-        (*logptr)("%s", (const char*)child);
-    });
+    auto *ptr = (unsigned char*)(tar);
+    while (!memcmp(ptr + 257, "ustar", 5))
+    {
+        auto *name = (const char*)ptr + ustar::NAME_OFFSET;
+        log("%s", name);
+
+        size_t fsize = oct2bin(ptr + 0x7c, 11);
+        ptr += (((fsize + 511) / 512) + 1) * 512;
+    }
+
 }
 
 

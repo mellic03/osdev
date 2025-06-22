@@ -27,7 +27,7 @@
 
 
 
-using mmap_type = struct { uintptr_t base; size_t size; };
+struct mmap_type { uintptr_t base; size_t size; };
 PMM::MemMap pmm_mmaps[32];
 size_t      num_mmaps;
 
@@ -53,6 +53,8 @@ void early_init()
     LimineRes_init();
     syslog log("early_init");
 
+    kmem::init();
+
     for (size_t i=0; i<32; i++)
         pmm_mmaps[i] = {0, 0};
     load_mmaps();
@@ -73,10 +75,7 @@ void early_init()
     }
 
     PCI::init();
-
-    auto *fb = limine_res.fb->framebuffers[0];
     kvideo2::init();
-    kvideo2::setMode(fb->width, fb->height, fb->bpp);
 
     for (size_t i=0; i<limine_res.modules->module_count; i++)
     {

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-qemu-img create -f raw ./output/disk0.img 4G
 # qemu-img create -f raw ./output/disk1.img 4G
 
 # qemu-system-x86_64 \
@@ -17,7 +16,6 @@ qemu-system-x86_64 \
     -cpu host \
     -m 4G \
     -smp 4 \
-    -drive format=raw,file=output/disk0.img \
     -cdrom ./output/CringeOS.iso \
     -serial stdio \
     -device ati-vga,model=rage128p \
@@ -26,3 +24,4 @@ qemu-system-x86_64 \
     # -device virtio-gpu-gl-pci \
     # -device virtio-vga-gl \
     # -device virtio-gpu-gl-pci \
+    # -drive format=qcow2,file=/home/seagate-8tb/disk0.img \

@@ -18,7 +18,6 @@ void *initrd::fopen( const char *name )
     return (void*)((uintptr_t)base + ustar::DATA_OFFSET);
 }
 
-
 void initrd::init( void *tar )
 {
     syslog log("initrd::init");
@@ -26,4 +25,23 @@ void initrd::init( void *tar )
 
     initrd::tarball = (uint8_t*)tar;
     // ustar::listAll(initrd::tarball);
+}
+
+
+static size_t oct2bin( unsigned char *str, int size )
+{
+    size_t n = 0;
+    unsigned char *c = str;
+    while (size-- > 0)
+    {
+        n *= 8;
+        n += *c - '0';
+        c++;
+    }
+    return n;
+}
+
+size_t initrd::fsize( void *addr )
+{
+    return oct2bin(((uint8_t*)addr - ustar::DATA_OFFSET) + 0x7c, 11);
 }

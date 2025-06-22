@@ -1,13 +1,13 @@
 #include <kernel/memory/pmm.hpp>
 #include <kernel/boot_limine.hpp>
-#include <kernel/bitmanip.hpp>
 #include <kassert.h>
 #include <kmemxx.hpp>
 #include <kernel/log.hpp>
-#include <kernel/linear_allocator.hpp>
 #include <sys/interrupt.hpp>
 
-#include <bitmap.hpp>
+#include <util/linear_allocator.hpp>
+#include <util/bitmanip.hpp>
+#include <util/bitmap.hpp>
 
 #include <kinplace/inplace_array.hpp>
 #include <kinplace/inplace_stack.hpp>

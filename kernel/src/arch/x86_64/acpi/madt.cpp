@@ -1,6 +1,5 @@
 #include <arch/acpi.hpp>
 #include <kernel/log.hpp>
-#include <kmalloc.h>
 #include <string.h>
 
 

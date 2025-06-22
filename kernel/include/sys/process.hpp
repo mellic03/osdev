@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/interrupt.hpp>
-#include <kernel/linkedlist.hpp>
+#include <util/linkedlist.hpp>
 #include <kernel/ringbuffer.hpp>
 #include <smp/lock.hpp>
 

@@ -44,6 +44,13 @@ static volatile struct limine_executable_address_request lim_execaddr_req = {
 
 
 __attribute__((used, section(".limine_requests")))
+static volatile struct limine_rsdp_request lim_rsdp_req = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 3
+};
+
+
+__attribute__((used, section(".limine_requests")))
 static volatile struct limine_mp_request lim_mp_req = {
     .id = LIMINE_MP_REQUEST,
     .revision = 3
@@ -78,13 +85,14 @@ LimineRes limine_res;
 void LimineRes_init()
 {
     limine_res = {
-        .hhdm    = lim_hhdm_req.response->offset,
-        .fb      = lim_fb_req.response,
-        .modules = lim_module_req.response,
-        .mmaps   = lim_mmap_req.response,
-        .fh      = lim_execfile_req.response,
+        .hhdm     = lim_hhdm_req.response->offset,
+        .fb       = lim_fb_req.response,
+        .modules  = lim_module_req.response,
+        .mmaps    = lim_mmap_req.response,
+        .fh       = lim_execfile_req.response,
         .execaddr = lim_execaddr_req.response,
-        .mp      = lim_mp_req.response
+        .rsdp     = lim_rsdp_req.response,
+        .mp       = lim_mp_req.response
     };
 
 }

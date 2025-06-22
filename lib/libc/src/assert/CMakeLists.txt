@@ -6,13 +6,27 @@ file(GLOB SOURCES
 add_library(klibc_assert OBJECT ${SOURCES})
 
 target_compile_options(
-    klibc_assert PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+    klibc_assert PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_KERNEL_NOFPU}>"
 )
 
 target_link_options(
-    klibc_assert PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
+    klibc_assert PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_KERNEL}>"
 )
+
+
+
+
+
+# add_library(ulibc_assert OBJECT ${SOURCES})
+
+# target_compile_options(
+#     ulibc_assert PRIVATE
+#     "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_SHARED}>"
+#     "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_OFF}>"
+# )
+
+# target_link_options(
+#     ulibc_assert PRIVATE
+#     "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_SHARED}>"
+# )
 

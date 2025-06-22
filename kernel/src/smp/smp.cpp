@@ -31,7 +31,6 @@ static cpu_t    SMP_cpus[SMP::max_cpus];
 static void (*SMP_kmain)(cpu_t*);
 static uint64_t  smp_gdt[SMP::max_cpus][5];
 static gdt_ptr_t smp_gdtr[SMP::max_cpus];
-static std::atomic_uint32_t smp_counter{0};
 
 void SMP_initwrapper( limine_mp_info *info )
 {
@@ -40,15 +39,9 @@ void SMP_initwrapper( limine_mp_info *info )
     size_t cpuid = info->lapic_id;
     CPU::createGDT(smp_gdt[cpuid], &smp_gdtr[cpuid]);
     CPU::installGDT(&smp_gdtr[cpuid]);
-
-    while (smp_counter.load() != info->lapic_id)
-        CPU::nop();
-
     CPU::enableFloat();
-    smp_counter++;
 
     cpu_t *cpu = new (SMP::get_cpu(cpuid)) cpu_t(cpuid);
-
     CPU::wrmsr(CPU::MSR_GS_BASE, (uint64_t)cpu);
     CPU::wrmsr(CPU::MSR_GS_KERNEL_BASE, (uint64_t)cpu);
 
@@ -62,7 +55,6 @@ void SMP_initwrapper( limine_mp_info *info )
 void SMP::init( void (*entry)(cpu_t*) )
 {
     SMP_kmain = entry;
-    smp_counter.store(0);
 
     auto *mp = limine_res.mp;
     SMP::num_cpus = mp->cpu_count;
@@ -74,7 +66,7 @@ void SMP::init( void (*entry)(cpu_t*) )
         info->extra_argument = (uint64_t)i;
 
         if (info->lapic_id != bspID)
-            __atomic_store_n(&(info->goto_address), &SMP_initwrapper, __ATOMIC_SEQ_CST);
+            __atomic_store_n(&(info->goto_address), &SMP_initwrapper, __ATOMIC_RELAXED);
     }
 
     SMP_initwrapper(mp->cpus[bspID]);

@@ -129,7 +129,7 @@ void knl::initModules()
             // kthread::create(I->signature, I->main, nullptr);
     }
 
-    kprintf("Modules initialised\n");
+    // kprintf("Modules initialised\n");
 }
 
 

@@ -18,8 +18,8 @@ section .text
         mov rax, cr0
         bts rax, 1		; Set Monitor co-processor (Bit 1)
         btr rax, 2		; Clear Emulation (Bit 2)
-        ; btr rax, 3		; Clear TS
-        ; bts rax, 5		; Set Native Exception (Bit 5)
+        btr rax, 3		; Clear TS
+        bts rax, 5		; Set Native Exception (Bit 5)
         mov cr0, rax
         finit
         ret

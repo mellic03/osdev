@@ -1,7 +1,7 @@
 #include <sys/process.hpp>
 #include <cpu/cpu.hpp>
 
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
 #include <kernel/clock.hpp>
 #include <kernel/log.hpp>
 #include <kmemxx.hpp>

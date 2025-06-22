@@ -6,11 +6,16 @@ namespace knl
     template <typename T>
     class LinkedList;
 
+
     class LinkedListNode
     {
     public:
         LinkedListNode(): prev(nullptr), next(nullptr) {  };
-    // private:
+
+    private:
+        template <typename T>
+        friend class LinkedList;
+
         LinkedListNode *prev, *next;
         void makeLast( LinkedListNode *&root );
     };

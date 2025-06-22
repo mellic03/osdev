@@ -4,11 +4,11 @@ ENTRY(_dl_init)
 
 SECTIONS
 {
-    . = 0x1000;
+    . = 4K;
     . = ALIGN(CONSTANT(MAXPAGESIZE));
     .text : {
         *(.text._dl_init )
-        *(.text*)
+        KEEP(*(.text*))
     }
 
     . = ALIGN(CONSTANT(MAXPAGESIZE));
@@ -26,4 +26,9 @@ SECTIONS
         *(COMMON)
     }
 
+    /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
+    /DISCARD/ : {
+        *(.eh_frame*)
+        *(.note .note.*)
+    }
 }

@@ -1,6 +1,7 @@
 #include <kernel/memory.hpp>
 #include <kernel/log.hpp>
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
+
 #include <sys/interrupt.hpp>
 #include <kpanic.hpp>
 #include <algorithm>
@@ -29,7 +30,7 @@ idk::buddy_allocator::buddy_allocator()
 }
 
 
-idk::buddy_allocator::buddy_allocator( idk::linear_allocator &A )
+idk::buddy_allocator::buddy_allocator( knl::linear_allocator &A )
 {
     syslog log("buddy_allocator::buddy_allocator");
 

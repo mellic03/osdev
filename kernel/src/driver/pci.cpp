@@ -1,11 +1,11 @@
 #include <driver/pci.hpp>
 #include <driver/pci_id.hpp>
 #include <kernel/log.hpp>
-#include <bitmap.hpp>
+#include <util/bitmap.hpp>
 
 
 static PCI_Device *PCI_RootDevice; //      = PCI_Device(PCIAddress(0, 0, 0));
-static auto PCI_DeviceAllocator = idk::BitMapAllocator2<PCI_Device, 128>();
+static auto PCI_DeviceAllocator = idk::BitMapAllocator<PCI_Device, 128>();
 
 // static PCI_Device *PCI_devices_buf[128];
 // static idk::inplace_vector<PCI_Device*> PCI_devices;

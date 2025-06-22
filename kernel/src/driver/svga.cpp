@@ -10,7 +10,6 @@
 
 #include <kernel/boot_limine.hpp>
 #include <kernel/log.hpp>
-#include <kmalloc.h>
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
 #include <kmemxx.hpp>

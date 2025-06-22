@@ -14,7 +14,7 @@ uint32_t kvideo2::Pitch;
 void kvideo2::init()
 {
     knl::VideoInterface *interfaces[] = {
-        SVGA::getInterface(),
+        // SVGA::getInterface(),
         VideoFramebuffer::getInterface()
     };
 
@@ -28,6 +28,7 @@ void kvideo2::init()
     }
 
     kvideo2::iface->init();
+    kvideo2::setMode(iface->W(), iface->H(), iface->BPP());
 }
 
 

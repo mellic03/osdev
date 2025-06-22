@@ -43,6 +43,8 @@ class VideoInterfaceFramebuffer: public knl::VideoInterface
 private:
     knl::RingBuffer<VideoCmd, 128> m_cmdbuf;
     uint8_t *m_front, *m_back;
+    Mode m_rmode;
+    
 
 public:
     virtual bool available() final;
@@ -79,7 +81,8 @@ void VideoInterfaceFramebuffer::init()
     m_mode.h     = fb->height;
     m_mode.bpp   = fb->bpp;
     m_mode.pitch = fb->pitch;
-
+    kmemcpy(&m_rmode, &m_mode, sizeof(Mode));
+    // m_rmode      = m_mode;
 
     using namespace VMM;
 
@@ -90,7 +93,7 @@ void VideoInterfaceFramebuffer::init()
 
     syslog log("VideoInterfaceFramebuffer::init");
     log("fb count:    %u",    res->framebuffer_count);
-    // log("address:     0x%lx", fb->address);
+    log("address:     0x%lx", fb->address);
     log("width:       %u",    fb->width);
     log("height:      %u",    fb->height);
     log("pitch:       %u",    fb->pitch);
@@ -106,19 +109,21 @@ void VideoInterfaceFramebuffer::init()
     // log("bmask_size:  %u",    fb->blue_mask_size);
     // log("bmask_shift: %u",    fb->blue_mask_shift);
 
-
 }
 
 
-void VideoInterfaceFramebuffer::setMode( uint32_t, uint32_t, uint32_t )
+void VideoInterfaceFramebuffer::setMode( uint32_t w, uint32_t h, uint32_t bpp )
 {
-    // m_mode = {w, h, bpp, w*bpp};
+    if (w != m_mode.w && h != m_mode.h && bpp == 32)
+    {
+        m_mode = {w, h, bpp, w*bpp};
+    }
 }
 
 
-void VideoInterfaceFramebuffer::flush( uint32_t x, uint32_t y, uint32_t w, uint32_t h )
+void VideoInterfaceFramebuffer::flush( uint32_t xp, uint32_t yp, uint32_t w, uint32_t h )
 {
-    if (x || y || w || h)
+    if (xp || yp || w || h)
     {
         
     }
@@ -135,11 +140,35 @@ void VideoInterfaceFramebuffer::flush( uint32_t x, uint32_t y, uint32_t w, uint3
     //     }
     // }
 
+
+    if ((m_mode.w == m_rmode.w) && (m_mode.h == m_rmode.h))
+    {
+        size_t nbytes = m_mode.pitch * m_mode.h;
+        CPU::movs64(m_front, m_back, nbytes/sizeof(uint64_t));
+        CPU::stos64(m_back, 0, nbytes/sizeof(uint64_t));
+        // kmemcpy<uint128_t>(m_front, m_back, nbytes);
+        // kmemset<uint128_t>(m_back, 0, nbytes);
+        return;
+    }
+
+    for (size_t y=0; y<m_rmode.h; y++)
+    {
+        size_t srcy = (m_mode.h*y) / m_rmode.h;
+
+        for (size_t x=0; x<m_rmode.w; x++)
+        {
+            size_t srcx = (m_mode.w*x) / m_rmode.w;
+
+            size_t idx0 = (m_rmode.pitch/4)*y + x;
+            size_t idx1 = (m_mode.pitch/4)*srcy + srcx;
+            
+            ((uint32_t*)m_front)[idx0] = ((uint32_t*)m_back)[idx1];
+        }
+    }
+
     size_t nbytes = m_mode.pitch * m_mode.h;
-    CPU::movs64(m_front, m_back, nbytes/sizeof(uint64_t));
     CPU::stos64(m_back, 0, nbytes/sizeof(uint64_t));
-    // kmemcpy<uint128_t>(m_front, m_back, nbytes);
-    // kmemset<uint128_t>(m_back, 0, nbytes);
+
 }
 
 

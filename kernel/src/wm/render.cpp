@@ -1,7 +1,7 @@
 #include <wm/render.hpp>
 #include <cpu/cpu.hpp>
 #include <kmemxx.hpp>
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
 
 
 void wm::guiBlitImage( guiFramebuffer &dstimg, guiImage &srcimg, ivec2 dsttl )

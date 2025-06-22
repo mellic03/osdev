@@ -1,13 +1,12 @@
 #include <arch/acpi.hpp>
 
 #include <kernel/log.hpp>
-#include <kmalloc.h>
 #include <string.h>
 // #include <driver/ioapic.hpp>
 // #include <driver/pic.hpp>
 // #include <cpu/cpu.hpp>
 // #include <arch/io.hpp>
-// #include <kernel/bitmanip.hpp>
+// #include <util/bitmanip.hpp>
 
 
 void ACPI::init( uintptr_t rsdp_phys, ACPI::Response &res )

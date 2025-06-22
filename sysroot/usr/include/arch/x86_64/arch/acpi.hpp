@@ -8,7 +8,7 @@
 #include <kernel/boot_limine.hpp>
 #include <kernel/memory/pmm.hpp>
 #include <kernel/memory/vmm.hpp>
-#include <kernel/bitmanip.hpp>
+#include <util/bitmanip.hpp>
 #include <kernel/log.hpp>
 
 namespace ACPI

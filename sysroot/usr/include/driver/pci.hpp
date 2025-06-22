@@ -105,7 +105,7 @@ union PCIAddress
 
 
 
-#include <kernel/linkedlist.hpp>
+#include <util/linkedlist.hpp>
 
 struct PCI_Device: public knl::LinkedListNode
 {

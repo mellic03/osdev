@@ -2,53 +2,18 @@
 #include <stddef.h>
 #include <stdint.h>
 
-
 FILE *stderr = nullptr;
 FILE *stdin  = nullptr;
 FILE *stdout = nullptr;
 
-
-
-// int __libc_stdio_init()
-// {
-//     serial_printf("[__libc_stdio_init]\n");
-//     idk::SysRequest req(idk::SysRequestType::FILE_GETSTDIO);
-
-//     auto &res  = idk::syscall(req);
-//     auto &fres = *(idk::SysResponse_FILE*)(&res);
-
-//     idk_FILE *files = (idk_FILE*)(fres.addr);
-//     stderr = (idk_file_t*)(files+0);
-//     stdin  = (idk_file_t*)(files+1);
-//     stdout = (idk_file_t*)(files+2);
-
-//     return 1;
-// }
 
 #ifdef __is_kernel
     #include <kthread.hpp>
 #endif
 
 
-int fflush( FILE *addr )
+int fflush( FILE* )
 {
-    if (!addr) {  };
-
-    // ((kfstream*)addr)->flush();
-
-    // #ifdef __is_kernel
-    //     kthread::yield();
-
-    // #else
-    //     // ksysc_request req = {
-    //     //     .type = SYSC_FILE_FLUSH,
-    //     //     .data = fh
-    //     // };
-    //     // libk_syscall(&req);
-
-    // #endif
-
-
     return 0;
 }
 

@@ -14,7 +14,9 @@ struct LimineRes
     limine_memmap_response          *mmaps;
     limine_executable_file_response *fh;
     limine_executable_address_response *execaddr;
+    limine_rsdp_response            *rsdp;
     limine_mp_response              *mp;
 };
 
 extern LimineRes limine_res;
+void LimineRes_init();

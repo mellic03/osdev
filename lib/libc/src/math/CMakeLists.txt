@@ -6,13 +6,10 @@ file(GLOB SOURCES
 add_library(klibc_math OBJECT ${SOURCES})
 
 target_compile_options(
-    klibc_math PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_STATIC}>"
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_SSE_ON}>"
+    klibc_math PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_COMPILE_KERNEL_NOFPU}>"
 )
 
 target_link_options(
-    klibc_math PRIVATE
-    "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_STATIC}>"
+    klibc_math PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${KFLAGS_LINK_KERNEL}>"
 )
 

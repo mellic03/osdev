@@ -9,7 +9,6 @@
 
 
 #ifdef __SSE__
-#include <math.h>
 #include "ftoa.hpp"
 // static double shitpow( double base, double exp )
 // {

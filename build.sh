@@ -40,24 +40,27 @@ cp -r lib/libc++/include/* sysroot/usr/include/.
 # ---------------------------------------------------------
 
 
+# Compile kernel
+# ---------------------------------------------------------
+mkdir -p build && cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=cmake-toolchain.cmake ..
+make -j8
+cd ../
+rm dump.txt
+# readelf -a sysroot/usr/bin/CringeOS >> dump.txt
+objdump -d sysroot/usr/bin/CringeOS >> dump.txt
+# readelf -a sysroot/usr/lib/libc.a >> dump.txt
+# objdump -d sysroot/usr/lib/libc.a >> dump.txt
+# hexdump -C sysroot/usr/lib/libc.a >> dump.txt
+# ---------------------------------------------------------
+
+
 # Create initrd tarball and move to output folder
 # ---------------------------------------------------------
 cd ./sysroot
 tar -cvf initrd.tar.gz * > /dev/null 2>&1
 mv ./initrd.tar.gz ../output/iso_root/initrd.tar.gz
 cd ../
-# ---------------------------------------------------------
-
-
-# Compile kernel
-# ---------------------------------------------------------
-mkdir -p build && cd build
-# cmake -DCMAKE_TOOLCHAIN_FILE=config.cmake ..
-cmake ..
-make -j8
-cd ../
-
-rm dump.txt && readelf -a sysroot/usr/bin/CringeOS >> dump.txt
 # ---------------------------------------------------------
 
 

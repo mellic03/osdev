@@ -29,8 +29,8 @@
     }
 
 
-
 #else
+    #include <sys/interrupt.hpp>
     #include <kernel/syscall.h>
     void *malloc( size_t )
     {
@@ -39,6 +39,7 @@
         //     .type = SYSC_MEM_ALLOC,
         //     .data = ptr
         // };
+        knl::interrupt<IntNo_Syscall>();
         // libk_syscall(&req);
         return nullptr;
     }

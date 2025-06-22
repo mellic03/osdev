@@ -13,6 +13,7 @@ enum SysNo_
     SysNo_FileWrite,
     SysNo_MemAlloc,
     SysNo_MemFree,
+    SysNo_PrintTest,
     SysNo_SysNoCount,
 };
 

@@ -4,6 +4,7 @@
 #include <kernel/array.hpp>
 #include <kinplace/inplace_array.hpp>
 #include <kinplace/inplace_stack.hpp>
+#include <util/linear_allocator.hpp>
 
 
 namespace idk
@@ -37,7 +38,7 @@ namespace idk
 
     public:
         buddy_allocator();
-        buddy_allocator( linear_allocator& );
+        buddy_allocator( knl::linear_allocator& );
 
         void *alloc( size_t nbytes, size_t alignment );
         void  free( void* );

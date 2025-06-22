@@ -1,9 +1,10 @@
 #pragma once
 
-#include "memory.hpp"
+#include <stddef.h>
+#include <stdint.h>
 
 
-namespace idk
+namespace knl
 {
     class linear_allocator
     {
@@ -12,7 +13,6 @@ namespace idk
         uintptr_t m_base;
         uintptr_t m_tail;
         uintptr_t m_end;
-        std::mutex m_mutex;
 
     public:
         linear_allocator() {  };
@@ -22,7 +22,7 @@ namespace idk
         size_t bytesAllocated() { return (m_tail - m_base); }
         size_t bytesRemaining() { return (m_end  - m_tail); }
 
-        void *alloc( size_t nbytes, size_t alignment );
+        void *alloc( size_t nbytes, size_t alignment=16 );
         void  free( void* );
         void  clear();
 
